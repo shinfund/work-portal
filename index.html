@@ -1,0 +1,834 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>현장 업무 포털</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
+  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
+  --r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --sidebar-w:200px;
+  --sidebar-bg:#1E2B38;
+  --mobile-nav-h:58px;
+  --header-h:52px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;}
+body{
+  font-family:'Noto Sans KR',-apple-system,sans-serif;
+  background:var(--bg);color:var(--txt);
+  font-size:15px;line-height:1.6;
+  word-break:keep-all;-webkit-font-smoothing:antialiased;
+  display:flex;height:100dvh;
+}
+
+/* ═══ 사이드바 (PC) ═══════════════════════════════════════ */
+.sidebar{
+  width:var(--sidebar-w);flex-shrink:0;
+  background:var(--sidebar-bg);
+  border-right:1px solid rgba(255,255,255,.1);
+  display:flex;flex-direction:column;
+  height:100dvh;
+  position:relative;z-index:100;
+  transition:width .22s ease;
+}
+/* 접힌 상태 */
+.sidebar.collapsed{ width:60px; }
+.sidebar.collapsed .sb-logo-text,
+.sidebar.collapsed .sb-sec,
+.sidebar.collapsed .sb-item > span,
+.sidebar.collapsed .sb-badge,
+.sidebar.collapsed .sb-version{ display:none; }
+.sidebar.collapsed .sb-logo{ padding:10px 8px;justify-content:center; }
+.sidebar.collapsed .sb-item{ justify-content:center;padding:10px 6px;margin:1px 4px;font-size:0; }
+.sidebar.collapsed .sb-item.on::before{ display:none; }
+.sidebar.collapsed .sb-footer-btn{ justify-content:center;padding:9px 6px;font-size:0; }
+.sidebar.collapsed .sb-footer-btn svg{ width:16px;height:16px; }
+/* 토글 버튼 */
+.sb-toggle{
+  position:absolute;right:-11px;top:22px;
+  width:22px;height:22px;
+  background:var(--sky);border:2px solid var(--sidebar-bg);
+  border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.15);
+  transition:transform .22s ease;
+}
+.sb-toggle svg{ width:10px;height:10px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round; }
+.sidebar.collapsed .sb-toggle{ right:-11px; }
+.sb-logo{
+  padding:0 12px;
+  height:64px;
+  border-bottom:1px solid rgba(255,255,255,.12);
+  flex-shrink:0;
+  display:flex;align-items:center;gap:10px;
+}
+.sb-logo-text{min-width:0;flex:1;}
+.sb-logo-icon{
+  width:38px;height:38px;flex-shrink:0;
+  background:rgba(255,255,255,.14);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.sb-logo-icon svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.sb-logo-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-logo-sub{font-size:10px;color:rgba(255,255,255,.75);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;scrollbar-width:none;}
+.sb-nav::-webkit-scrollbar{display:none}
+.sb-sec{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.06em;text-transform:uppercase;padding:12px 16px 5px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 10px 10px 12px;
+  margin:1px 8px;border-radius:8px;
+  color:rgba(255,255,255,.9);
+  font-size:13px;font-weight:600;
+  cursor:pointer;
+  transition:background .12s,color .12s;
+  -webkit-tap-highlight-color:transparent;
+  position:relative;
+}
+.sb-item:hover{background:rgba(255,255,255,.1);color:#fff;}
+.sb-item.on{background:rgba(255,255,255,.18);color:#fff;}
+.sb-item.on::before{
+  content:'';position:absolute;left:-8px;top:22%;bottom:22%;
+  width:3.5px;background:var(--sky);border-radius:0 3px 3px 0;
+}
+.sb-icon{
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:15px;
+  background:rgba(255,255,255,.1);
+  transition:background .12s;
+}
+.sb-item.on .sb-icon{background:var(--sky);}
+.sb-badge{
+  margin-left:auto;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:10px;
+  background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);
+}
+.sb-disabled{opacity:.5;cursor:not-allowed !important;}
+.sb-disabled:hover{background:transparent !important;color:rgba(255,255,255,.5) !important;}
+
+.sb-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.12);flex-shrink:0;}
+.sb-footer-btn{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:8px;
+  color:rgba(255,255,255,.85);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.sb-footer-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sb-footer-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.sb-version{font-size:10px;color:rgba(255,255,255,.55);padding:4px 10px;}
+
+/* ═══ 메인 영역 ════════════════════════════════════════════ */
+.main-area{
+  flex:1;display:flex;flex-direction:column;
+  height:100dvh;overflow:hidden;min-width:0;
+}
+
+/* PC 상단 바 */
+.topbar{
+  height:var(--header-h);flex-shrink:0;
+  background:#0C447C;
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  box-shadow:0 2px 8px rgba(12,68,124,.3);
+}
+.topbar-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
+.topbar-spacer{flex:1;}
+.topbar-clock{
+  font-size:13px;font-weight:700;color:#fff;
+  background:rgba(255,255,255,.14);border-radius:var(--r8);padding:5px 12px;
+}
+.topbar-info{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.14);border-radius:var(--r8);padding:5px 14px;
+  font-size:13px;font-weight:600;color:#fff;
+}
+.topbar-info-sep{color:rgba(255,255,255,.4);font-weight:300;}
+.topbar-weather{display:flex;align-items:center;gap:4px;}
+.topbar-weather-icon{font-size:15px;line-height:1;}
+.weather-loading{color:rgba(255,255,255,.7);font-size:12px;}
+.topbar-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:var(--r8);
+  font-size:13px;font-weight:600;color:#fff;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
+  cursor:pointer;font-family:inherit;transition:all .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.topbar-btn:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.45);}
+.topbar-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ═══ 패널/iframe ══════════════════════════════════════════ */
+.content-area{flex:1;overflow:hidden;position:relative;}
+.panel{position:absolute;inset:0;display:none;}
+.panel.on{display:flex;flex-direction:column;}
+.iframe-wrap{flex:1;position:relative;overflow:hidden;}
+.app-iframe{width:100%;height:100%;border:none;display:block;}
+.iframe-overlay{
+  position:absolute;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  z-index:10;transition:opacity .3s;
+}
+.iframe-overlay.done{opacity:0;pointer-events:none;}
+.spin-ring{
+  width:42px;height:42px;border:3px solid var(--border);
+  border-top-color:var(--sky);border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-txt{font-size:13px;color:var(--txt2);font-weight:600;}
+
+/* ═══ 홈 패널 ══════════════════════════════════════════════ */
+.home-inner{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:22px 24px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.home-inner::-webkit-scrollbar{width:5px}
+.home-inner::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+
+.greeting-box{margin-bottom:22px;}
+.greeting-date{font-size:13px;color:var(--txt3);font-weight:500;margin-bottom:5px;}
+.greeting-title{font-size:21px;font-weight:700;color:var(--txt);line-height:1.35;}
+.greeting-sub{font-size:13px;color:var(--txt2);margin-top:5px;}
+
+/* 앱 카드 */
+.app-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:12px;margin-bottom:22px;
+}
+.app-card{
+  background:var(--card);border:1.5px solid var(--border);
+  border-radius:var(--r16);padding:18px;
+  cursor:pointer;transition:all .15s;
+  box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:11px;
+}
+.app-card:hover{
+  border-color:var(--sky100);
+  transform:translateY(-2px);
+  box-shadow:0 8px 22px rgba(55,138,221,.13);
+}
+.app-card.disabled{opacity:.42;cursor:not-allowed;border-style:dashed;}
+.app-card.disabled:hover{transform:none;box-shadow:var(--shadow);border-color:var(--border);}
+.ac-icon{
+  width:46px;height:46px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.ac-name{font-size:14px;font-weight:700;color:var(--txt);}
+.ac-desc{font-size:12px;color:var(--txt2);line-height:1.55;}
+.ac-arrow{font-size:12px;color:var(--sky600);font-weight:700;margin-top:auto;}
+.ac-soon{font-size:12px;color:var(--txt3);font-weight:600;margin-top:auto;}
+
+/* KPI 그리드 */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:22px;}
+.kc{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;box-shadow:var(--shadow);}
+.kc-lbl{font-size:11px;color:var(--txt3);font-weight:600;margin-bottom:5px;letter-spacing:.02em;}
+.kc-val{font-size:22px;font-weight:900;line-height:1;}
+.kc-sub{font-size:12px;color:var(--txt2);margin-top:4px;}
+
+.sec-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+
+/* 안내 카드 */
+.guide-card{
+  background:var(--sky50);border:1px solid var(--sky100);
+  border-radius:var(--r12);padding:16px;margin-bottom:20px;
+}
+.guide-card-title{font-size:13px;font-weight:700;color:var(--sky800);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.guide-card-body{font-size:12px;color:var(--sky800);line-height:1.8;}
+.guide-btn{
+  margin-top:11px;background:var(--sky);border:none;color:#fff;
+  border-radius:var(--r8);padding:7px 14px;font-size:12px;
+  font-weight:700;cursor:pointer;font-family:inherit;
+}
+
+/* 공지/안내 */
+.notice-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);padding:16px;margin-bottom:20px;box-shadow:var(--shadow);}
+.notice-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2);font-size:13px;color:var(--txt);}
+.notice-item:last-child{border-bottom:none;}
+.notice-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px;background:var(--sky);}
+.notice-sub{font-size:11px;color:var(--txt3);margin-top:2px;}
+
+/* ═══ 모바일 ════════════════════════════════════════════════ */
+.mobile-hdr{
+  display:none;height:var(--header-h);
+  background:var(--sky800);
+  padding:0 14px;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 8px rgba(12,68,124,.2);
+  flex-shrink:0;z-index:200;
+}
+.m-logo{display:flex;align-items:center;gap:9px;}
+.m-logo-icon{
+  width:32px;height:32px;background:rgba(255,255,255,.15);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+}
+.m-logo-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.m-logo-title{font-size:15px;font-weight:700;color:#fff;}
+.m-page-name{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;}
+.m-cfg-btn{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;border-radius:20px;padding:6px 12px;
+  font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;gap:5px;
+  -webkit-tap-highlight-color:transparent;
+}
+.m-cfg-btn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.mobile-nav{
+  display:none;height:var(--mobile-nav-h);
+  background:var(--card);border-top:1.5px solid var(--border);
+  flex-shrink:0;z-index:200;
+}
+.mn-inner{display:flex;height:100%;}
+.mn-item{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  cursor:pointer;color:var(--txt3);font-size:11px;font-weight:600;
+  transition:color .12s;-webkit-tap-highlight-color:transparent;position:relative;
+}
+.mn-item.on{color:var(--sky600);}
+.mn-item.on::after{
+  content:'';position:absolute;top:0;left:18%;right:18%;
+  height:2.5px;background:var(--sky);border-radius:0 0 3px 3px;
+}
+.mn-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+
+/* ═══ 모달 ══════════════════════════════════════════════════ */
+#cfgModal{display:none}
+#cfgModal.open{display:block}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{
+  background:var(--card);border-radius:var(--r20);padding:24px;
+  width:100%;max-width:500px;max-height:88vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px;color:var(--txt);}
+.modal-title svg{width:16px;height:16px;fill:none;stroke:var(--sky800);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.modal-sec{
+  font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.07em;text-transform:uppercase;
+  margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2);
+}
+.modal-sec:first-of-type{margin-top:0;}
+.mf{margin-bottom:12px;}
+.ml{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:5px;display:block;}
+.mi{
+  width:100%;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:var(--r8);padding:9px 12px;font-size:14px;
+  font-family:inherit;color:var(--txt);outline:none;transition:border .18s;
+}
+.mi:focus{border-color:var(--sky);background:#fff;}
+.mh{font-size:11px;color:var(--txt3);margin-top:3px;}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid var(--border2);padding-top:16px;}
+.btn-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;}
+.btn-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px;}
+
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.25s;opacity:0;pointer-events:none;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* ═══ 반응형 ════════════════════════════════════════════════ */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .topbar{display:none;}
+  .mobile-hdr{display:flex;}
+  .mobile-nav{display:block;}
+  .main-area{height:calc(100dvh - var(--header-h) - var(--mobile-nav-h));}
+  .home-inner{padding:12px;}
+  .app-grid{grid-template-columns:1fr 1fr;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+}
+@media(max-width:380px){
+  .app-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────────────── 사이드바 ─────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+    </div>
+    <div class="sb-logo-text">
+      <div class="sb-logo-title">업무용 포털</div>
+      <div class="sb-logo-sub">현장 전산 통합 관리</div>
+    </div>
+  </div>
+  <!-- 사이드바 토글 버튼 -->
+  <div class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="메뉴 접기/펼치기">
+    <svg id="sb-toggle-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </div>
+
+  <nav class="sb-nav">
+    <div class="sb-sec">메인</div>
+    <div class="sb-item on" id="sbn-home" onclick="go('home')">
+      <span>홈 대시보드</span>
+    </div>
+
+    <div class="sb-sec" style="margin-top:6px">업무 앱</div>
+    <div class="sb-item" id="sbn-defect" onclick="go('defect')">
+      <span>하자보수현황</span>
+    </div>
+    <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
+      <span>연장근무현황</span>
+    </div>
+
+    <div class="sb-sec" style="margin-top:6px;opacity:.45">추후 추가 예정</div>
+    <div class="sb-item sb-disabled">
+      <span>태양광발전량일지</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>비품관리대장</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>차량운행일지</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>일일점검일지</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>월간점검계획서</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>월간점검결과보고서</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>분기점검결과보고서</span><span class="sb-badge">준비중</span>
+    </div>
+    <div class="sb-item sb-disabled">
+      <span>연간점검결과보고서</span><span class="sb-badge">준비중</span>
+    </div>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="sb-footer-btn" onclick="openCfg()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      DB 통합 설정
+    </div>
+    <div class="sb-version">현장 업무 포털 v1.0</div>
+  </div>
+</aside>
+
+<!-- ─────────────── 메인 ─────────────── -->
+<div class="main-area">
+
+  <!-- 모바일 헤더 -->
+  <div class="mobile-hdr">
+    <div class="m-logo">
+      <div class="m-logo-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg></div>
+      <div>
+        <div class="m-logo-title">현장 업무 포털</div>
+        <div class="m-page-name" id="m-page-name">홈 대시보드</div>
+      </div>
+    </div>
+    <button class="m-cfg-btn" onclick="openCfg()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      설정
+    </button>
+  </div>
+
+  <!-- PC 상단 바 -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">🏠 홈 대시보드</div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-info">
+      <span id="topbar-date">--</span>
+      <span class="topbar-info-sep">|</span>
+      <span class="topbar-weather" id="topbar-weather">
+        <span class="weather-loading">날씨 로딩중</span>
+      </span>
+      <span class="topbar-info-sep">|</span>
+      <span id="topbar-clock">--:--</span>
+    </div>
+  </div>
+
+  <!-- 콘텐츠 영역 -->
+  <div class="content-area">
+
+    <!-- ▸ 홈 패널 -->
+    <div class="panel on" id="panel-home">
+      <div class="home-inner">
+
+        <div class="greeting-box">
+          <div class="greeting-date" id="home-date"></div>
+          <div class="greeting-title">현장 업무 포털에 오신 것을 환영합니다</div>
+          <div class="greeting-sub">좌측 메뉴(PC) 또는 하단 탭(모바일)에서 업무 앱을 선택하세요.</div>
+        </div>
+
+        <div class="sec-hd"><span>업무 앱 바로가기</span></div>
+        <div class="app-grid">
+          <div class="app-card" onclick="go('defect')">
+            <div class="ac-icon" style="background:#E1F5EE;color:#0F6E56;">🔧</div>
+            <div>
+              <div class="ac-name">하자보수현황</div>
+              <div class="ac-desc">하자 접수·처리·완료 현황 조회 및 등록. Notion DB 연동.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
+          <div class="app-card" onclick="go('overtime')">
+            <div class="ac-icon" style="background:#E6F1FB;color:#185FA5;">⏰</div>
+            <div>
+              <div class="ac-name">연장근무현황</div>
+              <div class="ac-desc">당직·비상대기·비상출동 지급액 월별 현황. Notion DB 연동.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
+          <div class="app-card disabled">
+            <div class="ac-icon" style="background:#EEEDFE;color:#534AB7;">📋</div>
+            <div>
+              <div class="ac-name">일일업무보고</div>
+              <div class="ac-desc">현장 일일 업무 보고서 작성 및 이력 조회.</div>
+            </div>
+            <div class="ac-soon">준비중</div>
+          </div>
+          <div class="app-card disabled">
+            <div class="ac-icon" style="background:#FAECE7;color:#D85A30;">🦺</div>
+            <div>
+              <div class="ac-name">안전점검</div>
+              <div class="ac-desc">안전 점검 체크리스트 작성 및 이력 관리.</div>
+            </div>
+            <div class="ac-soon">준비중</div>
+          </div>
+        </div>
+
+        <div class="guide-card" id="guide-card">
+          <div class="guide-card-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sky800)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Notion DB 연동 설정 안내
+          </div>
+          <div class="guide-card-body">
+            좌측 메뉴 하단 <strong>DB 통합 설정</strong> 버튼에서 Cloudflare Worker URL과 각 앱의 DB ID를 입력하면 실시간 현장 데이터를 조회할 수 있습니다.
+          </div>
+          <button class="guide-btn" onclick="openCfg()">지금 설정하기</button>
+        </div>
+
+        <div class="sec-hd"><span>포털 이용 안내</span></div>
+        <div class="notice-card">
+          <div class="notice-item">
+            <div class="notice-dot"></div>
+            <div>
+              <div>각 업무 앱은 좌측 메뉴(PC) 또는 하단 탭(모바일)에서 이동할 수 있습니다.</div>
+              <div class="notice-sub">앱 첫 진입 시 로딩이 발생하며, 이후 전환은 빠릅니다</div>
+            </div>
+          </div>
+          <div class="notice-item">
+            <div class="notice-dot"></div>
+            <div>
+              <div>설정값은 기기 로컬 스토리지에 저장됩니다. 기기별 별도 설정이 필요합니다.</div>
+              <div class="notice-sub">좌측 메뉴 하단 DB 통합 설정 버튼에서 Worker URL · DB ID 입력</div>
+            </div>
+          </div>
+          <div class="notice-item">
+            <div class="notice-dot"></div>
+            <div>
+              <div>새 업무 앱 추가 시 사이드바 메뉴에 자동으로 반영됩니다.</div>
+              <div class="notice-sub">추가 예정: 일일업무보고 / 안전점검 / 자재관리</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ▸ 하자보수 iframe -->
+    <div class="panel" id="panel-defect">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-defect">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">하자보수현황 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-defect" class="app-iframe" title="하자보수현황" onload="onIframeLoad('defect')"></iframe>
+      </div>
+    </div>
+
+    <!-- ▸ 연장근무 iframe -->
+    <div class="panel" id="panel-overtime">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-overtime">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">연장근무현황 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-overtime" class="app-iframe" title="연장근무현황" onload="onIframeLoad('overtime')"></iframe>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 모바일 하단 탭 -->
+  <nav class="mobile-nav">
+    <div class="mn-inner">
+      <div class="mn-item on" id="mn-home" onclick="go('home')">
+        <div class="mn-icon">🏠</div><span>홈</span>
+      </div>
+      <div class="mn-item" id="mn-defect" onclick="go('defect')">
+        <div class="mn-icon">🔧</div><span>하자보수</span>
+      </div>
+      <div class="mn-item" id="mn-overtime" onclick="go('overtime')">
+        <div class="mn-icon">⏰</div><span>연장근무</span>
+      </div>
+      <div class="mn-item" onclick="openCfg()">
+        <div class="mn-icon">⚙️</div><span>설정</span>
+      </div>
+    </div>
+  </nav>
+
+</div>
+
+<!-- 설정 모달 -->
+<div id="cfgModal">
+  <div class="modal-back" onclick="closeCfg(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        DB 통합 설정
+      </div>
+
+      <div class="mf">
+        <label class="ml">Cloudflare Worker URL <span style="font-size:11px;color:var(--txt3);font-weight:400">(공통)</span></label>
+        <input id="c-hw" class="mi" type="text" placeholder="https://xxx.workers.dev" autocomplete="off"/>
+        <div class="mh">변경 시에만 입력. 저장된 값은 마스킹 표시됩니다.</div>
+      </div>
+
+      <div class="modal-sec">하자보수현황 앱</div>
+      <div class="mf">
+        <label class="ml">하자보수 DB ID</label>
+        <input id="c-hd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+      </div>
+      <div class="mf">
+        <label class="ml">업체연락처 DB ID <span style="font-size:11px;color:var(--txt3);font-weight:400">(선택)</span></label>
+        <input id="c-hc" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+        <div class="mh">업체 연락처 기능 사용 시 입력</div>
+      </div>
+
+      <div class="modal-sec">연장근무현황 앱</div>
+      <div class="mf">
+        <label class="ml">연장근무 DB ID</label>
+        <input id="c-od" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-cancel" onclick="closeCfg()">취소</button>
+        <button class="btn-save" onclick="saveCfg()">저장 및 적용</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── 앱 정의 ──────────────────────────────────────────────
+const APPS = {
+  defect:   { name:'하자보수현황', icon:'🔧', file:'defect-management.html',
+              keys:{ workerUrl:'haja_workerUrl', dbId:'haja_dbId', contactDbId:'haja_contactDbId' } },
+  overtime: { name:'연장근무현황', icon:'⏰', file:'overtime-work.html',
+              keys:{ workerUrl:'ot_workerUrl', dbId:'ot_dbId' } }
+};
+const PAGES = {
+  home:     { title:'🏠 홈 대시보드', mName:'홈 대시보드' },
+  defect:   { title:'🔧 하자보수현황', mName:'하자보수현황' },
+  overtime: { title:'⏰ 연장근무현황', mName:'연장근무현황' }
+};
+
+let _cur = 'home';
+const _loaded = {};
+
+// ── 페이지 전환 ──────────────────────────────────────────
+function go(id) {
+  if (id === _cur) return;
+  _cur = id;
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + id).classList.add('on');
+
+  ['home','defect','overtime'].forEach(k => {
+    document.getElementById('sbn-' + k)?.classList.toggle('on', k === id);
+    document.getElementById('mn-' + k)?.classList.toggle('on', k === id);
+  });
+
+  const page = PAGES[id] || { title: id, mName: id };
+  document.getElementById('topbar-title').textContent = page.title;
+  document.getElementById('m-page-name').textContent = page.mName;
+
+  // 앱 iframe 볼 때는 포털 topbar 숨김 (앱 자체 헤더와 중복 방지)
+  const topbar = document.querySelector('.topbar');
+  if (topbar) topbar.style.display = id === 'home' ? 'flex' : 'none';
+
+  if (id !== 'home' && !_loaded[id]) {
+    document.getElementById('ifr-' + id).src = APPS[id].file;
+  }
+}
+
+function onIframeLoad(id) {
+  _loaded[id] = true;
+  document.getElementById('ov-' + id)?.classList.add('done');
+  // 같은 origin이므로 iframe 내 localStorage 직접 주입
+  try {
+    const iw = document.getElementById('ifr-' + id).contentWindow;
+    Object.entries(APPS[id].keys).forEach(([, lsKey]) => {
+      const v = localStorage.getItem(lsKey);
+      if (v) iw.localStorage.setItem(lsKey, v);
+    });
+  } catch(e) {}
+}
+
+// ── 설정 모달 ────────────────────────────────────────────
+const CFG_FIELDS = [
+  { elId:'c-hw', lsKey:'haja_workerUrl', alsoKey:'ot_workerUrl' },
+  { elId:'c-hd', lsKey:'haja_dbId' },
+  { elId:'c-hc', lsKey:'haja_contactDbId' },
+  { elId:'c-od', lsKey:'ot_dbId' },
+];
+
+function mask(v) {
+  if (!v) return '';
+  if (v.startsWith('http')) {
+    try { const u = new URL(v); const p = u.hostname.split('.'); return u.protocol + '//' + p[0].slice(0,2) + '**.' + p.slice(1).join('.'); }
+    catch(e) { return v.slice(0,8) + '…'; }
+  }
+  if (/^[0-9a-f\-]{20,36}$/i.test(v)) { const c = v.replace(/-/g,''); return c.slice(0,4)+'-****-****-****-'+c.slice(-4); }
+  return v.slice(0,4) + '…';
+}
+
+function openCfg() {
+  CFG_FIELDS.forEach(({ elId, lsKey }) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const saved = localStorage.getItem(lsKey);
+    el.value = '';
+    el.placeholder = saved ? mask(saved) : '(미설정)';
+  });
+  document.getElementById('cfgModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCfg(e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('cfgModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfg(); });
+
+function saveCfg() {
+  let changed = 0;
+  CFG_FIELDS.forEach(({ elId, lsKey, alsoKey }) => {
+    const v = document.getElementById(elId)?.value.trim();
+    if (v) { localStorage.setItem(lsKey, v); if(alsoKey) localStorage.setItem(alsoKey, v); changed++; }
+  });
+  closeCfg();
+  if (changed > 0) {
+    // 이미 로드된 iframe 재로드 (설정 반영)
+    Object.keys(APPS).forEach(id => {
+      if (_loaded[id]) {
+        _loaded[id] = false;
+        const ifr = document.getElementById('ifr-' + id);
+        if (ifr) { ifr.src = ''; document.getElementById('ov-' + id)?.classList.remove('done'); }
+        if (_cur === id) setTimeout(() => { document.getElementById('ifr-'+id).src = APPS[id].file; }, 80);
+      }
+    });
+    showToast('설정이 저장되었습니다.');
+  } else {
+    showToast('변경된 설정이 없습니다.');
+  }
+}
+
+// ── 시계 / 날짜 ──────────────────────────────────────────
+function tick() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const el = document.getElementById('topbar-clock');
+  if (el) el.textContent = h + ':' + m;
+
+  const de = document.getElementById('home-date');
+  if (de) {
+    const days = ['일','월','화','수','목','금','토'];
+    de.textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+  }
+  // topbar 날짜
+  const td = document.getElementById('topbar-date');
+  if (td) {
+    const days = ['일','월','화','수','목','금','토'];
+    td.textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+  }
+}
+tick();
+setInterval(tick, 10000);
+
+// ── 날씨 로딩 (wttr.in, API 키 불필요) ──────────────────────
+const WEATHER_CODE = {
+  113:'☀️',116:'⛅',119:'☁️',122:'🌫️',
+  143:'🌫️',176:'🌦️',179:'🌨️',182:'🌧️',185:'🌧️',
+  200:'⛈️',227:'🌨️',230:'❄️',248:'🌫️',260:'🌫️',
+  263:'🌦️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',
+  296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',
+  311:'🌧️',314:'🌧️',317:'🌨️',320:'🌨️',323:'🌨️',
+  326:'🌨️',329:'❄️',332:'❄️',335:'❄️',338:'❄️',
+  350:'🌧️',353:'🌦️',356:'🌧️',359:'🌧️',362:'🌨️',
+  365:'🌨️',368:'🌨️',371:'❄️',374:'🌧️',377:'🌧️',
+  386:'⛈️',389:'⛈️',392:'⛈️',395:'⛈️'
+};
+function loadWeather() {
+  const el = document.getElementById('topbar-weather');
+  if (!el) return;
+  // wttr.in 위치 파라미터 생략 시 접속 IP 기반 자동 위치 감지 → 권한 팝업 없음
+  fetch('https://wttr.in/?format=j1')
+    .then(r => r.json())
+    .then(data => {
+      const cur = data.current_condition[0];
+      const code = parseInt(cur.weatherCode);
+      const icon = WEATHER_CODE[code] || '🌡️';
+      const desc = cur.lang_ko?.[0]?.value || cur.weatherDesc[0].value;
+      el.innerHTML = `<span class="topbar-weather-icon">${icon}</span><span>${cur.temp_C}°C</span>`;
+      el.title = desc;
+    })
+    .catch(() => { el.innerHTML = '<span style="color:var(--txt3)">날씨 오류</span>'; });
+}
+loadWeather();
+setInterval(loadWeather, 1800000); // 30분마다 갱신
+
+// ── 사이드바 접기/펼치기 ──────────────────────────────────
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const icon = document.getElementById('sb-toggle-icon');
+  const collapsed = sb.classList.toggle('collapsed');
+  // 화살표 방향 전환 (< → >)
+  icon.innerHTML = collapsed
+    ? '<polyline points="9 18 15 12 9 6"/>'
+    : '<polyline points="15 18 9 12 15 6"/>';
+  localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+}
+// 새로고침 후 상태 복원
+(function() {
+  if (localStorage.getItem('sb_collapsed') === '1') {
+    const sb = document.getElementById('sidebar');
+    const icon = document.getElementById('sb-toggle-icon');
+    if (sb) sb.classList.add('collapsed');
+    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+  }
+})();
+
+// ── 토스트 ────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>연장근무현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
+  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
+  --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:16px;line-height:1.75;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER ── */
+.header{background:#0C447C;height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(12,68,124,.3);}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-mark{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.logo-sub{font-size:12px;color:rgba(255,255,255,.85)}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.header-btns{display:flex;gap:7px}
+.hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:18px;padding:5px 13px;font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:32px;-webkit-tap-highlight-color:transparent}
+.hdr-btn:hover{background:rgba(255,255,255,.25)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:rgba(255,255,255,.85)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV ── */
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
+.top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:transparent;color:var(--txt2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
+.top-tab.active{color:var(--sky600)}
+.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
+/* ── MAIN ── */
+.main{padding:14px 14px;max-width:1400px;margin:0 auto}
+
+/* ── MONTH SELECTOR ── */
+.month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:14px;box-shadow:var(--shadow);padding:8px 14px;display:flex;align-items:center;gap:8px}
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
+.dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
+.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
+.dd-menu.open{display:block}
+.dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
+.dd-opt.has{color:var(--sky600)}
+.dd-year-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border)}
+.dd-year-nav{background:none;border:none;font-size:16px;font-weight:700;color:var(--sky600);cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
+.dd-year-val{font-size:13px;font-weight:700;color:var(--txt)}
+.dd-sep{font-size:14px;font-weight:300;color:var(--border)}
+.month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
+
+/* ── 근무형태 가로 바 차트 ── */
+.typebar-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border2)}
+.typebar-row:last-child{border-bottom:none}
+.typebar-name{font-size:14px;font-weight:700;color:var(--txt);width:64px;flex-shrink:0}
+.typebar-track{flex:1;height:22px;background:var(--border);border-radius:5px;overflow:hidden}
+.typebar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.typebar-pay{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;text-align:right;width:95px;flex-shrink:0}
+.typebar-cnt{font-size:13px;font-weight:700;color:var(--txt2);white-space:nowrap;width:38px;flex-shrink:0;text-align:right}
+.typebar-pct{font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
+
+/* ── SECTION CARD ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.sc-hd{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
+
+/* ── PANEL ── */
+.panel{display:none}.panel.active{display:block}
+
+
+/* ── TREND CHART ── */
+.trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.trend-chart{display:flex;align-items:flex-end;gap:8px;min-width:300px;height:140px}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px}
+
+.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
+.trend-bar.cur{box-shadow:0 0 0 2px var(--sky600)}
+.trend-lbl{font-size:13px;color:var(--txt2);font-weight:700}
+.trend-val{font-size:12px;color:var(--sky600);font-weight:700}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:10px 12px;text-align:left;font-size:13px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+th.r,td.r{text-align:right}
+td{padding:11px 12px;font-size:14px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+.pay-cell{font-weight:800;color:var(--teal600);font-size:15px}
+
+/* ── RANK ── */
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
+
+/* ── FILTER ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
+.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+
+/* ── 근무형태 뱃지 ── */
+.type-badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.type-당직근무{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.type-비상대기{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.type-비상근무{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+/* ── MODAL ── */
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:#fff}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  td{font-size:13px;padding:10px 10px}
+  th{font-size:12px;padding:9px 10px}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        Notion DB 연동 설정
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Cloudflare Worker URL</label>
+        <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
+        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">노션 DB ID</label>
+        <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
+        <button class="modal-save" onclick="saveCfg()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div style="position:sticky;top:0;z-index:100">
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div>
+      <div class="logo-title">연장근무현황</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadData()">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+    <div class="last-update" id="lastUpdate"></div>
+  </div>
+</div>
+
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-summary" role="tab" aria-selected="true" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
+  <button class="top-tab" id="nav-employee" role="tab" aria-selected="false" aria-controls="panel-employee" onclick="switchPanel('employee')">직원별</button>
+  <button class="top-tab" id="nav-detail" role="tab" aria-selected="false" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
+  <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- MONTH SELECTOR -->
+  <div class="month-sel" id="monthSel">
+    <!-- 년도 드롭다운 -->
+    <div class="dd-wrap" id="ddYearWrap">
+      <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
+        <span id="ddYearLabel">2026년</span>
+      </div>
+      <div class="dd-menu" id="ddYearMenu">
+        <div class="dd-year-row">
+          <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
+          <span class="dd-year-val" id="ddYearCenter">2026</span>
+          <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
+        </div>
+        <div id="ddYearOpts"></div>
+      </div>
+    </div>
+    <span class="dd-sep">·</span>
+    <!-- 월 드롭다운 -->
+    <div class="dd-wrap" id="ddMonthWrap">
+      <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
+        <span id="ddMonthLabel">4월</span>
+      </div>
+      <div class="dd-menu" id="ddMonthMenu">
+        <div class="dd-grid" id="ddMonthOpts"></div>
+      </div>
+    </div>
+    <div class="month-sub-row" id="monthSub"></div>
+  </div>
+
+  <!-- ▸ 요약 -->
+  <div id="panel-summary" class="panel active" role="tabpanel" aria-labelledby="nav-summary">
+
+    <!-- 지급금액 요약 (최상단 컴팩트) -->
+    <div id="sumCompare"></div>
+
+    <!-- 근무별 금액 -->
+    <div class="sc">
+      <div class="sc-hd">근무별 지급액 <span class="badge" id="donutBadge"></span></div>
+      <div id="donutInline"></div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-hd">직원별 지급액 <span class="badge" id="sumEmpBadge">0명</span></div>
+      <div id="sumBarChart"></div>
+    </div>
+
+    <div class="sc">
+      <div class="sc-hd">직원별 근무 건수 <span class="badge" id="sumCntBadge">0명</span></div>
+      <div id="sumCntChart"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 직원별 -->
+  <div id="panel-employee" class="panel" role="tabpanel" aria-labelledby="nav-employee">
+    <div class="sc">
+      <div class="sc-hd">
+        직원별 상세 <span class="badge" id="empBadge">0명</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>직원명</th>
+            <th class="r">횟수</th>
+            <th class="r">지급액</th>
+          </tr></thead>
+          <tbody id="empTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- 직원별 상세 내역 -->
+      <div id="empDetailWrap" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 월별추이 -->
+  <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
+    <div id="trendTotalCard"></div>
+    <div class="sc">
+      <div class="sc-hd">최근 12개월 지급금액 추이</div>
+      <div class="trend-wrap">
+        <div class="trend-chart" id="trendChart"></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">월별 요약 <span class="badge">최근 12개월</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>월</th><th class="r">지급액</th>
+            <th>근무형태</th><th class="r">건수</th><th class="r">인원</th>
+          </tr></thead>
+          <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 상세내역 -->
+  <div id="panel-detail" class="panel" role="tabpanel" aria-labelledby="nav-detail">
+    <div class="sc">
+      <div class="sc-hd">
+        상세 내역
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="filterEmployee" onchange="renderDetail()">
+          <option value="">전체 직원</option>
+        </select>
+        <select class="filter-select" id="filterType" onchange="renderDetail()">
+          <option value="">전체 근무형태</option>
+        </select>
+      </div>
+      <div class="detail-count" id="detailCount"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">직원명</th><th style="white-space:nowrap;width:1%">근무형태</th>
+            <th class="r" style="white-space:nowrap;width:1%">시간</th><th class="r" style="white-space:nowrap;width:1%">지급액</th><th style="width:1%;white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── 설정 ──────────────────────────────────────────────
+const DEFAULT_DB_ID="";
+let CFG=(()=>{
+  try{return{workerUrl:localStorage.getItem('ot_workerUrl')||'',dbId:localStorage.getItem('ot_dbId')||DEFAULT_DB_ID};}
+  catch(e){return{workerUrl:'',dbId:DEFAULT_DB_ID};}
+})();
+
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+function fmtDate(d){
+  if(!d) return '';
+  const days=['일','월','화','수','목','금','토'];
+  const s=String(d).slice(0,10); // ISO timestamp 등 앞 10자리로 정규화
+  const dt=new Date(s+'T00:00:00');
+  if(isNaN(dt)) return s;
+  return `${s.slice(5).replace('-','/')} (${days[dt.getDay()]})`;
+}
+function getPayAmt(r){ return r.pay||0; }
+function fmtWon(n){ return Number(n).toLocaleString('ko-KR'); }
+function fmtH(h){ const n=parseFloat(h)||0; return n%1===0?String(n):n.toFixed(1).replace(/\.0$/,''); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 모달 헬퍼 ─────────────────────────────────────────
+function maskVal(v){
+  if(!v)return'';
+  if(v.startsWith('http')){
+    try{const u=new URL(v);const h=u.hostname;const parts=h.split('.');const masked=parts[0].length>4?parts[0].slice(0,2)+'XX'+parts[0].slice(-2)+'.'+parts.slice(1).join('.'):('XX.'+parts.slice(1).join('.'));return u.protocol+'//'+masked;}
+    catch(e){return v.slice(0,6)+'XX...XX'+v.slice(-4);}
+  }
+  if(/^[0-9a-f\-]{32,36}$/i.test(v)){const clean=v.replace(/-/g,'');return clean.slice(0,4)+'-XXXX-XXXX-XXXX-'+clean.slice(-4);}
+  return v.slice(0,3)+'XX...XX'+v.slice(-3);
+}
+function openCfgModal(){
+  const wEl=document.getElementById('cfgWorkerUrl'),dEl=document.getElementById('cfgDbId');
+  const wu=CFG.workerUrl,db=CFG.dbId;
+  if(wu){wEl.value='';wEl.placeholder=maskVal(wu);wEl.dataset.saved='1';}
+  else{wEl.value='';wEl.placeholder='https://your-worker.workers.dev';delete wEl.dataset.saved;}
+  if(db){dEl.value='';dEl.placeholder=maskVal(db);dEl.dataset.saved='1';}
+  else{dEl.value='';dEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';delete dEl.dataset.saved;}
+  const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
+function saveCfg(){
+  const wEl=document.getElementById('cfgWorkerUrl'),dEl=document.getElementById('cfgDbId');
+  const newWu=wEl.value.trim(),newDb=dEl.value.trim();
+  if(newWu)CFG.workerUrl=newWu;
+  if(newDb)CFG.dbId=newDb;
+  try{localStorage.setItem('ot_workerUrl',CFG.workerUrl);localStorage.setItem('ot_dbId',CFG.dbId);}catch(e){}
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  if(CFG.workerUrl&&CFG.dbId){ALL_RECORDS=[];loadData();}
+}
+
+// ── 날짜 ──────────────────────────────────────────────
+const _now=new Date();
+let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
+let ddYearBase=curYear; // 년도 드롭다운 기준 년도
+
+function toggleDD(type){
+  const yMenu=document.getElementById('ddYearMenu');
+  const mMenu=document.getElementById('ddMonthMenu');
+  if(type==='year'){
+    const isOpen=yMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDYear(); yMenu.classList.add('open'); }
+  } else {
+    const isOpen=mMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDMonth(); mMenu.classList.add('open'); }
+  }
+}
+function closeAllDD(){
+  document.getElementById('ddYearMenu').classList.remove('open');
+  document.getElementById('ddMonthMenu').classList.remove('open');
+}
+function shiftDDYear(d){
+  ddYearBase+=d;
+  document.getElementById('ddYearCenter').textContent=ddYearBase;
+  renderDDYear();
+}
+function renderDDYear(){
+  // 데이터 보유 연도 자동 감지 후 ddYearBase ±2년과 합산
+  const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
+  dataYears.add(curYear);
+  const minY=Math.min(ddYearBase-2,...dataYears);
+  const maxY=Math.max(ddYearBase+2,...dataYears);
+  const years=[];
+  for(let y=minY;y<=maxY;y++) years.push(y);
+  document.getElementById('ddYearOpts').innerHTML=
+    `<div style="display:grid;grid-template-columns:repeat(3,1fr);">`+
+    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}${dataYears.has(y)&&y!==curYear?' has':''}" onclick="pickYear(${y})">${y}년</div>`).join('')+
+    `</div>`;
+}
+function renderDDMonth(){
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" style="grid-column:1/-1;border-bottom:1px solid var(--border2)" onclick="pickMonth(0)">전체</div>`;
+  document.getElementById('ddMonthOpts').innerHTML=allOpt+MONTHS.map((lbl,i)=>{
+    const m=i+1;
+    const ym=`${curYear}-${String(m).padStart(2,'0')}`;
+    const has=ALL_RECORDS.some(r=>r.date.startsWith(ym));
+    return `<div class="dd-opt${m===curMonth?' sel':''}${has&&m!==curMonth?' has':''}" onclick="pickMonth(${m})">${lbl}</div>`;
+  }).join('');
+}
+function pickYear(y){
+  curYear=y; ddYearBase=y; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(CFG.workerUrl){ loadData(); }
+  else if(ALL_RECORDS.length){ renderAll(); }
+}
+function pickMonth(m){
+  curMonth=m; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(CFG.workerUrl){ loadData(); }
+  else if(ALL_RECORDS.length){ renderAll(); }
+}
+function updateMonthLabel(){
+  document.getElementById('ddYearLabel').textContent=curYear+'년';
+  document.getElementById('ddMonthLabel').textContent=curMonth===0?'전체':curMonth+'월';
+  const n=filteredRecords().length;
+  document.getElementById('monthSub').textContent=n?`총 ${n}건`:'데이터 없음';
+}
+// 외부 클릭 시 닫기 (버블링 중복 호출 방지)
+document.addEventListener('click',e=>{
+  const sel=document.getElementById('monthSel');
+  if(sel&&!sel.contains(e.target)) closeAllDD();
+});
+
+// ── 하단 네비 ─────────────────────────────────────────
+const PANELS=['summary','employee','detail','trend'];
+let _activePanel='summary';
+function switchPanel(name){
+  if(name===_activePanel) return;
+  _activePanel=name;
+  PANELS.forEach(p=>{
+    document.getElementById('panel-'+p).classList.toggle('active',p===name);
+    const btn=document.getElementById('nav-'+p);
+    btn.classList.toggle('active',p===name);
+    btn.setAttribute('aria-selected',p===name?'true':'false');
+  });
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+}
+
+// ── 전역 데이터 ───────────────────────────────────────
+let ALL_RECORDS=[];
+let _isLoading=false; // 레이스 컨디션 방지 플래그
+let _userPickedMonth=false; // 사용자가 수동으로 월 선택했는지 여부
+
+// ── Notion fetch 헬퍼 ────────────────────────────────
+async function fetchNotion(body){
+  const res=await fetch(`${CFG.workerUrl}/v1/databases/${CFG.dbId}/query`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const ct=res.headers.get('content-type')||'';
+  if(!ct.includes('application/json'))throw new Error('응답이 JSON이 아닙니다 (content-type: '+ct+') — Worker URL을 확인하세요');
+  let json;
+  try{json=await res.json();}catch(e){throw new Error('JSON 파싱 실패 — Worker 응답을 확인하세요');}
+  // Worker가 200으로 에러 객체를 반환하는 패턴 감지
+  if(json&&json.error){throw new Error('Worker 오류: '+(json.error.message||json.error||'알 수 없는 오류'));}
+  return json;
+}
+
+// ── Notion 페이지 파싱 ───────────────────────────────
+function parseNotionPage(page){
+  const props=page.properties||{};
+  function getText(p){
+    if(!p)return'';
+    if(p.type==='title')return(p.title||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='rich_text')return(p.rich_text||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='select')return p.select?.name||'';
+    if(p.type==='number')return String(p.number??0);
+    if(p.type==='formula')return String(p.formula?.number??p.formula?.string??'');
+    return'';
+  }
+  function getNum(p){
+    if(!p)return 0;
+    if(p.type==='number')return parseFloat(p.number||0)||0;
+    if(p.type==='formula')return parseFloat(p.formula?.number||0)||0;
+    return parseFloat(getText(p))||0;
+  }
+  // 날짜 — date 타입 속성 자동 감지
+  let date='';
+  for(const[,v] of Object.entries(props)){
+    if(v.type==='date'&&v.date?.start){date=v.date.start.slice(0,10);break;}
+  }
+  if(!date)return null;
+  // 각 필드 추출 — 키워드 자동 매핑
+  let employee='',type='',hours=0,pay=0,note='';
+  for(const[k,v] of Object.entries(props)){
+    const lk=k.toLowerCase().replace(/\s/g,'');
+    if(!employee&&(v.type==='title'||lk.includes('성명')||lk.includes('직원')||lk==='name'))employee=getText(v);
+    if(!type&&(lk.includes('근무형태')||lk.includes('근무명')||lk==='type'))type=getText(v);
+    if(!hours&&(lk.includes('시간')||lk==='hours'))hours=getNum(v);
+    if(!pay&&(lk.includes('지급액')||lk.includes('지급')||lk==='pay'))pay=getNum(v);
+    if(!note&&(lk.includes('비고')||lk==='note'))note=getText(v);
+  }
+  if(!employee){const tp=Object.values(props).find(p=>p.type==='title');if(tp)employee=getText(tp);}
+  return{id:page.id,date,employee:employee.trim(),type:type.trim(),hours,pay,note:note.trim()};
+}
+
+// ── 데이터 로드 ──────────────────────────────────────
+async function loadData(){
+  if(!CFG.workerUrl||!CFG.dbId){openCfgModal();return;}
+  if(_isLoading) return; // 중복 요청 차단
+  _isLoading=true;
+  const btn=document.getElementById('syncBtn');
+  const lu=document.getElementById('lastUpdate');
+  const syncIcon=document.getElementById('syncIcon');
+  const syncLabel=document.getElementById('syncLabel');
+  if(btn)btn.disabled=true;
+  if(syncIcon)syncIcon.classList.add('spinning');
+  if(syncLabel)syncLabel.textContent='불러오는 중...';
+  if(lu)lu.textContent='';
+  try{
+    // 날짜 속성명 자동 감지 (1건 probe)
+    const probe=await fetchNotion({page_size:1});
+    let dateProp='날짜';
+    if(probe.results&&probe.results.length){
+      const pp=probe.results[0].properties||{};
+      for(const[k,v] of Object.entries(pp)){if(v.type==='date'){dateProp=k;break;}}
+    }
+    const body={page_size:100,sorts:[{property:dateProp,direction:'ascending'}]};
+    const data=await fetchNotion(body);
+    let pages=data.results||[];
+    let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
+    while(cursor&&hasMore&&++pageCount<20){
+      const d2=await fetchNotion({...body,start_cursor:cursor});
+      pages=[...pages,...(d2.results||[])];
+      cursor=d2.next_cursor;hasMore=d2.has_more;
+    }
+    const parsed=pages.map(parseNotionPage).filter(Boolean);
+    if(parsed.length>0){
+      ALL_RECORDS=parsed;
+      // 사용자가 수동으로 월을 선택하지 않은 경우 → 항상 최신 월로 이동
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+      }
+      renderAll();
+      const now=new Date();
+      const ts=`${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getDate()).padStart(2,'0')}. `
+               +now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      if(lu){lu.textContent='마지막 업데이트: '+ts;lu.style.color='rgba(255,255,255,.75)';}
+    }else{
+      if(!ALL_RECORDS.length){ALL_RECORDS=DEMO_DATA;renderAll();}
+      if(lu){lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인';lu.style.color='rgba(255,150,130,.9)';}
+    }
+  }catch(e){
+    if(!ALL_RECORDS.length){
+      ALL_RECORDS=DEMO_DATA;
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+      }
+      renderAll();
+    }
+    const msg=e.message||'';let errMsg='⚠ '+msg;
+    if(msg.includes('401')||msg.includes('403'))errMsg='⚠ 인증 오류 — Worker API 키 확인';
+    else if(msg.includes('404'))errMsg='⚠ DB를 찾을 수 없음 — DB ID 확인';
+    else if(msg.includes('400'))errMsg='⚠ HTTP 400 — Worker URL 또는 DB ID 확인';
+    else if(msg.includes('JSON')||msg.includes('content-type'))errMsg='⚠ Worker URL 오류 — Worker 주소를 확인하세요';
+    else if(msg.includes('Failed to fetch'))errMsg='⚠ 네트워크 오류 — Worker URL 확인';
+    if(lu){lu.textContent=errMsg;lu.style.color='rgba(255,150,130,.9)';}
+  }finally{
+    _isLoading=false;
+    if(btn)btn.disabled=false;
+    if(syncIcon)syncIcon.classList.remove('spinning');
+    if(syncLabel)syncLabel.textContent='새로고침';
+  }
+}
+
+// ── 필터/집계 ─────────────────────────────────────────
+function recordsForYM(y,m){
+  const ym=`${y}-${String(m).padStart(2,'0')}`;
+  return ALL_RECORDS.filter(r=>r.date.startsWith(ym));
+}
+function filteredRecords(){
+  if(curMonth===0) return ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+  return recordsForYM(curYear,curMonth);
+}
+function calcEmpMap(recs){
+  const m={};
+  recs.forEach(r=>{
+    if(!r.employee)return;
+    if(!m[r.employee])m[r.employee]={hours:0,count:0,pay:0,types:{},typePay:{}};
+    m[r.employee].hours+=r.hours;
+    m[r.employee].count++;
+    m[r.employee].pay+=getPayAmt(r);
+    const t=r.type||'기타';
+    m[r.employee].types[t]=(m[r.employee].types[t]||0)+1;
+    m[r.employee].typePay[t]=(m[r.employee].typePay[t]||0)+getPayAmt(r);
+  });
+  return m;
+}
+
+// ── 공통: 3셀 요약 카드 빌더 ─────────────────────────
+function buildCompareCard(cells){
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">`+
+    cells.map(({bg,border,labelColor,label,value,sub,subColor})=>`
+      <div style="background:${bg};border:1px solid ${border};border-radius:var(--r12);padding:10px 12px">
+        <div style="font-size:12px;font-weight:600;color:${labelColor};margin-bottom:3px">${label}</div>
+        <div style="font-size:15px;font-weight:800;color:${labelColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div>
+        <div style="font-size:12px;${subColor?'color:'+subColor+';font-weight:600':'color:var(--txt2)'};margin-top:2px">${sub}</div>
+      </div>`).join('')+
+  `</div>`;
+}
+
+
+// valueKey: 'pay'|'count', labelFn: (d,t)=>string (바 안 라벨)
+function buildStackBars(arr, typeList, valueKey, totalKey, labelFn){
+  if(!arr.length) return emptyState('이번 달 데이터가 없습니다.');
+  const maxVal=arr[0][1][totalKey]||1;
+  return arr.map(([name,d])=>{
+    const total=d[totalKey]||0;
+    const pct=(total/maxVal*100).toFixed(1);
+    const segs=typeList.map(t=>{
+      const v=valueKey==='pay'?(d.typePay?.[t]||0):(d.types?.[t]||0);
+      if(!v) return '';
+      const segPct=(v/total*100).toFixed(1);
+      const lbl=labelFn(v,t);
+      return `<div style="width:${segPct}%;background:${typeColor(t)};height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;transition:width .5s ease;padding:0 6px">${parseFloat(segPct)>=18?lbl:''}</div>`;
+    }).join('');
+    const typeLabels=typeList.filter(t=>valueKey==='pay'?(d.typePay?.[t]):(d.types?.[t])).map(t=>{
+      const v=valueKey==='pay'?(d.typePay[t]):(d.types[t]);
+      const lbl=valueKey==='pay'?fmtWon(v):v+'건';
+      return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--txt2)"><span style="width:8px;height:8px;border-radius:2px;background:${typeColor(t)};flex-shrink:0;display:inline-block"></span>${esc(t)} ${lbl}</span>`;
+    }).join('');
+    const totalLbl=valueKey==='pay'?fmtWon(total):total+'건';
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:700;color:var(--txt);min-width:44px">${esc(name)}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${typeLabels}</div>
+        </div>
+        <span style="font-size:13px;font-weight:800;color:var(--txt);margin-left:8px;flex-shrink:0">${totalLbl}</span>
+      </div>
+      <div style="width:${pct}%;max-width:100%;height:22px;border-radius:4px;overflow:hidden;background:var(--border);display:flex">${segs}</div>
+    </div>`;
+  }).join('')+
+  `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:1px solid var(--border2)">
+    ${typeList.map(t=>`<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2)"><div style="width:10px;height:10px;border-radius:3px;background:${typeColor(t)}"></div>${esc(t)}</div>`).join('')}
+  </div>`;
+}
+
+// ── 공통: 상세 행 HTML 빌더 ─────────────────────────
+// showEmployee=true이면 직원명 컬럼 포함 (상세내역 탭)
+function buildDetailRow(r, showEmployee){
+  return `<tr>
+    <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+    ${showEmployee?`<td style="font-weight:600;white-space:nowrap">${esc(r.employee)}</td>`:''}
+    <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
+    <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtH(r.hours)}h</td>
+    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
+    <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
+  </tr>`;
+}
+// 하위 호환 유지용 래퍼 (직원별 탭 — 직원명 컬럼 없음)
+function buildEmpDetailRow(r){ return buildDetailRow(r, false); }
+
+// ── renderAll ─────────────────────────────────────────
+function renderAll(){
+  updateMonthLabel();
+  const recs=filteredRecords();
+  renderSummary(recs);
+  renderEmployee(recs);
+  renderTrend();
+  renderDetail(recs);
+}
+
+// ── 요약 ──────────────────────────────────────────────
+function renderSummary(recs){
+  recs=recs||filteredRecords();
+  const totalPay=recs.reduce((s,r)=>s+getPayAmt(r),0);
+  const empTypeMap=calcEmpMap(recs);
+  const typeMap={};
+  recs.forEach(r=>{
+    const t=r.type||'기타';
+    if(!typeMap[t]) typeMap[t]={cnt:0,pay:0};
+    typeMap[t].cnt++; typeMap[t].pay+=getPayAmt(r);
+  });
+  const empPayArr = Object.entries(empTypeMap).sort((a,b)=>b[1].pay-a[1].pay);
+  const empCntArr = Object.entries(empTypeMap).sort((a,b)=>b[1].count-a[1].count);
+  const empCnt    = empPayArr.length;
+
+  // 직원별 지급액 바
+  document.getElementById('sumEmpBadge').textContent=`${empCnt}명`;
+  const allSumTypes=[...new Set(empPayArr.flatMap(([,d])=>Object.keys(d.typePay||{})))];
+  document.getElementById('sumBarChart').innerHTML=
+    buildStackBars(empPayArr, allSumTypes, 'pay', 'pay', v=>fmtWon(v));
+
+  // 근무형태 분포 차트
+  renderDonut(typeMap);
+
+  // 직원별 건수 바
+  const allCntTypes=[...new Set(empCntArr.flatMap(([,d])=>Object.keys(d.types||{})))];
+  document.getElementById('sumCntBadge').textContent=`${empCntArr.length}명`;
+  document.getElementById('sumCntChart').innerHTML=
+    buildStackBars(empCntArr, allCntTypes, 'count', 'count', v=>v+'건');
+
+  // 지급금액 요약 (컴팩트 3셀) — 전체(curMonth=0) 모드 대응
+  if(curMonth===0){
+    const allRecs2=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+    const yearPay=allRecs2.reduce((s,r)=>s+getPayAmt(r),0);
+    const yearCnt=allRecs2.length;
+    const yearEmps=new Set(allRecs2.map(r=>r.employee).filter(Boolean)).size;
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:fmtWon(yearPay),sub:'총 지급액'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'총 건수',value:`${yearCnt}<span style="font-size:12px;font-weight:500">건</span>`,sub:'연간 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'참여 인원',value:`${yearEmps}<span style="font-size:12px;font-weight:500">명</span>`,sub:'연간 합산'}
+    ]);
+  } else {
+    let pm=curMonth-1,py=curYear;
+    if(pm<1){pm=12;py--;}
+    const prevRecs=recordsForYM(py,pm);
+    const prevPay=prevRecs.reduce((s,r)=>s+getPayAmt(r),0);
+    const diffPay=totalPay-prevPay;
+    const sign=n=>n>=0?'+':'';
+    const isUp=diffPay>=0;
+    const diffColor=isUp?'var(--coral)':'var(--teal600)';
+    const diffBg=isUp?'var(--coral50)':'var(--teal50)';
+    const diffBorder=isUp?'var(--coral100)':'var(--teal100)';
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 지급액',value:fmtWon(prevPay),sub:`${py}년 ${pm}월`},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 지급액',value:fmtWon(totalPay),sub:`${curYear}년 ${curMonth}월`},
+      {bg:diffBg,border:diffBorder,labelColor:diffColor,label:'전월 대비',value:`${sign(diffPay)}${fmtWon(Math.abs(diffPay))}`,sub:diffPay===0?'변동 없음':isUp?'증가':'감소',subColor:diffColor}
+    ]);
+  }
+}
+
+// ── 직원별 누적 바 차트 ───────────────────────────────
+const TYPE_COLORS={
+  '당직근무':'#378ADD','비상대기':'#1D9E75','비상출동':'#D85A30','비상근무':'#BA7517'
+};
+const _SAFE_COLOR_RE=/^#[0-9A-Fa-f]{6}$/;
+function typeColor(t){
+  const c=TYPE_COLORS[t]||'#534AB7';
+  return _SAFE_COLOR_RE.test(c)?c:'#534AB7'; // 화이트리스트 외 값 방어
+}
+
+// ── 근무형태 분포 차트 (가로 바) ─────────────────────
+function renderDonut(typeMap){
+  if(!typeMap) return;
+  const arr=Object.entries(typeMap).sort((a,b)=>b[1].pay-a[1].pay);
+  const totalPay=arr.reduce((s,[,d])=>s+d.pay,0);
+  const totalCnt=arr.reduce((s,[,d])=>s+d.cnt,0);
+  const maxPay=Math.max(...arr.map(([,d])=>d.pay),1);
+
+  document.getElementById('donutBadge').textContent=`${arr.length}종`;
+  document.getElementById('donutInline').innerHTML=`
+    <div class="typebar-row" style="background:var(--sky50);border-radius:var(--r8);padding:8px 10px;margin-bottom:6px;border:1px solid var(--sky100)">
+      <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:700">합계</div>
+      <div style="flex:1"></div>
+      <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:900">${fmtWon(totalPay)}원</div>
+      <div class="typebar-cnt" style="color:var(--sky600)">${totalCnt}건</div>
+      <div class="typebar-pct" style="color:var(--sky600)">100%</div>
+    </div>`+
+  arr.map(([t,d])=>{
+    const barPct=Math.round(d.pay/maxPay*100);
+    const payPct=totalPay>0?Math.round(d.pay/totalPay*100):0;
+    return `<div class="typebar-row">
+      <div class="typebar-name">${esc(t)}</div>
+      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${typeColor(t)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtWon(d.pay):''}</div></div>
+      <div class="typebar-pay">${fmtWon(d.pay)}원</div>
+      <div class="typebar-cnt">${d.cnt}건</div>
+      <div class="typebar-pct">${payPct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 직원별 ────────────────────────────────────────────
+function renderEmployee(recs){
+  recs=recs||filteredRecords();
+  const empMap=calcEmpMap(recs);
+  const empArr=Object.entries(empMap).sort((a,b)=>b[1].pay-a[1].pay);
+  document.getElementById('empBadge').textContent=`${empArr.length}명`;
+
+  document.getElementById('empTableBody').innerHTML=empArr.length
+    ?empArr.map(([name,d],i)=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:5px">
+          <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
+        </div></td>
+        <td style="font-weight:700">${esc(name)}</td>
+        <td class="r">${d.count}회</td>
+        <td class="r pay-cell">${fmtWon(d.pay)}</td>
+      </tr>`).join('')
+    :`<tr><td colspan="4">${emptyState('이번 달 직원 데이터가 없습니다.')}</td></tr>`;
+
+  // 직원별 상세 내역 (날짜 + 근무형태)
+  const wrap = document.getElementById('empDetailWrap');
+  if(!empArr.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = empArr.map(([name])=>{
+    const empRecs = recs.filter(r=>r.employee===name).sort((a,b)=>a.date.localeCompare(b.date));
+    return `<div class="sc" style="margin-bottom:10px">
+      <div class="sc-hd" style="margin-bottom:8px">
+        <span style="font-weight:700">${esc(name)}</span>
+        <span class="badge">${empRecs.length}건</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%;min-width:52px">날짜</th><th style="white-space:nowrap;width:1%">근무형태</th><th class="r" style="white-space:nowrap;width:1%">시간</th><th class="r" style="white-space:nowrap;width:1%">지급액</th><th style="width:1%;white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody>
+            ${empRecs.map(r=>buildEmpDetailRow(r)).join('')}
+            <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
+              <td colspan="2" style="font-weight:700;color:var(--txt2)">합계</td>
+              <td class="r" style="font-weight:700;color:var(--sky600)">${fmtH(empRecs.reduce((s,r)=>s+r.hours,0))}h</td>
+              <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(empRecs.reduce((s,r)=>s+getPayAmt(r),0))}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 월별 추이 ─────────────────────────────────────────
+function renderTrend(){
+  const months=[];
+  const baseMonth=curMonth===0?12:curMonth;
+  for(let i=11;i>=0;i--){
+    let m=baseMonth-i,y=curYear;
+    if(m<1){m+=12;y--;}
+    months.push({y,m});
+  }
+  const data=months.map(({y,m})=>{
+    const recs=recordsForYM(y,m);
+    const totalPay=recs.reduce((s,r)=>s+getPayAmt(r),0);
+    const emps=new Set(recs.map(r=>r.employee).filter(Boolean));
+    const typeMap={};
+    recs.forEach(r=>{
+      const t=r.type||'기타';
+      typeMap[t]=(typeMap[t]||0)+1;
+    });
+    return {y,m,label:`${m}월`,totalPay,cnt:recs.length,empCnt:emps.size,typeMap};
+  });
+  const maxPay=Math.max(...data.map(d=>d.totalPay),1);
+
+  // ── 전체 기간 집계 (1회 계산) ────────────────────────
+  const allMonths=new Set(ALL_RECORDS.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
+  const allEmps=new Set(ALL_RECORDS.map(r=>r.employee).filter(Boolean));
+  const totalAllPay=ALL_RECORDS.reduce((s,r)=>s+getPayAmt(r),0);
+  const totalAllCnt=ALL_RECORDS.length;
+  const monthRange=(()=>{
+    const sorted=[...allMonths].sort();
+    if(!sorted.length) return '—';
+    const s=sorted[0].replace('-','/');
+    const e=sorted[sorted.length-1].replace('-','/');
+    return s===e?s:`${s} ~ ${e}`;
+  })();
+  document.getElementById('trendTotalCard').innerHTML=`
+    <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
+          <div style="font-size:16px;font-weight:800;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 건수</div>
+          <div style="font-size:16px;font-weight:800;color:var(--txt)">${totalAllCnt}<span style="font-size:12px;font-weight:500;color:var(--txt2)">건</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 지급액</div>
+          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${fmtWon(totalAllPay)}</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('trendChart').innerHTML=data.map(({y,m,label,totalPay})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const h=Math.max(totalPay/maxPay*110,totalPay>0?5:2);
+    return `<div class="trend-col">
+      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'#378ADD':'#B5D4F4'};width:100%;border-radius:4px 4px 0 0"></div>
+      <div class="trend-lbl">${esc(label)}</div>
+      <div class="trend-val">${totalPay>0?fmtWon(Math.round(totalPay/10000))+'만':'-'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalPay,cnt,empCnt,typeMap})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const typeBadges=Object.entries(typeMap).sort((a,b)=>b[1]-a[1])
+      .map(([t,n])=>`<span class="type-badge type-${typeSlug(t)}">${esc(t)} ${n}</span>`).join('<br style="margin:1px">');
+    return `<tr${isCur?' style="background:var(--sky50)"':''}>
+      <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
+      <td class="r pay-cell">${fmtWon(totalPay)}</td>
+      <td>${typeBadges||'—'}</td>
+      <td class="r">${cnt}건</td>
+      <td class="r">${empCnt}명</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 상세내역 ──────────────────────────────────────────
+function renderDetail(recs){
+  recs=recs||filteredRecords();
+  const selEmp=document.getElementById('filterEmployee');
+  const selType=document.getElementById('filterType');
+  const prevEmp=selEmp.value, prevType=selType?selType.value:'';
+
+  // 필터 select 옵션은 현재 년/월 전체 기준(recs)으로 구성
+  const emps=[...new Set(recs.map(r=>r.employee).filter(Boolean))].sort();
+  const types=[...new Set(recs.map(r=>r.type).filter(Boolean))].sort();
+
+  selEmp.innerHTML='<option value="">전체 직원</option>'+emps.map(e=>`<option value="${esc(e)}">${e}</option>`).join('');
+  selEmp.value=prevEmp;
+  if(selType){
+    selType.innerHTML='<option value="">전체 근무형태</option>'+types.map(t=>`<option value="${esc(t)}">${t}</option>`).join('');
+    selType.value=prevType;
+  }
+
+  let filtered=recs;
+  if(selEmp.value) filtered=filtered.filter(r=>r.employee===selEmp.value);
+  if(selType&&selType.value) filtered=filtered.filter(r=>r.type===selType.value);
+
+  document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
+  document.getElementById('detailTableBody').innerHTML=filtered.length
+    ?filtered.map(r=>buildDetailRow(r,true)).join('')
+    :`<tr><td colspan="6">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+}
+
+
+// CSS class명에 사용할 슬러그 변환 — 안전 문자(영문·숫자·한글·하이픈)만 허용
+function typeSlug(t){
+  return (t||'').replace(/[^a-zA-Z0-9가-힣]/g,'-').replace(/-{2,}/g,'-').replace(/^-|-$/g,'').slice(0,40)||'etc';
+}
+
+function emptyState(desc, icon='📋'){
+  return `<div class="empty"><div class="empty-icon">${icon}</div>
+    <div class="empty-title">데이터 없음</div>
+    <div class="empty-desc">${desc}</div></div>`;
+}
+
+// ── 내장 데이터 (연장근무 DB 샘플 데이터 — 2025-11 ~ 2026-05) ──
+const DEMO_DATA = [
+  // ── 2025년 11월 ──
+  {id:'m01',date:'2025-11-08',employee:'직원A', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m02',date:'2025-11-08',employee:'직원B', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m03',date:'2025-11-08',employee:'직원C', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m04',date:'2025-11-08',employee:'직원D', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m05',date:'2025-11-08',employee:'직원E', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m06',date:'2025-11-08',employee:'직원B', hours:24, pay:15000,  type:'비상대기'},
+  {id:'m07',date:'2025-11-09',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m08',date:'2025-11-15',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m09',date:'2025-11-16',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m10',date:'2025-11-22',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m11',date:'2025-11-23',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m12',date:'2025-11-29',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m13',date:'2025-11-30',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  // ── 2025년 12월 ──
+  {id:'m14',date:'2025-12-06',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m15',date:'2025-12-07',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m16',date:'2025-12-08',employee:'직원A', hours:8, pay:130000, type:'당직근무'},
+  {id:'m17',date:'2025-12-11',employee:'직원D', hours:8,  pay:130000, type:'당직근무'},
+  {id:'m18',date:'2025-12-13',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m19',date:'2025-12-14',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m20',date:'2025-12-20',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m21',date:'2025-12-21',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m22',date:'2025-12-25',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m23',date:'2025-12-27',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'m24',date:'2025-12-28',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  // ── 2026년 1월 ──
+  {id:'n01',date:'2026-01-01',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n02',date:'2026-01-01',employee:'직원B', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n03',date:'2026-01-01',employee:'직원C', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n04',date:'2026-01-01',employee:'직원D', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n05',date:'2026-01-01',employee:'직원E', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n06',date:'2026-01-01',employee:'직원F', hours:8,  pay:130000, type:'당직근무', note:'신정 당직'},
+  {id:'n07',date:'2026-01-03',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n08',date:'2026-01-04',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n09',date:'2026-01-10',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n10',date:'2026-01-11',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n11',date:'2026-01-17',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n12',date:'2026-01-18',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n13',date:'2026-01-24',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n14',date:'2026-01-25',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n15',date:'2026-01-31',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n16',date:'2026-01-31',employee:'직원D', hours:8,  pay:30000,  type:'당직근무'},
+  // ── 2026년 2월 ──
+  {id:'n17',date:'2026-02-01',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n18',date:'2026-02-02',employee:'직원A', hours:15, pay:130000, type:'비상근무', note:'설 연휴 비상근무'},
+  {id:'n19',date:'2026-02-07',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n20',date:'2026-02-08',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n21',date:'2026-02-14',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n22',date:'2026-02-15',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n23',date:'2026-02-16',employee:'직원D', hours:8,  pay:130000, type:'당직근무', note:'설 연휴 당직'},
+  {id:'n24',date:'2026-02-17',employee:'직원D', hours:8,  pay:130000, type:'당직근무', note:'설 연휴 당직'},
+  {id:'n25',date:'2026-02-18',employee:'직원D', hours:8,  pay:130000, type:'당직근무', note:'설 연휴 당직'},
+  {id:'n26',date:'2026-02-21',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n27',date:'2026-02-22',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n28',date:'2026-02-28',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  // ── 2026년 3월 ──
+  {id:'n29',date:'2026-03-01',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n30',date:'2026-03-02',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'삼일절 당직'},
+  {id:'n31',date:'2026-03-02',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n32',date:'2026-03-07',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'토요 당직'},
+  {id:'n33',date:'2026-03-07',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n34',date:'2026-03-08',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n35',date:'2026-03-14',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n36',date:'2026-03-15',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n37',date:'2026-03-21',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n38',date:'2026-03-22',employee:'직원A', hours:24, pay:130000, type:'비상출동', note:'야간 긴급출동'},
+  {id:'n39',date:'2026-03-28',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n40',date:'2026-03-29',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  // ── 2026년 4월 ──
+  {id:'n41',date:'2026-04-04',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n42',date:'2026-04-05',employee:'직원B', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n43',date:'2026-04-11',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n44',date:'2026-04-12',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n45',date:'2026-04-18',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'토요 당직'},
+  {id:'n46',date:'2026-04-18',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n47',date:'2026-04-19',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'일요 당직'},
+  {id:'n48',date:'2026-04-19',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n49',date:'2026-04-25',employee:'직원A', hours:8,  pay:130000, type:'당직근무', note:'토요 당직'},
+  {id:'n50',date:'2026-04-25',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'n51',date:'2026-04-26',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  // ── 2026년 5월 ──
+  {id:'o01',date:'2026-05-02',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'o02',date:'2026-05-03',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'o03',date:'2026-05-05',employee:'직원B', hours:8,  pay:130000, type:'당직근무', note:'어린이날 당직'},
+  {id:'o04',date:'2026-05-05',employee:'직원C', hours:8,  pay:130000, type:'당직근무', note:'어린이날 당직'},
+  {id:'o05',date:'2026-05-05',employee:'직원D', hours:8,  pay:130000, type:'당직근무', note:'어린이날 당직'},
+  {id:'o06',date:'2026-05-09',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'o07',date:'2026-05-10',employee:'직원D', hours:24, pay:30000,  type:'비상대기'},
+  {id:'o08',date:'2026-05-16',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+  {id:'o09',date:'2026-05-17',employee:'직원A', hours:24, pay:30000,  type:'비상대기'},
+
+];
+
+// 초기화 (연/월은 선언 시 현재 날짜로 자동 설정됨)
+ALL_RECORDS = DEMO_DATA;
+
+// 현재 달에 데이터가 없으면 데이터가 있는 가장 최근 달로 자동 이동
+(()=>{
+  const ym=`${curYear}-${String(curMonth).padStart(2,'0')}`;
+  const hasCur=ALL_RECORDS.some(r=>r.date.startsWith(ym));
+  if(!hasCur && ALL_RECORDS.length){
+    // 가장 최근 날짜 기준으로 연/월 설정
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(latest){
+      curYear=parseInt(latest.slice(0,4));
+      curMonth=parseInt(latest.slice(5,7));
+      ddYearBase=curYear;
+    }
+  }
+})();
+
+updateMonthLabel();
+renderAll();
+
+// 설정값이 있으면 페이지 로드 시 자동 새로고침
+(()=>{
+  if(CFG.workerUrl&&CFG.dbId){
+    loadData();
+  }
+})();
+</script>
+</body>
+</html>

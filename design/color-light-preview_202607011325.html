@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>포털 밝은 색상 조합 미리보기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#E8EDF2;padding:20px;}
+h1{font-size:17px;font-weight:700;color:#1E3148;margin-bottom:6px;text-align:center;}
+.subtitle{font-size:12px;color:#5A7B9A;text-align:center;margin-bottom:20px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:860px){.grid{grid-template-columns:1fr;}}
+
+.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.08);}
+.card-label{padding:10px 16px;font-size:13px;font-weight:700;color:#1E3148;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:8px;}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.mock{display:flex;height:340px;}
+
+/* ─── 사이드바 ─── */
+.sb{width:158px;flex-shrink:0;display:flex;flex-direction:column;padding:0;}
+.sb-logo{padding:11px 12px 11px;display:flex;align-items:center;gap:8px;border-bottom:1px solid;}
+.sb-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;}
+.sb-title{font-size:11px;font-weight:700;line-height:1.35;}
+.sb-sub{font-size:9px;margin-top:1px;}
+.sb-sec{font-size:9px;font-weight:700;padding:10px 12px 4px;letter-spacing:.06em;}
+.sb-item{display:flex;align-items:center;gap:7px;padding:7px 8px 7px 10px;margin:1px 6px;border-radius:6px;font-size:11px;font-weight:600;}
+.sb-emoji{width:23px;height:23px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.sb-footer{margin-top:auto;padding:10px 10px;}
+.sb-footer-btn{font-size:10px;padding:7px 10px;border-radius:7px;text-align:center;font-weight:600;cursor:default;}
+
+/* ─── 콘텐츠 ─── */
+.ct{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#F8FAFC;}
+.ct-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;}
+.ct-hdr-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;background:rgba(255,255,255,.18);}
+.ct-hdr-title{font-size:13px;font-weight:700;color:#fff;}
+.ct-hdr-sub{font-size:10px;color:rgba(255,255,255,.78);margin-top:1px;}
+.ct-tabs{display:flex;background:#fff;border-bottom:2px solid #E2E8F0;}
+.ct-tab{flex:1;text-align:center;padding:7px 2px;font-size:10px;font-weight:600;color:#3D5269;}
+.ct-tab.on{color:#1565C0;border-bottom:2px solid #1565C0;margin-bottom:-2px;}
+.ct-body{flex:1;padding:10px;overflow:hidden;}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px;}
+.kpi-c{background:#fff;border-radius:7px;padding:6px 8px;text-align:center;border:1px solid #E2E8F0;}
+.kpi-v{font-size:15px;font-weight:700;margin-bottom:1px;}
+.kpi-l{font-size:8px;color:#5A7B9A;}
+.tbl{background:#fff;border-radius:7px;border:1px solid #E2E8F0;overflow:hidden;}
+.tr{display:grid;grid-template-columns:55px 70px 1fr 70px;font-size:9px;padding:5px 8px;border-bottom:1px solid #F1F5F9;color:#1E3148;align-items:center;}
+.tr.hd{background:#F8FAFC;color:#5A7B9A;font-weight:700;}
+.badge-done{display:inline-block;background:#E0F2ED;color:#0F6E56;font-size:8px;padding:1px 5px;border-radius:10px;font-weight:600;}
+.badge-ing{display:inline-block;background:#FEE9E2;color:#C05621;font-size:8px;padding:1px 5px;border-radius:10px;font-weight:600;}
+
+.chips{display:flex;gap:8px;padding:8px 12px;background:#F8FAFC;border-top:1px solid #E2E8F0;flex-wrap:wrap;}
+.chip{display:flex;align-items:center;gap:4px;font-size:10px;color:#3D5269;}
+.chip-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<h1>포털 밝은 색상 조합 미리보기</h1>
+<p class="subtitle">사이드바 · 헤더 밝은 계열 — 4가지 안</p>
+<div class="grid">
+
+<!-- ══ 안 A: 아이스 블루 사이드바 + 스카이 블루 헤더 ══ -->
+<div class="card">
+  <div class="card-label">
+    안 A — 아이스 블루 사이드바 + 스카이 헤더
+    <span class="badge" style="background:#EBF3FF;color:#1565C0;">추천</span>
+  </div>
+  <div class="mock">
+    <div class="sb" style="background:#EBF4FF;border-right:1px solid #C8DEFA;">
+      <div class="sb-logo" style="border-color:#C8DEFA;">
+        <div class="sb-icon" style="background:#378ADD22;">🏢</div>
+        <div>
+          <div class="sb-title" style="color:#0C3868;">현장 업무 포털</div>
+          <div class="sb-sub" style="color:#5A8EC0;">현장 전산 통합 관리</div>
+        </div>
+      </div>
+      <div class="sb-sec" style="color:#5A8EC0;">메인</div>
+      <div class="sb-item" style="color:#2D5B8A;">
+        <div class="sb-emoji" style="background:#378ADD1A;">🏠</div>홈 대시보드
+      </div>
+      <div class="sb-sec" style="color:#5A8EC0;">업무 앱</div>
+      <div class="sb-item" style="background:#378ADD;color:#fff;">
+        <div class="sb-emoji" style="background:rgba(255,255,255,.2);">🔧</div>하자보수현황
+      </div>
+      <div class="sb-item" style="color:#2D5B8A;">
+        <div class="sb-emoji" style="background:#378ADD1A;">⏰</div>연장근무현황
+      </div>
+      <div class="sb-footer">
+        <div class="sb-footer-btn" style="background:#378ADD18;color:#2D5B8A;">⚙ Notion 설정</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="ct-hdr" style="background:#2183D5;">
+        <div class="ct-hdr-icon">✅</div>
+        <div><div class="ct-hdr-title">하자보수현황</div><div class="ct-hdr-sub">Notion DB 연동</div></div>
+      </div>
+      <div class="ct-tabs">
+        <div class="ct-tab">요약</div><div class="ct-tab on">하자내역</div><div class="ct-tab">미처리</div><div class="ct-tab">터널별</div>
+      </div>
+      <div class="ct-body">
+        <div class="kpi">
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">25</div><div class="kpi-l">전체</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#C05621">3</div><div class="kpi-l">진행중</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">22</div><div class="kpi-l">완료</div></div>
+        </div>
+        <div class="tbl">
+          <div class="tr hd"><span>상태</span><span>날짜</span><span>터널/하자내용</span><span>업체</span></div>
+          <div class="tr"><span class="badge-ing">진행중</span><span>2025-12-22</span><span>흥해터널 외벽 균열</span><span>태갑종합</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-18</span><span>청하터널 통신 불량</span><span>LK시스템</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-16</span><span>청하터널 설비 케이블</span><span>세인</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-15</span><span>흥해터널 전기 RTU</span><span>동양ENT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><div class="chip-dot" style="background:#EBF4FF;border:1px solid #C8DEFA;"></div>사이드바 #EBF4FF</div>
+    <div class="chip"><div class="chip-dot" style="background:#2183D5;"></div>헤더 #2183D5</div>
+    <div class="chip"><div class="chip-dot" style="background:#378ADD;"></div>선택항목 #378ADD</div>
+  </div>
+</div>
+
+<!-- ══ 안 B: 스노우 화이트 사이드바 + 네이비 헤더 ══ -->
+<div class="card">
+  <div class="card-label">안 B — 화이트 사이드바 + 네이비 헤더</div>
+  <div class="mock">
+    <div class="sb" style="background:#FFFFFF;border-right:1px solid #E2E8F0;">
+      <div class="sb-logo" style="border-color:#E2E8F0;">
+        <div class="sb-icon" style="background:#EBF3FF;">🏢</div>
+        <div>
+          <div class="sb-title" style="color:#0C3868;">현장 업무 포털</div>
+          <div class="sb-sub" style="color:#6B8FAF;">현장 전산 통합 관리</div>
+        </div>
+      </div>
+      <div class="sb-sec" style="color:#8AAAC8;">메인</div>
+      <div class="sb-item" style="color:#1E3148;">
+        <div class="sb-emoji" style="background:#F0F7FF;">🏠</div>홈 대시보드
+      </div>
+      <div class="sb-sec" style="color:#8AAAC8;">업무 앱</div>
+      <div class="sb-item" style="background:#EBF3FF;color:#1565C0;">
+        <div class="sb-emoji" style="background:#DBEAFE;">🔧</div>하자보수현황
+      </div>
+      <div class="sb-item" style="color:#1E3148;">
+        <div class="sb-emoji" style="background:#F0F7FF;">⏰</div>연장근무현황
+      </div>
+      <div class="sb-footer">
+        <div class="sb-footer-btn" style="background:#F0F7FF;color:#1565C0;">⚙ Notion 설정</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="ct-hdr" style="background:#0C447C;">
+        <div class="ct-hdr-icon">✅</div>
+        <div><div class="ct-hdr-title">하자보수현황</div><div class="ct-hdr-sub">Notion DB 연동</div></div>
+      </div>
+      <div class="ct-tabs">
+        <div class="ct-tab">요약</div><div class="ct-tab on">하자내역</div><div class="ct-tab">미처리</div><div class="ct-tab">터널별</div>
+      </div>
+      <div class="ct-body">
+        <div class="kpi">
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">25</div><div class="kpi-l">전체</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#C05621">3</div><div class="kpi-l">진행중</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">22</div><div class="kpi-l">완료</div></div>
+        </div>
+        <div class="tbl">
+          <div class="tr hd"><span>상태</span><span>날짜</span><span>터널/하자내용</span><span>업체</span></div>
+          <div class="tr"><span class="badge-ing">진행중</span><span>2025-12-22</span><span>흥해터널 외벽 균열</span><span>태갑종합</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-18</span><span>청하터널 통신 불량</span><span>LK시스템</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-16</span><span>청하터널 설비 케이블</span><span>세인</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-15</span><span>흥해터널 전기 RTU</span><span>동양ENT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><div class="chip-dot" style="background:#fff;border:1px solid #E2E8F0;"></div>사이드바 #FFFFFF</div>
+    <div class="chip"><div class="chip-dot" style="background:#0C447C;"></div>헤더 #0C447C (기존)</div>
+    <div class="chip"><div class="chip-dot" style="background:#EBF3FF;"></div>선택항목 #EBF3FF</div>
+  </div>
+</div>
+
+<!-- ══ 안 C: 라이트 그레이 블루 + 코발트 헤더 ══ -->
+<div class="card">
+  <div class="card-label">안 C — 라이트 그레이블루 사이드바 + 코발트 헤더</div>
+  <div class="mock">
+    <div class="sb" style="background:#F1F5FB;border-right:1px solid #D8E3EF;">
+      <div class="sb-logo" style="border-color:#D8E3EF;">
+        <div class="sb-icon" style="background:#1565C020;">🏢</div>
+        <div>
+          <div class="sb-title" style="color:#1A3A5C;">현장 업무 포털</div>
+          <div class="sb-sub" style="color:#6B8FAF;">현장 전산 통합 관리</div>
+        </div>
+      </div>
+      <div class="sb-sec" style="color:#7A9EBF;">메인</div>
+      <div class="sb-item" style="color:#1A3A5C;">
+        <div class="sb-emoji" style="background:#1565C015;">🏠</div>홈 대시보드
+      </div>
+      <div class="sb-sec" style="color:#7A9EBF;">업무 앱</div>
+      <div class="sb-item" style="background:#1565C0;color:#fff;">
+        <div class="sb-emoji" style="background:rgba(255,255,255,.18);">🔧</div>하자보수현황
+      </div>
+      <div class="sb-item" style="color:#1A3A5C;">
+        <div class="sb-emoji" style="background:#1565C015;">⏰</div>연장근무현황
+      </div>
+      <div class="sb-footer">
+        <div class="sb-footer-btn" style="background:#1565C015;color:#1A3A5C;">⚙ Notion 설정</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="ct-hdr" style="background:#1565C0;">
+        <div class="ct-hdr-icon">✅</div>
+        <div><div class="ct-hdr-title">하자보수현황</div><div class="ct-hdr-sub">Notion DB 연동</div></div>
+      </div>
+      <div class="ct-tabs">
+        <div class="ct-tab">요약</div><div class="ct-tab on" style="color:#1565C0;border-color:#1565C0;">하자내역</div><div class="ct-tab">미처리</div><div class="ct-tab">터널별</div>
+      </div>
+      <div class="ct-body">
+        <div class="kpi">
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">25</div><div class="kpi-l">전체</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#C05621">3</div><div class="kpi-l">진행중</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">22</div><div class="kpi-l">완료</div></div>
+        </div>
+        <div class="tbl">
+          <div class="tr hd"><span>상태</span><span>날짜</span><span>터널/하자내용</span><span>업체</span></div>
+          <div class="tr"><span class="badge-ing">진행중</span><span>2025-12-22</span><span>흥해터널 외벽 균열</span><span>태갑종합</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-18</span><span>청하터널 통신 불량</span><span>LK시스템</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-16</span><span>청하터널 설비 케이블</span><span>세인</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-15</span><span>흥해터널 전기 RTU</span><span>동양ENT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><div class="chip-dot" style="background:#F1F5FB;border:1px solid #D8E3EF;"></div>사이드바 #F1F5FB</div>
+    <div class="chip"><div class="chip-dot" style="background:#1565C0;"></div>헤더 #1565C0</div>
+    <div class="chip"><div class="chip-dot" style="background:#1565C0;"></div>선택항목 #1565C0</div>
+  </div>
+</div>
+
+<!-- ══ 안 D: 페일 슬레이트 + 스틸 블루 헤더 ══ -->
+<div class="card">
+  <div class="card-label">안 D — 페일 슬레이트 사이드바 + 스틸 블루 헤더</div>
+  <div class="mock">
+    <div class="sb" style="background:#F4F7FA;border-right:1px solid #DDE5EE;">
+      <div class="sb-logo" style="border-color:#DDE5EE;">
+        <div class="sb-icon" style="background:#2B6CB020;">🏢</div>
+        <div>
+          <div class="sb-title" style="color:#1E3148;">현장 업무 포털</div>
+          <div class="sb-sub" style="color:#6B8FAF;">현장 전산 통합 관리</div>
+        </div>
+      </div>
+      <div class="sb-sec" style="color:#8AAAC8;">메인</div>
+      <div class="sb-item" style="color:#1E3148;">
+        <div class="sb-emoji" style="background:#2B6CB018;">🏠</div>홈 대시보드
+      </div>
+      <div class="sb-sec" style="color:#8AAAC8;">업무 앱</div>
+      <div class="sb-item" style="background:#2B6CB0;color:#fff;">
+        <div class="sb-emoji" style="background:rgba(255,255,255,.2);">🔧</div>하자보수현황
+      </div>
+      <div class="sb-item" style="color:#1E3148;">
+        <div class="sb-emoji" style="background:#2B6CB018;">⏰</div>연장근무현황
+      </div>
+      <div class="sb-footer">
+        <div class="sb-footer-btn" style="background:#2B6CB015;color:#1E3148;">⚙ Notion 설정</div>
+      </div>
+    </div>
+    <div class="ct">
+      <div class="ct-hdr" style="background:#2B6CB0;">
+        <div class="ct-hdr-icon">✅</div>
+        <div><div class="ct-hdr-title">하자보수현황</div><div class="ct-hdr-sub">Notion DB 연동</div></div>
+      </div>
+      <div class="ct-tabs">
+        <div class="ct-tab">요약</div><div class="ct-tab on" style="color:#2B6CB0;border-color:#2B6CB0;">하자내역</div><div class="ct-tab">미처리</div><div class="ct-tab">터널별</div>
+      </div>
+      <div class="ct-body">
+        <div class="kpi">
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">25</div><div class="kpi-l">전체</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#C05621">3</div><div class="kpi-l">진행중</div></div>
+          <div class="kpi-c"><div class="kpi-v" style="color:#0F6E56">22</div><div class="kpi-l">완료</div></div>
+        </div>
+        <div class="tbl">
+          <div class="tr hd"><span>상태</span><span>날짜</span><span>터널/하자내용</span><span>업체</span></div>
+          <div class="tr"><span class="badge-ing">진행중</span><span>2025-12-22</span><span>흥해터널 외벽 균열</span><span>태갑종합</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-18</span><span>청하터널 통신 불량</span><span>LK시스템</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-16</span><span>청하터널 설비 케이블</span><span>세인</span></div>
+          <div class="tr"><span class="badge-done">완료</span><span>2025-12-15</span><span>흥해터널 전기 RTU</span><span>동양ENT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><div class="chip-dot" style="background:#F4F7FA;border:1px solid #DDE5EE;"></div>사이드바 #F4F7FA</div>
+    <div class="chip"><div class="chip-dot" style="background:#2B6CB0;"></div>헤더 #2B6CB0</div>
+    <div class="chip"><div class="chip-dot" style="background:#2B6CB0;"></div>선택항목 #2B6CB0</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

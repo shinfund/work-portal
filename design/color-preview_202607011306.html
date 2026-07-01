@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>포털 색상 조합 미리보기</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F0F4F8;padding:20px;}
+h1{font-size:18px;font-weight:700;color:#0D1520;margin-bottom:20px;text-align:center;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:900px){.grid{grid-template-columns:1fr;}}
+
+.card{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.10);}
+.card-label{padding:10px 16px;background:#fff;font-size:13px;font-weight:700;color:#1E3148;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:8px;}
+.card-label .badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:#EBF3FF;color:#1565C0;}
+.mock{display:flex;height:320px;}
+
+/* 사이드바 목업 */
+.m-sidebar{width:160px;flex-shrink:0;display:flex;flex-direction:column;padding:12px 0;}
+.m-sb-logo{padding:10px 12px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.12);}
+.m-sb-icon{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;}
+.m-sb-title{font-size:11px;font-weight:700;color:#fff;line-height:1.3;}
+.m-sb-sub{font-size:9px;color:rgba(255,255,255,.55);margin-top:1px;}
+.m-sb-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,.38);padding:10px 12px 4px;letter-spacing:.06em;}
+.m-sb-item{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px;margin:1px 6px;border-radius:6px;color:rgba(255,255,255,.72);font-size:11px;font-weight:600;}
+.m-sb-item.on{background:rgba(255,255,255,.14);color:#fff;}
+.m-sb-emoji{width:24px;height:24px;border-radius:5px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.m-sb-item.on .m-sb-emoji{background:#378ADD;}
+
+/* 우측 콘텐츠 */
+.m-content{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.m-hdr{display:flex;align-items:center;gap:10px;padding:10px 14px;}
+.m-hdr-icon{width:30px;height:30px;border-radius:7px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:14px;}
+.m-hdr-title{font-size:14px;font-weight:700;color:#fff;}
+.m-hdr-sub{font-size:10px;color:rgba(255,255,255,.8);margin-top:1px;}
+.m-tabs{display:flex;background:#fff;border-bottom:2px solid #E2E8F0;}
+.m-tab{flex:1;text-align:center;padding:7px 4px;font-size:10px;font-weight:600;color:#3D5269;}
+.m-tab.on{color:#378ADD;border-bottom:2px solid #378ADD;margin-bottom:-2px;}
+.m-body{flex:1;background:#F8FAFC;padding:10px;}
+.m-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;}
+.m-kpi-card{background:#fff;border-radius:6px;padding:6px 8px;text-align:center;border:1px solid #E2E8F0;}
+.m-kpi-val{font-size:16px;font-weight:700;margin-bottom:2px;}
+.m-kpi-lbl{font-size:8px;color:#3D5269;}
+.m-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.m-bar-lbl{font-size:9px;color:#3D5269;width:40px;text-align:right;flex-shrink:0;}
+.m-bar-wrap{flex:1;height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;}
+.m-bar-fill{height:100%;border-radius:4px;}
+.m-bar-num{font-size:9px;color:#1E3148;font-weight:600;width:16px;text-align:right;flex-shrink:0;}
+
+.color-chips{display:flex;gap:6px;padding:8px 12px;background:#F8FAFC;border-top:1px solid #E2E8F0;}
+.chip{display:flex;align-items:center;gap:5px;font-size:10px;color:#3D5269;}
+.chip-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+</style>
+</head>
+<body>
+<h1>포털 색상 조합 미리보기 — 4가지 안</h1>
+<div class="grid">
+
+  <!-- 안 1 -->
+  <div class="card">
+    <div class="card-label">
+      <span>안 1 — 다크 슬레이트 + 밝은 파란</span>
+      <span class="badge">추천</span>
+    </div>
+    <div class="mock">
+      <div class="m-sidebar" style="background:#1E2B38;">
+        <div class="m-sb-logo">
+          <div class="m-sb-icon">🏢</div>
+          <div><div class="m-sb-title">현장 업무 포털</div><div class="m-sb-sub">현장 전산 통합 관리</div></div>
+        </div>
+        <div class="m-sb-sec">메인</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">🏠</div>홈 대시보드</div>
+        <div class="m-sb-sec">업무 앱</div>
+        <div class="m-sb-item on"><div class="m-sb-emoji">🔧</div>하자보수현황</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">⏰</div>연장근무현황</div>
+      </div>
+      <div class="m-content">
+        <div class="m-hdr" style="background:#1565C0;">
+          <div class="m-hdr-icon">✅</div>
+          <div><div class="m-hdr-title">하자보수현황</div><div class="m-hdr-sub">Notion DB 연동</div></div>
+        </div>
+        <div class="m-tabs">
+          <div class="m-tab on">요약</div><div class="m-tab">하자내역</div><div class="m-tab">미처리</div><div class="m-tab">터널별</div>
+        </div>
+        <div class="m-body">
+          <div class="m-kpi">
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#0F6E56">22</div><div class="m-kpi-lbl">완료</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#D85A30">3</div><div class="m-kpi-lbl">진행중</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#BA7517">0</div><div class="m-kpi-lbl">미흡</div></div>
+          </div>
+          <div class="m-bar-row"><div class="m-bar-lbl">청하터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:100%;background:#1565C0"></div></div><div class="m-bar-num">8</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">흥해터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:87%;background:#1565C0"></div></div><div class="m-bar-num">7</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">남정5터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:50%;background:#1565C0"></div></div><div class="m-bar-num">4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="color-chips">
+      <div class="chip"><div class="chip-dot" style="background:#1E2B38"></div>사이드바 #1E2B38</div>
+      <div class="chip"><div class="chip-dot" style="background:#1565C0"></div>앱 헤더 #1565C0</div>
+    </div>
+  </div>
+
+  <!-- 안 2 -->
+  <div class="card">
+    <div class="card-label">안 2 — 딥 그린 + 파란 헤더</div>
+    <div class="mock">
+      <div class="m-sidebar" style="background:#0D3D2E;">
+        <div class="m-sb-logo">
+          <div class="m-sb-icon">🏢</div>
+          <div><div class="m-sb-title">현장 업무 포털</div><div class="m-sb-sub">현장 전산 통합 관리</div></div>
+        </div>
+        <div class="m-sb-sec">메인</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">🏠</div>홈 대시보드</div>
+        <div class="m-sb-sec">업무 앱</div>
+        <div class="m-sb-item on"><div class="m-sb-emoji">🔧</div>하자보수현황</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">⏰</div>연장근무현황</div>
+      </div>
+      <div class="m-content">
+        <div class="m-hdr" style="background:#0C447C;">
+          <div class="m-hdr-icon">✅</div>
+          <div><div class="m-hdr-title">하자보수현황</div><div class="m-hdr-sub">Notion DB 연동</div></div>
+        </div>
+        <div class="m-tabs">
+          <div class="m-tab on">요약</div><div class="m-tab">하자내역</div><div class="m-tab">미처리</div><div class="m-tab">터널별</div>
+        </div>
+        <div class="m-body">
+          <div class="m-kpi">
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#0F6E56">22</div><div class="m-kpi-lbl">완료</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#D85A30">3</div><div class="m-kpi-lbl">진행중</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#BA7517">0</div><div class="m-kpi-lbl">미흡</div></div>
+          </div>
+          <div class="m-bar-row"><div class="m-bar-lbl">청하터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:100%;background:#0C447C"></div></div><div class="m-bar-num">8</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">흥해터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:87%;background:#0C447C"></div></div><div class="m-bar-num">7</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">남정5터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:50%;background:#0C447C"></div></div><div class="m-bar-num">4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="color-chips">
+      <div class="chip"><div class="chip-dot" style="background:#0D3D2E"></div>사이드바 #0D3D2E</div>
+      <div class="chip"><div class="chip-dot" style="background:#0C447C"></div>앱 헤더 #0C447C (기존)</div>
+    </div>
+  </div>
+
+  <!-- 안 3 -->
+  <div class="card">
+    <div class="card-label">안 3 — 차콜 블루 + 파란 헤더</div>
+    <div class="mock">
+      <div class="m-sidebar" style="background:#2C3E50;">
+        <div class="m-sb-logo">
+          <div class="m-sb-icon">🏢</div>
+          <div><div class="m-sb-title">현장 업무 포털</div><div class="m-sb-sub">현장 전산 통합 관리</div></div>
+        </div>
+        <div class="m-sb-sec">메인</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">🏠</div>홈 대시보드</div>
+        <div class="m-sb-sec">업무 앱</div>
+        <div class="m-sb-item on"><div class="m-sb-emoji">🔧</div>하자보수현황</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">⏰</div>연장근무현황</div>
+      </div>
+      <div class="m-content">
+        <div class="m-hdr" style="background:#0C447C;">
+          <div class="m-hdr-icon">✅</div>
+          <div><div class="m-hdr-title">하자보수현황</div><div class="m-hdr-sub">Notion DB 연동</div></div>
+        </div>
+        <div class="m-tabs">
+          <div class="m-tab on">요약</div><div class="m-tab">하자내역</div><div class="m-tab">미처리</div><div class="m-tab">터널별</div>
+        </div>
+        <div class="m-body">
+          <div class="m-kpi">
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#0F6E56">22</div><div class="m-kpi-lbl">완료</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#D85A30">3</div><div class="m-kpi-lbl">진행중</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#BA7517">0</div><div class="m-kpi-lbl">미흡</div></div>
+          </div>
+          <div class="m-bar-row"><div class="m-bar-lbl">청하터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:100%;background:#0C447C"></div></div><div class="m-bar-num">8</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">흥해터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:87%;background:#0C447C"></div></div><div class="m-bar-num">7</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">남정5터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:50%;background:#0C447C"></div></div><div class="m-bar-num">4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="color-chips">
+      <div class="chip"><div class="chip-dot" style="background:#2C3E50"></div>사이드바 #2C3E50</div>
+      <div class="chip"><div class="chip-dot" style="background:#0C447C"></div>앱 헤더 #0C447C (기존)</div>
+    </div>
+  </div>
+
+  <!-- 안 4 -->
+  <div class="card">
+    <div class="card-label">안 4 — 기존 네이비 + 틸 그린 헤더</div>
+    <div class="mock">
+      <div class="m-sidebar" style="background:#08305A;">
+        <div class="m-sb-logo">
+          <div class="m-sb-icon">🏢</div>
+          <div><div class="m-sb-title">현장 업무 포털</div><div class="m-sb-sub">현장 전산 통합 관리</div></div>
+        </div>
+        <div class="m-sb-sec">메인</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">🏠</div>홈 대시보드</div>
+        <div class="m-sb-sec">업무 앱</div>
+        <div class="m-sb-item on"><div class="m-sb-emoji">🔧</div>하자보수현황</div>
+        <div class="m-sb-item"><div class="m-sb-emoji">⏰</div>연장근무현황</div>
+      </div>
+      <div class="m-content">
+        <div class="m-hdr" style="background:#0F6E56;">
+          <div class="m-hdr-icon">✅</div>
+          <div><div class="m-hdr-title">하자보수현황</div><div class="m-hdr-sub">Notion DB 연동</div></div>
+        </div>
+        <div class="m-tabs">
+          <div class="m-tab on">요약</div><div class="m-tab">하자내역</div><div class="m-tab">미처리</div><div class="m-tab">터널별</div>
+        </div>
+        <div class="m-body">
+          <div class="m-kpi">
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#0F6E56">22</div><div class="m-kpi-lbl">완료</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#D85A30">3</div><div class="m-kpi-lbl">진행중</div></div>
+            <div class="m-kpi-card"><div class="m-kpi-val" style="color:#BA7517">0</div><div class="m-kpi-lbl">미흡</div></div>
+          </div>
+          <div class="m-bar-row"><div class="m-bar-lbl">청하터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:100%;background:#0F6E56"></div></div><div class="m-bar-num">8</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">흥해터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:87%;background:#0F6E56"></div></div><div class="m-bar-num">7</div></div>
+          <div class="m-bar-row"><div class="m-bar-lbl">남정5터널</div><div class="m-bar-wrap"><div class="m-bar-fill" style="width:50%;background:#0F6E56"></div></div><div class="m-bar-num">4</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="color-chips">
+      <div class="chip"><div class="chip-dot" style="background:#08305A"></div>사이드바 #08305A (기존)</div>
+      <div class="chip"><div class="chip-dot" style="background:#0F6E56"></div>앱 헤더 #0F6E56 틸그린</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

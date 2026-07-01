@@ -1,0 +1,3043 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하자보수현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sky:#378ADD; --sky50:#E6F1FB; --sky100:#B5D4F4; --sky600:#185FA5; --sky800:#0C447C;
+  --teal:#1D9E75; --teal50:#E1F5EE; --teal100:#9FE1CB; --teal600:#0F6E56;
+  --coral:#D85A30; --coral50:#FAECE7; --coral100:#F5C4B3; --coral800:#712B13;
+  --amber:#BA7517; --amber50:#FAEEDA; --amber100:#FAC775; --amber800:#633806;
+  --green:#639922; --green50:#EAF3DE; --green100:#C0DD97; --green800:#27500A;
+  --purple:#534AB7; --purple50:#EEEDFE; --purple100:#CECBF6;
+  --gray50:#F1EFE8; --gray100:#D3D1C7; --gray200:#B4B2A9; --gray600:#5F5E5A;
+  --bg:#F5F8FF; --card:#FFFFFF; --border:#E0EAF5; --border2:#EBF3FF;
+  --txt:#1A2535; --txt2:#3D4F68; --txt3:#6B7E99;
+  --r6:6px; --r8:8px; --r10:10px; --r12:12px; --r14:14px; --r16:16px; --r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;word-break:keep-all;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+.hdr-wrap{position:sticky;top:0;z-index:600}
+.hdr{background:#0C447C;height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(12,68,124,.3);}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.hdr-icon{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-icon svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hdr-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em}
+.hdr-sub{font-size:12px;color:rgba(255,255,255,.85);margin-top:1px}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.hdr-btns{display:flex;gap:7px}
+.hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:18px;padding:5px 13px;font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;min-height:32px;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background .15s}
+.hdr-btn:hover{background:rgba(255,255,255,.25)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.hdr-btn svg{width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TAB NAV ── */
+.top-nav{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--txt2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.tab-btn.on{color:var(--sky600)}
+.tab-btn.on::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+.tab-btn:hover:not(.on){color:var(--txt)}
+
+/* ── KPI BAR ── */
+.kpi-bar{display:flex;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--border2);overflow-x:auto;scrollbar-width:none}
+.kpi-bar::-webkit-scrollbar{display:none}
+.kpi-card{flex:1;min-width:72px;background:var(--bg);border-radius:var(--r8);padding:8px 10px;text-align:center}
+.kpi-num{font-size:20px;font-weight:900;line-height:1.1}
+.kpi-lbl{font-size:12px;color:var(--txt2);margin-top:2px;font-weight:600}
+.kpi-total .kpi-num{color:var(--sky800)}
+.kpi-progress .kpi-num{color:var(--coral)}
+.kpi-done .kpi-num{color:var(--teal600)}
+.kpi-poor .kpi-num{color:var(--amber)}
+
+/* ── MAIN WRAP ── */
+.wrap{max-width:1600px;margin:0 auto;padding:14px}
+.panel{display:none}
+.panel.on{display:block}
+
+/* ── FILTER BAR ── */
+.filter-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px;align-items:center}
+.filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.f-chip{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--txt2);transition:all .12s;white-space:nowrap;font-family:inherit}
+.f-chip.on{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.f-chip.c-teal.on{background:var(--teal600);border-color:var(--teal600)}
+.f-chip.c-coral.on{background:var(--coral);border-color:var(--coral)}
+.f-chip.c-amber.on{background:var(--amber);border-color:var(--amber)}
+.search-box{flex:1;min-width:160px;padding:6px 10px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky100);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
+.filter-count{font-size:13px;color:var(--txt2);font-weight:600;white-space:nowrap;padding:4px 0}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
+.tbl-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--bg);border-bottom:2px solid var(--border)}
+th{padding:9px 12px;font-size:12px;font-weight:700;color:var(--txt);text-align:left;white-space:nowrap}
+td{padding:10px 12px;font-size:13px;color:var(--txt2);border-bottom:1px solid var(--border2);vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover{background:var(--sky50)}
+tbody tr:last-child td{border-bottom:none}
+.td-content{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;color:var(--txt);line-height:1.55;word-break:keep-all}
+.td-nowrap{white-space:nowrap}
+.col-expand{width:100%;min-width:320px}
+.col-remark{width:120px;min-width:120px;max-width:160px}
+td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.55;word-break:keep-all}
+.col-date{width:80px;white-space:nowrap}
+.col-tunnel{width:52px;white-space:nowrap}
+.col-type{width:44px;white-space:nowrap}
+.col-loc{width:80px;white-space:nowrap}
+.col-status{width:64px;white-space:nowrap}
+.col-date2{width:80px;white-space:nowrap}
+.col-company{width:88px;white-space:nowrap}
+.col-contact{width:76px;white-space:nowrap}
+.col-manager{width:72px;white-space:nowrap}
+.col-photo{width:56px;min-width:52px;text-align:center}
+@media(max-width:640px){.col-photo{display:none}}
+
+/* ── STATUS BADGE ── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge-done{background:var(--teal50);color:var(--teal600)}
+.badge-prog{background:var(--coral50);color:var(--coral)}
+.badge-poor{background:var(--amber50);color:var(--amber)}
+
+/* ── DASHBOARD ── */
+.sc{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.sc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sc-hd h3{font-size:13px;font-weight:700;color:var(--txt)}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:13px;color:var(--txt2);min-width:64px;flex-shrink:0;font-weight:500}
+.bar-track{flex:1;height:18px;background:var(--bg);border-radius:20px;overflow:hidden}
+.bar-fill{height:100%;border-radius:20px;transition:width .4s ease}
+.bar-val{font-size:13px;font-weight:700;color:var(--txt);min-width:28px;text-align:right;flex-shrink:0}
+.bar-sub{font-size:12px;font-weight:700;color:var(--teal600);min-width:36px;text-align:right;flex-shrink:0}
+.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.status-card{padding:12px;border-radius:var(--r8);text-align:center}
+.status-card .num{font-size:24px;font-weight:900;line-height:1}
+.status-card .lbl{font-size:12px;margin-top:4px;font-weight:600}
+.status-done{background:var(--teal50);color:var(--teal600)}
+.status-prog{background:var(--coral50);color:var(--coral)}
+.status-poor{background:var(--amber50);color:var(--amber)}
+
+/* ── MODAL ── */
+#cfgModal, #detailModal{
+  visibility:hidden; opacity:0; pointer-events:none;
+  transition:opacity .15s, visibility .15s;
+}
+#cfgModal.modal-open, #detailModal.modal-open{
+  visibility:visible; opacity:1; pointer-events:auto;
+}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px;color:var(--txt)}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:#fff}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+
+/* ── DETAIL MODAL ── */
+.detail-modal-box{max-width:560px;max-height:85vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-modal-close{width:28px;height:28px;border-radius:var(--r6);border:none;background:var(--bg);color:var(--txt2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-row:last-child{border-bottom:none}
+.detail-row:nth-child(odd){background:#fff}
+.detail-row:nth-child(even){background:var(--sky50)}
+.detail-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:78px;width:78px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
+
+/* ── 사진 영역 ── */
+.photo-section{padding:10px 0;border-bottom:1px solid var(--border2)}
+.photo-section:last-child{border-bottom:none}
+.photo-label{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
+
+/* ── EMPTY / STATUS ── */
+.empty{text-align:center;padding:48px 20px;color:var(--txt3)}
+.empty p{font-size:13px}
+.last-update{font-size:11px;color:rgba(255,255,255,.75);min-height:14px;text-align:right}
+
+/* ── RESPONSIVE ── */
+
+/* 모바일 공통 (~ 640px) */
+@media(max-width:640px){
+  /* 헤더 */
+  .hdr{padding:9px 12px;min-height:unset}
+  .hdr-title{font-size:14px;white-space:nowrap}
+  .hdr-sub{font-size:10px}
+  .hdr-icon{width:30px;height:30px;flex-shrink:0}
+  .hdr-icon svg{width:16px;height:16px}
+  .hdr-right{flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+  .hdr-btns{gap:5px}
+  /* [개선2] 터치 타겟 40px 확보 */
+  .hdr-btn{padding:8px 10px;font-size:11px;min-height:40px;gap:3px}
+  .hdr-btn svg{width:11px;height:11px}
+  .last-update{font-size:10px}
+
+  /* [개선3] 탭 6개 - 균등 분할, 글자 잘림 방지 */
+  .tab-btn{font-size:12px;padding:10px 1px;letter-spacing:-.03em}
+
+  /* KPI */
+  .kpi-bar{padding:8px 10px;gap:6px}
+  .kpi-card{min-width:56px;padding:6px 6px}
+  .kpi-num{font-size:18px}
+  .kpi-lbl{font-size:11px}
+
+  /* 본문 */
+  .wrap{padding:10px}
+
+  /* 대시보드 */
+  .dash-grid{grid-template-columns:1fr}
+  .status-grid{grid-template-columns:repeat(3,1fr)}
+  .sc{padding:12px}
+  .sc-hd{flex-wrap:wrap;gap:6px}
+
+  /* 테이블 - 모바일에서 담당자·전화번호 숨김 */
+  .col-contact{display:none}
+  .col-remark{display:none}
+  .col-manager{display:none}
+  /* [문제1 수정] 숨긴 컬럼 반영해 min-width 축소 */
+  table{min-width:340px}
+  td{padding:7px 8px;font-size:12px}
+  th{padding:7px 8px;font-size:11px}
+  .td-content{-webkit-line-clamp:4}
+
+  /* [개선4] 필터 - 검색박스 모바일에서 독립 줄 배치 */
+  .filter-row{flex-wrap:wrap;gap:6px}
+  .filter-row .filter-group{flex-wrap:wrap}
+  .filter-row .search-box{width:100%;order:9;min-width:unset;margin-top:2px}
+  .f-chip{font-size:11px;padding:8px 10px;min-height:40px}
+  .search-box{font-size:12px}
+
+  /* 드롭다운 - 모바일 높이 제한 */
+  .dd-menu{max-height:200px}
+
+  /* 모달 */
+  .modal-box{padding:18px;border-radius:var(--r16)}
+  .detail-modal-box{max-height:90vh}
+}
+
+/* 소형 모바일 (~ 380px) */
+@media(max-width:380px){
+  /* [개선3] 소형 기기 탭 폰트 추가 축소 */
+  .tab-btn{font-size:11px;letter-spacing:-.04em}
+  .hdr-title{font-size:14px}
+  .kpi-num{font-size:16px}
+}
+
+/* 태블릿 (641px ~ 960px) */
+@media(min-width:641px) and (max-width:960px){
+  .tab-btn{font-size:12px;padding:11px 6px}
+  .wrap{padding:14px}
+  .col-contact{display:table-cell}
+  .col-remark{display:table-cell}
+  .col-manager{display:table-cell}
+  /* [개선1] 태블릿 테이블 min-width 추가 */
+  table{min-width:800px}
+}
+
+/* PC (961px ~) */
+@media(min-width:961px){
+  .tab-btn{font-size:13px;padding:11px 16px}
+  .wrap{padding:18px}
+  .col-contact{display:table-cell}
+  .col-remark{display:table-cell}
+  .col-manager{display:table-cell}
+  table{width:100%;min-width:1200px}
+  .hdr-right{flex-direction:column;align-items:flex-end;gap:4px}
+  .hdr-btn{padding:5px 13px;font-size:13px;min-height:32px}
+  .last-update{font-size:11px}
+}
+
+@media(max-width:640px){
+  .modal-backdrop{padding:0;align-items:flex-end}
+  .detail-modal-box{max-width:100%;width:100%;border-radius:var(--r20) var(--r20) 0 0;max-height:92vh}
+  .modal-box{border-radius:var(--r16) var(--r16) 0 0;max-width:100%}
+}
+
+/* ── CONTACT EDIT MODAL ── */
+#contactEditModal{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s,visibility .15s}
+#contactEditModal.modal-open{visibility:visible;opacity:1;pointer-events:auto}
+
+/* ── ADD FORM MODAL ── */
+#addModal{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s,visibility .15s}
+#addModal.modal-open{visibility:visible;opacity:1;pointer-events:auto}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.modal-section{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.modal-section:first-child{margin-top:0}
+.modal-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:80px;transition:border .18s}
+.modal-textarea:focus{border-color:var(--sky);background:#fff}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:#fff}
+.modal-required{color:var(--coral);margin-left:2px}
+.modal-hint-url{font-size:11px;color:var(--txt3);margin-top:3px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:640px){.modal-form-row{grid-template-columns:1fr}}
+
+/* ── PHOTO UPLOAD ── */
+.photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
+.photo-upload-box:hover{border-color:var(--sky100)}
+.photo-upload-row{display:flex;align-items:center;gap:10px}
+.photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
+.photo-upload-file-btn:hover{background:var(--sky100)}
+.photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-upload-status.ok{color:var(--teal600);font-weight:700}
+.photo-upload-status.err{color:var(--coral);font-weight:700}
+.photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);display:none;margin-top:10px;cursor:zoom-in}
+.photo-thumb.show{display:block}
+
+/* ── DETAIL ACTION BUTTONS ── */
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.detail-del-btn:disabled,.detail-edit-btn:disabled{opacity:.5;cursor:not-allowed}
+.del-confirm-bar{background:var(--coral50);border:1.5px solid var(--coral100);border-radius:var(--r8);padding:12px 14px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* ── TUNNEL DROPDOWN ── */
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:20px;padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn:hover{border-color:var(--sky)}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu::-webkit-scrollbar{width:4px}
+.dd-menu::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.dd-menu::-webkit-scrollbar-track{background:transparent}
+.dd-menu.open{display:block}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2);white-space:nowrap}
+.dd-opt:last-child{border-bottom:none}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
+
+</style>
+</head>
+<body>
+
+<!-- 업체연락처 수정/신규추가 모달 -->
+<div id="contactEditModal">
+  <div class="modal-backdrop">
+    <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="contactEditModalTitle">업체연락처 수정</span></h3>
+        <button class="detail-modal-close" onclick="closeContactEditModal()" aria-label="닫기">✕</button>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">관리구분</label>
+        <select id="ceGrp" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'ceGrpCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="안전관리자">안전관리자</option>
+          <option value="점검팀">점검팀</option>
+        </select>
+        <input id="ceGrpCustom" class="modal-input" type="text" placeholder="관리구분 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">터널명 <span class="modal-required">*</span></label>
+        <select id="ceTunnel" class="modal-select" onchange="onTunnelChange(this,'ceTunnelCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="ceTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">업체명 <span class="modal-required">*</span></label>
+        <select id="ceCo" class="modal-select" onchange="onSelectChange(this,'ceCoCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="ceCoCustom" class="modal-input" type="text" placeholder="업체명 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">담당자</label>
+        <select id="cePerson" class="modal-select" onchange="onSelectChange(this,'cePersonCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="cePersonCustom" class="modal-input" type="text" placeholder="담당자 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">전화번호</label>
+        <input id="ceTel" class="modal-input" type="tel" placeholder="예) 01012341234 (숫자만 입력)" autocomplete="off" oninput="formatPhone(this)"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">관련업무</label>
+        <textarea id="ceWork" class="modal-textarea" placeholder="담당 업무 내용 입력" autocomplete="off" inputmode="text" lang="ko"></textarea>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="ceRemark" class="modal-input" type="text" placeholder="추가사항" autocomplete="off"/>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeContactEditModal()">취소</button>
+        <button class="modal-save" id="ceSubmitBtn" onclick="submitContactForm()"><span id="ceSubmitLabel">저장</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 신규 하자 등록 모달 -->
+<div id="addModal">
+  <div class="modal-backdrop">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 하자 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">✕</button>
+      </div>
+
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+
+      <!-- 1.날짜 -->
+      <div class="modal-field">
+        <label class="modal-label">날짜 <span class="modal-required">*</span></label>
+        <input id="addDate" class="modal-input" type="date"/>
+      </div>
+
+      <!-- 2.공종 -->
+      <div class="modal-field">
+        <label class="modal-label">공종 <span class="modal-required">*</span></label>
+        <select id="addType" class="modal-select" onchange="onSelectChange(this,'addTypeCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="설비">설비</option>
+          <option value="전기">전기</option>
+          <option value="소방">소방</option>
+          <option value="통신">통신</option>
+          <option value="토목">토목</option>
+          <option value="건축">건축</option>
+        </select>
+        <input id="addTypeCustom" class="modal-input" type="text" placeholder="공종 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- 3.터널명 -->
+      <div class="modal-field">
+        <label class="modal-label">터널명 <span class="modal-required">*</span></label>
+        <select id="addTunnel" class="modal-select" onchange="onTunnelChange(this,'addTunnelCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- 4.위치 -->
+      <div class="modal-field">
+        <label class="modal-label">위치 <span class="modal-required">*</span></label>
+        <select id="addLoc" class="modal-select" onchange="onSelectChange(this,'addLocCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addLocCustom" class="modal-input" type="text" placeholder="관리동, 기계실 등" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- 5.하자내용 -->
+      <div class="modal-field">
+        <label class="modal-label">하자내용 <span class="modal-required">*</span></label>
+        <textarea id="addContent" class="modal-textarea" placeholder="하자 내용을 상세히 입력하세요" inputmode="text" lang="ko"></textarea>
+      </div>
+
+      <!-- 6.하자사진 -->
+      <div class="modal-field">
+        <label class="modal-label">하자사진</label>
+        <div class="photo-upload-box">
+          <div class="photo-upload-row">
+            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPhoto1File').click()">사진 선택</button>
+            <span class="photo-upload-status" id="photo1Status">파일을 선택하세요</span>
+          </div>
+          <img class="photo-thumb" id="photo1Thumb" alt="하자사진 미리보기">
+        </div>
+        <input type="file" id="addPhoto1File" accept="image/*" style="display:none" onchange="uploadPhoto(this,'photo1')">
+        <input type="hidden" id="addPhoto1">
+      </div>
+
+      <!-- 7.조치일 -->
+      <div class="modal-field">
+        <label class="modal-label">조치일</label>
+        <input id="addActionDate" class="modal-input" type="date"/>
+      </div>
+
+
+
+      <!-- 9.조치사진 -->
+      <div class="modal-field">
+        <label class="modal-label">조치사진</label>
+        <div class="photo-upload-box">
+          <div class="photo-upload-row">
+            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPhoto2File').click()">사진 선택</button>
+            <span class="photo-upload-status" id="photo2Status">파일을 선택하세요</span>
+          </div>
+          <img class="photo-thumb" id="photo2Thumb" alt="조치사진 미리보기">
+        </div>
+        <input type="file" id="addPhoto2File" accept="image/*" style="display:none" onchange="uploadPhoto(this,'photo2')">
+        <input type="hidden" id="addPhoto2">
+      </div>
+
+      <!-- 10.조치여부 -->
+      <div class="modal-field">
+        <label class="modal-label">조치여부</label>
+        <select id="addStatus" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'addStatusCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="진행중">진행중</option>
+          <option value="완료">완료</option>
+          <option value="미흡">미흡</option>
+        </select>
+        <input id="addStatusCustom" class="modal-input" type="text" placeholder="상태 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+
+      <!-- 11.업체명 -->
+      <div class="modal-field">
+        <label class="modal-label">업체명</label>
+        <select id="addCompany" class="modal-select" onchange="onSelectChange(this,'addCompanyCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addCompanyCustom" class="modal-input" type="text" placeholder="업체명 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- 12.업체담당자 -->
+      <div class="modal-field">
+        <label class="modal-label">업체담당자</label>
+        <select id="addContact" class="modal-select" onchange="onSelectChange(this,'addContactCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addContactCustom" class="modal-input" type="text" placeholder="담당자 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+
+      <!-- 13.전화번호 -->
+      <div class="modal-field">
+        <label class="modal-label">전화번호</label>
+        <input id="addPhone" class="modal-input" type="tel" placeholder="예) 01012341234 (숫자만 입력)" autocomplete="off" oninput="formatPhone(this)"/>
+      </div>
+
+      <!-- 14.비고 -->
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addRemark" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+
+      <!-- 15.관리 -->
+      <div class="modal-field">
+        <label class="modal-label">관리</label>
+        <select id="addManager" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'addManagerCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="안전관리자">안전관리자</option>
+          <option value="점검팀">점검팀</option>
+        </select>
+        <input id="addManagerCustom" class="modal-input" type="text" placeholder="관리 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          <span id="addSubmitLabel">등록</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 설정 모달 -->
+<div id="cfgModal">
+  <div class="modal-backdrop">
+    <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        연동 설정
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Cloudflare Worker URL</label>
+        <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
+        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">노션 DB ID (하자보수)</label>
+        <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">노션 DB ID (업체연락처)</label>
+        <input id="cfgContactDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+        <div class="modal-hint">업체연락처 탭 전용 · 저장된 값은 XX로 마스킹 표시</div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
+        <button class="modal-save" onclick="saveCfg()">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 상세 모달 -->
+<div id="detailModal">
+  <div class="modal-backdrop">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailTitle">하자 상세</h3>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div id="detailActions"></div>
+          <button class="detail-modal-close" onclick="closeDetail()" aria-label="닫기">✕</button>
+        </div>
+      </div>
+      <div id="detailBody"></div>
+      <div id="detailFooter"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 헤더 -->
+<div class="hdr-wrap">
+  <div class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon">
+        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+      </div>
+      <div>
+        <div class="hdr-title">하자보수현황</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-btns">
+        <button class="hdr-btn" onclick="openCfgModal()" aria-label="연동 설정">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          설정
+        </button>
+        <button class="hdr-btn" id="syncBtn" onclick="loadData()" aria-label="데이터 새로고침">
+          <svg id="syncIcon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          <span id="syncLabel">새로고침</span>
+        </button>
+      </div>
+      <div class="last-update" id="lastUpdate"></div>
+    </div>
+  </div>
+  <!-- 탭 -->
+  <div class="top-nav" role="tablist">
+    <button class="tab-btn on" role="tab" aria-selected="true"  onclick="switchTab(1,this)">하자내역</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(5,this)">업체연락처</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(2,this)">미처리</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(3,this)">터널별</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(4,this)">업체별</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(0,this)">요약</button>
+  </div>
+  <!-- KPI -->
+  <div class="kpi-bar" id="kpiBar">
+    <div class="kpi-card kpi-total"><div class="kpi-num" id="kpiTotal">-</div><div class="kpi-lbl" id="kpiLbl0">전체</div></div>
+    <div class="kpi-card kpi-progress"><div class="kpi-num" id="kpiProg">-</div><div class="kpi-lbl" id="kpiLbl1">진행중</div></div>
+    <div class="kpi-card kpi-done"><div class="kpi-num" id="kpiDone">-</div><div class="kpi-lbl" id="kpiLbl2">완료</div></div>
+    <div class="kpi-card kpi-poor"><div class="kpi-num" id="kpiPoor">-</div><div class="kpi-lbl" id="kpiLbl3">미흡</div></div>
+  </div>
+
+</div>
+
+<div class="wrap">
+
+<!-- 패널0: 대시보드 -->
+<div class="panel" id="p0">
+  <div class="dash-grid">
+    <div class="sc">
+      <div class="sc-hd"><h3>처리 상태 현황</h3></div>
+      <div class="status-grid">
+        <div class="status-card status-done"><div class="num" id="ds-done">-</div><div class="lbl">완료</div></div>
+        <div class="status-card status-prog"><div class="num" id="ds-prog">-</div><div class="lbl">진행중</div></div>
+        <div class="status-card status-poor"><div class="num" id="ds-poor">-</div><div class="lbl">미흡</div></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd"><h3>완료율</h3></div>
+      <div id="rateWrap" style="padding:4px 0"></div>
+    </div>
+  </div>
+  <div class="sc">
+    <div class="sc-hd"><h3>터널별 현황</h3></div>
+    <div id="tunnelChart"></div>
+  </div>
+  <div class="sc">
+    <div class="sc-hd"><h3>공종별 현황</h3></div>
+    <div id="typeChart"></div>
+  </div>
+  <div class="sc">
+    <div class="sc-hd"><h3>업체별 현황</h3></div>
+    <div id="companyChart"></div>
+  </div>
+</div>
+
+<!-- 패널1: 목록 -->
+<div class="panel on" id="p1">
+  <div class="filter-row">
+    <div class="dd-wrap" id="statusDdWrap">
+      <button class="dd-btn" id="statusDdBtn" onclick="toggleStatusDd()" aria-haspopup="listbox" aria-label="상태 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="statusDdLabel">상태 전체</span>
+      </button>
+      <div class="dd-menu" id="statusDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="tunnelDdWrap">
+      <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        <span id="tunnelDdLabel">터널 전체</span>
+      </button>
+      <div class="dd-menu" id="tunnelDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="managerDdWrap">
+      <button class="dd-btn" id="managerDdBtn" onclick="toggleManagerDd()" aria-haspopup="listbox" aria-label="관리자 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="managerDdLabel">관리 전체</span>
+      </button>
+      <div class="dd-menu" id="managerDdMenu"></div>
+    </div>
+    <input class="search-box" id="searchBox" placeholder="🔍 하자내용, 위치 검색..." oninput="renderList()">
+    <button onclick="openAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      신규등록
+    </button>
+  </div>
+  <div class="filter-count" id="filterCount"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr id="listHead"></tr></thead>
+        <tbody id="listBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 패널2: 미처리 -->
+<div class="panel" id="p2">
+  <div class="filter-row" style="margin-bottom:14px">
+    <div class="dd-wrap" id="unprocStatusDdWrap">
+      <button class="dd-btn" id="unprocStatusDdBtn" onclick="toggleUnprocStatusDd()" aria-haspopup="listbox" aria-label="상태 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="unprocStatusDdLabel">전체 미처리</span>
+      </button>
+      <div class="dd-menu" id="unprocStatusDdMenu">
+        <div class="dd-opt sel" data-val="ALL">전체 미처리</div>
+        <div class="dd-opt" data-val="진행중">진행중</div>
+        <div class="dd-opt" data-val="미흡">미흡</div>
+      </div>
+    </div>
+    <div class="filter-count" id="unprocCount"></div>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th class="col-status">상태</th>
+          <th class="col-date">날짜</th>
+          <th class="col-tunnel">터널</th>
+          <th class="col-type">공종</th>
+          <th class="col-loc">위치</th>
+          <th class="col-expand">하자내용</th>
+          <th class="col-photo">하자사진</th>
+          <th class="col-photo">조치사진</th>
+          <th class="col-company">업체</th>
+          <th class="col-contact">업체담당</th>
+          <th class="col-contact">전화번호</th>
+          <th class="col-remark">비고</th>
+          <th class="col-manager">관리</th>
+        </tr></thead>
+        <tbody id="unprocBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 패널3: 터널별 -->
+<div class="panel" id="p3">
+  <div class="filter-row" style="margin-bottom:14px">
+    <div class="dd-wrap" id="tunnelTabDdWrap">
+      <button class="dd-btn" id="tunnelTabDdBtn" onclick="toggleTabDd('tunnel')" aria-haspopup="listbox" aria-label="터널 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        <span id="tunnelTabDdLabel">터널 전체</span>
+      </button>
+      <div class="dd-menu" id="tunnelTabDdMenu"></div>
+    </div>
+    <div class="filter-count" id="tunnelTabCount"></div>
+  </div>
+  <div id="tunnelPanels"></div>
+</div>
+
+<!-- 패널4: 업체별 -->
+<div class="panel" id="p4">
+  <div class="filter-row" style="margin-bottom:14px">
+    <div class="dd-wrap" id="companyTabDdWrap">
+      <button class="dd-btn" id="companyTabDdBtn" onclick="toggleTabDd('company')" aria-haspopup="listbox" aria-label="업체 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span id="companyTabDdLabel">업체 전체</span>
+      </button>
+      <div class="dd-menu" id="companyTabDdMenu"></div>
+    </div>
+    <div class="filter-count" id="companyTabCount"></div>
+  </div>
+  <div id="companyPanels"></div>
+</div>
+
+<!-- 패널5: 업체연락처 -->
+<div class="panel" id="p5">
+  <div class="filter-row">
+    <div class="filter-group" id="contactGroupFilter">
+      <button class="f-chip on" onclick="selectContactGroup('ALL',this)">전체</button>
+      <button class="f-chip" onclick="selectContactGroup('안전관리자',this)">안전관리자</button>
+      <button class="f-chip" onclick="selectContactGroup('점검팀',this)">점검팀</button>
+    </div>
+    <div class="dd-wrap" id="contactTunnelDdWrap">
+      <button class="dd-btn" id="contactTunnelDdBtn" onclick="toggleContactTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        <span id="contactTunnelDdLabel">터널 전체</span>
+      </button>
+      <div class="dd-menu" id="contactTunnelDdMenu"></div>
+    </div>
+    <input class="search-box" id="contactSearchBox" placeholder="🔍 업체명, 담당자, 관련업무 검색..." oninput="renderContactTable()">
+    <button class="hdr-btn" onclick="openContactAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      신규추가
+    </button>
+  </div>
+  <div class="filter-count" id="contactCount"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th style="width:84px;white-space:nowrap">관리구분</th>
+          <th style="width:90px;white-space:nowrap">터널명</th>
+          <th style="width:110px;white-space:nowrap">업체명</th>
+          <th style="width:96px;white-space:nowrap">담당자</th>
+          <th style="width:120px;white-space:nowrap">전화번호</th>
+          <th class="col-expand">관련업무</th>
+          <th style="width:80px;white-space:nowrap">비고</th>
+        </tr></thead>
+        <tbody id="contactBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+var ALL_DATA = [];
+var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL' };
+var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
+var CURRENT_TAB = 1;
+
+// ── 열 정의 (노션 DB 컬럼 순서와 동일) ──
+var COL_DEFS = [
+  { key:'조치여부',   label:'상태',     width:'col-status',  fixed:true  },
+  { key:'날짜',       label:'날짜',     width:'col-date',    fixed:false },
+  { key:'터널명',     label:'터널',     width:'col-tunnel',  fixed:false },
+  { key:'공종',       label:'공종',     width:'col-type',    fixed:false },
+  { key:'위치',       label:'위치',     width:'col-loc',     fixed:false },
+  { key:'하자내용',   label:'하자내용', width:'col-expand',  fixed:true  },
+  { key:'하자사진_URL', label:'하자사진', width:'col-photo', fixed:false },
+  { key:'조치일',     label:'조치일',   width:'col-date2',   fixed:false },
+
+  { key:'조치사진_URL', label:'조치사진', width:'col-photo', fixed:false },
+  { key:'업체명',     label:'업체',     width:'col-company', fixed:false },
+  { key:'업체담당자', label:'업체담당', width:'col-contact', fixed:false },
+  { key:'전화번호',   label:'전화번호', width:'col-contact', fixed:false },
+  { key:'비고',       label:'비고',     width:'col-remark',  fixed:false },
+  { key:'업무담당',   label:'관리',     width:'col-manager', fixed:false }
+];
+
+// probe로 감지된 실제 노션 속성명 매핑 { 내부key: 실제Notion속성명 }
+var NOTION_PROP_MAP = {};
+
+// 열 정의 조회 헬퍼
+function getColDef(key){ return COL_DEFS.find(function(c){return c.key===key;})||null; }
+// 표시 열 순서
+function getVisibleCols(){
+  return COL_DEFS.map(function(c){return c.key;});
+}
+
+var MAX_PAGES = 20; // 노션 페이지네이션 최대 페이지 수 (100건/페이지 × 20 = 2,000건)
+var EDIT_PAGE_ID = null; // 수정 모드: 노션 페이지 ID (null이면 등록 모드)
+
+// ── 설정 (localStorage) ──
+var CFG = (function(){
+  try{
+    return {
+      workerUrl:    localStorage.getItem('haja_workerUrl')||'',
+      dbId:         localStorage.getItem('haja_dbId')||'',
+      contactDbId:  localStorage.getItem('haja_contactDbId')||'5104d4ad640e4c69884d3d32dc2d4b11'
+    };
+  }catch(e){ return {workerUrl:'',dbId:'',contactDbId:'5104d4ad640e4c69884d3d32dc2d4b11'}; }
+})();
+
+// ── 마스킹 헬퍼 ──
+function maskVal(v){
+  if(!v) return '';
+  if(v.startsWith('http')){
+    try{
+      var u=new URL(v);
+      var h=u.hostname;
+      var parts=h.split('.');
+      var masked=parts[0].length>4
+        ? parts[0].slice(0,2)+'XX'+parts[0].slice(-2)+'.'+parts.slice(1).join('.')
+        : 'XX.'+parts.slice(1).join('.');
+      return u.protocol+'//'+masked;
+    }catch(e){ return v.slice(0,6)+'XX...XX'+v.slice(-4); }
+  }
+  if(/^[0-9a-f\-]{32,36}$/i.test(v)){
+    var clean=v.replace(/-/g,'');
+    return clean.slice(0,4)+'-XXXX-XXXX-XXXX-'+clean.slice(-4);
+  }
+  return v.slice(0,3)+'XX...XX'+v.slice(-3);
+}
+
+/* ── 데모 데이터 (노션 하자보수DB · 2025년 11~12월 샘플) ── */
+var DEMO_DATA = [
+  {_idx:1,  날짜:'2025-11-05', 공종:'설비', 터널명:'남정5터널', 위치:'공동구',      하자내용:'공동구 전선출구 덮개 불량 (빗물 침투 우려됨)',                    하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-10', 조치사진_URL:'', 업체명:'현대산업개발', 업체담당자:'천○○ 팀장', 전화번호:'010-****-3817', 비고:'',        업무담당:'안전관리자'},
+  {_idx:2,  날짜:'2025-11-07', 공종:'전기', 터널명:'남정5터널', 위치:'기계실',      하자내용:'전선 취부 불량',                                                   하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-05', 조치사진_URL:'', 업체명:'명신전기통신', 업체담당자:'노○○ 부장', 전화번호:'010-****-8873', 비고:'',        업무담당:'안전관리자'},
+  {_idx:3,  날짜:'2025-11-10', 공종:'소방', 터널명:'남정5터널', 위치:'하론 약제실', 하자내용:'유도등 불량',                                                       하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-01', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'변○○ 소장', 전화번호:'010-****-8119', 비고:'',        업무담당:'안전관리자'},
+  {_idx:4,  날짜:'2025-11-12', 공종:'통신', 터널명:'남정5터널', 위치:'관리동',      하자내용:'터널무선중계 시스템 설정창 오류',                                   하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-24', 조치사진_URL:'', 업체명:'무선중계IBK',  업체담당자:'김○○ 이사', 전화번호:'010-****-1506', 비고:'',        업무담당:'안전관리자'},
+  {_idx:5,  날짜:'2025-11-14', 공종:'전기', 터널명:'남정6터널', 위치:'터널',        하자내용:'포항방향 추월로(1차로) 제어함 인버터(이동) 불량',                   하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-19', 조치사진_URL:'', 업체명:'대성기업(주)', 업체담당자:'오○○ 대표', 전화번호:'010-****-0042', 비고:'',        업무담당:'점검팀'},
+  {_idx:6,  날짜:'2025-11-14', 공종:'소방', 터널명:'남정6터널', 위치:'터널',        하자내용:'부저음향정지 버튼해지시 알람발생',                                   하자사진_URL:'', 조치여부:'완료',   조치일:'2026-01-16', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'최○○ 과장', 전화번호:'010-****-8520', 비고:'',        업무담당:'점검팀'},
+  {_idx:7,  날짜:'2025-11-17', 공종:'설비', 터널명:'남정7터널', 위치:'기계실',      하자내용:'방화문 자동닫힘 불량',                                             하자사진_URL:'', 조치여부:'진행중', 조치일:'',           조치사진_URL:'', 업체명:'(주)태양건설', 업체담당자:'박○○ 소장', 전화번호:'010-****-9368', 비고:'',        업무담당:'점검팀'},
+  {_idx:8,  날짜:'2025-11-18', 공종:'소방', 터널명:'남정7터널', 위치:'터널',        하자내용:'낙이 바닥에 고정 불량',                                             하자사진_URL:'', 조치여부:'완료',   조치일:'2026-01-16', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'최○○ 과장', 전화번호:'010-****-8520', 비고:'',        업무담당:'점검팀'},
+  {_idx:9,  날짜:'2025-11-20', 공종:'전기', 터널명:'남정8터널', 위치:'배전반실',    하자내용:'배전반 접지선 이완',                                               하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-15', 조치사진_URL:'', 업체명:'명신전기통신', 업체담당자:'노○○ 부장', 전화번호:'010-****-8873', 비고:'',        업무담당:'점검팀'},
+  {_idx:10, 날짜:'2025-11-22', 공종:'소방', 터널명:'남정8터널', 위치:'터널',        하자내용:'영덕방향 4번 소화전 밸브 누수',                                     하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-20', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'김○○ 과장', 전화번호:'010-****-5426', 비고:'',        업무담당:'점검팀'},
+  {_idx:11, 날짜:'2025-11-25', 공종:'토목', 터널명:'청하터널',  위치:'공동구',      하자내용:'공동구 청소 미흡 (배수로 진흙 및 쓰레기)',                          하자사진_URL:'', 조치여부:'완료',   조치일:'2026-04-02', 조치사진_URL:'', 업체명:'한화',         업체담당자:'정○○ 과장', 전화번호:'010-****-5039', 비고:'2공구',    업무담당:'안전관리자'},
+  {_idx:12, 날짜:'2025-11-28', 공종:'설비', 터널명:'청하터널',  위치:'관리동',      하자내용:'관리동 대기실 바닥 온열판널 불량',                                   하자사진_URL:'', 조치여부:'완료',   조치일:'2025-11-28', 조치사진_URL:'', 업체명:'DL이앵씨',    업체담당자:'안○○ 소장', 전화번호:'010-****-7180', 비고:'',        업무담당:'안전관리자'},
+  {_idx:13, 날짜:'2025-12-05', 공종:'소방', 터널명:'청하터널',  위치:'기계실',      하자내용:'충압펌프 드레인 호수 누락',                                         하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-17', 조치사진_URL:'', 업체명:'서진엔지니어링',업체담당자:'성○○ 소장', 전화번호:'010-****-4628', 비고:'',        업무담당:'안전관리자'},
+  {_idx:14, 날짜:'2025-12-08', 공종:'통신', 터널명:'청하터널',  위치:'관리동',      하자내용:'청하터널 관리사무소 출입구 CCTV 작동 불량',                         하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-12', 조치사진_URL:'', 업체명:'신성정보기술',  업체담당자:'박○○',      전화번호:'010-****-3386', 비고:'',        업무담당:'안전관리자'},
+  {_idx:15, 날짜:'2025-12-10', 공종:'소방', 터널명:'청하터널',  위치:'터널',        하자내용:'포항방향 5번 발신기 버튼 불량',                                      하자사진_URL:'', 조치여부:'완료',   조치일:'2026-01-15', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'김○○ 과장', 전화번호:'010-****-5426', 비고:'',        업무담당:'점검팀'},
+  {_idx:16, 날짜:'2025-12-12', 공종:'건축', 터널명:'청하터널',  위치:'주전기실',    하자내용:'전기실 진입로 미장 처리 미흡',                                      하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-19', 조치사진_URL:'', 업체명:'태갑종합건축',  업체담당자:'조○○ 소장', 전화번호:'010-****-6910', 비고:'',        업무담당:'안전관리자'},
+  {_idx:17, 날짜:'2025-12-14', 공종:'토목', 터널명:'청하터널',  위치:'부전기실',    하자내용:'가드레일 주변, 외부 청소상태 미흡',                                  하자사진_URL:'', 조치여부:'진행중', 조치일:'',           조치사진_URL:'', 업체명:'DL이앵씨',    업체담당자:'홍○○ 부장', 전화번호:'010-****-4146', 비고:'2공구',    업무담당:'안전관리자'},
+  {_idx:18, 날짜:'2025-12-16', 공종:'설비', 터널명:'청하터널',  위치:'터널',        하자내용:'청하터널 포항방향 입구부 히팅케이블 온도센서 교체',                  하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-31', 조치사진_URL:'', 업체명:'세인',         업체담당자:'홍○○ 부장', 전화번호:'010-****-4914', 비고:'',        업무담당:'안전관리자'},
+  {_idx:19, 날짜:'2025-11-18', 공종:'소방', 터널명:'흥해터널',  위치:'관리동',      하자내용:'소방예비펌프 이상 기동',                                             하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-06', 조치사진_URL:'', 업체명:'',             업체담당자:'',           전화번호:'',              비고:'자체보수', 업무담당:'안전관리자'},
+  {_idx:20, 날짜:'2025-12-08', 공종:'소방', 터널명:'흥해터널',  위치:'터널',        하자내용:'포항방향 17번 소화전 경종, 시각경보기 불량',                         하자사진_URL:'', 조치여부:'완료',   조치일:'2026-01-15', 조치사진_URL:'', 업체명:'D2U',          업체담당자:'김○○ 과장', 전화번호:'010-****-5426', 비고:'',        업무담당:'점검팀'},
+  {_idx:21, 날짜:'2025-12-08', 공종:'소방', 터널명:'흥해터널',  위치:'관리동',      하자내용:'비상방송 송출 불량',                                                하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-23', 조치사진_URL:'', 업체명:'LK시스템',    업체담당자:'남○○ 부장',    전화번호:'010-****-9794', 비고:'설비 신설', 업무담당:'안전관리자'},
+  {_idx:22, 날짜:'2025-12-10', 공종:'설비', 터널명:'흥해터널',  위치:'관리동',      하자내용:'옥상 사다리 추락 방지망 누락',                                       하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-26', 조치사진_URL:'', 업체명:'태갑종합건축',  업체담당자:'조○○ 소장', 전화번호:'010-****-6910', 비고:'',        업무담당:'안전관리자'},
+  {_idx:23, 날짜:'2025-12-15', 공종:'전기', 터널명:'흥해터널',  위치:'관리동',      하자내용:'전력RTU 결선 누락 (조명)',                                           하자사진_URL:'', 조치여부:'완료',   조치일:'2025-12-30', 조치사진_URL:'', 업체명:'동양ENT',      업체담당자:'박○○ 이사', 전화번호:'010-****-1321', 비고:'',        업무담당:'안전관리자'},
+  {_idx:24, 날짜:'2025-12-18', 공종:'통신', 터널명:'흥해터널',  위치:'관리동',      하자내용:'신설 비상방송 터치 스크린 불량',                                     하자사진_URL:'', 조치여부:'완료',   조치일:'2026-01-16', 조치사진_URL:'', 업체명:'LK시스템',    업체담당자:'남○○ 부장', 전화번호:'010-****-9794', 비고:'',        업무담당:'안전관리자'},
+  {_idx:25, 날짜:'2025-12-22', 공종:'건축', 터널명:'흥해터널',  위치:'외벽',        하자내용:'외벽 균열 실란트 보수 미흡',                                         하자사진_URL:'', 조치여부:'진행중', 조치일:'',           조치사진_URL:'', 업체명:'태갑종합건축',  업체담당자:'조○○ 소장', 전화번호:'010-****-6910', 비고:'',        업무담당:'안전관리자'}
+];
+
+/* ── INIT ── */
+function init(){
+  if(CFG.workerUrl && CFG.dbId){ loadData(); }
+  else { loadDemo(); }
+}
+document.addEventListener('DOMContentLoaded', init);
+
+function loadDemo(){
+  ALL_DATA = DEMO_DATA;
+  buildStatusFilter();
+  buildTunnelFilter();
+  buildManagerFilter();
+  buildTabDropdowns();
+  updateKPI();
+  renderAll(); // 내부에서 rebuildListHeader() 포함
+  var lu=document.getElementById('lastUpdate');
+  if(lu){ lu.textContent=''; }
+  var kpiBar = document.getElementById('kpiBar');
+  if(kpiBar) kpiBar.style.display = '';
+}
+
+/* ── CONFIG MODAL ── */
+function openCfgModal(){
+  var wu=CFG.workerUrl, db=CFG.dbId, cdb=CFG.contactDbId;
+  var wEl=document.getElementById('cfgWorkerUrl');
+  var dEl=document.getElementById('cfgDbId');
+  var cEl=document.getElementById('cfgContactDbId');
+  if(wu){ wEl.value=''; wEl.placeholder=maskVal(wu); wEl.dataset.saved='1'; }
+  else   { wEl.value=''; wEl.placeholder='https://your-worker.workers.dev'; delete wEl.dataset.saved; }
+  if(db){ dEl.value=''; dEl.placeholder=maskVal(db); dEl.dataset.saved='1'; }
+  else   { dEl.value=''; dEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'; delete dEl.dataset.saved; }
+  if(cdb&&cEl){ cEl.value=''; cEl.placeholder=maskVal(cdb); cEl.dataset.saved='1'; }
+  else if(cEl){ cEl.value=''; cEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'; delete cEl.dataset.saved; }
+  document.getElementById('cfgModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeCfgModal(){
+  document.getElementById('cfgModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+}
+function saveCfg(){
+  var wEl=document.getElementById('cfgWorkerUrl');
+  var dEl=document.getElementById('cfgDbId');
+  var cEl=document.getElementById('cfgContactDbId');
+  var newWu=wEl.value.trim();
+  var newDb=dEl.value.trim();
+  var newCdb=cEl ? cEl.value.trim() : '';
+  if(newWu && !/^https:\/\/.+/.test(newWu)){ alert('Worker URL은 https:// 로 시작해야 합니다.'); wEl.focus(); return; }
+  if(newWu) CFG.workerUrl=newWu;
+  if(newDb) CFG.dbId=newDb;
+  if(newCdb){ CFG.contactDbId=newCdb; CONTACT_LOADED=false; }
+  if(!CFG.workerUrl||!CFG.dbId){ alert('Worker URL과 DB ID를 모두 입력해주세요.'); return; }
+  try{
+    localStorage.setItem('haja_workerUrl',   CFG.workerUrl);
+    localStorage.setItem('haja_dbId',        CFG.dbId);
+    if(CFG.contactDbId) localStorage.setItem('haja_contactDbId', CFG.contactDbId);
+  }catch(e){}
+  document.getElementById('cfgModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  ALL_DATA=[];
+  NOTION_PROP_MAP={};
+  loadData();
+}
+// ESC 키로 모달 닫기
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.getElementById('cfgModal').classList.remove('modal-open');
+    document.getElementById('detailModal').classList.remove('modal-open');
+    document.getElementById('addModal').classList.remove('modal-open');
+    document.getElementById('contactEditModal').classList.remove('modal-open');
+    document.body.style.overflow='';
+  }
+});
+
+/* ── NOTION FETCH HELPER ── */
+function fetchNotion(workerUrl, dbId, body){
+  return fetch(workerUrl+'/v1/databases/'+dbId+'/query',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  }).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  });
+}
+
+/* ── parseNotionPage ── */
+
+function getPropText(p){
+  if(!p) return '';
+  if(p.type==='title')        return (p.title||[]).map(function(t){return t.plain_text||'';}).join('');
+  if(p.type==='rich_text')    return (p.rich_text||[]).map(function(t){return t.plain_text||'';}).join('');
+  if(p.type==='select')       return (p.select&&p.select.name)||'';
+  if(p.type==='multi_select') return (p.multi_select||[]).map(function(s){return s.name;}).join(', ');
+  if(p.type==='number')       return p.number!==null&&p.number!==undefined ? String(p.number) : '';
+  if(p.type==='formula')      return String(p.formula&&(p.formula.string||p.formula.number)||'');
+  if(p.type==='url')          return p.url||'';
+  if(p.type==='date')         return (p.date&&p.date.start)||'';
+  if(p.type==='checkbox')     return p.checkbox ? '완료' : '진행중';
+  if(p.type==='phone_number') return p.phone_number||'';
+  if(p.type==='email')        return p.email||'';
+  return '';
+}
+
+function parseNotionPage(page, idx){
+  var props = page.properties||{};
+  var result = { _idx: idx+1, _pageId: page.id };
+
+  // NOTION_PROP_MAP이 있으면 직접 접근, 없으면 키워드 검색 폴백
+  function getField(internalKey, kwFallback){
+    var notionKey = NOTION_PROP_MAP[internalKey];
+    if(notionKey && props[notionKey]) return getPropText(props[notionKey]);
+    // 폴백: 키워드 검색
+    var entries=Object.entries(props);
+    for(var ki=0; ki<kwFallback.length; ki++){
+      var kw=kwFallback[ki].toLowerCase();
+      for(var ei=0; ei<entries.length; ei++){
+        if(entries[ei][0].toLowerCase().includes(kw)){
+          var v=getPropText(entries[ei][1]);
+          if(v) return v;
+        }
+      }
+    }
+    return '';
+  }
+
+  // 날짜: date 타입 우선
+  var dateVal='';
+  var notionDateKey = NOTION_PROP_MAP['날짜'];
+  if(notionDateKey && props[notionDateKey] && props[notionDateKey].type==='date'){
+    dateVal = (props[notionDateKey].date&&props[notionDateKey].date.start||'').slice(0,10);
+  }
+  if(!dateVal){
+    var entries=Object.entries(props);
+    for(var i=0; i<entries.length; i++){
+      var p=entries[i][1];
+      if(p.type==='date'&&p.date&&p.date.start){ dateVal=p.date.start.slice(0,10); break; }
+    }
+  }
+  if(!dateVal){
+    var _t=new Date();
+    dateVal=_t.getFullYear()+'-'+fmt(_t.getMonth()+1)+'-'+fmt(_t.getDate());
+  }
+  result['날짜'] = dateVal.slice(0,10);
+
+  result['터널명']     = getField('터널명',    ['터널명','터널','tunnel']);
+  result['공종']       = getField('공종',       ['공종','type','공사종류']);
+  result['위치']       = getField('위치',       ['위치','location','loc']);
+  result['하자내용']   = getField('하자내용',   ['하자내용','내용','content']);
+  result['조치여부']   = getField('조치여부',   ['조치여부','상태','status'])||'진행중';
+  result['조치일']     = getField('조치일',     ['조치일','완료일','act_date']);
+  result['업체명']     = getField('업체명',     ['업체명','업체','company']);
+  result['업무담당']   = getField('업무담당',   ['관리','업무담당','manager']);
+  result['업체담당자'] = getField('업체담당자', ['업체담당자','업체담당','담당자','contact']);
+  result['전화번호']   = getField('전화번호',   ['전화번호','phone','연락처']);
+  result['비고']       = getField('비고',       ['비고','remark','memo','메모']);
+
+  // 사진: file 타입 → 첫 번째 파일 URL 추출
+  function getFileUrl(internalKey, kwFallback){
+    var notionKey=NOTION_PROP_MAP[internalKey];
+    var p = notionKey&&props[notionKey] ? props[notionKey] : null;
+    if(!p){
+      var entries2=Object.entries(props);
+      for(var ki2=0; ki2<kwFallback.length; ki2++){
+        var kw2=kwFallback[ki2].toLowerCase();
+        for(var ei2=0; ei2<entries2.length; ei2++){
+          if(entries2[ei2][0].toLowerCase().includes(kw2)){ p=entries2[ei2][1]; break; }
+        }
+        if(p) break;
+      }
+    }
+    if(!p) return '';
+    if(p.type==='files'&&p.files&&p.files.length){
+      var f=p.files[0];
+      return (f.type==='external'?f.external&&f.external.url:f.file&&f.file.url)||'';
+    }
+    if(p.type==='url') return p.url||'';
+    return getPropText(p);
+  }
+  result['하자사진_URL'] = getFileUrl('하자사진_URL', ['하자사진','photo1','사진1']);
+  result['조치사진_URL'] = getFileUrl('조치사진_URL', ['조치사진','photo2','사진2']);
+
+  // title 타입 폴백
+  if(!result['하자내용']){
+    var ents=Object.entries(props);
+    for(var j=0; j<ents.length; j++){
+      if(ents[j][1].type==='title'){
+        var tv=getPropText(ents[j][1]);
+        if(tv){ result['하자내용']=tv; break; }
+      }
+    }
+  }
+
+  // _extra_ 컬럼 값 추출 — Notion 연동 모드 전용
+  // (buildNotionPropMap에서 미매핑 속성을 COL_DEFS에 동적 등록 후 여기서 값을 가져옴)
+  // 데모 모드(loadDemo)에서는 parseNotionPage 자체를 호출하지 않으므로 이 블록은 실행되지 않음
+  COL_DEFS.forEach(function(c){
+    if(c.key.indexOf('_extra_')===0){
+      var nk=NOTION_PROP_MAP[c.key];
+      if(nk&&props[nk]) result[c.key]=getPropText(props[nk]);
+    }
+  });
+
+  return result;
+}
+
+/* ── LOAD DATA (Notion) ── */
+function loadData(){
+  if(_retryTimer){ clearInterval(_retryTimer); _retryTimer=null; }
+  if(!CFG.workerUrl||!CFG.dbId){ openCfgModal(); return; }
+  setSync(true);
+  var lu = document.getElementById('lastUpdate');
+  if(lu){ lu.textContent=''; }
+
+  // probe: 1건 조회로 실제 속성명 자동 감지 → NOTION_PROP_MAP 갱신
+  fetchNotion(CFG.workerUrl, CFG.dbId, {page_size:1})
+    .then(function(probe){
+      var pages = probe.results||[];
+      if(pages.length){ buildNotionPropMap(pages[0].properties||{}); }
+
+      // 전체 데이터 조회
+      var sortProp = (NOTION_PROP_MAP['날짜']||'날짜');
+      var body = { page_size:100, sorts:[{property:sortProp, direction:'descending'}] };
+
+      return fetchNotion(CFG.workerUrl, CFG.dbId, body)
+        .then(function(data){
+          var allPages = data.results||[];
+          var cursor = data.next_cursor, hasMore = data.has_more, pageCount = 0;
+          var truncated = false; // MAX_PAGES 초과로 잘렸는지 여부
+          function fetchNext(cur, more){
+            if(!cur||!more) return Promise.resolve();
+            if(pageCount++>=MAX_PAGES){ truncated=true; return Promise.resolve(); }
+            return fetchNotion(CFG.workerUrl, CFG.dbId, Object.assign({},body,{start_cursor:cur}))
+              .then(function(d2){
+                allPages = allPages.concat(d2.results||[]);
+                return fetchNext(d2.next_cursor, d2.has_more);
+              });
+          }
+          return fetchNext(cursor, hasMore).then(function(){
+            ALL_DATA = allPages.map(parseNotionPage).filter(function(r){ return r['하자내용']&&r['하자내용'].length>0; });
+            buildStatusFilter();
+            buildTunnelFilter();
+            buildManagerFilter();
+            buildTabDropdowns();
+            updateKPI();
+            renderAll();
+            rebuildListHeader();
+            setSync(false);
+            if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
+            var kpiBar=document.getElementById('kpiBar');
+            if(kpiBar) kpiBar.style.display = CURRENT_TAB===0?'none':'';
+            var now=new Date();
+            var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
+            if(truncated) upTxt += ' ⚠ 데이터가 '+MAX_PAGES*100+'건을 초과하여 일부만 표시됩니다';
+            if(lu){
+              lu.textContent=upTxt;
+              lu.style.color = truncated ? 'rgba(255,200,100,.95)' : 'rgba(255,255,255,.75)';
+            }
+          });
+        });
+    })
+    .catch(function(e){
+      setSync(false);
+      var msg='⚠ '+e.message;
+      if(e.message.indexOf('400')>=0)       msg='⚠ HTTP 400 — Worker URL 또는 DB ID를 확인하세요';
+      else if(e.message.indexOf('401')>=0||e.message.indexOf('403')>=0) msg='⚠ 인증 오류 — Notion API 키를 확인하세요';
+      else if(e.message.indexOf('404')>=0)  msg='⚠ DB를 찾을 수 없습니다 — DB ID를 확인하세요';
+      else if(e.message.indexOf('503')>=0||e.message.indexOf('502')>=0||e.message.indexOf('504')>=0){
+        msg='⚠ 서버 일시 불가 — 30초 후 자동 재시도합니다';
+        startRetryCountdown(30);
+      }
+      else if(e.message.indexOf('fetch')>=0||e.message.indexOf('network')>=0) msg='⚠ 네트워크 오류 — Worker URL을 확인하세요';
+      if(lu){ lu.textContent=msg; lu.style.color='rgba(255,150,130,.9)'; }
+      console.error(e);
+    });
+}
+
+/* ── probe: 실제 노션 속성명 → 내부 key 매핑 ── */
+function buildNotionPropMap(props){
+  NOTION_PROP_MAP = {};
+  var keys = Object.keys(props);
+
+  // 내부 key별 키워드와 타입 힌트로 매칭
+  var matchers = [
+    { key:'날짜',        kws:['날짜','date'],            types:['date','created_time'] },
+    { key:'터널명',      kws:['터널명','터널','tunnel'],  types:['select','multi_select','title','rich_text'] },
+    { key:'공종',        kws:['공종','type','공사'],      types:['select','multi_select','rich_text'] },
+    { key:'위치',        kws:['위치','location','loc'],  types:['rich_text','text','title'] },
+    { key:'업무담당',    kws:['관리','업무담당','manager'],    types:['select','rich_text','title'] },
+    { key:'업체담당자',  kws:['업체담당자','업체담당','담당자','contact'], types:['rich_text','text','title'] },
+    { key:'하자내용',    kws:['하자내용','내용','content','하자'], types:['title','rich_text'] },
+    { key:'조치여부',    kws:['조치여부','상태','status'], types:['select','checkbox'] },
+    { key:'조치일',      kws:['조치일','완료일','act'],   types:['date'] },
+    { key:'하자사진_URL',kws:['하자사진','하자 사진','photo1','사진1'], types:['files','url','rich_text'] },
+    { key:'조치사진_URL',kws:['조치사진','조치 사진','photo2','사진2'], types:['files','url','rich_text'] },
+    { key:'업체명',      kws:['업체명','업체 명','업체','company'], types:['rich_text','title','text'] },
+    { key:'전화번호',    kws:['전화번호','전화','phone','연락'], types:['phone_number','rich_text','text'] },
+    { key:'비고',        kws:['비고','remark','memo','메모'], types:['rich_text','text'] }
+  ];
+
+  matchers.forEach(function(m){
+    // 이미 다른 내부 key에 매핑된 notionKey는 재사용 안 함
+    function alreadyUsed(nk){ return Object.values(NOTION_PROP_MAP).indexOf(nk)>=0; }
+    // 1차: 키워드 + 타입 동시 매칭 (정확도 높음)
+    for(var ki=0; ki<m.kws.length; ki++){
+      var kw = m.kws[ki].toLowerCase();
+      for(var ni=0; ni<keys.length; ni++){
+        var nk = keys[ni];
+        if(nk.toLowerCase().includes(kw) && m.types.indexOf(props[nk].type)>=0 && !alreadyUsed(nk)){
+          if(!NOTION_PROP_MAP[m.key]){ NOTION_PROP_MAP[m.key]=nk; return; }
+        }
+      }
+    }
+    // 2차: 키워드만 매칭 (타입 무관)
+    for(var ki2=0; ki2<m.kws.length; ki2++){
+      var kw2=m.kws[ki2].toLowerCase();
+      for(var ni2=0; ni2<keys.length; ni2++){
+        var nk2=keys[ni2];
+        if(nk2.toLowerCase().includes(kw2) && !alreadyUsed(nk2)){
+          if(!NOTION_PROP_MAP[m.key]){ NOTION_PROP_MAP[m.key]=nk2; return; }
+        }
+      }
+    }
+  });
+  // title 타입 → 하자내용 폴백
+  if(!NOTION_PROP_MAP['하자내용']){
+    for(var ti=0; ti<keys.length; ti++){
+      if(props[keys[ti]].type==='title'){ NOTION_PROP_MAP['하자내용']=keys[ti]; break; }
+    }
+  }
+  // 이전 재로드로 쌓인 _extra_ 항목 제거 후 재감지
+  for(var ei=COL_DEFS.length-1; ei>=0; ei--){
+    if(COL_DEFS[ei].key.indexOf('_extra_')===0) COL_DEFS.splice(ei,1);
+  }
+  // COL_DEFS에 없는 노션 속성 추가 (새 컬럼 자동 감지)
+  keys.forEach(function(nk){
+    var alreadyMapped = Object.values(NOTION_PROP_MAP).indexOf(nk)>=0;
+    if(!alreadyMapped){
+      var tempKey = '_extra_'+nk;
+      var alreadyInDefs = COL_DEFS.some(function(c){ return c.key===tempKey; });
+      if(!alreadyInDefs){
+        COL_DEFS.push({key:tempKey,label:nk,width:'col-remark',fixed:false});
+        NOTION_PROP_MAP[tempKey]=nk;
+      }
+    }
+  });
+}
+
+function fmt(n){ return n<10?'0'+n:String(n); }
+
+/* ── COMMON HELPER ── */
+function getUniqueValues(key){
+  var seen={}, result=[];
+  ALL_DATA.forEach(function(r){ var v=r[key]; if(v&&!seen[v]){seen[v]=1;result.push(v);} });
+  return result.sort();
+}
+
+/* ── BUILD MANAGER DROPDOWN ── */
+function buildManagerFilter(){
+  var managers = getUniqueValues('업무담당');
+  var menu = document.getElementById('managerDdMenu');
+  if(!menu) return;
+  var opts = [{ val:'ALL', label:'관리 전체' }];
+  managers.forEach(function(m){ opts.push({ val:m, label:m }); });
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  if(!buildManagerFilter._bound){
+    buildManagerFilter._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectManager(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('managerDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeManagerDd();
+    });
+  }
+}
+
+/* ── 드롭다운 공통 toggle/close 헬퍼 ── */
+function toggleDd(menuId, btnId){
+  var menu = document.getElementById(menuId);
+  var btn  = document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId, btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId, btnId){
+  var menu = document.getElementById(menuId); if(menu) menu.classList.remove('open');
+  var btn  = document.getElementById(btnId);  if(btn)  btn.classList.remove('active');
+}
+
+function toggleManagerDd(){ toggleDd('managerDdMenu','managerDdBtn'); }
+function closeManagerDd()  { closeDd('managerDdMenu','managerDdBtn'); }
+
+function selectManager(val, el){
+  document.querySelectorAll('#managerDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById('managerDdLabel').textContent = val==='ALL' ? '관리 전체' : val;
+  var btn = document.getElementById('managerDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  FILTER.manager = val;
+  closeManagerDd();
+  renderList();
+}
+
+/* ── BUILD STATUS DROPDOWN (하자내역 탭) ── */
+function buildStatusFilter(){
+  FILTER.status = 'ALL';
+  var menu = document.getElementById('statusDdMenu');
+  if(!menu) return;
+  var opts = [
+    { val:'ALL',   label:'상태 전체' },
+    { val:'진행중', label:'진행중' },
+    { val:'완료',  label:'완료' },
+    { val:'미흡',  label:'미흡' }
+  ];
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+o.val+'">'+o.label+'</div>';
+  }).join('');
+  if(!buildStatusFilter._bound){
+    buildStatusFilter._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectStatus(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('statusDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeStatusDd();
+    });
+  }
+}
+function toggleStatusDd(){ toggleDd('statusDdMenu','statusDdBtn'); }
+function closeStatusDd()  { closeDd('statusDdMenu','statusDdBtn'); }
+function selectStatus(val, el){
+  document.querySelectorAll('#statusDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  var labelMap = { ALL:'상태 전체', '진행중':'진행중', '완료':'완료', '미흡':'미흡' };
+  document.getElementById('statusDdLabel').textContent = labelMap[val] || val;
+  var btn = document.getElementById('statusDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  FILTER.status = val;
+  closeStatusDd();
+  renderList();
+}
+
+/* ── UNPROC STATUS DROPDOWN (미처리 탭) ── */
+function toggleUnprocStatusDd(){ toggleDd('unprocStatusDdMenu','unprocStatusDdBtn'); }
+function closeUnprocStatusDd() { closeDd('unprocStatusDdMenu','unprocStatusDdBtn'); }
+(function(){
+  document.addEventListener('click', function(e){
+    var wrap = document.getElementById('unprocStatusDdWrap');
+    if(wrap && !wrap.contains(e.target)) closeUnprocStatusDd();
+  });
+  var menu = document.getElementById('unprocStatusDdMenu');
+  if(menu && !menu._bound){
+    menu._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(!opt || !opt.dataset || !opt.dataset.val) return;
+      var val = opt.dataset.val;
+      menu.querySelectorAll('.dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+      opt.classList.add('sel');
+      var labelMap = { ALL:'전체 미처리', '진행중':'진행중', '미흡':'미흡' };
+      document.getElementById('unprocStatusDdLabel').textContent = labelMap[val] || val;
+      var btn = document.getElementById('unprocStatusDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
+      closeUnprocStatusDd();
+      setUnprocFilter(val);
+    });
+  }
+})();
+
+/* ── FILTER ── */
+function setFilter(key, val){
+  FILTER[key] = val;
+  renderList();
+}
+
+function filtered(){
+  var q = (document.getElementById('searchBox').value||'').trim().toLowerCase();
+  return ALL_DATA.filter(function(r){
+    var stMatch = FILTER.status==='ALL' || r['조치여부']===FILTER.status;
+    var tnMatch = FILTER.tunnel==='ALL' || r['터널명']===FILTER.tunnel;
+    var mgMatch = FILTER.manager==='ALL' || r['업무담당']===FILTER.manager;
+    var qMatch  = !q || (r['하자내용']||'').toLowerCase().includes(q)
+                     || (r['터널명']||'').toLowerCase().includes(q)
+                     || (r['위치']||'').toLowerCase().includes(q)
+                     || (r['공종']||'').toLowerCase().includes(q)
+                     || (r['업무담당']||'').toLowerCase().includes(q)
+                     || (r['업체명']||'').toLowerCase().includes(q)
+                     || (r['비고']||'').toLowerCase().includes(q);
+    return stMatch && tnMatch && mgMatch && qMatch;
+  });
+}
+
+/* ── BUILD TUNNEL DROPDOWN ── */
+function buildTunnelFilter(){
+  FILTER.tunnel = 'ALL';
+  var tunnels = getUniqueValues('터널명');
+  var menu = document.getElementById('tunnelDdMenu');
+  var opts = [{ val:'ALL', label:'터널 전체' }];
+  tunnels.forEach(function(t){ opts.push({ val:t, label:t }); });
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  if(!buildTunnelFilter._bound){
+    buildTunnelFilter._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectTunnel(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('tunnelDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeTunnelDd();
+    });
+  }
+}
+
+function toggleTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
+function closeTunnelDd()  { closeDd('tunnelDdMenu','tunnelDdBtn'); }
+
+function selectTunnel(val, el){
+  document.querySelectorAll('#tunnelDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById('tunnelDdLabel').textContent = val==='ALL' ? '터널 전체' : val;
+  var btn = document.getElementById('tunnelDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  FILTER.tunnel = val;
+  closeTunnelDd();
+  renderList();
+}
+
+/* ── KPI ── */
+
+function calcGroupKpi(groupKey){
+  var d = ALL_DATA;
+  var groups = groupBy(d, groupKey);
+  var keys = Object.keys(groups);
+  var rates = keys.map(function(k){
+    var r=groups[k], dn=r.filter(function(x){return x['조치여부']==='완료';}).length;
+    return Math.round(dn/r.length*100);
+  });
+  var avgRate = keys.length>0 ? Math.round(rates.reduce(function(a,b){return a+b;},0)/keys.length) : 0;
+  var unproc  = d.filter(function(r){return r['조치여부']==='진행중'||r['조치여부']==='미흡';}).length;
+  return { count:keys.length, unproc:unproc, avgRate:avgRate };
+}
+
+/* ── 상태별 카운트 공통 헬퍼 ── */
+function countStatus(data){
+  var done=0, prog=0, poor=0;
+  data.forEach(function(r){
+    var s=r['조치여부'];
+    if(s==='완료') done++; else if(s==='진행중') prog++; else if(s==='미흡') poor++;
+  });
+  return {done:done, prog:prog, poor:poor};
+}
+
+function updateKPI(tabNum){
+  if(tabNum === undefined) tabNum = CURRENT_TAB;
+  var d = ALL_DATA;
+  var c = countStatus(d);
+  var done=c.done, prog=c.prog, poor=c.poor;
+
+  // 요약 대시보드 카드는 항상 전체 기준
+  document.getElementById('ds-done').textContent = done;
+  document.getElementById('ds-prog').textContent = prog;
+  document.getElementById('ds-poor').textContent = poor;
+  var rate = d.length>0?Math.round(done/d.length*100):0;
+  document.getElementById('rateWrap').innerHTML =
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+    +'<span style="font-size:32px;font-weight:900;color:var(--teal600)">'+rate+'%</span>'
+    +'<span style="font-size:13px;font-weight:600;color:var(--txt2)">하자 완료율</span></div>'
+    +'<div class="bar-track" style="height:12px">'
+    +'<div class="bar-fill" style="width:'+rate+'%;background:var(--teal600)"></div></div>';
+
+  if(tabNum === 0){
+    setKpiLabels('전체','진행중','완료','미흡','poor');
+    document.getElementById('kpiTotal').textContent = d.length;
+    document.getElementById('kpiProg').textContent  = prog;
+    document.getElementById('kpiDone').textContent  = done;
+    document.getElementById('kpiPoor').textContent  = poor;
+  } else if(tabNum === 1){
+    updateKpiForList();
+  } else if(tabNum === 2){
+    // 미처리 탭 — kpiPoor(amber카드)에 미흡, kpiDone(초록카드)에 완료
+    var unproc = prog + poor;
+    setKpiLabels('미처리 전체','진행중','완료','미흡','poor');
+    document.getElementById('kpiTotal').textContent = unproc;
+    document.getElementById('kpiProg').textContent  = prog;
+    document.getElementById('kpiDone').textContent  = done;
+    document.getElementById('kpiPoor').textContent  = poor;
+  } else if(tabNum === 3){
+    var g2=calcGroupKpi('터널명');
+    setKpiLabels('터널 수','미처리 합계','평균 완료율','미흡','poor');
+    document.getElementById('kpiTotal').textContent = g2.count+'개';
+    document.getElementById('kpiProg').textContent  = g2.unproc;
+    document.getElementById('kpiDone').textContent  = g2.avgRate+'%';
+    document.getElementById('kpiPoor').textContent  = poor;
+  } else if(tabNum === 4){
+    var g4=calcGroupKpi('업체명');
+    setKpiLabels('업체 수','미처리 합계','평균 완료율','미흡','poor');
+    document.getElementById('kpiTotal').textContent = g4.count+'개';
+    document.getElementById('kpiProg').textContent  = g4.unproc;
+    document.getElementById('kpiDone').textContent  = g4.avgRate+'%';
+    document.getElementById('kpiPoor').textContent  = poor;
+  } else if(tabNum === 5){
+    var cdata = CONTACT_DATA;
+    var cuniq={}, tuniq={};
+    cdata.forEach(function(r){ if(r.업체명) cuniq[r.업체명]=1; if(r.터널명) tuniq[r.터널명]=1; });
+    var safe = cdata.filter(function(r){ return r.관리구분==='안전관리자'; }).length;
+    var check = cdata.filter(function(r){ return r.관리구분==='점검팀'; }).length;
+    setKpiLabels('총 연락처','안전관리자','점검팀','업체 수','done');
+    document.getElementById('kpiTotal').textContent = cdata.length;
+    document.getElementById('kpiProg').textContent  = safe;
+    document.getElementById('kpiDone').textContent  = check;
+    document.getElementById('kpiPoor').textContent  = Object.keys(cuniq).length+'개';
+  }
+}
+
+// l3Color: 'poor'(amber·기본) 또는 'done'(teal·완료색) — 탭별 kpi-poor 카드 의미에 맞게 색상 전환
+function setKpiLabels(l0,l1,l2,l3,l3Color){
+  document.getElementById('kpiLbl0').textContent = l0;
+  document.getElementById('kpiLbl1').textContent = l1;
+  document.getElementById('kpiLbl2').textContent = l2;
+  document.getElementById('kpiLbl3').textContent = l3;
+  var poorNum = document.querySelector('.kpi-poor .kpi-num');
+  if(poorNum){
+    poorNum.style.color = (l3Color === 'done') ? 'var(--teal600)' : 'var(--amber)';
+  }
+}
+
+function updateKpiForList(){
+  // 하자내역 탭: 필터 결과 기준
+  var rows = filtered();
+  var c = countStatus(rows);
+  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL'
+    || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
+  setKpiLabels(isFiltered ? '필터 결과' : '전체', '진행중', '완료', '미흡', 'poor');
+  document.getElementById('kpiTotal').textContent = rows.length;
+  document.getElementById('kpiProg').textContent  = c.prog;
+  document.getElementById('kpiDone').textContent  = c.done;
+  document.getElementById('kpiPoor').textContent  = c.poor;
+}
+
+
+/* ── RENDER ALL (현재 탭만 즉시, 나머지는 탭 전환 시 lazy) ── */
+var DIRTY_TABS = [0,1,2,3,4]; // 렌더 필요 탭 목록
+function renderAll(){
+  DIRTY_TABS = [0,1,2,3,4];
+  renderCurrentTab();
+}
+function renderCurrentTab(){
+  var t = CURRENT_TAB;
+  if(DIRTY_TABS.indexOf(t)<0) return;
+  DIRTY_TABS = DIRTY_TABS.filter(function(x){return x!==t;});
+  if(t===0){ renderDashboard(); }
+  else if(t===1){ rebuildListHeader(); renderList(); }
+  else if(t===2){ renderUnprocPanel(); }
+  else if(t===3){ renderTunnelPanel(); }
+  else if(t===4){ renderCompanyPanel(); }
+}
+
+/* ── UNPROC FILTER ── */
+var UNPROC_FILTER = 'ALL';
+
+function setUnprocFilter(val){
+  UNPROC_FILTER = val;
+  renderUnprocPanel();
+}
+
+/* ── UNPROC PANEL ── */
+function renderUnprocPanel(){
+  var rows = ALL_DATA.filter(function(r){
+    var s = r['조치여부'];
+    return s === '진행중' || s === '미흡';
+  });
+  if(UNPROC_FILTER !== 'ALL'){
+    rows = rows.filter(function(r){ return r['조치여부'] === UNPROC_FILTER; });
+  }
+  // 날짜 오름차순 (오래된 것 먼저)
+  rows = rows.slice().sort(function(a,b){
+    var da=(a['날짜']||'').replace(/[.\/]/g,'-');
+    var db=(b['날짜']||'').replace(/[.\/]/g,'-');
+    return da < db ? -1 : da > db ? 1 : 0;
+  });
+
+  var cnt = document.getElementById('unprocCount');
+  if(cnt) cnt.textContent = '총 '+rows.length+'건';
+
+  var tbody = document.getElementById('unprocBody');
+  if(!tbody) return;
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--teal600);font-weight:700">🎉 미처리 하자가 없습니다!</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r){
+    var s = r['조치여부'];
+    var badge = s==='진행중' ? 'badge-prog' : 'badge-poor';
+    return '<tr onclick="openDetail('+r._idx+')" style="cursor:pointer">'
+      +'<td><span class="badge '+badge+'">'+esc(s)+'</span></td>'
+      +'<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>'
+      +'<td class="td-nowrap"><strong>'+esc(r['터널명']||'-')+'</strong></td>'
+      +'<td class="td-nowrap">'+esc(r['공종']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['위치']||'-')+'</td>'
+      +'<td><span class="td-content">'+esc(r['하자내용']||'-')+'</span></td>'
+      +'<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>'
+      +'<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>'
+      +'<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>'
+      +'<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>'
+      +'<td class="col-remark">'+esc(r['비고']||'-')+'</td>'
+      +'<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>'
+      +'</tr>';
+  }).join('');
+  if(CURRENT_TAB===2) updateKPI(2);
+}
+
+/* ── 사진 썸네일 헬퍼 (테이블용) ── */
+function makePhotoThumb(url){
+  if(!url||!url.trim()) return '<span style="color:var(--txt3)">-</span>';
+  if(!/^https?:\/\//i.test(url.trim())) return '<span style="color:var(--txt3)">-</span>';
+  return '<a href="'+esc(url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
+    +'<img src="'+esc(url)+'" alt="사진"'
+    +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block;margin:0 auto"'
+    +' onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'afterend\',\'<span style=\\\'font-size:10px;color:var(--coral)\\\'>⚠</span>\')">'
+    +'</a>';
+}
+
+/* ── LIST HEADER 동적 생성 ── */
+function rebuildListHeader(){
+  var visKeys = getVisibleCols();
+  var thead = document.getElementById('listHead');
+  if(!thead) return;
+  thead.innerHTML = visKeys.map(function(key){
+    var def=getColDef(key); if(!def) return '';
+    return '<th class="'+def.width+'">'+esc(def.label)+'</th>';
+  }).join('');
+}
+
+/* ── LIST ── */
+function renderList(){
+  var rows = filtered();
+  rows = rows.map(function(r){
+    return { r:r, d:(r['날짜']||'').replace(/[.\/]/g,'-') };
+  }).sort(function(a,b){
+    return a.d < b.d ? 1 : a.d > b.d ? -1 : 0;
+  }).map(function(o){ return o.r; });
+
+  var visKeys = getVisibleCols();
+  document.getElementById('filterCount').textContent = '총 '+rows.length+'건';
+  var tbody = document.getElementById('listBody');
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="'+visKeys.length+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    if(CURRENT_TAB===1) updateKpiForList();
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r){
+    var s = r['조치여부'];
+    var badge = s==='완료'?'badge-done':s==='진행중'?'badge-prog':'badge-poor';
+    var cells = visKeys.map(function(key){
+      var def = getColDef(key);
+      var cls = def ? def.width : '';
+      var val = r[key]||'';
+      if(key==='날짜')     return '<td class="td-nowrap">'+shortDate(val)+'</td>';
+      if(key==='조치일')   return '<td class="td-nowrap">'+shortDate(val)+'</td>';
+      if(key==='터널명')   return '<td class="td-nowrap"><strong>'+esc(val)+'</strong></td>';
+      if(key==='조치여부') return '<td><span class="badge '+badge+'">'+esc(s||'-')+'</span></td>';
+      if(key==='하자내용') return '<td><span class="td-content">'+esc(val)+'</span></td>';
+      if(key==='하자사진_URL'||key==='조치사진_URL') return '<td class="col-photo">'+makePhotoThumb(val)+'</td>';
+      return '<td class="'+cls+' td-nowrap">'+esc(val||'-')+'</td>';
+    }).join('');
+    return '<tr onclick="openDetail('+r._idx+')">'+cells+'</tr>';
+  }).join('');
+  if(CURRENT_TAB===1) updateKpiForList();
+}
+
+function shortDate(d){
+  if(!d) return '-';
+  var m = d.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+  if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+  return d||'-';
+}
+
+/* ── BAR ROW 공통 헬퍼 ── */
+// label: 표시명, count: 건수, max: 최대건수(비율 기준), color: 바 색상
+// rate: 완료율(숫자, 없으면 null), unprocBadge: 미처리 뱃지 HTML(없으면 ''), labelStyle: 추가 style
+function buildBarRow(label, count, max, color, rate, unprocBadge, labelStyle){
+  var pct = Math.round(count / max * 100);
+  var html = '<div class="bar-row">'
+    +'<div class="bar-label"'+(labelStyle?' style="'+labelStyle+'"':'')+'>'+esc(label)+'</div>'
+    +'<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>'
+    +'<div class="bar-val">'+count+'</div>';
+  if(rate !== null) html += '<div class="bar-sub" style="color:var(--teal600)">'+rate+'%</div>';
+  if(unprocBadge) html += unprocBadge;
+  html += '</div>';
+  return html;
+}
+
+/* ── DASHBOARD CHARTS ── */
+function renderDashboard(){
+  // 단일 순회로 터널·공종·업체 그룹 동시 수집
+  var tunnels={}, types={}, companies={};
+  ALL_DATA.forEach(function(r){
+    var tn=r['터널명']||'(미지정)', tp=r['공종']||'(미지정)', cp=r['업체명']||'(미지정)';
+    if(!tunnels[tn])   tunnels[tn]=[];   tunnels[tn].push(r);
+    if(!types[tp])     types[tp]=[];     types[tp].push(r);
+    if(!companies[cp]) companies[cp]=[]; companies[cp].push(r);
+  });
+
+  // 터널별
+  var tc = document.getElementById('tunnelChart');
+  var tvals = Object.values(tunnels).map(function(a){return a.length;});
+  var tmax = tvals.length ? Math.max.apply(null, tvals) : 1;
+  tc.innerHTML = Object.keys(tunnels).sort(function(a,b){return tunnels[b].length-tunnels[a].length;}).map(function(t){
+    var rows = tunnels[t];
+    var done = rows.filter(function(r){return r['조치여부']==='완료';}).length;
+    var rate = Math.round(done/rows.length*100);
+    return buildBarRow(t, rows.length, tmax, 'var(--sky600)', rate, '', '');
+  }).join('');
+
+  // 공종별
+  var ec = document.getElementById('typeChart');
+  var evals = Object.values(types).map(function(a){return a.length;});
+  var emax = evals.length ? Math.max.apply(null, evals) : 1;
+  var colors = ['var(--sky600)','var(--teal600)','var(--coral)','var(--amber)','var(--purple)','var(--green)'];
+  var ci = 0;
+  ec.innerHTML = Object.keys(types).sort(function(a,b){return types[b].length-types[a].length;}).map(function(t){
+    var rows = types[t];
+    var col  = colors[ci++ % colors.length];
+    return buildBarRow(t, rows.length, emax, col, null, '', '');
+  }).join('');
+
+  // 업체별
+  var cc = document.getElementById('companyChart');
+  var csorted = Object.keys(companies).sort(function(a,b){return companies[b].length-companies[a].length;});
+  var cmax = companies[csorted[0]] ? companies[csorted[0]].length : 1;
+  var ci2 = 0;
+  cc.innerHTML = csorted.map(function(cp){
+    var rows = companies[cp];
+    var done = rows.filter(function(r){return r['조치여부']==='완료';}).length;
+    var prog = rows.filter(function(r){return r['조치여부']==='진행중';}).length;
+    var poor = rows.filter(function(r){return r['조치여부']==='미흡';}).length;
+    var rate = Math.round(done/rows.length*100);
+    var col  = colors[ci2++ % colors.length];
+    var unproc = prog + poor;
+    var unprocBadge = unproc > 0
+      ? '<span style="font-size:10px;font-weight:700;color:var(--coral);background:var(--coral50);border-radius:10px;padding:1px 6px;margin-left:4px">미처리 '+unproc+'</span>'
+      : '';
+    return buildBarRow(cp, rows.length, cmax, col, rate, unprocBadge, 'min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis');
+  }).join('');
+}
+
+/* ── TAB DROPDOWN (터널별·공종별 탭 공용) ── */
+function buildTabDropdowns(){
+  // 터널별 드롭다운
+  var tunnels = getUniqueValues('터널명');
+  var tmenu = document.getElementById('tunnelTabDdMenu');
+  if(tmenu){
+    tmenu.innerHTML = '';
+    var topts = [{val:'ALL',label:'터널 전체'}].concat(tunnels.map(function(t){return{val:t,label:t};}));
+    tmenu.innerHTML = topts.map(function(o){
+      return '<div class="dd-opt'+(TAB_FILTER.tunnel===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+    }).join('');
+    if(!tmenu._bound){
+      tmenu._bound = true;
+      tmenu.addEventListener('click', function(e){
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+        if(opt && opt.dataset && opt.dataset.val) selectTabDd('tunnel', opt.dataset.val, opt);
+      });
+    }
+  }
+  // 업체별 드롭다운
+  var companies = getUniqueValues('업체명');
+  var cmenu = document.getElementById('companyTabDdMenu');
+  if(cmenu){
+    cmenu.innerHTML = '';
+    var copts = [{val:'ALL',label:'업체 전체'}].concat(companies.map(function(c){return{val:c,label:c};}));
+    cmenu.innerHTML = copts.map(function(o){
+      return '<div class="dd-opt'+(TAB_FILTER.company===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+    }).join('');
+    if(!cmenu._bound){
+      cmenu._bound = true;
+      cmenu.addEventListener('click', function(e){
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+        if(opt && opt.dataset && opt.dataset.val) selectTabDd('company', opt.dataset.val, opt);
+      });
+    }
+  }
+  // 외부 클릭 닫기 (중복 등록 방지: 한 번만)
+  if(!buildTabDropdowns._bound){
+    buildTabDropdowns._bound = true;
+    document.addEventListener('click', function(e){
+      var pairs = [['tunnelTabDdMenu','tunnelTabDdBtn'],['companyTabDdMenu','companyTabDdBtn']];
+      pairs.forEach(function(p){
+        var wrap = document.getElementById(p[0].replace('DdMenu','DdWrap'));
+        if(wrap && !wrap.contains(e.target)) closeTabDd(p[0], p[1]);
+      });
+    });
+  }
+  // 카운트 라벨 초기화
+  updateTabCounts();
+}
+
+function toggleTabDd(kind){
+  var menuId = kind==='tunnel'?'tunnelTabDdMenu':'companyTabDdMenu';
+  var btnId  = kind==='tunnel'?'tunnelTabDdBtn':'companyTabDdBtn';
+  toggleDd(menuId, btnId);
+}
+
+function closeTabDd(menuId, btnId){ closeDd(menuId, btnId); }
+
+function selectTabDd(kind, val, el){
+  var menuId  = kind==='tunnel'?'tunnelTabDdMenu':'companyTabDdMenu';
+  var btnId   = kind==='tunnel'?'tunnelTabDdBtn':'companyTabDdBtn';
+  var labelId = kind==='tunnel'?'tunnelTabDdLabel':'companyTabDdLabel';
+  var defLabel= kind==='tunnel'?'터널 전체':'업체 전체';
+  document.querySelectorAll('#'+menuId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById(labelId).textContent = val==='ALL' ? defLabel : val;
+  var btn = document.getElementById(btnId);
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  TAB_FILTER[kind] = val;
+  closeTabDd(menuId, btnId);
+  if(kind==='tunnel'){ renderTunnelPanel(); }
+  else               { renderCompanyPanel(); }
+  updateTabCounts();
+}
+
+function updateTabCounts(){
+  var tc = document.getElementById('tunnelTabCount');
+  var cc = document.getElementById('companyTabCount');
+  if(tc){
+    var tData = TAB_FILTER.tunnel==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['터널명']===TAB_FILTER.tunnel;});
+    tc.textContent = '총 '+tData.length+'건';
+  }
+  if(cc){
+    var cData = TAB_FILTER.company==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['업체명']===TAB_FILTER.company;});
+    cc.textContent = '총 '+cData.length+'건';
+  }
+}
+
+/* ── TUNNEL PANEL ── */
+// buildPanelRows: 패널 tbody 행 공통 생성 헬퍼
+// cols: 출력할 컬럼 배열 — 각 항목은 { key, cls, render(r, badge) } 형태
+function buildPanelRows(rows, cols){
+  return rows.map(function(r){
+    var s=r['조치여부'];
+    var badge=s==='완료'?'badge-done':s==='진행중'?'badge-prog':'badge-poor';
+    var cells = cols.map(function(c){ return c.render(r, badge); }).join('');
+    return '<tr onclick="openDetail('+r._idx+')" style="cursor:pointer">'+cells+'</tr>';
+  }).join('');
+}
+// buildPanelCard: 패널 카드 공통 래퍼 (헤더 + 테이블)
+function buildPanelCard(title, subHtml, rows, thead, tbody, showRate){
+  var done=rows.filter(function(r){return r['조치여부']==='완료';}).length;
+  var prog=rows.filter(function(r){return r['조치여부']==='진행중';}).length;
+  var poor=rows.filter(function(r){return r['조치여부']==='미흡';}).length;
+  var rate=Math.round(done/rows.length*100);
+  return '<div class="sc" style="margin-bottom:14px">'
+    +'<div class="sc-hd"><div>'
+    +'<h3>'+esc(title)+'<span style="display:inline-block;width:16px"></span>'
+    +'<span style="font-size:13px;font-weight:500;color:var(--txt2)">'+rows.length+'건</span></h3>'
+    +(subHtml||'')+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<span class="badge badge-done">완료 '+done+'</span>'
+    +'<span class="badge badge-prog">진행중 '+prog+'</span>'
+    +(poor>0?'<span class="badge badge-poor">미흡 '+poor+'</span>':'')
+    +(showRate?'<span style="font-size:12px;font-weight:700;color:var(--teal600)">'+rate+'%</span>':'')
+    +'</div></div>'
+    +'<div class="tbl-wrap"><div class="tbl-scroll">'
+    +'<table><thead><tr>'+thead+'</tr></thead><tbody>'+tbody+'</tbody></table>'
+    +'</div></div></div>';
+}
+
+function renderTunnelPanel(){
+  var allTunnels = groupBy(ALL_DATA,'터널명');
+  var el = document.getElementById('tunnelPanels');
+  var keys = Object.keys(allTunnels).sort();
+  if(TAB_FILTER.tunnel !== 'ALL'){
+    keys = keys.filter(function(k){ return k === TAB_FILTER.tunnel; });
+  }
+  if(!keys.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
+  var cols = [
+    {render:function(r,b){return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+esc(r['공종'])+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+esc(r['위치'])+'</td>';}},
+    {render:function(r){return '<td><span class="td-content">'+esc(r['하자내용'])+'</span></td>';}},
+    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>';}},
+    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>';}},
+    {render:function(r){return '<td class="col-remark">'+esc(r['비고']||'-')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>';}}
+  ];
+  var thead = '<th class="col-status">상태</th><th>날짜</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th>업체</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
+  el.innerHTML = keys.map(function(t){
+    var rows = allTunnels[t];
+    return buildPanelCard(t, '', rows, thead, buildPanelRows(rows, cols), true);
+  }).join('');
+}
+
+/* ── COMPANY PANEL ── */
+function renderCompanyPanel(){
+  var companies = groupBy(ALL_DATA,'업체명');
+  var el = document.getElementById('companyPanels');
+  var sorted = Object.keys(companies).sort(function(a,b){ return companies[b].length-companies[a].length; });
+  if(TAB_FILTER.company !== 'ALL'){
+    sorted = sorted.filter(function(k){ return k === TAB_FILTER.company; });
+  }
+  if(!sorted.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
+  var cols = [
+    {render:function(r,b){return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap"><strong>'+esc(r['터널명'])+'</strong></td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+esc(r['공종'])+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap">'+esc(r['위치'])+'</td>';}},
+    {render:function(r){return '<td><span class="td-content">'+esc(r['하자내용'])+'</span></td>';}},
+    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>';}},
+    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>';}},
+    {render:function(r){return '<td class="col-remark">'+esc(r['비고']||'-')+'</td>';}},
+    {render:function(r){return '<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>';}}
+  ];
+  var thead = '<th class="col-status">상태</th><th>날짜</th><th>터널</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
+  el.innerHTML = sorted.map(function(cp){
+    var rows = companies[cp];
+    var contactRow = rows.find(function(r){ return r['업체담당자']||r['전화번호']; })||rows[0];
+    var contact = contactRow['업체담당자']||'';
+    var tel = contactRow['전화번호']||'';
+    var subHtml = (contact||tel)
+      ? '<div style="font-size:13px;color:var(--txt2);margin-top:3px">'+esc(contact)+(tel?' &nbsp;&middot;&nbsp; '+esc(tel):'')+'</div>'
+      : '';
+    return buildPanelCard(cp, subHtml, rows, thead, buildPanelRows(rows, cols), true);
+  }).join('');
+}
+
+/* ── PHOTO URL 변환 ── */
+
+function makePhotoHtml(label, rawUrl){
+  if(!rawUrl || !rawUrl.trim()) return '';
+  var origUrl = rawUrl.trim();
+  // 보안: https?:// 이외의 프로토콜(javascript: 등) 차단
+  if(!/^https?:\/\//i.test(origUrl)) return '';
+
+  var inner = '<div class="photo-wrap">'
+    +'<a href="'+esc(origUrl)+'" target="_blank" rel="noopener">'
+    +'<img class="photo-img loading" src="'+esc(origUrl)+'" alt="'+esc(label)+'"'
+    +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+    +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+    +'></a>'
+    +'<div class="photo-spinner"></div>'
+    +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(origUrl)+'" target="_blank">링크로 직접 열기 →</a></div>'
+    +'</div>';
+
+  return '<div class="photo-section">'
+    +'<div class="photo-label">'+esc(label)+'</div>'
+    +inner
+    +'</div>';
+}
+
+/* ── DETAIL MODAL ── */
+function openDetail(idx){
+  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
+  if(!r) return;
+  var s = r['조치여부'];
+  var badge = s==='완료'?'badge-done':s==='진행중'?'badge-prog':'badge-poor';
+  document.getElementById('detailTitle').innerHTML = esc(r['터널명'])+' · '+esc(r['공종']);
+
+  // 수정/삭제 버튼 (항상 표시, Notion 미연동 시 클릭하면 안내)
+  var actionsEl = document.getElementById('detailActions');
+  if(actionsEl){
+    actionsEl.innerHTML =
+      '<button class="detail-act-btn detail-edit-btn" onclick="openEditModal('+r._idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>'
+      +'<button class="detail-act-btn detail-del-btn" onclick="showDeleteConfirm('+r._idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>삭제</button>';
+  }
+  // 푸터(삭제 확인 바) 초기화
+  var footer = document.getElementById('detailFooter');
+  if(footer) footer.innerHTML = '';
+  var rows = [
+    ['날짜',   esc(r['날짜']||'-')],
+    ['터널명', esc(r['터널명']||'-')],
+    ['공종',   esc(r['공종']||'-')],
+    ['위치',   esc(r['위치']||'-')],
+    ['하자내용', esc(r['하자내용']||'-')],
+    ['조치여부', '<span class="badge '+badge+'">'+esc(s||'-')+'</span>'],
+    ['조치일',  esc(r['조치일']||'-')],
+    ['업체명',  esc(r['업체명']||'-')],
+    ['담당자',  esc(r['업체담당자']||'-')],
+    ['전화번호', esc(r['전화번호']||'-')],
+    ['비고',    esc(r['비고']||'-')],
+    ['관리',    esc(r['업무담당']||'-')],
+  ];
+  var infoHtml = '<div class="detail-info-wrap">'
+    + rows.map(function(rv){
+        return '<div class="detail-row"><div class="detail-key">'+rv[0]+'</div><div class="detail-val">'+rv[1]+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  var p1 = r['하자사진_URL']||'';
+  var p2 = r['조치사진_URL']||'';
+  function photoSection(label, url){
+    var inner = url && /^https?:\/\//i.test(url.trim())
+      ? '<div class="photo-wrap"><a href="'+esc(url)+'" target="_blank" rel="noopener">'
+        +'<img class="photo-img loading" src="'+esc(url)+'" alt="'+esc(label)+'"'
+        +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+        +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+        +'></a>'
+        +'<div class="photo-spinner"></div>'
+        +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(url)+'" target="_blank">링크로 직접 열기 →</a></div>'
+        +'</div>'
+      : '<div style="padding:18px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
+    return '<div class="photo-section"><div class="photo-label">'+esc(label)+'</div>'+inner+'</div>';
+  }
+  var photoHtml = photoSection('하자사진', p1) + photoSection('조치사진', p2);
+
+  document.getElementById('detailBody').innerHTML = infoHtml + photoHtml;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeDetail(){
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+}
+
+/* ── TAB ── */
+function switchTab(n,el){
+  CURRENT_TAB = n;
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('on'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b){
+    b.classList.remove('on');
+    b.setAttribute('aria-selected','false');
+  });
+  document.getElementById('p'+n).classList.add('on');
+  el.classList.add('on');
+  el.setAttribute('aria-selected','true');
+  // 요약 탭(0)에서는 KPI 바 숨김 (처리 상태 현황 카드와 중복)
+  var kpiBar = document.getElementById('kpiBar');
+  if(kpiBar) kpiBar.style.display = n === 0 ? 'none' : '';
+  updateKPI(n);
+  if(n===5 && !CONTACT_LOADED){ loadContactData(); }
+  if(n<5) renderCurrentTab();
+}
+
+/* ── 503 자동 재시도 카운트다운 ── */
+var _retryTimer = null;
+function startRetryCountdown(sec){
+  if(_retryTimer) clearInterval(_retryTimer);
+  var remaining = sec;
+  var lu = document.getElementById('lastUpdate');
+  _retryTimer = setInterval(function(){
+    remaining--;
+    if(lu) lu.textContent = '⚠ 서버 일시 불가 — ' + remaining + '초 후 자동 재시도';
+    if(remaining <= 0){
+      clearInterval(_retryTimer);
+      _retryTimer = null;
+      loadData();
+    }
+  }, 1000);
+}
+
+/* ── SYNC BUTTON ── */
+function setSync(loading){
+  var btn  = document.getElementById('syncBtn');
+  var icon = document.getElementById('syncIcon');
+  var lbl  = document.getElementById('syncLabel');
+  if(loading){
+    btn.disabled = true;
+    if(icon) icon.classList.add('spinning');
+    lbl.textContent = '로딩중...';
+  } else {
+    btn.disabled = false;
+    if(icon) icon.classList.remove('spinning');
+    lbl.textContent = '새로고침';
+  }
+}
+
+/* ── HELPERS ── */
+function groupBy(arr, key){
+  var obj={};
+  arr.forEach(function(r){ var k=r[key]||'(미지정)'; if(!obj[k]) obj[k]=[]; obj[k].push(r); });
+  return obj;
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── 사진 업로드 (R2) ── */
+function uploadPhoto(input, key){
+  var file = input.files[0];
+  if(!file) return;
+
+  var num       = key==='photo1' ? '1' : '2';
+  var statusEl  = document.getElementById('photo'+num+'Status');
+  var thumbEl   = document.getElementById('photo'+num+'Thumb');
+  var urlEl     = document.getElementById('addPhoto'+num);
+
+  // 로컬 미리보기 (업로드 전)
+  var reader = new FileReader();
+  reader.onload = function(e){
+    thumbEl.src = e.target.result;
+    thumbEl.classList.add('show');
+  };
+  reader.readAsDataURL(file);
+
+  if(!CFG.workerUrl){
+    statusEl.textContent = '⚠ Worker URL 미설정';
+    statusEl.className = 'photo-upload-status err';
+    return;
+  }
+
+  statusEl.textContent = '업로드 중...';
+  statusEl.className = 'photo-upload-status';
+
+  var formData = new FormData();
+  formData.append('file', file);
+
+  fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(function(r){
+      if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); });
+      return r.json();
+    })
+    .then(function(data){
+      urlEl.value = data.url;
+      thumbEl.src = data.url;
+      statusEl.textContent = '✓ 업로드 완료';
+      statusEl.className = 'photo-upload-status ok';
+    })
+    .catch(function(e){
+      statusEl.textContent = '✗ ' + e.message;
+      statusEl.className = 'photo-upload-status err';
+    });
+}
+
+/* ── 하자 수정 모달 ── */
+function openEditModal(idx){
+  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
+  if(!r){ return; }
+  if(!CFG.workerUrl || !r._pageId){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  EDIT_PAGE_ID = r._pageId;
+
+  // 터널 목록
+  var tunnelSel = document.getElementById('addTunnel');
+  var tunnels = ALL_DATA.length ? getUniqueValues('터널명') : ['남정5터널','남정6터널','남정7터널','청하터널','흥해터널'];
+  buildTunnelSelectOpts(tunnelSel, document.getElementById('addTunnelCustom'), tunnels, r['터널명']||'');
+
+  // 기존 데이터 채우기
+  document.getElementById('addDate').value        = r['날짜']||'';
+  buildGenericSelectOpts(document.getElementById('addType'), document.getElementById('addTypeCustom'), ['설비','전기','소방','통신','토목','건축'], r['공종']||'');
+  var locs = ALL_DATA.length ? getUniqueValues('위치') : [];
+  buildGenericSelectOpts(document.getElementById('addLoc'), document.getElementById('addLocCustom'), locs, r['위치']||'');
+  document.getElementById('addContent').value       = r['하자내용']||'';
+  document.getElementById('addStatus').value        = r['조치여부']||'진행중';
+  document.getElementById('addActionDate').value    = r['조치일']||'';
+  var companies = ALL_DATA.length ? getUniqueValues('업체명') : [];
+  buildGenericSelectOpts(document.getElementById('addCompany'), document.getElementById('addCompanyCustom'), companies, r['업체명']||'');
+  var contacts = (function(){ if(CONTACT_DATA.length){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; } return getUniqueValues('업체담당자'); })();
+  buildGenericSelectOpts(document.getElementById('addContact'), document.getElementById('addContactCustom'), contacts, r['업체담당자']||'');
+  document.getElementById('addPhone').value       = r['전화번호']||'';
+  document.getElementById('addRemark').value      = r['비고']||'';
+  document.getElementById('addManager').value     = r['업무담당']||'';
+
+  // 사진 처리
+  var p1 = r['하자사진_URL']||'', p2 = r['조치사진_URL']||'';
+  document.getElementById('addPhoto1').value = p1;
+  document.getElementById('addPhoto2').value = p2;
+  document.getElementById('addPhoto1File').value = '';
+  document.getElementById('addPhoto2File').value = '';
+  var s1=document.getElementById('photo1Status'), t1=document.getElementById('photo1Thumb');
+  var s2=document.getElementById('photo2Status'), t2=document.getElementById('photo2Thumb');
+  if(p1){ s1.textContent='기존 사진 있음'; s1.className='photo-upload-status ok'; t1.src=p1; t1.classList.add('show'); }
+  else  { s1.textContent='파일을 선택하세요'; s1.className='photo-upload-status'; t1.classList.remove('show'); }
+  if(p2){ s2.textContent='기존 사진 있음'; s2.className='photo-upload-status ok'; t2.src=p2; t2.classList.add('show'); }
+  else  { s2.textContent='파일을 선택하세요'; s2.className='photo-upload-status'; t2.classList.remove('show'); }
+
+  // 모달 타이틀·버튼 라벨 변경
+  var titleText = document.getElementById('addModalTitleText');
+  if(titleText) titleText.textContent = '하자 수정';
+  document.getElementById('addSubmitLabel').textContent = '수정';
+
+  closeDetail();
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ document.getElementById('addContent').focus(); }, 100);
+}
+
+/* ── 삭제 확인 ── */
+function showDeleteConfirm(idx){
+  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !CFG.workerUrl || !r._pageId){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  var footer = document.getElementById('detailFooter');
+  if(!footer) return;
+  footer.innerHTML = '<div class="del-confirm-bar">'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
+    +'<button class="detail-act-btn detail-del-btn" id="deleteExecBtn" onclick="deleteItem('+idx+')">삭제 확인</button>'
+    +'</div></div>';
+  footer.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function hideDeleteConfirm(){
+  var footer = document.getElementById('detailFooter');
+  if(footer) footer.innerHTML = '';
+}
+
+function deleteItem(idx){
+  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !r._pageId) return;
+  var btn = document.getElementById('deleteExecBtn');
+  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
+  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ in_trash: true })
+  })
+  .then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+    return res.json();
+  })
+  .then(function(){
+    closeDetail();
+    loadData();
+  })
+  .catch(function(e){
+    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+    alert('삭제 실패: '+e.message);
+    console.error(e);
+  });
+}
+
+/* ── 신규 하자 등록 모달 ── */
+function openAddModal(){
+  EDIT_PAGE_ID = null;
+  var titleText = document.getElementById('addModalTitleText');
+  if(titleText) titleText.textContent = '신규 하자 등록';
+  document.getElementById('addSubmitLabel').textContent = '등록';
+  // 오늘 날짜 기본값
+  var today = new Date();
+  var ymd = today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
+  document.getElementById('addDate').value = ymd;
+  document.getElementById('addActionDate').value = ymd;
+  document.getElementById('addStatus').value = '진행중';
+  document.getElementById('addType').value = '';
+  document.getElementById('addContent').value = '';
+  document.getElementById('addPhone').value = '';
+  document.getElementById('addRemark').value = '';
+  document.getElementById('addPhoto1').value = '';
+  document.getElementById('addPhoto2').value = '';
+  document.getElementById('addPhoto1File').value = '';
+  document.getElementById('addPhoto2File').value = '';
+  document.getElementById('photo1Status').textContent = '파일을 선택하세요';
+  document.getElementById('photo1Status').className = 'photo-upload-status';
+  document.getElementById('photo2Status').textContent = '파일을 선택하세요';
+  document.getElementById('photo2Status').className = 'photo-upload-status';
+  document.getElementById('photo1Thumb').classList.remove('show');
+  document.getElementById('photo2Thumb').classList.remove('show');
+  document.getElementById('addManager').value = '';
+  ['addTypeCustom','addLocCustom','addStatusCustom','addCompanyCustom','addContactCustom','addManagerCustom'].forEach(function(id){
+    var el=document.getElementById(id); if(el){el.value='';el.style.display='none';}
+  });
+  // 위치, 업체명, 업체담당자 드롭다운 동적 채우기
+  var locs = ALL_DATA.length ? getUniqueValues('위치') : [];
+  buildGenericSelectOpts(document.getElementById('addLoc'), document.getElementById('addLocCustom'), locs, '');
+  var companies = ALL_DATA.length ? getUniqueValues('업체명') : [];
+  buildGenericSelectOpts(document.getElementById('addCompany'), document.getElementById('addCompanyCustom'), companies, '');
+  var contacts = (function(){ if(CONTACT_DATA.length){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; } return getUniqueValues('업체담당자'); })();
+  buildGenericSelectOpts(document.getElementById('addContact'), document.getElementById('addContactCustom'), contacts, '');
+
+  // 터널 목록: 현재 데이터에서 동적 생성 (없으면 고정 목록)
+  var tunnelSel = document.getElementById('addTunnel');
+  var tunnels = ALL_DATA.length ? getUniqueValues('터널명') : ['남정5터널','남정6터널','남정7터널','청하터널','흥해터널'];
+  buildTunnelSelectOpts(tunnelSel, document.getElementById('addTunnelCustom'), tunnels, '');
+
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ document.getElementById('addDate').focus(); }, 100);
+}
+
+function closeAddModal(){
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow = '';
+}
+
+/* ── 터널 드롭다운 공통 헬퍼 ── */
+function buildTunnelSelectOpts(selectEl, customInputEl, tunnels, currentValue){
+  selectEl.innerHTML = '<option value="">선택</option>'
+    + '<option value="__custom__">직접입력</option>'
+    + tunnels.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(!currentValue) return;
+  var inList = tunnels.indexOf(currentValue) >= 0;
+  if(inList){
+    selectEl.value = currentValue;
+  } else {
+    selectEl.value = '__custom__';
+    if(customInputEl){ customInputEl.value = currentValue; customInputEl.style.display=''; }
+  }
+}
+function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
+  selectEl.innerHTML = '<option value="">선택</option>'
+    + '<option value="__custom__">직접입력</option>'
+    + values.filter(Boolean).map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(currentValue===undefined||currentValue===null||currentValue==='') return;
+  var inList = values.indexOf(currentValue) >= 0;
+  if(inList){
+    selectEl.value = currentValue;
+  } else {
+    selectEl.value = '__custom__';
+    if(customInputEl){ customInputEl.value = currentValue; customInputEl.style.display=''; }
+  }
+}
+function onSelectChange(selectEl, customInputId){
+  var ci = document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value === '__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  var sel = document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value === '__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function onTunnelChange(selectEl, customInputId){
+  var ci = document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value === '__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getTunnelValue(selectId, customInputId){
+  var sel = document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value === '__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+
+function formatPhone(el){
+  var v = el.value.replace(/\D/g,'');
+  if(v.length<=3)      el.value = v;
+  else if(v.length<=7) el.value = v.slice(0,3)+'-'+v.slice(3);
+  else                 el.value = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+}
+
+function submitAddForm(){
+  var date    = document.getElementById('addDate').value.trim();
+  var type    = getSelectValue('addType','addTypeCustom');
+  var tunnel  = getTunnelValue('addTunnel','addTunnelCustom');
+  var loc     = getSelectValue('addLoc','addLocCustom');
+  var content = document.getElementById('addContent').value.trim();
+
+  if(!date)    { alert('날짜를 입력해주세요.'); document.getElementById('addDate').focus(); return; }
+  if(!type)    { alert('공종을 선택해주세요.'); document.getElementById('addType').focus(); return; }
+  if(!tunnel)  { alert('터널명을 선택해주세요.'); document.getElementById('addTunnel').focus(); return; }
+  if(!loc)     { alert('위치를 입력해주세요.'); document.getElementById('addLoc').focus(); return; }
+  if(!content) { alert('하자내용을 입력해주세요.'); document.getElementById('addContent').focus(); return; }
+
+  if(!CFG.workerUrl || !CFG.dbId) { alert('연동 설정(Worker URL, DB ID)을 먼저 입력해주세요.'); closeAddModal(); openCfgModal(); return; }
+  var s1t = (document.getElementById('photo1Status')||{}).textContent||'';
+  var s2t = (document.getElementById('photo2Status')||{}).textContent||'';
+  if(s1t==='업로드 중...' || s2t==='업로드 중...'){ alert('사진 업로드가 완료될 때까지 기다려주세요.'); return; }
+
+  var status    = getSelectValue('addStatus','addStatusCustom');
+  var actDate      = document.getElementById('addActionDate').value.trim();
+  var company   = getSelectValue('addCompany','addCompanyCustom');
+  var contact   = getSelectValue('addContact','addContactCustom');
+  var phone     = document.getElementById('addPhone').value.trim();
+  var remark    = document.getElementById('addRemark').value.trim();
+  var manager   = getSelectValue('addManager','addManagerCustom');
+  var photo1    = document.getElementById('addPhoto1').value.trim();
+  var photo2    = document.getElementById('addPhoto2').value.trim();
+
+  var btn = document.getElementById('addSubmitBtn');
+  var lbl = document.getElementById('addSubmitLabel');
+  btn.disabled = true;
+  lbl.textContent = EDIT_PAGE_ID ? '수정 중...' : '등록 중...';
+
+  // NOTION_PROP_MAP 기반으로 실제 속성명 결정
+  // 맵이 구성됐는데 키가 없으면 null → 해당 속성 전송 생략 (400 방지)
+  var mapReady = Object.keys(NOTION_PROP_MAP).length > 0;
+  function nk(internalKey){
+    if(mapReady) return NOTION_PROP_MAP[internalKey] || null;
+    return internalKey;
+  }
+  function setProp(key, val){
+    var k = nk(key);
+    if(k) properties[k] = val;
+  }
+
+  var properties = {};
+
+  // 하자내용 → title
+  var contentKey = nk('하자내용') || '하자내용';
+  properties[contentKey] = { title: [{ text: { content: content } }] };
+
+  setProp('날짜',    { date: { start: date } });
+  setProp('공종',    { multi_select: [{ name: type }] });
+  setProp('터널명',  { select: { name: tunnel } });
+  setProp('위치',    { rich_text: [{ text: { content: loc } }] });
+  setProp('조치여부',{ select: { name: status } });
+
+  if(actDate)    setProp('조치일',    { date: { start: actDate } });
+  if(company)    setProp('업체명',    { rich_text: [{ text: { content: company } }] });
+  if(contact)    setProp('업체담당자',{ rich_text: [{ text: { content: contact } }] });
+  if(phone)      setProp('전화번호',  { phone_number: phone });
+  if(remark)     setProp('비고',      { rich_text: [{ text: { content: remark } }] });
+  if(manager)    setProp('업무담당',  { select: { name: manager } });
+  if(photo1)     setProp('하자사진_URL', { files: [{ name: '하자사진', type: 'external', external: { url: photo1 } }] });
+  if(photo2)     setProp('조치사진_URL', { files: [{ name: '조치사진', type: 'external', external: { url: photo2 } }] });
+
+  var isEdit = !!EDIT_PAGE_ID;
+  var reqUrl = isEdit
+    ? (CFG.workerUrl + '/v1/pages/' + EDIT_PAGE_ID)
+    : (CFG.workerUrl + '/v1/pages');
+  var reqBody = isEdit
+    ? JSON.stringify({ properties: properties })
+    : JSON.stringify({ parent: { database_id: CFG.dbId }, properties: properties });
+
+  fetch(reqUrl, {
+    method: isEdit ? 'PATCH' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: reqBody
+  })
+  .then(function(r){
+    if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); });
+    return r.json();
+  })
+  .then(function(saved){
+    btn.disabled = false;
+    lbl.textContent = isEdit ? '수정' : '등록';
+    closeAddModal();
+    if(!isEdit && saved && saved.id){
+      var newId = saved.id;
+      AFTER_RELOAD_CB = function(){
+        var r = ALL_DATA.find(function(d){ return d._pageId===newId; });
+        if(r) openDetail(r._idx);
+      };
+    }
+    // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (업체명+터널) 미존재
+    if(!isEdit && company && CFG.contactDbId){
+      var alreadyExists = CONTACT_DATA.some(function(c){
+        return c.업체명 === company && c.터널명 === tunnel;
+      });
+      if(!alreadyExists){
+        var cProps = {};
+        setCProp(cProps, '업체명', { title: [{ text: { content: company } }] });
+        if(manager) setCProp(cProps, '관리구분', { select: { name: manager } });
+        if(tunnel)  setCProp(cProps, '터널명',   { select: { name: tunnel } });
+        if(contact) setCProp(cProps, '담당자',   { rich_text: [{ text: { content: contact } }] });
+        if(phone)   setCProp(cProps, '전화번호', { phone_number: phone });
+        fetch(CFG.workerUrl + '/v1/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parent: { database_id: CFG.contactDbId }, properties: cProps })
+        }).then(function(r){ if(r.ok) CONTACT_LOADED = false; }).catch(function(){});
+      }
+    }
+    loadData();
+  })
+  .catch(function(e){
+    btn.disabled = false;
+    lbl.textContent = isEdit ? '수정' : '등록';
+    alert((isEdit?'수정':'등록') + ' 실패: ' + e.message + '\n\nWorker가 해당 라우트를 지원하는지 확인하세요.');
+    console.error(e);
+  });
+}
+
+/* ── 업체연락처 탭 ── */
+var CONTACT_DATA = [];
+var CONTACT_LOADED = false;
+var CONTACT_FILTER = { group:'ALL', tunnel:'ALL' };
+var CONTACT_DB_ID = ''; // CFG.contactDbId 에서 런타임 참조
+var CONTACT_PROP_MAP = {}; // 실제 Notion 속성명 매핑 (빌드 후 사용)
+var AFTER_RELOAD_CB = null; // 신규 등록 후 자동 상세 오픈 콜백
+
+function buildContactPropMap(page){
+  if(!page || !page.properties) return;
+  var keys = Object.keys(page.properties);
+  var matchers = [
+    { key:'관리구분', kws:['관리구분','관리','group','category','구분','관리 구분'] },
+    { key:'터널명',   kws:['터널명','터널','tunnel','터널 명'] },
+    { key:'업체명',   kws:['업체명','업체','company','업체 명'] },
+    { key:'담당자',   kws:['담당자','담당','person','contact','담당 자'] },
+    { key:'전화번호', kws:['전화번호','전화','tel','phone','전화 번호'] },
+    { key:'관련업무', kws:['관련업무','업무','work','task','관련 업무'] },
+    { key:'비고',     kws:['비고','remark','note','memo'] },
+  ];
+  matchers.forEach(function(m){
+    for(var i=0;i<m.kws.length;i++){
+      var kw = m.kws[i].toLowerCase();
+      var found = null;
+      for(var j=0;j<keys.length;j++){
+        if(keys[j].toLowerCase()===kw){ found=keys[j]; break; }
+      }
+      if(!found) for(var j=0;j<keys.length;j++){
+        if(keys[j].toLowerCase().includes(kw)){ found=keys[j]; break; }
+      }
+      if(found){ CONTACT_PROP_MAP[m.key]=found; break; }
+    }
+  });
+}
+
+function cpk(internalKey){
+  return Object.keys(CONTACT_PROP_MAP).length ? (CONTACT_PROP_MAP[internalKey]||null) : internalKey;
+}
+function setCProp(props, key, val){
+  var k = cpk(key);
+  if(k) props[k] = val;
+}
+
+var CONTACT_DEMO_DATA = [
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'D2U이앤씨',      담당자:'박민규 대리',  전화번호:'010-2345-6712', 관련업무:'수신기',                       비고:''},
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'D2U이앤씨',      담당자:'변창식 소장',  전화번호:'010-3456-8119', 관련업무:'피난유도등',                    비고:''},
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'명신전기',        담당자:'노제훈 부장',  전화번호:'010-7890-8873', 관련업무:'전선 취부 보안등',               비고:''},
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'무선중계IBK',     담당자:'김홍삼 이사',  전화번호:'010-6789-1506', 관련업무:'터널무선중계 시스템',            비고:''},
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'현대산업',        담당자:'천훈식 팀장',  전화번호:'010-4455-3817', 관련업무:'공동구',                        비고:''},
+  {관리구분:'안전관리자',터널명:'남정5터널', 업체명:'보국발전기',      담당자:'최원일 소장',  전화번호:'010-8901-3345', 관련업무:'차단기 히팅설비',               비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'DL이앤씨',        담당자:'홍순범 부장',  전화번호:'010-2345-4146', 관련업무:'가드레일 점검로 전선통로',        비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'서진엔지니어링',   담당자:'성용성 소장',  전화번호:'010-7890-4628', 관련업무:'충압펌프',                      비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'세인',            담당자:'홍순범 부장',  전화번호:'010-2345-4146', 관련업무:'히팅케이블',                    비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'코리아넷',        담당자:'오종익',       전화번호:'010-7689-5979', 관련업무:'IP월 방재설비',                 비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'한화',            담당자:'정승규',       전화번호:'010-1234-5039', 관련업무:'환기설비',                      비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'태갑종합건축',     담당자:'조시현 소장',  전화번호:'010-1023-6910', 관련업무:'외벽 균열 미장 바닥',            비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'신성정보기술',     담당자:'박경민',       전화번호:'010-9011-3386', 관련업무:'폐쇄회로 영상감시',             비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'(주)와튼',         담당자:'정범모 과장',  전화번호:'010-7788-3312', 관련업무:'축전지 배터리관리시스템',                    비고:''},
+  {관리구분:'안전관리자',터널명:'청하터널',  업체명:'오리엔트㈜',       담당자:'양기호 소장',  전화번호:'010-5467-4324', 관련업무:'콘센트 직부등',                  비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'LK시스템',        담당자:'남형택 부장',  전화번호:'010-3456-9794', 관련업무:'비상방송',                      비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'동양이엔티',       담당자:'이정우 차장',  전화번호:'010-5678-2201', 관련업무:'자동도로전광표시기 정류기',       비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'한화',            담당자:'정승용 부장',  전화번호:'010-2345-6150', 관련업무:'공동구 누수',                    비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'태갑종합건축',     담당자:'조시현 소장',  전화번호:'010-1023-6910', 관련업무:'사다리 배관',                   비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'아이에프텍',       담당자:'맹대섭 이사',  전화번호:'010-7890-3138', 관련업무:'무정전전원장치',                 비고:''},
+  {관리구분:'안전관리자',터널명:'흥해터널',  업체명:'창천',            담당자:'홍순권 대표',  전화번호:'010-8901-4249', 관련업무:'설비제어장치 자동도로전광표시기',     비고:''},
+  {관리구분:'점검팀',    터널명:'남정5터널', 업체명:'D2U이앤씨',      담당자:'최준혁 과장',  전화번호:'010-9900-8520', 관련업무:'소화전',                        비고:''},
+  {관리구분:'점검팀',    터널명:'남정5터널', 업체명:'대성기업㈜',       담당자:'오석준 대표',  전화번호:'010-4455-0042', 관련업무:'인버터',                        비고:''},
+  {관리구분:'점검팀',    터널명:'남정5터널', 업체명:'명신전기',        담당자:'정승훈 차장',  전화번호:'010-5566-1153', 관련업무:'바닥',                          비고:''},
+  {관리구분:'점검팀',    터널명:'남정6터널', 업체명:'D2U이앤씨',      담당자:'최준혁 과장',  전화번호:'010-9900-8520', 관련업무:'자동화재탐지설비 수신기 소화전',  비고:''},
+  {관리구분:'점검팀',    터널명:'남정6터널', 업체명:'대성기업㈜',       담당자:'오석준 대표',  전화번호:'010-4455-0042', 관련업무:'인버터',                        비고:''},
+  {관리구분:'점검팀',    터널명:'남정7터널', 업체명:'D2U이앤씨',      담당자:'최준혁 과장',  전화번호:'010-9900-8520', 관련업무:'경종 중계기 광센서',             비고:''},
+  {관리구분:'점검팀',    터널명:'남정8터널', 업체명:'명신전기',        담당자:'정승훈 차장',  전화번호:'010-5566-1153', 관련업무:'표시등',                        비고:''},
+  {관리구분:'점검팀',    터널명:'남정8터널', 업체명:'한마음수배전반',   담당자:'박현규 부장',  전화번호:'010-6677-2264', 관련업무:'무정전전원장치',                 비고:''},
+  {관리구분:'점검팀',    터널명:'청하터널',  업체명:'D2U이앤씨',      담당자:'김병훈 과장',  전화번호:'010-7788-5426', 관련업무:'발신기 경종 시각경보기 공동구',  비고:''},
+  {관리구분:'점검팀',    터널명:'청하터널',  업체명:'HP시스템',        담당자:'박은경 대표',  전화번호:'010-3456-5057', 관련업무:'터널진입차단설비(차단막)',        비고:''},
+  {관리구분:'점검팀',    터널명:'청하터널',  업체명:'동화전기',        담당자:'김명훈 팀장',  전화번호:'010-8899-6537', 관련업무:'소화전',                        비고:''},
+  {관리구분:'점검팀',    터널명:'흥해터널',  업체명:'D2U이앤씨',      담당자:'김병훈 과장',  전화번호:'010-7788-5426', 관련업무:'소화전',                        비고:''},
+  {관리구분:'점검팀',    터널명:'강구2터널', 업체명:'(주)와튼',        담당자:'김진욱 대리',  전화번호:'010-1122-6471', 관련업무:'무정전전원장치',                 비고:''},
+  {관리구분:'점검팀',    터널명:'강구3터널', 업체명:'(주)와튼',        담당자:'김진욱 대리',  전화번호:'010-1122-6471', 관련업무:'무정전전원장치',                 비고:''}
+];
+
+function loadContactData(){
+  if(!CFG.workerUrl){
+    CONTACT_DATA = CONTACT_DEMO_DATA.map(function(r,i){ return Object.assign({},r,{_idx:i+1,_pageId:null}); });
+    CONTACT_LOADED = true;
+    renderContactPanel();
+    return;
+  }
+  fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId||CONTACT_DB_ID)+'/query', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ page_size:100 })
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(data){
+    var pages = data.results||[];
+    if(pages.length && !Object.keys(CONTACT_PROP_MAP).length) buildContactPropMap(pages[0]);
+    CONTACT_DATA = pages.map(parseContactPage).filter(function(r){return r.업체명||r._pageId;});
+    // has_more 처리
+    if(data.has_more && data.next_cursor){
+      return fetchContactNext(data.next_cursor);
+    }
+  })
+  .then(function(){
+    // 관리구분→터널명 순 클라이언트 정렬
+    CONTACT_DATA.sort(function(a,b){
+      var ga=(a.관리구분||''), gb=(b.관리구분||'');
+      if(ga!==gb) return ga<gb?-1:1;
+      var ta=(a.터널명||''), tb=(b.터널명||'');
+      return ta<tb?-1:ta>tb?1:0;
+    });
+    CONTACT_DATA = CONTACT_DATA.map(function(r,i){r._idx=i+1;return r;});
+    CONTACT_LOADED = true;
+    renderContactPanel();
+    if(CURRENT_TAB===5) updateKPI(5);
+  })
+  .catch(function(e){
+    console.error('업체연락처 로드 실패:', e);
+    CONTACT_DATA = CONTACT_DEMO_DATA;
+    CONTACT_LOADED = true;
+    renderContactPanel();
+  });
+}
+
+function fetchContactNext(cursor){
+  return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId||CONTACT_DB_ID)+'/query', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ page_size:100, start_cursor:cursor })
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(data){
+    CONTACT_DATA = CONTACT_DATA.concat((data.results||[]).map(parseContactPage).filter(function(r){return r.업체명||r._pageId;}));
+    if(data.has_more && data.next_cursor) return fetchContactNext(data.next_cursor);
+  });
+}
+
+function parseContactPage(page){
+  var p = page.properties||{};
+  var m = CONTACT_PROP_MAP;
+  function gprop(internalKey, extras){
+    var mapped = m[internalKey];
+    var names = (mapped ? [mapped] : []).concat(extras||[]).concat([internalKey]);
+    for(var i=0;i<names.length;i++) if(p[names[i]]) return getPropText(p[names[i]]);
+    return '';
+  }
+  return {
+    _pageId:  page.id||null,
+    관리구분: gprop('관리구분', ['관리']),
+    터널명:   gprop('터널명',   ['터널']),
+    업체명:   gprop('업체명',   ['업체']),
+    담당자:   gprop('담당자',   ['담당']),
+    전화번호: gprop('전화번호', ['전화']),
+    관련업무: gprop('관련업무', ['업무']),
+    비고:     gprop('비고',     []),
+  };
+}
+
+function filteredContacts(){
+  var q = (document.getElementById('contactSearchBox')||{value:''}).value.trim().toLowerCase();
+  return CONTACT_DATA.filter(function(r){
+    var gMatch = CONTACT_FILTER.group==='ALL' || r.관리구분===CONTACT_FILTER.group;
+    var tMatch = CONTACT_FILTER.tunnel==='ALL' || r.터널명===CONTACT_FILTER.tunnel;
+    var qMatch = !q
+      || (r.업체명||'').toLowerCase().includes(q)
+      || (r.담당자||'').toLowerCase().includes(q)
+      || (r.관련업무||'').toLowerCase().includes(q)
+      || (r.전화번호||'').includes(q)
+      || (r.터널명||'').toLowerCase().includes(q);
+    return gMatch && tMatch && qMatch;
+  });
+}
+
+function buildContactTunnelDd(){
+  var seen={}, tunnels=[];
+  CONTACT_DATA.forEach(function(r){ if(r.터널명&&!seen[r.터널명]){seen[r.터널명]=1;tunnels.push(r.터널명);} });
+  tunnels.sort();
+  var menu = document.getElementById('contactTunnelDdMenu');
+  if(!menu) return;
+  var opts = [{val:'ALL',label:'터널 전체'}].concat(tunnels.map(function(t){return{val:t,label:t};}));
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(CONTACT_FILTER.tunnel===o.val?' sel':'')+'" data-val="'+o.val+'">'+o.label+'</div>';
+  }).join('');
+  if(!menu._cbound){
+    menu._cbound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(!opt||!opt.dataset||!opt.dataset.val) return;
+      var val = opt.dataset.val;
+      menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
+      opt.classList.add('sel');
+      document.getElementById('contactTunnelDdLabel').textContent = val==='ALL'?'터널 전체':val;
+      var btn=document.getElementById('contactTunnelDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
+      CONTACT_FILTER.tunnel = val;
+      closeDd('contactTunnelDdMenu','contactTunnelDdBtn');
+      renderContactTable();
+    });
+    document.addEventListener('click', function(e){
+      var wrap=document.getElementById('contactTunnelDdWrap');
+      if(wrap&&!wrap.contains(e.target)) closeDd('contactTunnelDdMenu','contactTunnelDdBtn');
+    });
+  }
+}
+
+function toggleContactTunnelDd(){ toggleDd('contactTunnelDdMenu','contactTunnelDdBtn'); }
+
+function selectContactGroup(val, el){
+  document.querySelectorAll('#contactGroupFilter .f-chip').forEach(function(c){c.classList.remove('on');});
+  if(el) el.classList.add('on');
+  CONTACT_FILTER.group = val;
+  renderContactTable();
+}
+
+function renderContactPanel(){
+  buildContactTunnelDd();
+  renderContactTable();
+  if(CURRENT_TAB===5) updateKPI(5);
+  if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
+}
+
+/* ── 업체연락처 상세 (detailModal 재사용) ── */
+var CONTACT_EDIT_IDX = null;
+
+function openContactDetail(idx){
+  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r) return;
+  document.getElementById('detailTitle').textContent = (r.업체명||'-') + ' · ' + (r.담당자||'-');
+
+  var actionsEl = document.getElementById('detailActions');
+  if(actionsEl){
+    actionsEl.innerHTML =
+      '<button class="detail-act-btn detail-edit-btn" onclick="openContactEditModal('+idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>'
+      +'<button class="detail-act-btn detail-del-btn" onclick="showContactDeleteConfirm('+idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>삭제</button>';
+  }
+  var footer = document.getElementById('detailFooter');
+  if(footer) footer.innerHTML = '';
+
+  var tel = r.전화번호||'';
+  var telHtml = tel ? '<a href="tel:'+esc(tel)+'" style="color:var(--sky600);font-weight:700;text-decoration:none">'+esc(tel)+'</a>' : '-';
+  var gBadge = r.관리구분==='안전관리자'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">안전관리자</span>'
+    : r.관리구분==='점검팀'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">점검팀</span>'
+    : esc(r.관리구분||'-');
+
+  var rows = [
+    ['관리구분', gBadge],
+    ['터널명',   esc(r.터널명||'-')],
+    ['업체명',   esc(r.업체명||'-')],
+    ['담당자',   esc(r.담당자||'-')],
+    ['전화번호', telHtml],
+    ['관련업무', esc(r.관련업무||'-')],
+    ['비고',     esc(r.비고||'-')],
+  ];
+  var infoHtml = '<div class="detail-info-wrap">'
+    + rows.map(function(rv){
+        return '<div class="detail-row"><div class="detail-key">'+rv[0]+'</div><div class="detail-val">'+rv[1]+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  document.getElementById('detailBody').innerHTML = infoHtml;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function openContactEditModal(idx){
+  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r) return;
+  CONTACT_EDIT_IDX = idx;
+
+  var titleEl = document.getElementById('contactEditModalTitle');
+  if(titleEl) titleEl.textContent = '업체연락처 수정';
+  var lbl = document.getElementById('ceSubmitLabel');
+  if(lbl) lbl.textContent = '저장';
+
+  var ceTunnels = CONTACT_DATA.length
+    ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.터널명&&!s[c.터널명]){s[c.터널명]=1;a.push(c.터널명);} }); a.sort(); return a; })()
+    : [];
+  buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, r.터널명||'');
+
+  document.getElementById('ceGrp').value    = r.관리구분||'안전관리자';
+  var ceCompanies = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.업체명&&!s[c.업체명]){s[c.업체명]=1;a.push(c.업체명);} }); a.sort(); return a; })() : [];
+  buildGenericSelectOpts(document.getElementById('ceCo'), document.getElementById('ceCoCustom'), ceCompanies, r.업체명||'');
+  var cePersons = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; })() : [];
+  buildGenericSelectOpts(document.getElementById('cePerson'), document.getElementById('cePersonCustom'), cePersons, r.담당자||'');
+  document.getElementById('ceTel').value    = r.전화번호||'';
+  document.getElementById('ceWork').value   = r.관련업무||'';
+  document.getElementById('ceRemark').value = r.비고||'';
+
+  closeDetail();
+  document.getElementById('contactEditModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function openContactAddModal(){
+  CONTACT_EDIT_IDX = null;
+  var titleEl = document.getElementById('contactEditModalTitle');
+  if(titleEl) titleEl.textContent = '업체연락처 신규추가';
+  var lbl = document.getElementById('ceSubmitLabel');
+  if(lbl) lbl.textContent = '등록';
+
+  var ceTunnels = CONTACT_DATA.length
+    ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.터널명&&!s[c.터널명]){s[c.터널명]=1;a.push(c.터널명);} }); a.sort(); return a; })()
+    : [];
+  buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, '');
+
+  document.getElementById('ceGrp').value    = '안전관리자';
+  ['ceCoCustom','cePersonCustom','ceGrpCustom','ceTel','ceWork','ceRemark','ceTunnelCustom'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.value = '';
+    if(el.style !== undefined) el.style.display = 'none';
+  });
+  var ceCompanies = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.업체명&&!s[c.업체명]){s[c.업체명]=1;a.push(c.업체명);} }); a.sort(); return a; })() : [];
+  buildGenericSelectOpts(document.getElementById('ceCo'), document.getElementById('ceCoCustom'), ceCompanies, '');
+  var cePersons = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; })() : [];
+  buildGenericSelectOpts(document.getElementById('cePerson'), document.getElementById('cePersonCustom'), cePersons, '');
+
+  document.getElementById('contactEditModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function closeContactEditModal(){
+  document.getElementById('contactEditModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+}
+
+function submitContactForm(){
+  var isAdd = (CONTACT_EDIT_IDX === null);
+
+  var co = getSelectValue('ceCo','ceCoCustom');
+  if(!co){ alert('업체명을 입력해주세요.'); document.getElementById('ceCo').focus(); return; }
+  var tunnel = getTunnelValue('ceTunnel','ceTunnelCustom');
+  if(!tunnel){ alert('터널명을 입력해주세요.'); document.getElementById('ceTunnel').focus(); return; }
+
+  var btn = document.getElementById('ceSubmitBtn');
+  var lbl = document.getElementById('ceSubmitLabel');
+  btn.disabled=true;
+  if(lbl) lbl.textContent = isAdd ? '등록 중...' : '저장 중...';
+
+  var grp    = getSelectValue('ceGrp','ceGrpCustom');
+  var person = getSelectValue('cePerson','cePersonCustom');
+  var tel    = document.getElementById('ceTel').value.trim();
+  var work   = document.getElementById('ceWork').value.trim();
+  var rem    = document.getElementById('ceRemark').value.trim();
+
+  var properties = {};
+  setCProp(properties, '업체명',   { title: [{ text: { content: co } }] });
+  setCProp(properties, '관리구분', { select: { name: grp } });
+  setCProp(properties, '터널명',   { select: { name: tunnel } });
+  if(person) setCProp(properties, '담당자',   { rich_text: [{ text: { content: person } }] });
+  if(tel)    setCProp(properties, '전화번호', { phone_number: tel });
+  if(work)   setCProp(properties, '관련업무', { rich_text: [{ text: { content: work } }] });
+  if(rem)    setCProp(properties, '비고',     { rich_text: [{ text: { content: rem } }] });
+
+  function resetBtn(label){
+    btn.disabled=false;
+    if(lbl) lbl.textContent = label;
+  }
+
+  if(isAdd){
+    // 노션 미연동: 로컬에 추가
+    if(!CFG.workerUrl || !CFG.contactDbId){
+      var newIdx = CONTACT_DATA.length
+        ? Math.max.apply(null, CONTACT_DATA.map(function(d){ return d._idx; })) + 1
+        : 1;
+      CONTACT_DATA.push({ _idx:newIdx, _pageId:null,
+        관리구분:grp, 터널명:tunnel, 업체명:co,
+        담당자:person, 전화번호:tel, 관련업무:work, 비고:rem });
+      resetBtn('등록');
+      closeContactEditModal();
+      AFTER_RELOAD_CB = function(){ openContactDetail(newIdx); };
+      renderContactPanel();
+      return;
+    }
+    // map이 아직 비어있으면 DB에서 레코드 1건 probe 후 빌드
+    var doPost = function(){
+      // properties 재구성 (map 기준)
+      var p2 = {};
+      setCProp(p2, '업체명',   { title: [{ text: { content: co } }] });
+      setCProp(p2, '관리구분', { select: { name: grp } });
+      setCProp(p2, '터널명',   { select: { name: tunnel } });
+      if(person) setCProp(p2, '담당자',   { rich_text: [{ text: { content: person } }] });
+      if(tel)    setCProp(p2, '전화번호', { phone_number: tel });
+      if(work)   setCProp(p2, '관련업무', { rich_text: [{ text: { content: work } }] });
+      if(rem)    setCProp(p2, '비고',     { rich_text: [{ text: { content: rem } }] });
+      return fetch(CFG.workerUrl+'/v1/pages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ parent:{ database_id: CFG.contactDbId }, properties: p2 })
+      });
+    };
+    var probeAndPost = function(){
+      if(Object.keys(CONTACT_PROP_MAP).length) return doPost();
+      return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId)+'/query', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ page_size:1 })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ if((data.results||[]).length) buildContactPropMap(data.results[0]); })
+      .then(doPost)
+      .catch(function(){ return doPost(); });
+    };
+    probeAndPost()
+    .then(function(res){
+      if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+      return res.json();
+    })
+    .then(function(saved){
+      resetBtn('등록');
+      closeContactEditModal();
+      if(saved && saved.id){
+        var newId = saved.id;
+        AFTER_RELOAD_CB = function(){
+          var r = CONTACT_DATA.find(function(d){ return d._pageId===newId; });
+          if(r) openContactDetail(r._idx);
+        };
+      }
+      CONTACT_LOADED=false; loadContactData();
+    })
+    .catch(function(e){
+      resetBtn('등록');
+      alert('등록 실패: '+e.message);
+      console.error(e);
+    });
+  } else {
+    var r = CONTACT_DATA.find(function(d){ return d._idx===CONTACT_EDIT_IDX; });
+    if(!r || !r._pageId){
+      alert('노션 연동 설정 후 사용 가능합니다.');
+      resetBtn('저장');
+      return;
+    }
+    fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ properties: properties })
+    })
+    .then(function(res){
+      if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+      return res.json();
+    })
+    .then(function(){
+      resetBtn('저장');
+      closeContactEditModal();
+      CONTACT_LOADED=false; loadContactData();
+    })
+    .catch(function(e){
+      resetBtn('저장');
+      alert('수정 실패: '+e.message);
+      console.error(e);
+    });
+  }
+}
+
+function showContactDeleteConfirm(idx){
+  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !r._pageId || !CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.'); return; }
+  var footer = document.getElementById('detailFooter');
+  if(!footer) return;
+  footer.innerHTML = '<div class="del-confirm-bar">'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
+    +'<button class="detail-act-btn detail-del-btn" id="cDeleteExecBtn" onclick="deleteContactItem('+idx+')">삭제 확인</button>'
+    +'</div></div>';
+  footer.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function deleteContactItem(idx){
+  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !r._pageId) return;
+  var btn = document.getElementById('cDeleteExecBtn');
+  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
+  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ in_trash: true })
+  })
+  .then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+    return res.json();
+  })
+  .then(function(){
+    closeDetail();
+    CONTACT_LOADED=false;
+    loadContactData();
+  })
+  .catch(function(e){
+    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+    alert('삭제 실패: '+e.message);
+    console.error(e);
+  });
+}
+
+function renderContactTable(){
+  var rows = filteredContacts();
+  var cnt = document.getElementById('contactCount');
+  if(cnt) cnt.textContent = '총 '+rows.length+'건';
+  var tbody = document.getElementById('contactBody');
+  if(!tbody) return;
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    if(CURRENT_TAB===5) updateKPI(5);
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r){
+    var gBadge = r.관리구분==='안전관리자'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">안전관리자</span>'
+      : r.관리구분==='점검팀'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">점검팀</span>'
+      : esc(r.관리구분);
+    var tel = r.전화번호||'-';
+    var telHtml = tel!=='-'
+      ? '<a href="tel:'+esc(tel)+'" style="color:var(--sky600);text-decoration:none;font-weight:600">'+esc(tel)+'</a>'
+      : '-';
+    return '<tr onclick="openContactDetail('+r._idx+')" style="cursor:pointer">'
+      +'<td class="td-nowrap">'+gBadge+'</td>'
+      +'<td class="td-nowrap"><strong>'+esc(r.터널명||'-')+'</strong></td>'
+      +'<td class="td-nowrap">'+esc(r.업체명||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r.담당자||'-')+'</td>'
+      +'<td class="td-nowrap">'+telHtml+'</td>'
+      +'<td style="font-size:13px;color:var(--txt2);line-height:1.5">'+esc(r.관련업무||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r.비고||'-')+'</td>'
+      +'</tr>';
+  }).join('');
+  if(CURRENT_TAB===5) updateKPI(5);
+}
+
+</script>
+</body>
+</html>
