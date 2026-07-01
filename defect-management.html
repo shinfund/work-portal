@@ -2515,12 +2515,18 @@ function submitAddForm(confirmed){
           return cProps;
         };
         var doAutoPost = function(){
+          var payload = { parent: { database_id: CFG.contactDbId }, properties: buildCProps() };
+          console.log('[자동등록] POST payload:', JSON.stringify(payload));
           return fetch(CFG.workerUrl + '/v1/pages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ parent: { database_id: CFG.contactDbId }, properties: buildCProps() })
-          }).then(function(r){ if(r.ok) CONTACT_LOADED = false; }).catch(function(){});
+            body: JSON.stringify(payload)
+          }).then(function(res){
+            if(res.ok){ CONTACT_LOADED = false; console.log('[자동등록] 성공'); }
+            else res.text().then(function(t){ console.warn('[자동등록] 실패 HTTP '+res.status, t); });
+          }).catch(function(e){ console.error('[자동등록] 오류', e); });
         };
+        console.log('[자동등록] PROP_MAP 크기:', Object.keys(CONTACT_PROP_MAP).length, 'contactDbId:', CFG.contactDbId);
         if(Object.keys(CONTACT_PROP_MAP).length){
           doAutoPost();
         } else {
@@ -2528,8 +2534,12 @@ function submitAddForm(confirmed){
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ page_size:1 })
           }).then(function(r){ return r.json(); })
-            .then(function(d){ if((d.results||[]).length) buildContactPropMap(d.results[0]); })
-            .then(doAutoPost).catch(doAutoPost);
+            .then(function(d){
+              console.log('[자동등록] probe 결과:', (d.results||[]).length, '건');
+              if((d.results||[]).length) buildContactPropMap(d.results[0]);
+              console.log('[자동등록] PROP_MAP 빌드 후:', JSON.stringify(CONTACT_PROP_MAP));
+            })
+            .then(doAutoPost).catch(function(e){ console.error('[자동등록] probe 오류', e); doAutoPost(); });
         }
       }
     }
