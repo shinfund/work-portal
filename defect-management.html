@@ -2505,17 +2505,32 @@ function submitAddForm(confirmed){
         return c.업체명 === company && c.터널명 === tunnel;
       });
       if(!alreadyExists){
-        var cProps = {};
-        setCProp(cProps, '업체명', { title: [{ text: { content: company } }] });
-        if(manager) setCProp(cProps, '관리구분', { select: { name: manager } });
-        if(tunnel)  setCProp(cProps, '터널명',   { select: { name: tunnel } });
-        if(contact) setCProp(cProps, '담당자',   { rich_text: [{ text: { content: contact } }] });
-        if(phone)   setCProp(cProps, '전화번호', { phone_number: phone });
-        fetch(CFG.workerUrl + '/v1/pages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ parent: { database_id: CFG.contactDbId }, properties: cProps })
-        }).then(function(r){ if(r.ok) CONTACT_LOADED = false; }).catch(function(){});
+        var buildCProps = function(){
+          var cProps = {};
+          setCProp(cProps, '업체명', { title: [{ text: { content: company } }] });
+          if(manager) setCProp(cProps, '관리구분', { select: { name: manager } });
+          if(tunnel)  setCProp(cProps, '터널명',   { select: { name: tunnel } });
+          if(contact) setCProp(cProps, '담당자',   { rich_text: [{ text: { content: contact } }] });
+          if(phone)   setCProp(cProps, '전화번호', { phone_number: phone });
+          return cProps;
+        };
+        var doAutoPost = function(){
+          return fetch(CFG.workerUrl + '/v1/pages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ parent: { database_id: CFG.contactDbId }, properties: buildCProps() })
+          }).then(function(r){ if(r.ok) CONTACT_LOADED = false; }).catch(function(){});
+        };
+        if(Object.keys(CONTACT_PROP_MAP).length){
+          doAutoPost();
+        } else {
+          fetch(CFG.workerUrl+'/v1/databases/'+CFG.contactDbId+'/query', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ page_size:1 })
+          }).then(function(r){ return r.json(); })
+            .then(function(d){ if((d.results||[]).length) buildContactPropMap(d.results[0]); })
+            .then(doAutoPost).catch(doAutoPost);
+        }
       }
     }
     loadData();
