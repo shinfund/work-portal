@@ -319,6 +319,11 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 .detail-del-btn:hover{background:var(--coral100)}
 .detail-del-btn:disabled,.detail-edit-btn:disabled{opacity:.5;cursor:not-allowed}
 .del-confirm-bar{background:var(--coral50);border:1.5px solid var(--coral100);border-radius:var(--r8);padding:12px 14px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#confirmModal{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .15s}
+#confirmModal.open{opacity:1;pointer-events:auto}
+.confirm-box{background:#fff;border-radius:14px;padding:26px 22px 20px;min-width:260px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
+.confirm-msg{font-size:14px;font-weight:600;color:var(--txt);margin:0 0 18px;line-height:1.6}
+.confirm-btns{display:flex;gap:8px;justify-content:center}
 
 /* ── TUNNEL DROPDOWN ── */
 .dd-wrap{position:relative;display:inline-block}
@@ -2245,6 +2250,17 @@ function hideDeleteConfirm(){
   if(footer) footer.innerHTML = '';
 }
 
+function showConfirm(msg, onOk, okLabel){
+  document.getElementById('confirmMsg').textContent = msg;
+  var okBtn = document.getElementById('confirmOkBtn');
+  okBtn.textContent = okLabel || '확인';
+  okBtn.onclick = function(){ closeConfirmModal(); onOk(); };
+  document.getElementById('confirmModal').classList.add('open');
+}
+function closeConfirmModal(){
+  document.getElementById('confirmModal').classList.remove('open');
+}
+
 function deleteItem(idx){
   var r = ALL_DATA.find(function(d){ return d._idx===idx; });
   if(!r || !r._pageId) return;
@@ -2384,7 +2400,7 @@ function formatPhone(el){
   else                 el.value = v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
 }
 
-function submitAddForm(){
+function submitAddForm(confirmed){
   var date    = document.getElementById('addDate').value.trim();
   var type    = getSelectValue('addType','addTypeCustom');
   var tunnel  = getTunnelValue('addTunnel','addTunnelCustom');
@@ -2396,6 +2412,11 @@ function submitAddForm(){
   if(!tunnel)  { alert('터널명을 선택해주세요.'); document.getElementById('addTunnel').focus(); return; }
   if(!loc)     { alert('위치를 입력해주세요.'); document.getElementById('addLoc').focus(); return; }
   if(!content) { alert('하자내용을 입력해주세요.'); document.getElementById('addContent').focus(); return; }
+
+  if(EDIT_PAGE_ID && !confirmed){
+    showConfirm('입력한 내용으로 수정하시겠습니까?', function(){ submitAddForm(true); }, '수정');
+    return;
+  }
 
   if(!CFG.workerUrl || !CFG.dbId) { alert('연동 설정(Worker URL, DB ID)을 먼저 입력해주세요.'); closeAddModal(); openCfgModal(); return; }
   var s1t = (document.getElementById('photo1Status')||{}).textContent||'';
@@ -2837,13 +2858,18 @@ function closeContactEditModal(){
   document.body.style.overflow='';
 }
 
-function submitContactForm(){
+function submitContactForm(confirmed){
   var isAdd = (CONTACT_EDIT_IDX === null);
 
   var co = getSelectValue('ceCo','ceCoCustom');
   if(!co){ alert('업체명을 입력해주세요.'); document.getElementById('ceCo').focus(); return; }
   var tunnel = getTunnelValue('ceTunnel','ceTunnelCustom');
   if(!tunnel){ alert('터널명을 입력해주세요.'); document.getElementById('ceTunnel').focus(); return; }
+
+  if(!isAdd && !confirmed){
+    showConfirm('입력한 내용으로 수정하시겠습니까?', function(){ submitContactForm(true); }, '수정');
+    return;
+  }
 
   var btn = document.getElementById('ceSubmitBtn');
   var lbl = document.getElementById('ceSubmitLabel');
@@ -3039,5 +3065,16 @@ function renderContactTable(){
 }
 
 </script>
+
+<!-- 수정 확인 모달 -->
+<div id="confirmModal">
+  <div class="confirm-box">
+    <p class="confirm-msg" id="confirmMsg">수정하시겠습니까?</p>
+    <div class="confirm-btns">
+      <button class="modal-cancel" onclick="closeConfirmModal()">취소</button>
+      <button class="add-submit-btn" id="confirmOkBtn" style="min-width:80px">확인</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
