@@ -3172,6 +3172,14 @@ function exportToExcel(){
         row.commit();
       });
 
+      // 템플릿에 남아있을 수 있는 옛 버전의 빈 행(높이만 있고 셀 없음) 제거
+      // — 데이터가 없는 하위 행이 그대로 남으면 Excel이 파일 손상으로 인식함
+      // (spliceRows는 이 빈 행들을 제거하지 못해 내부 배열을 직접 자름)
+      var lastDataRow = EXCEL_FIRST_DATA_ROW + rows.length - 1;
+      if(ws._rows && ws._rows.length > lastDataRow){
+        ws._rows.length = lastDataRow;
+      }
+
       lbl.textContent = '사진 불러오는 중...';
       var photoJobs = [];
       rows.forEach(function(r, i){
@@ -3221,8 +3229,8 @@ function exportToExcel(){
 // 기준은 가로(landscape) 모드. 세로(portrait)는 추후 사용 예정 참고용으로만 정의.
 var PDF_ORIENTATION = 'landscape'; // 'landscape' | 'portrait'
 var PDF_MARGINS = {
-  landscape: '20mm 10mm 10mm 25mm', // 상 우 하 좌 (가로 기준)
-  portrait:  '25mm 10mm 10mm 10mm'  // 상 우 하 좌 (세로 기준, 참고용 · 미사용)
+  landscape: '5mm 5mm 5mm 10mm',  // 상 우 하 좌 (가로 기준)
+  portrait:  '10mm 5mm 5mm 5mm'   // 상 우 하 좌 (세로 기준, 참고용 · 미사용)
 };
 
 function buildFilterSummaryText(){
@@ -3259,8 +3267,8 @@ function exportToPDF(){
 
   var theadHtml = '<tr>'
     + '<th>조치여부</th><th>날짜</th><th>관리</th><th>터널명</th><th>공종</th><th>위치</th>'
-    + '<th class="wide">하자내용</th><th>하자사진</th><th>조치일</th><th>조치사진</th>'
-    + '<th>업체명</th><th>담당자</th><th>전화번호</th><th class="wide">비고</th>'
+    + '<th class="wide wide-content">하자내용</th><th>하자사진</th><th>조치일</th><th>조치사진</th>'
+    + '<th>업체명</th><th>담당자</th><th>전화번호</th><th class="wide wide-note">비고</th>'
     + '</tr>';
 
   var tbodyHtml = rows.map(function(r){
@@ -3273,14 +3281,14 @@ function exportToPDF(){
       + '<td><strong>'+esc(r['터널명']||'-')+'</strong></td>'
       + '<td>'+esc(r['공종']||'-')+'</td>'
       + '<td>'+esc(r['위치']||'-')+'</td>'
-      + '<td class="wide">'+esc(r['하자내용']||'-')+'</td>'
+      + '<td class="wide wide-content">'+esc(r['하자내용']||'-')+'</td>'
       + '<td>'+(photoImg(r['하자사진_URL'])||'-')+'</td>'
       + '<td>'+shortDate(r['조치일'])+'</td>'
       + '<td>'+(photoImg(r['조치사진_URL'])||'-')+'</td>'
       + '<td>'+esc(r['업체명']||'-')+'</td>'
       + '<td>'+esc(r['업체담당자']||'-')+'</td>'
       + '<td>'+esc(r['전화번호']||'-')+'</td>'
-      + '<td class="wide">'+esc(r['비고']||'-')+'</td>'
+      + '<td class="wide wide-note">'+esc(r['비고']||'-')+'</td>'
       + '</tr>';
   }).join('');
 
@@ -3292,12 +3300,14 @@ function exportToPDF(){
     + 'body{font-family:"Malgun Gothic","Noto Sans KR",sans-serif;color:#1a2535;margin:0;padding:16px}'
     + 'h1{font-size:18px;margin:0 0 6px}'
     + '.meta{font-size:11px;color:#555;margin-bottom:12px}'
-    + 'table{width:100%;border-collapse:collapse;font-size:10px}'
+    + 'table{width:100%;table-layout:auto;border-collapse:collapse;font-size:10px}'
     + 'thead{display:table-header-group}'
     + 'tr{page-break-inside:avoid}'
     + 'th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:middle;white-space:nowrap}'
     + 'th{background:#eef3fb;font-weight:700}'
-    + 'td.wide,th.wide{width:180px;max-width:180px;white-space:normal;word-break:keep-all}'
+    + 'td.wide,th.wide{white-space:normal;word-break:keep-all}'
+    + 'td.wide-content,th.wide-content{width:220px}'
+    + 'td.wide-note,th.wide-note{width:100px}'
     + '.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap}'
     + '.b-done{background:#e1f5ee;color:#0f6e56}'
     + '.b-prog{background:#faece7;color:#d85a30}'
