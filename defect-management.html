@@ -3152,6 +3152,10 @@ function exportToExcel(){
         var rn = EXCEL_FIRST_DATA_ROW + i;
         var row = ws.getRow(rn);
         row.height = EXCEL_ROW_HEIGHT;
+        // 행 레벨 서식(customFormat)을 모든 데이터 행에 강제로 동일하게 부여
+        // — 템플릿에 이미 있던 행과 새로 생성된 행 사이에 이 속성이 있고 없고가 갈리면
+        //   Excel이 파일을 손상으로 인식하는 문제가 있었음 (2026-07-02 확인)
+        row.font = { name:'맑은 고딕', size:10 };
         for(var col=1; col<=14; col++){
           var cell = row.getCell(col);
           cell.border = EXCEL_CELL_BORDER;
