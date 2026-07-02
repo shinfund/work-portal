@@ -721,6 +721,10 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="excelExportLabel">엑셀 생성</span>
     </button>
+    <button id="pdfExportBtn" onclick="exportToPDF()" style="background:var(--coral);border-color:var(--coral);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/><line x1="9" y1="11" x2="12" y2="11"/></svg>
+      <span id="pdfExportLabel">PDF 생성</span>
+    </button>
   </div>
   <div class="filter-count" id="filterCount"></div>
   <div class="tbl-wrap">
@@ -3215,6 +3219,105 @@ function exportToExcel(){
       lbl.textContent = '엑셀 생성';
     })
     .finally(function(){ btn.disabled = false; });
+}
+
+/* ── PDF 생성 (하자내역 탭, 브라우저 인쇄 기능 이용) ── */
+function buildFilterSummaryText(){
+  var q = (document.getElementById('searchBox').value||'').trim();
+  var parts = [
+    '터널명: ' + (FILTER.tunnel==='ALL' ? '전체' : FILTER.tunnel),
+    '관리: ' + (FILTER.manager==='ALL' ? '전체' : FILTER.manager),
+    '조치여부: ' + (FILTER.status==='ALL' ? '전체' : FILTER.status)
+  ];
+  if(q) parts.push('검색: "' + q + '"');
+  return parts.join(' · ');
+}
+
+function exportToPDF(){
+  var btn = document.getElementById('pdfExportBtn');
+  var lbl = document.getElementById('pdfExportLabel');
+  var rows = filtered().slice().sort(function(a,b){
+    var da=(a['날짜']||'').replace(/[.\/]/g,'-');
+    var db=(b['날짜']||'').replace(/[.\/]/g,'-');
+    return da<db?1:da>db?-1:0;
+  });
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+
+  var win = window.open('', '_blank');
+  if(!win){ alert('팝업이 차단되었습니다. 브라우저에서 이 사이트의 팝업을 허용해주세요.'); return; }
+
+  var now = new Date();
+  var genTime = now.getFullYear()+'-'+fmt(now.getMonth()+1)+'-'+fmt(now.getDate())+' '+fmt(now.getHours())+':'+fmt(now.getMinutes());
+
+  function photoImg(url){
+    if(!url || !/^https?:\/\//i.test(url)) return '';
+    return '<img src="'+esc(url)+'" style="width:50px;height:50px;object-fit:cover;border-radius:3px;border:1px solid #ccc" onerror="this.style.display=\'none\'">';
+  }
+
+  var theadHtml = '<tr>'
+    + '<th>조치여부</th><th>날짜</th><th>관리</th><th>터널명</th><th>공종</th><th>위치</th>'
+    + '<th class="wide">하자내용</th><th>하자사진</th><th>조치일</th><th>조치사진</th>'
+    + '<th>업체명</th><th>담당자</th><th>전화번호</th><th class="wide">비고</th>'
+    + '</tr>';
+
+  var tbodyHtml = rows.map(function(r){
+    var s = r['조치여부'];
+    var badgeClass = s==='완료'?'b-done':s==='진행중'?'b-prog':'b-poor';
+    return '<tr>'
+      + '<td><span class="badge '+badgeClass+'">'+esc(s||'-')+'</span></td>'
+      + '<td>'+shortDate(r['날짜'])+'</td>'
+      + '<td>'+esc(r['업무담당']||'-')+'</td>'
+      + '<td><strong>'+esc(r['터널명']||'-')+'</strong></td>'
+      + '<td>'+esc(r['공종']||'-')+'</td>'
+      + '<td>'+esc(r['위치']||'-')+'</td>'
+      + '<td class="wide">'+esc(r['하자내용']||'-')+'</td>'
+      + '<td>'+(photoImg(r['하자사진_URL'])||'-')+'</td>'
+      + '<td>'+shortDate(r['조치일'])+'</td>'
+      + '<td>'+(photoImg(r['조치사진_URL'])||'-')+'</td>'
+      + '<td>'+esc(r['업체명']||'-')+'</td>'
+      + '<td>'+esc(r['업체담당자']||'-')+'</td>'
+      + '<td>'+esc(r['전화번호']||'-')+'</td>'
+      + '<td class="wide">'+esc(r['비고']||'-')+'</td>'
+      + '</tr>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">'
+    + '<title>하자보수현황_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes())+'</title>'
+    + '<style>'
+    + '@page{ size:A4 landscape; margin:10mm; }'
+    + '*{box-sizing:border-box}'
+    + 'body{font-family:"Malgun Gothic","Noto Sans KR",sans-serif;color:#1a2535;margin:0;padding:16px}'
+    + 'h1{font-size:18px;margin:0 0 6px}'
+    + '.meta{font-size:11px;color:#555;margin-bottom:12px}'
+    + 'table{width:100%;border-collapse:collapse;font-size:10px}'
+    + 'thead{display:table-header-group}'
+    + 'tr{page-break-inside:avoid}'
+    + 'th,td{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:middle}'
+    + 'th{background:#eef3fb;font-weight:700}'
+    + 'td.wide,th.wide{min-width:120px}'
+    + '.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap}'
+    + '.b-done{background:#e1f5ee;color:#0f6e56}'
+    + '.b-prog{background:#faece7;color:#d85a30}'
+    + '.b-poor{background:#faeeda;color:#ba7517}'
+    + '.no-print{margin-bottom:12px}'
+    + '@media print{ .no-print{display:none} }'
+    + '</style></head><body>'
+    + '<button class="no-print" onclick="window.print()" style="padding:8px 16px;font-size:13px;cursor:pointer">인쇄 / PDF로 저장</button>'
+    + '<h1>터널 하자보수현황</h1>'
+    + '<div class="meta">생성일시: '+genTime+' · '+buildFilterSummaryText()+' · 총 '+rows.length+'건</div>'
+    + '<table><thead>'+theadHtml+'</thead><tbody>'+tbodyHtml+'</tbody></table>'
+    + '</body></html>';
+
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+
+  lbl.textContent = '완료!';
+  setTimeout(function(){ lbl.textContent = 'PDF 생성'; }, 1500);
+
+  win.addEventListener('load', function(){
+    setTimeout(function(){ win.print(); }, 400);
+  });
 }
 
 </script>
