@@ -3075,7 +3075,7 @@ function loadExcelLib(){
     var s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
     s.onload = function(){ resolve(); };
-    s.onerror = function(){ reject(new Error('엑셀 라이브러리 로드 실패')); };
+    s.onerror = function(){ EXCEL_LIB_LOADING = null; reject(new Error('엑셀 라이브러리 로드 실패')); };
     document.head.appendChild(s);
   });
   return EXCEL_LIB_LOADING;
@@ -3086,14 +3086,15 @@ var EXCEL_SHEET_NAME = '하자현황';
 var EXCEL_FIRST_DATA_ROW = 3;
 var EXCEL_TEMPLATE_ROWS = 10; // 템플릿에 미리 스타일된 데이터 행 수
 
+// exceljs가 지원하는 형식(jpeg/png/gif)만 반환, 그 외(webp/heic 등)는 null → 임베드 생략
 function guessImageExt(blob, url){
   var t = (blob && blob.type) || '';
   if(t.indexOf('png')>=0) return 'png';
   if(t.indexOf('gif')>=0) return 'gif';
-  if(t.indexOf('jpeg')>=0 || t.indexOf('jpg')>=0) return 'jpeg';
+  if(t.indexOf('jpeg')>=0) return 'jpeg';
   var m = (url||'').toLowerCase().match(/\.(png|gif|jpe?g)(\?|$)/);
   if(m) return m[1]==='jpg' ? 'jpeg' : m[1];
-  return 'jpeg';
+  return null;
 }
 
 function fetchImageForExcel(url){
@@ -3102,8 +3103,10 @@ function fetchImageForExcel(url){
     if(!r.ok) throw new Error('HTTP '+r.status);
     return r.blob();
   }).then(function(blob){
+    var ext = guessImageExt(blob, url);
+    if(!ext){ console.warn('지원하지 않는 이미지 형식:', url, blob.type); return null; }
     return blob.arrayBuffer().then(function(buf){
-      return { buffer: buf, extension: guessImageExt(blob, url) };
+      return { buffer: buf, extension: ext };
     });
   }).catch(function(e){
     console.warn('사진 로드 실패:', url, e);
@@ -3154,7 +3157,6 @@ function exportToExcel(){
       rows.forEach(function(r, i){
         var rn = EXCEL_FIRST_DATA_ROW + i;
         var row = ws.getRow(rn);
-        row.height = 85.2;
         row.getCell(1).value  = shortDate(r['날짜']);
         row.getCell(2).value  = r['터널명']||'';
         row.getCell(3).value  = r['업무담당']||'';
