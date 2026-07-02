@@ -1444,7 +1444,7 @@ function filtered(){
 /* ── BUILD TUNNEL DROPDOWN ── */
 function buildTunnelFilter(){
   FILTER.tunnel = 'ALL';
-  var tunnels = getUniqueValues('터널명');
+  var tunnels = getUniqueValues('터널명').reverse();
   var menu = document.getElementById('tunnelDdMenu');
   var opts = [{ val:'ALL', label:'터널명 전체' }];
   tunnels.forEach(function(t){ opts.push({ val:t, label:t }); });
@@ -1784,7 +1784,7 @@ function renderDashboard(){
 /* ── TAB DROPDOWN (터널별·공종별 탭 공용) ── */
 function buildTabDropdowns(){
   // 터널별 드롭다운
-  var tunnels = getUniqueValues('터널명');
+  var tunnels = getUniqueValues('터널명').reverse();
   var tmenu = document.getElementById('tunnelTabDdMenu');
   if(tmenu){
     tmenu.innerHTML = '';
@@ -2707,7 +2707,7 @@ function filteredContacts(){
 function buildContactTunnelDd(){
   var seen={}, tunnels=[];
   CONTACT_DATA.forEach(function(r){ if(r.터널명&&!seen[r.터널명]){seen[r.터널명]=1;tunnels.push(r.터널명);} });
-  tunnels.sort();
+  tunnels.sort().reverse();
   var menu = document.getElementById('contactTunnelDdMenu');
   if(!menu) return;
   var opts = [{val:'ALL',label:'터널 전체'}].concat(tunnels.map(function(t){return{val:t,label:t};}));
