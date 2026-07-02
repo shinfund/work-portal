@@ -691,31 +691,35 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 <!-- 패널1: 목록 -->
 <div class="panel on" id="p1">
   <div class="filter-row">
-    <div class="dd-wrap" id="statusDdWrap">
-      <button class="dd-btn" id="statusDdBtn" onclick="toggleStatusDd()" aria-haspopup="listbox" aria-label="상태 선택">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="statusDdLabel">상태 전체</span>
-      </button>
-      <div class="dd-menu" id="statusDdMenu"></div>
-    </div>
     <div class="dd-wrap" id="tunnelDdWrap">
-      <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+      <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널명 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-        <span id="tunnelDdLabel">터널 전체</span>
+        <span id="tunnelDdLabel">터널명 전체</span>
       </button>
       <div class="dd-menu" id="tunnelDdMenu"></div>
     </div>
     <div class="dd-wrap" id="managerDdWrap">
-      <button class="dd-btn" id="managerDdBtn" onclick="toggleManagerDd()" aria-haspopup="listbox" aria-label="관리자 선택">
+      <button class="dd-btn" id="managerDdBtn" onclick="toggleManagerDd()" aria-haspopup="listbox" aria-label="관리 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span id="managerDdLabel">관리 전체</span>
       </button>
       <div class="dd-menu" id="managerDdMenu"></div>
     </div>
+    <div class="dd-wrap" id="statusDdWrap">
+      <button class="dd-btn" id="statusDdBtn" onclick="toggleStatusDd()" aria-haspopup="listbox" aria-label="조치여부 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="statusDdLabel">조치여부 전체</span>
+      </button>
+      <div class="dd-menu" id="statusDdMenu"></div>
+    </div>
     <input class="search-box" id="searchBox" placeholder="🔍 하자내용, 위치 검색..." oninput="renderList()">
     <button onclick="openAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
+    </button>
+    <button id="excelExportBtn" onclick="exportToExcel()" style="background:var(--teal600);border-color:var(--teal600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="excelExportLabel">엑셀 생성</span>
     </button>
   </div>
   <div class="filter-count" id="filterCount"></div>
@@ -847,11 +851,12 @@ var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL' };
 var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
 var CURRENT_TAB = 1;
 
-// ── 열 정의 (노션 DB 컬럼 순서와 동일) ──
+// ── 열 정의 (노션 하자보수DB 컬럼명과 동일하게 표기) ──
 var COL_DEFS = [
-  { key:'조치여부',   label:'상태',     width:'col-status',  fixed:true  },
+  { key:'조치여부',   label:'조치여부', width:'col-status',  fixed:true  },
   { key:'날짜',       label:'날짜',     width:'col-date',    fixed:false },
-  { key:'터널명',     label:'터널',     width:'col-tunnel',  fixed:false },
+  { key:'터널명',     label:'터널명',   width:'col-tunnel',  fixed:false },
+  { key:'업무담당',   label:'관리',     width:'col-manager', fixed:false },
   { key:'공종',       label:'공종',     width:'col-type',    fixed:false },
   { key:'위치',       label:'위치',     width:'col-loc',     fixed:false },
   { key:'하자내용',   label:'하자내용', width:'col-expand',  fixed:true  },
@@ -859,11 +864,10 @@ var COL_DEFS = [
   { key:'조치일',     label:'조치일',   width:'col-date2',   fixed:false },
 
   { key:'조치사진_URL', label:'조치사진', width:'col-photo', fixed:false },
-  { key:'업체명',     label:'업체',     width:'col-company', fixed:false },
-  { key:'업체담당자', label:'업체담당', width:'col-contact', fixed:false },
+  { key:'업체명',     label:'업체명',   width:'col-company', fixed:false },
+  { key:'업체담당자', label:'담당자',   width:'col-contact', fixed:false },
   { key:'전화번호',   label:'전화번호', width:'col-contact', fixed:false },
-  { key:'비고',       label:'비고',     width:'col-remark',  fixed:false },
-  { key:'업무담당',   label:'관리',     width:'col-manager', fixed:false }
+  { key:'비고',       label:'비고',     width:'col-remark',  fixed:false }
 ];
 
 // probe로 감지된 실제 노션 속성명 매핑 { 내부key: 실제Notion속성명 }
@@ -1353,7 +1357,7 @@ function buildStatusFilter(){
   var menu = document.getElementById('statusDdMenu');
   if(!menu) return;
   var opts = [
-    { val:'ALL',   label:'상태 전체' },
+    { val:'ALL',   label:'조치여부 전체' },
     { val:'진행중', label:'진행중' },
     { val:'완료',  label:'완료' },
     { val:'미흡',  label:'미흡' }
@@ -1378,7 +1382,7 @@ function closeStatusDd()  { closeDd('statusDdMenu','statusDdBtn'); }
 function selectStatus(val, el){
   document.querySelectorAll('#statusDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
-  var labelMap = { ALL:'상태 전체', '진행중':'진행중', '완료':'완료', '미흡':'미흡' };
+  var labelMap = { ALL:'조치여부 전체', '진행중':'진행중', '완료':'완료', '미흡':'미흡' };
   document.getElementById('statusDdLabel').textContent = labelMap[val] || val;
   var btn = document.getElementById('statusDdBtn');
   if(btn) btn.classList.toggle('active', val!=='ALL');
@@ -1442,7 +1446,7 @@ function buildTunnelFilter(){
   FILTER.tunnel = 'ALL';
   var tunnels = getUniqueValues('터널명');
   var menu = document.getElementById('tunnelDdMenu');
-  var opts = [{ val:'ALL', label:'터널 전체' }];
+  var opts = [{ val:'ALL', label:'터널명 전체' }];
   tunnels.forEach(function(t){ opts.push({ val:t, label:t }); });
   menu.innerHTML = opts.map(function(o){
     return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
@@ -1466,7 +1470,7 @@ function closeTunnelDd()  { closeDd('tunnelDdMenu','tunnelDdBtn'); }
 function selectTunnel(val, el){
   document.querySelectorAll('#tunnelDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
-  document.getElementById('tunnelDdLabel').textContent = val==='ALL' ? '터널 전체' : val;
+  document.getElementById('tunnelDdLabel').textContent = val==='ALL' ? '터널명 전체' : val;
   var btn = document.getElementById('tunnelDdBtn');
   if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.tunnel = val;
@@ -3060,6 +3064,155 @@ function renderContactTable(){
       +'</tr>';
   }).join('');
   if(CURRENT_TAB===5) updateKPI(5);
+}
+
+/* ── 엑셀 생성 (하자내역 탭, 템플릿 기반) ── */
+var EXCEL_LIB_LOADING = null;
+function loadExcelLib(){
+  if(window.ExcelJS) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  EXCEL_LIB_LOADING = new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    s.onload = function(){ resolve(); };
+    s.onerror = function(){ reject(new Error('엑셀 라이브러리 로드 실패')); };
+    document.head.appendChild(s);
+  });
+  return EXCEL_LIB_LOADING;
+}
+
+var EXCEL_TEMPLATE_PATH = 'template/하자보수현황_템플릿.xlsx';
+var EXCEL_SHEET_NAME = '하자현황';
+var EXCEL_FIRST_DATA_ROW = 3;
+var EXCEL_TEMPLATE_ROWS = 10; // 템플릿에 미리 스타일된 데이터 행 수
+
+function guessImageExt(blob, url){
+  var t = (blob && blob.type) || '';
+  if(t.indexOf('png')>=0) return 'png';
+  if(t.indexOf('gif')>=0) return 'gif';
+  if(t.indexOf('jpeg')>=0 || t.indexOf('jpg')>=0) return 'jpeg';
+  var m = (url||'').toLowerCase().match(/\.(png|gif|jpe?g)(\?|$)/);
+  if(m) return m[1]==='jpg' ? 'jpeg' : m[1];
+  return 'jpeg';
+}
+
+function fetchImageForExcel(url){
+  if(!url || !/^https?:\/\//i.test(url)) return Promise.resolve(null);
+  return fetch(url).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.blob();
+  }).then(function(blob){
+    return blob.arrayBuffer().then(function(buf){
+      return { buffer: buf, extension: guessImageExt(blob, url) };
+    });
+  }).catch(function(e){
+    console.warn('사진 로드 실패:', url, e);
+    return null;
+  });
+}
+
+function exportToExcel(){
+  var btn = document.getElementById('excelExportBtn');
+  var lbl = document.getElementById('excelExportLabel');
+  var rows = filtered().slice().sort(function(a,b){
+    var da=(a['날짜']||'').replace(/[.\/]/g,'-');
+    var db=(b['날짜']||'').replace(/[.\/]/g,'-');
+    return da<db?1:da>db?-1:0;
+  });
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+
+  btn.disabled = true;
+  lbl.textContent = '준비 중...';
+
+  loadExcelLib()
+    .then(function(){ return fetch(EXCEL_TEMPLATE_PATH); })
+    .then(function(r){
+      if(!r.ok) throw new Error('템플릿 파일을 불러올 수 없습니다 (HTTP '+r.status+')');
+      return r.arrayBuffer();
+    })
+    .then(function(buf){
+      var wb = new ExcelJS.Workbook();
+      return wb.xlsx.load(buf).then(function(){ return wb; });
+    })
+    .then(function(wb){
+      var ws = wb.getWorksheet(EXCEL_SHEET_NAME);
+      if(!ws) throw new Error('템플릿에서 "'+EXCEL_SHEET_NAME+'" 시트를 찾을 수 없습니다.');
+
+      // 필요한 만큼 행 스타일 복제 (템플릿 기본 10행 초과 시)
+      if(rows.length > EXCEL_TEMPLATE_ROWS){
+        var refRow = ws.getRow(EXCEL_FIRST_DATA_ROW + EXCEL_TEMPLATE_ROWS - 1);
+        for(var i=EXCEL_TEMPLATE_ROWS; i<rows.length; i++){
+          var newRow = ws.getRow(EXCEL_FIRST_DATA_ROW + i);
+          newRow.height = refRow.height;
+          refRow.eachCell({ includeEmpty:true }, function(cell, colNum){
+            newRow.getCell(colNum).style = Object.assign({}, cell.style);
+          });
+        }
+      }
+
+      lbl.textContent = '데이터 입력 중...';
+      rows.forEach(function(r, i){
+        var rn = EXCEL_FIRST_DATA_ROW + i;
+        var row = ws.getRow(rn);
+        row.height = 85.2;
+        row.getCell(1).value  = shortDate(r['날짜']);
+        row.getCell(2).value  = r['터널명']||'';
+        row.getCell(3).value  = r['업무담당']||'';
+        row.getCell(4).value  = r['공종']||'';
+        row.getCell(5).value  = r['위치']||'';
+        row.getCell(6).value  = r['하자내용']||'';
+        row.getCell(8).value  = shortDate(r['조치일']);
+        row.getCell(10).value = r['조치여부']||'';
+        row.getCell(11).value = r['업체명']||'';
+        row.getCell(12).value = r['업체담당자']||'';
+        row.getCell(13).value = r['전화번호']||'';
+        row.getCell(14).value = r['비고']||'';
+        row.commit();
+      });
+
+      lbl.textContent = '사진 불러오는 중...';
+      var photoJobs = [];
+      rows.forEach(function(r, i){
+        var rn0 = EXCEL_FIRST_DATA_ROW - 1 + i; // 0-based row index
+        if(r['하자사진_URL']){
+          photoJobs.push(fetchImageForExcel(r['하자사진_URL']).then(function(img){
+            if(!img) return;
+            var imgId = wb.addImage(img);
+            ws.addImage(imgId, { tl:{col:6, row:rn0}, br:{col:7, row:rn0+1} });
+          }));
+        }
+        if(r['조치사진_URL']){
+          photoJobs.push(fetchImageForExcel(r['조치사진_URL']).then(function(img){
+            if(!img) return;
+            var imgId = wb.addImage(img);
+            ws.addImage(imgId, { tl:{col:8, row:rn0}, br:{col:9, row:rn0+1} });
+          }));
+        }
+      });
+
+      return Promise.all(photoJobs).then(function(){
+        lbl.textContent = '파일 저장 중...';
+        return wb.xlsx.writeBuffer();
+      });
+    })
+    .then(function(buf){
+      var blob = new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      var url = URL.createObjectURL(blob);
+      var now = new Date();
+      var fname = '하자보수현황_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes())+'.xlsx';
+      var a = document.createElement('a');
+      a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+      lbl.textContent = '완료!';
+      setTimeout(function(){ lbl.textContent = '엑셀 생성'; }, 1500);
+    })
+    .catch(function(e){
+      alert('엑셀 생성 실패: '+e.message);
+      console.error(e);
+      lbl.textContent = '엑셀 생성';
+    })
+    .finally(function(){ btn.disabled = false; });
 }
 
 </script>
