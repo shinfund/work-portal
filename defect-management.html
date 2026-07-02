@@ -990,7 +990,7 @@ function saveCfg(){
   if(newWu && !/^https:\/\/.+/.test(newWu)){ alert('Worker URL은 https:// 로 시작해야 합니다.'); wEl.focus(); return; }
   if(newWu) CFG.workerUrl=newWu;
   if(newDb) CFG.dbId=newDb;
-  if(newCdb){ CFG.contactDbId=newCdb; CONTACT_LOADED=false; }
+  if(newCdb){ CFG.contactDbId=newCdb; CONTACT_LOADED=false; CONTACT_PROP_MAP={}; }
   if(!CFG.workerUrl||!CFG.dbId){ alert('Worker URL과 DB ID를 모두 입력해주세요.'); return; }
   try{
     localStorage.setItem('haja_workerUrl',   CFG.workerUrl);
@@ -1035,7 +1035,7 @@ function getPropText(p){
   if(p.type==='select')       return (p.select&&p.select.name)||'';
   if(p.type==='multi_select') return (p.multi_select||[]).map(function(s){return s.name;}).join(', ');
   if(p.type==='number')       return p.number!==null&&p.number!==undefined ? String(p.number) : '';
-  if(p.type==='formula')      return String(p.formula&&(p.formula.string||p.formula.number)||'');
+  if(p.type==='formula')      return (p.formula&&p.formula.string!=null) ? p.formula.string : (p.formula&&p.formula.number!=null ? String(p.formula.number) : '');
   if(p.type==='url')          return p.url||'';
   if(p.type==='date')         return (p.date&&p.date.start)||'';
   if(p.type==='checkbox')     return p.checkbox ? '완료' : '진행중';
@@ -1359,7 +1359,7 @@ function buildStatusFilter(){
     { val:'미흡',  label:'미흡' }
   ];
   menu.innerHTML = opts.map(function(o){
-    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+o.val+'">'+o.label+'</div>';
+    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
   }).join('');
   if(!buildStatusFilter._bound){
     buildStatusFilter._bound = true;
@@ -1637,25 +1637,8 @@ function renderUnprocPanel(){
     tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--teal600);font-weight:700">🎉 미처리 하자가 없습니다!</td></tr>';
     return;
   }
-  tbody.innerHTML = rows.map(function(r){
-    var s = r['조치여부'];
-    var badge = s==='진행중' ? 'badge-prog' : 'badge-poor';
-    return '<tr onclick="openDetail('+r._idx+')" style="cursor:pointer">'
-      +'<td><span class="badge '+badge+'">'+esc(s)+'</span></td>'
-      +'<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>'
-      +'<td class="td-nowrap"><strong>'+esc(r['터널명']||'-')+'</strong></td>'
-      +'<td class="td-nowrap">'+esc(r['공종']||'-')+'</td>'
-      +'<td class="td-nowrap">'+esc(r['위치']||'-')+'</td>'
-      +'<td><span class="td-content">'+esc(r['하자내용']||'-')+'</span></td>'
-      +'<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>'
-      +'<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>'
-      +'<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>'
-      +'<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>'
-      +'<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>'
-      +'<td class="col-remark">'+esc(r['비고']||'-')+'</td>'
-      +'<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>'
-      +'</tr>';
-  }).join('');
+  var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
+  tbody.innerHTML = buildPanelRows(rows, cols);
   if(CURRENT_TAB===2) updateKPI(2);
 }
 
@@ -1884,6 +1867,25 @@ function updateTabCounts(){
 }
 
 /* ── TUNNEL PANEL ── */
+// CELL_RENDERERS: 미처리·터널별·업체별 탭 공통 컬럼 렌더러
+var CELL_RENDERERS = {
+  status:  function(r,b){ return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>'; },
+  date:    function(r){ return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>'; },
+  tunnel:  function(r){ return '<td class="td-nowrap"><strong>'+esc(r['터널명']||'-')+'</strong></td>'; },
+  type:    function(r){ return '<td class="td-nowrap">'+esc(r['공종']||'-')+'</td>'; },
+  loc:     function(r){ return '<td class="td-nowrap">'+esc(r['위치']||'-')+'</td>'; },
+  content: function(r){ return '<td><span class="td-content">'+esc(r['하자내용']||'-')+'</span></td>'; },
+  photo1:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>'; },
+  photo2:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>'; },
+  company: function(r){ return '<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>'; },
+  contact: function(r){ return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>'; },
+  phone:   function(r){ return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>'; },
+  remark:  function(r){ return '<td class="col-remark">'+esc(r['비고']||'-')+'</td>'; },
+  manager: function(r){ return '<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>'; }
+};
+function pickCols(keys){
+  return keys.map(function(k){ return { render: CELL_RENDERERS[k] }; });
+}
 // buildPanelRows: 패널 tbody 행 공통 생성 헬퍼
 // cols: 출력할 컬럼 배열 — 각 항목은 { key, cls, render(r, badge) } 형태
 function buildPanelRows(rows, cols){
@@ -1924,20 +1926,7 @@ function renderTunnelPanel(){
     keys = keys.filter(function(k){ return k === TAB_FILTER.tunnel; });
   }
   if(!keys.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
-  var cols = [
-    {render:function(r,b){return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+esc(r['공종'])+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+esc(r['위치'])+'</td>';}},
-    {render:function(r){return '<td><span class="td-content">'+esc(r['하자내용'])+'</span></td>';}},
-    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>';}},
-    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>';}},
-    {render:function(r){return '<td class="col-remark">'+esc(r['비고']||'-')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>';}}
-  ];
+  var cols = pickCols(['status','date','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
   var thead = '<th class="col-status">상태</th><th>날짜</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th>업체</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
   el.innerHTML = keys.map(function(t){
     var rows = allTunnels[t];
@@ -1954,20 +1943,7 @@ function renderCompanyPanel(){
     sorted = sorted.filter(function(k){ return k === TAB_FILTER.company; });
   }
   if(!sorted.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
-  var cols = [
-    {render:function(r,b){return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap"><strong>'+esc(r['터널명'])+'</strong></td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+esc(r['공종'])+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap">'+esc(r['위치'])+'</td>';}},
-    {render:function(r){return '<td><span class="td-content">'+esc(r['하자내용'])+'</span></td>';}},
-    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>';}},
-    {render:function(r){return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>';}},
-    {render:function(r){return '<td class="col-remark">'+esc(r['비고']||'-')+'</td>';}},
-    {render:function(r){return '<td class="td-nowrap col-manager">'+esc(r['업무담당']||'-')+'</td>';}}
-  ];
+  var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','contact','phone','remark','manager']);
   var thead = '<th class="col-status">상태</th><th>날짜</th><th>터널</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
   el.innerHTML = sorted.map(function(cp){
     var rows = companies[cp];
@@ -2196,7 +2172,7 @@ function openEditModal(idx){
   var locs = ALL_DATA.length ? getUniqueValues('위치') : [];
   buildGenericSelectOpts(document.getElementById('addLoc'), document.getElementById('addLocCustom'), locs, r['위치']||'');
   document.getElementById('addContent').value       = r['하자내용']||'';
-  document.getElementById('addStatus').value        = r['조치여부']||'진행중';
+  buildGenericSelectOpts(document.getElementById('addStatus'), document.getElementById('addStatusCustom'), ['진행중','완료','미흡'], r['조치여부']||'진행중');
   document.getElementById('addActionDate').value    = r['조치일']||'';
   var companies = ALL_DATA.length ? getUniqueValues('업체명') : [];
   buildGenericSelectOpts(document.getElementById('addCompany'), document.getElementById('addCompanyCustom'), companies, r['업체명']||'');
@@ -2204,7 +2180,7 @@ function openEditModal(idx){
   buildGenericSelectOpts(document.getElementById('addContact'), document.getElementById('addContactCustom'), contacts, r['업체담당자']||'');
   document.getElementById('addPhone').value       = r['전화번호']||'';
   document.getElementById('addRemark').value      = r['비고']||'';
-  document.getElementById('addManager').value     = r['업무담당']||'';
+  buildGenericSelectOpts(document.getElementById('addManager'), document.getElementById('addManagerCustom'), ['안전관리자','점검팀'], r['업무담당']||'');
 
   // 사진 처리
   var p1 = r['하자사진_URL']||'', p2 = r['조치사진_URL']||'';
@@ -2499,34 +2475,37 @@ function submitAddForm(confirmed){
         if(r) openDetail(r._idx);
       };
     }
-    // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (업체명+터널) 미존재
+    // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (터널명·관리·업체명·담당자·전화번호) 미존재 (관련업무 제외)
     if(!isEdit && company && CFG.contactDbId){
+      // 하자보수DB 터널명은 "남정5" 같은 축약형, 업체연락처DB는 "남정5터널" 같은 전체형 사용 → 저장 전 통일
+      var cTunnel = (tunnel && !/터널$/.test(tunnel)) ? (tunnel + '터널') : tunnel;
       var alreadyExists = CONTACT_DATA.some(function(c){
-        return c.업체명 === company && c.터널명 === tunnel;
+        return c.업체명 === company &&
+               c.터널명 === cTunnel &&
+               (c.관리구분||'') === (manager||'') &&
+               (c.담당자||'')   === (contact||'') &&
+               (c.전화번호||'') === (phone||'');
       });
       if(!alreadyExists){
         var buildCProps = function(){
           var cProps = {};
           setCProp(cProps, '업체명', { title: [{ text: { content: company } }] });
-          if(manager) setCProp(cProps, '관리구분', { select: { name: manager } });
-          if(tunnel)  setCProp(cProps, '터널명',   { select: { name: tunnel } });
-          if(contact) setCProp(cProps, '담당자',   { rich_text: [{ text: { content: contact } }] });
-          if(phone)   setCProp(cProps, '전화번호', { phone_number: phone });
+          if(manager)  setCProp(cProps, '관리구분', { select: { name: manager } });
+          if(cTunnel)  setCProp(cProps, '터널명',   { select: { name: cTunnel } });
+          if(contact)  setCProp(cProps, '담당자',   { rich_text: [{ text: { content: contact } }] });
+          if(phone)    setCProp(cProps, '전화번호', { phone_number: phone });
           return cProps;
         };
         var doAutoPost = function(){
-          var payload = { parent: { database_id: CFG.contactDbId }, properties: buildCProps() };
-          console.log('[자동등록] POST payload:', JSON.stringify(payload));
           return fetch(CFG.workerUrl + '/v1/pages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ parent: { database_id: CFG.contactDbId }, properties: buildCProps() })
           }).then(function(res){
-            if(res.ok){ CONTACT_LOADED = false; console.log('[자동등록] 성공'); }
-            else res.text().then(function(t){ console.warn('[자동등록] 실패 HTTP '+res.status, t); });
-          }).catch(function(e){ console.error('[자동등록] 오류', e); });
+            if(res.ok) CONTACT_LOADED = false;
+            else res.text().then(function(t){ console.warn('업체연락처 자동등록 실패 HTTP '+res.status, t); });
+          }).catch(function(e){ console.error('업체연락처 자동등록 오류', e); });
         };
-        console.log('[자동등록] PROP_MAP 크기:', Object.keys(CONTACT_PROP_MAP).length, 'contactDbId:', CFG.contactDbId);
         if(Object.keys(CONTACT_PROP_MAP).length){
           doAutoPost();
         } else {
@@ -2534,12 +2513,8 @@ function submitAddForm(confirmed){
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({ page_size:1 })
           }).then(function(r){ return r.json(); })
-            .then(function(d){
-              console.log('[자동등록] probe 결과:', (d.results||[]).length, '건');
-              if((d.results||[]).length) buildContactPropMap(d.results[0]);
-              console.log('[자동등록] PROP_MAP 빌드 후:', JSON.stringify(CONTACT_PROP_MAP));
-            })
-            .then(doAutoPost).catch(function(e){ console.error('[자동등록] probe 오류', e); doAutoPost(); });
+            .then(function(d){ if((d.results||[]).length) buildContactPropMap(d.results[0]); })
+            .then(doAutoPost).catch(doAutoPost);
         }
       }
     }
@@ -2557,7 +2532,6 @@ function submitAddForm(confirmed){
 var CONTACT_DATA = [];
 var CONTACT_LOADED = false;
 var CONTACT_FILTER = { group:'ALL', tunnel:'ALL' };
-var CONTACT_DB_ID = ''; // CFG.contactDbId 에서 런타임 참조
 var CONTACT_PROP_MAP = {}; // 실제 Notion 속성명 매핑 (빌드 후 사용)
 var AFTER_RELOAD_CB = null; // 신규 등록 후 자동 상세 오픈 콜백
 
@@ -2641,7 +2615,7 @@ function loadContactData(){
     renderContactPanel();
     return;
   }
-  fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId||CONTACT_DB_ID)+'/query', {
+  fetch(CFG.workerUrl+'/v1/databases/'+CFG.contactDbId+'/query', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ page_size:100 })
@@ -2678,7 +2652,7 @@ function loadContactData(){
 }
 
 function fetchContactNext(cursor){
-  return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId||CONTACT_DB_ID)+'/query', {
+  return fetch(CFG.workerUrl+'/v1/databases/'+CFG.contactDbId+'/query', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ page_size:100, start_cursor:cursor })
@@ -2734,7 +2708,7 @@ function buildContactTunnelDd(){
   if(!menu) return;
   var opts = [{val:'ALL',label:'터널 전체'}].concat(tunnels.map(function(t){return{val:t,label:t};}));
   menu.innerHTML = opts.map(function(o){
-    return '<div class="dd-opt'+(CONTACT_FILTER.tunnel===o.val?' sel':'')+'" data-val="'+o.val+'">'+o.label+'</div>';
+    return '<div class="dd-opt'+(CONTACT_FILTER.tunnel===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
   }).join('');
   if(!menu._cbound){
     menu._cbound = true;
@@ -2907,15 +2881,6 @@ function submitContactForm(confirmed){
   var work   = document.getElementById('ceWork').value.trim();
   var rem    = document.getElementById('ceRemark').value.trim();
 
-  var properties = {};
-  setCProp(properties, '업체명',   { title: [{ text: { content: co } }] });
-  setCProp(properties, '관리구분', { select: { name: grp } });
-  setCProp(properties, '터널명',   { select: { name: tunnel } });
-  if(person) setCProp(properties, '담당자',   { rich_text: [{ text: { content: person } }] });
-  if(tel)    setCProp(properties, '전화번호', { phone_number: tel });
-  if(work)   setCProp(properties, '관련업무', { rich_text: [{ text: { content: work } }] });
-  if(rem)    setCProp(properties, '비고',     { rich_text: [{ text: { content: rem } }] });
-
   function resetBtn(label){
     btn.disabled=false;
     if(lbl) lbl.textContent = label;
@@ -2993,6 +2958,14 @@ function submitContactForm(confirmed){
       resetBtn('저장');
       return;
     }
+    var properties = {};
+    setCProp(properties, '업체명',   { title: [{ text: { content: co } }] });
+    setCProp(properties, '관리구분', { select: { name: grp } });
+    setCProp(properties, '터널명',   { select: { name: tunnel } });
+    if(person) setCProp(properties, '담당자',   { rich_text: [{ text: { content: person } }] });
+    if(tel)    setCProp(properties, '전화번호', { phone_number: tel });
+    if(work)   setCProp(properties, '관련업무', { rich_text: [{ text: { content: work } }] });
+    if(rem)    setCProp(properties, '비고',     { rich_text: [{ text: { content: rem } }] });
     fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
       method:'PATCH',
       headers:{'Content-Type':'application/json'},
