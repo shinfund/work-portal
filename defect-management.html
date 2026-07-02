@@ -355,7 +355,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
         <button class="detail-modal-close" onclick="closeContactEditModal()" aria-label="닫기">✕</button>
       </div>
       <div class="modal-field">
-        <label class="modal-label">관리구분</label>
+        <label class="modal-label">관리</label>
         <select id="ceGrp" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'ceGrpCustom')">
           <option value="">선택</option>
           <option value="__custom__">직접입력</option>
@@ -447,7 +447,19 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
         <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접 입력" style="display:none;margin-top:6px"/>
       </div>
 
-      <!-- 4.위치 -->
+      <!-- 4.관리 -->
+      <div class="modal-field">
+        <label class="modal-label">관리</label>
+        <select id="addManager" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'addManagerCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="안전관리자">안전관리자</option>
+          <option value="점검팀">점검팀</option>
+        </select>
+        <input id="addManagerCustom" class="modal-input" type="text" placeholder="관리 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+
+      <!-- 5.위치 -->
       <div class="modal-field">
         <label class="modal-label">위치 <span class="modal-required">*</span></label>
         <select id="addLoc" class="modal-select" onchange="onSelectChange(this,'addLocCustom')">
@@ -539,18 +551,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
       <div class="modal-field">
         <label class="modal-label">비고</label>
         <input id="addRemark" class="modal-input" type="text" placeholder="추가 사항"/>
-      </div>
-
-      <!-- 15.관리 -->
-      <div class="modal-field">
-        <label class="modal-label">관리</label>
-        <select id="addManager" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'addManagerCustom')">
-          <option value="">선택</option>
-          <option value="__custom__">직접입력</option>
-          <option value="안전관리자">안전관리자</option>
-          <option value="점검팀">점검팀</option>
-        </select>
-        <input id="addManagerCustom" class="modal-input" type="text" placeholder="관리 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
       </div>
 
       <div class="modal-btns">
@@ -829,7 +829,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
     <div class="tbl-scroll">
       <table>
         <thead><tr>
-          <th style="width:84px;white-space:nowrap">관리구분</th>
+          <th style="width:84px;white-space:nowrap">관리</th>
           <th style="width:90px;white-space:nowrap">터널명</th>
           <th style="width:110px;white-space:nowrap">업체명</th>
           <th style="width:96px;white-space:nowrap">담당자</th>
@@ -855,8 +855,8 @@ var CURRENT_TAB = 1;
 var COL_DEFS = [
   { key:'조치여부',   label:'조치여부', width:'col-status',  fixed:true  },
   { key:'날짜',       label:'날짜',     width:'col-date',    fixed:false },
-  { key:'터널명',     label:'터널명',   width:'col-tunnel',  fixed:false },
   { key:'업무담당',   label:'관리',     width:'col-manager', fixed:false },
+  { key:'터널명',     label:'터널명',   width:'col-tunnel',  fixed:false },
   { key:'공종',       label:'공종',     width:'col-type',    fixed:false },
   { key:'위치',       label:'위치',     width:'col-loc',     fixed:false },
   { key:'하자내용',   label:'하자내용', width:'col-expand',  fixed:true  },
@@ -2780,7 +2780,7 @@ function openContactDetail(idx){
     : esc(r.관리구분||'-');
 
   var rows = [
-    ['관리구분', gBadge],
+    ['관리', gBadge],
     ['터널명',   esc(r.터널명||'-')],
     ['업체명',   esc(r.업체명||'-')],
     ['담당자',   esc(r.담당자||'-')],
