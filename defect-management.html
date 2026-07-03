@@ -47,16 +47,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 .tab-btn.on::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
 .tab-btn:hover:not(.on){color:var(--txt)}
 
-/* ── KPI BAR ── */
-.kpi-bar{display:flex;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--border2);overflow-x:auto;scrollbar-width:none}
-.kpi-bar::-webkit-scrollbar{display:none}
-.kpi-card{flex:1;min-width:72px;background:var(--bg);border-radius:var(--r8);padding:8px 10px;text-align:center}
-.kpi-num{font-size:20px;font-weight:900;line-height:1.1}
-.kpi-lbl{font-size:12px;color:var(--txt2);margin-top:2px;font-weight:600}
-.kpi-total .kpi-num{color:var(--sky800)}
-.kpi-progress .kpi-num{color:var(--coral)}
-.kpi-done .kpi-num{color:var(--teal600)}
-.kpi-poor .kpi-num{color:var(--amber)}
 
 /* ── MAIN WRAP ── */
 .wrap{max-width:1600px;margin:0 auto;padding:14px}
@@ -200,12 +190,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
   /* [개선3] 탭 6개 - 균등 분할, 글자 잘림 방지 */
   .tab-btn{font-size:12px;padding:10px 1px;letter-spacing:-.03em}
 
-  /* KPI */
-  .kpi-bar{padding:8px 10px;gap:6px}
-  .kpi-card{min-width:56px;padding:6px 6px}
-  .kpi-num{font-size:18px}
-  .kpi-lbl{font-size:11px}
-
   /* 본문 */
   .wrap{padding:10px}
 
@@ -245,7 +229,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
   /* [개선3] 소형 기기 탭 폰트 추가 축소 */
   .tab-btn{font-size:11px;letter-spacing:-.04em}
   .hdr-title{font-size:14px}
-  .kpi-num{font-size:16px}
 }
 
 /* 태블릿 (641px ~ 960px) */
@@ -645,13 +628,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(4,this)">업체별</button>
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(0,this)">요약</button>
   </div>
-  <!-- KPI -->
-  <div class="kpi-bar" id="kpiBar">
-    <div class="kpi-card kpi-total"><div class="kpi-num" id="kpiTotal">-</div><div class="kpi-lbl" id="kpiLbl0">전체</div></div>
-    <div class="kpi-card kpi-progress"><div class="kpi-num" id="kpiProg">-</div><div class="kpi-lbl" id="kpiLbl1">진행중</div></div>
-    <div class="kpi-card kpi-done"><div class="kpi-num" id="kpiDone">-</div><div class="kpi-lbl" id="kpiLbl2">완료</div></div>
-    <div class="kpi-card kpi-poor"><div class="kpi-num" id="kpiPoor">-</div><div class="kpi-lbl" id="kpiLbl3">미흡</div></div>
-  </div>
 
 </div>
 
@@ -805,17 +781,19 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 <!-- 패널5: 업체연락처 -->
 <div class="panel" id="p5">
   <div class="filter-row">
-    <div class="filter-group" id="contactGroupFilter">
-      <button class="f-chip on" onclick="selectContactGroup('ALL',this)">전체</button>
-      <button class="f-chip" onclick="selectContactGroup('안전관리자',this)">안전관리자</button>
-      <button class="f-chip" onclick="selectContactGroup('점검팀',this)">점검팀</button>
-    </div>
     <div class="dd-wrap" id="contactTunnelDdWrap">
       <button class="dd-btn" id="contactTunnelDdBtn" onclick="toggleContactTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
         <span id="contactTunnelDdLabel">터널 전체</span>
       </button>
       <div class="dd-menu" id="contactTunnelDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="contactManagerDdWrap">
+      <button class="dd-btn" id="contactManagerDdBtn" onclick="toggleContactManagerDd()" aria-haspopup="listbox" aria-label="관리 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="contactManagerDdLabel">관리 전체</span>
+      </button>
+      <div class="dd-menu" id="contactManagerDdMenu"></div>
     </div>
     <input class="search-box" id="contactSearchBox" placeholder="🔍 업체명, 담당자, 관련업무 검색..." oninput="renderContactTable()">
     <button class="hdr-btn" onclick="openContactAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
@@ -964,8 +942,6 @@ function loadDemo(){
   renderAll(); // 내부에서 rebuildListHeader() 포함
   var lu=document.getElementById('lastUpdate');
   if(lu){ lu.textContent=''; }
-  var kpiBar = document.getElementById('kpiBar');
-  if(kpiBar) kpiBar.style.display = '';
 }
 
 /* ── CONFIG MODAL ── */
@@ -1196,8 +1172,6 @@ function loadData(){
             rebuildListHeader();
             setSync(false);
             if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
-            var kpiBar=document.getElementById('kpiBar');
-            if(kpiBar) kpiBar.style.display = CURRENT_TAB===0?'none':'';
             var now=new Date();
             var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
             if(truncated) upTxt += ' ⚠ 데이터가 '+MAX_PAGES*100+'건을 초과하여 일부만 표시됩니다';
@@ -1496,6 +1470,18 @@ function calcGroupKpi(groupKey){
   return { count:keys.length, unproc:unproc, avgRate:avgRate };
 }
 
+// KPI 카드바(고정 헤더, 화면 상단 고정) 폐기 후 각 탭의 "총 N건" 라인에 통계를 함께
+// 텍스트로 표시하는 방식으로 전환(2026-07-03) — 스크롤에 따라 같이 움직이고 공간도 적게 차지.
+// 요약 탭(0)은 대상 아님(자체 대시보드 카드 별도 유지).
+function renderKpiCountLine(elId, parts){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML = parts.map(function(p, i){
+    var style = i===0 ? 'font-weight:700;color:var(--txt)' : 'font-weight:600;color:'+(p.color||'var(--txt2)');
+    return '<span style="'+style+'">'+esc(p.label)+' '+esc(String(p.value))+'</span>';
+  }).join('<span style="color:var(--border2);margin:0 8px">·</span>');
+}
+
 /* ── 상태별 카운트 공통 헬퍼 ── */
 function countStatus(data){
   var done=0, prog=0, poor=0;
@@ -1508,91 +1494,35 @@ function countStatus(data){
   return {done:done, prog:prog, poor:poor};
 }
 
-function updateKPI(tabNum){
-  if(tabNum === undefined) tabNum = CURRENT_TAB;
+// 요약 탭(0) 전용 — "처리 상태 현황" 대시보드 카드만 갱신. 다른 탭의 KPI는 각 탭의
+// "총 N건" 라인에 renderKpiCountLine()으로 직접 표시(2026-07-03, kpiBar 폐기).
+function updateKPI(){
   var d = ALL_DATA;
   var c = countStatus(d);
-  var done=c.done, prog=c.prog, poor=c.poor;
-
-  // 요약 대시보드 카드는 항상 전체 기준
-  document.getElementById('ds-done').textContent = done;
-  document.getElementById('ds-prog').textContent = prog;
-  document.getElementById('ds-poor').textContent = poor;
-  var rate = d.length>0?Math.round(done/d.length*100):0;
+  document.getElementById('ds-done').textContent = c.done;
+  document.getElementById('ds-prog').textContent = c.prog;
+  document.getElementById('ds-poor').textContent = c.poor;
+  var rate = d.length>0?Math.round(c.done/d.length*100):0;
   document.getElementById('rateWrap').innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
     +'<span style="font-size:32px;font-weight:900;color:var(--teal600)">'+rate+'%</span>'
     +'<span style="font-size:13px;font-weight:600;color:var(--txt2)">하자 완료율</span></div>'
     +'<div class="bar-track" style="height:12px">'
     +'<div class="bar-fill" style="width:'+rate+'%;background:var(--teal600)"></div></div>';
-
-  if(tabNum === 0){
-    setKpiLabels('전체','진행중','완료','미흡','poor');
-    document.getElementById('kpiTotal').textContent = d.length;
-    document.getElementById('kpiProg').textContent  = prog;
-    document.getElementById('kpiDone').textContent  = done;
-    document.getElementById('kpiPoor').textContent  = poor;
-  } else if(tabNum === 1){
-    updateKpiForList();
-  } else if(tabNum === 2){
-    // 미처리 탭 — kpiPoor(amber카드)에 미흡, kpiDone(초록카드)에 완료
-    var unproc = prog + poor;
-    setKpiLabels('미처리 전체','진행중','완료','미흡','poor');
-    document.getElementById('kpiTotal').textContent = unproc;
-    document.getElementById('kpiProg').textContent  = prog;
-    document.getElementById('kpiDone').textContent  = done;
-    document.getElementById('kpiPoor').textContent  = poor;
-  } else if(tabNum === 3){
-    var g2=calcGroupKpi('터널명');
-    setKpiLabels('터널 수','미처리 합계','평균 완료율','미흡','poor');
-    document.getElementById('kpiTotal').textContent = g2.count+'개';
-    document.getElementById('kpiProg').textContent  = g2.unproc;
-    document.getElementById('kpiDone').textContent  = g2.avgRate+'%';
-    document.getElementById('kpiPoor').textContent  = poor;
-  } else if(tabNum === 4){
-    var g4=calcGroupKpi('업체명');
-    setKpiLabels('업체 수','미처리 합계','평균 완료율','미흡','poor');
-    document.getElementById('kpiTotal').textContent = g4.count+'개';
-    document.getElementById('kpiProg').textContent  = g4.unproc;
-    document.getElementById('kpiDone').textContent  = g4.avgRate+'%';
-    document.getElementById('kpiPoor').textContent  = poor;
-  } else if(tabNum === 5){
-    var cdata = CONTACT_DATA;
-    var cuniq={}, tuniq={};
-    cdata.forEach(function(r){ if(r.업체명) cuniq[r.업체명]=1; if(r.터널명) tuniq[r.터널명]=1; });
-    var safe = cdata.filter(function(r){ return r.관리구분==='안전관리자'; }).length;
-    var check = cdata.filter(function(r){ return r.관리구분==='점검팀'; }).length;
-    setKpiLabels('총 연락처','안전관리자','점검팀','업체 수','done');
-    document.getElementById('kpiTotal').textContent = cdata.length;
-    document.getElementById('kpiProg').textContent  = safe;
-    document.getElementById('kpiDone').textContent  = check;
-    document.getElementById('kpiPoor').textContent  = Object.keys(cuniq).length+'개';
-  }
-}
-
-// l3Color: 'poor'(amber·기본) 또는 'done'(teal·완료색) — 탭별 kpi-poor 카드 의미에 맞게 색상 전환
-function setKpiLabels(l0,l1,l2,l3,l3Color){
-  document.getElementById('kpiLbl0').textContent = l0;
-  document.getElementById('kpiLbl1').textContent = l1;
-  document.getElementById('kpiLbl2').textContent = l2;
-  document.getElementById('kpiLbl3').textContent = l3;
-  var poorNum = document.querySelector('.kpi-poor .kpi-num');
-  if(poorNum){
-    poorNum.style.color = (l3Color === 'done') ? 'var(--teal600)' : 'var(--amber)';
-  }
 }
 
 function updateKpiForList(){
-  // 하자내역 탭: 필터 결과 기준
+  // 하자내역 탭: 필터 결과 기준, "총 N건" 라인에 진행중/완료/미흡 함께 표시
   var rows = filtered();
   var c = countStatus(rows);
   var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL'
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
-  setKpiLabels(isFiltered ? '필터 결과' : '전체', '진행중', '완료', '미흡', 'poor');
-  document.getElementById('kpiTotal').textContent = rows.length;
-  document.getElementById('kpiProg').textContent  = c.prog;
-  document.getElementById('kpiDone').textContent  = c.done;
-  document.getElementById('kpiPoor').textContent  = c.poor;
+  renderKpiCountLine('filterCount', [
+    { label:isFiltered?'필터 결과':'전체', value:rows.length },
+    { label:'진행중', value:c.prog, color:'var(--coral)' },
+    { label:'완료', value:c.done, color:'var(--teal600)' },
+    { label:'미흡', value:c.poor, color:'var(--amber)' }
+  ]);
 }
 
 
@@ -1637,8 +1567,12 @@ function renderUnprocPanel(){
     return da < db ? -1 : da > db ? 1 : 0;
   });
 
-  var cnt = document.getElementById('unprocCount');
-  if(cnt) cnt.textContent = '총 '+rows.length+'건';
+  var uc = countStatus(rows);
+  renderKpiCountLine('unprocCount', [
+    { label:'미처리 전체', value:rows.length },
+    { label:'진행중', value:uc.prog, color:'var(--coral)' },
+    { label:'미흡', value:uc.poor, color:'var(--amber)' }
+  ]);
 
   var tbody = document.getElementById('unprocBody');
   if(!tbody) return;
@@ -1648,7 +1582,6 @@ function renderUnprocPanel(){
   }
   var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
   tbody.innerHTML = buildPanelRows(rows, cols);
-  if(CURRENT_TAB===2) updateKPI(2);
 }
 
 /* ── 사진 썸네일 헬퍼 (테이블용) ── */
@@ -1683,7 +1616,6 @@ function renderList(){
   }).map(function(o){ return o.r; });
 
   var visKeys = getVisibleCols();
-  document.getElementById('filterCount').textContent = '총 '+rows.length+'건';
   var tbody = document.getElementById('listBody');
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="'+visKeys.length+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
@@ -1867,11 +1799,23 @@ function updateTabCounts(){
   var cc = document.getElementById('companyTabCount');
   if(tc){
     var tData = TAB_FILTER.tunnel==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['터널명']===TAB_FILTER.tunnel;});
-    tc.textContent = '총 '+tData.length+'건';
+    var g2 = calcGroupKpi('터널명');
+    renderKpiCountLine('tunnelTabCount', [
+      { label:'총', value:tData.length+'건' },
+      { label:'터널 수', value:g2.count+'개' },
+      { label:'미처리 합계', value:g2.unproc, color:'var(--coral)' },
+      { label:'평균 완료율', value:g2.avgRate+'%', color:'var(--teal600)' }
+    ]);
   }
   if(cc){
     var cData = TAB_FILTER.company==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['업체명']===TAB_FILTER.company;});
-    cc.textContent = '총 '+cData.length+'건';
+    var g4 = calcGroupKpi('업체명');
+    renderKpiCountLine('companyTabCount', [
+      { label:'총', value:cData.length+'건' },
+      { label:'업체 수', value:g4.count+'개' },
+      { label:'미처리 합계', value:g4.unproc, color:'var(--coral)' },
+      { label:'평균 완료율', value:g4.avgRate+'%', color:'var(--teal600)' }
+    ]);
   }
 }
 
@@ -2043,10 +1987,7 @@ function switchTab(n,el){
   document.getElementById('p'+n).classList.add('on');
   el.classList.add('on');
   el.setAttribute('aria-selected','true');
-  // 요약 탭(0)에서는 KPI 바 숨김 (처리 상태 현황 카드와 중복)
-  var kpiBar = document.getElementById('kpiBar');
-  if(kpiBar) kpiBar.style.display = n === 0 ? 'none' : '';
-  updateKPI(n);
+  updateKPI();
   if(n===5 && !CONTACT_LOADED){ loadContactData(); }
   if(n<5) renderCurrentTab();
 }
@@ -2604,7 +2545,6 @@ function loadContactData(){
     CONTACT_DATA = CONTACT_DATA.map(function(r,i){r._idx=i+1;return r;});
     CONTACT_LOADED = true;
     renderContactPanel();
-    if(CURRENT_TAB===5) updateKPI(5);
   })
   .catch(function(e){
     console.error('업체연락처 로드 실패:', e);
@@ -2701,17 +2641,41 @@ function buildContactTunnelDd(){
 
 function toggleContactTunnelDd(){ toggleDd('contactTunnelDdMenu','contactTunnelDdBtn'); }
 
-function selectContactGroup(val, el){
-  document.querySelectorAll('#contactGroupFilter .f-chip').forEach(function(c){c.classList.remove('on');});
-  if(el) el.classList.add('on');
-  CONTACT_FILTER.group = val;
-  renderContactTable();
+// 관리(안전관리자/점검팀) 필터 — 칩 버튼 대신 다른 드롭다운들과 동일한 방식으로 통일(2026-07-03)
+function buildContactManagerDd(){
+  var menu = document.getElementById('contactManagerDdMenu');
+  if(!menu) return;
+  var opts = [{val:'ALL',label:'관리 전체'},{val:'안전관리자',label:'안전관리자'},{val:'점검팀',label:'점검팀'}];
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(CONTACT_FILTER.group===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  if(!menu._cbound){
+    menu._cbound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(!opt||!opt.dataset||!opt.dataset.val) return;
+      var val = opt.dataset.val;
+      menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
+      opt.classList.add('sel');
+      document.getElementById('contactManagerDdLabel').textContent = val==='ALL'?'관리 전체':val;
+      var btn=document.getElementById('contactManagerDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
+      CONTACT_FILTER.group = val;
+      closeDd('contactManagerDdMenu','contactManagerDdBtn');
+      renderContactTable();
+    });
+    document.addEventListener('click', function(e){
+      var wrap=document.getElementById('contactManagerDdWrap');
+      if(wrap&&!wrap.contains(e.target)) closeDd('contactManagerDdMenu','contactManagerDdBtn');
+    });
+  }
 }
+function toggleContactManagerDd(){ toggleDd('contactManagerDdMenu','contactManagerDdBtn'); }
 
 function renderContactPanel(){
   buildContactTunnelDd();
+  buildContactManagerDd();
   renderContactTable();
-  if(CURRENT_TAB===5) updateKPI(5);
   if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
 }
 
@@ -2997,13 +2961,20 @@ function deleteContactItem(idx){
 
 function renderContactTable(){
   var rows = filteredContacts();
-  var cnt = document.getElementById('contactCount');
-  if(cnt) cnt.textContent = '총 '+rows.length+'건';
+  var safe = rows.filter(function(r){ return r.관리구분==='안전관리자'; }).length;
+  var check = rows.filter(function(r){ return r.관리구분==='점검팀'; }).length;
+  var cuniq = {};
+  rows.forEach(function(r){ if(r.업체명) cuniq[r.업체명]=1; });
+  renderKpiCountLine('contactCount', [
+    { label:'총 연락처', value:rows.length },
+    { label:'안전관리자', value:safe, color:'var(--sky800)' },
+    { label:'점검팀', value:check, color:'var(--teal600)' },
+    { label:'업체 수', value:Object.keys(cuniq).length+'개' }
+  ]);
   var tbody = document.getElementById('contactBody');
   if(!tbody) return;
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
-    if(CURRENT_TAB===5) updateKPI(5);
     return;
   }
   tbody.innerHTML = rows.map(function(r){
@@ -3026,7 +2997,6 @@ function renderContactTable(){
       +'<td class="td-nowrap">'+esc(r.비고||'-')+'</td>'
       +'</tr>';
   }).join('');
-  if(CURRENT_TAB===5) updateKPI(5);
 }
 
 /* ── 엑셀 생성 (하자내역 탭) ──
