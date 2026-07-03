@@ -716,6 +716,10 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
+    <button id="excelExportBtn" onclick="exportToExcel()" style="background:var(--teal600);border-color:var(--teal600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="excelExportLabel">엑셀 생성</span>
+    </button>
   </div>
   <div class="filter-count" id="filterCount"></div>
   <div class="tbl-wrap">
@@ -3019,6 +3023,256 @@ function renderContactTable(){
   if(CURRENT_TAB===5) updateKPI(5);
 }
 
+/* ── 엑셀 생성 (하자내역 탭) ──
+   2026-07-03 손상 문제의 진짜 원인은 xlsx 템플릿에 걸린 조건부 서식(한글 formula)을
+   exceljs가 재저장 시 깨진 바이트로 직렬화하는 버그였음 — 템플릿을 아예 쓰지 않고
+   매번 신규 워크북을 코드로 직접 구성하는 방식(scripts/lib/xlsx_report_lib.mjs와 동일
+   로직)으로 해결. 자세한 배경은 ~/.claude/skills/xlsx-report-export/SKILL.md 참고. */
+var EXCEL_LIB_LOADING = null;
+function loadExcelLib(){
+  if(window.ExcelJS && window.JSZip) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src){
+    return new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function(){ resolve(); };
+      s.onerror = function(){ reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING = Promise.all([
+    window.ExcelJS ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js'),
+    window.JSZip   ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js')
+  ]).catch(function(e){ EXCEL_LIB_LOADING = null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+
+var EXCEL_COMPANY_NAME = '수자원기술(주)';
+var EXCEL_TITLE_FONT = { name:'HY헤드라인M', size:28 };
+var EXCEL_BODY_FONT = { name:'맑은 고딕', size:13 };
+var EXCEL_HEADER_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE9F8'} };
+var EXCEL_ROW_HEIGHTS = { title:60, header:30, data:30, dataWithPhoto:85 };
+var EXCEL_CELL_BORDER = { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+var EXCEL_EMU_PER_PX = 9525;
+var EXCEL_PHOTO_INSET_EMU = 3 * EXCEL_EMU_PER_PX;
+function excelCm2in(cm){ return cm/2.54; }
+var EXCEL_PAGE_MARGINS = { top:excelCm2in(1), bottom:excelCm2in(0.5), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) };
+
+var EXCEL_COLUMNS = [
+  { key:'날짜', header:'날짜' },
+  { key:'터널명', header:'터널명' },
+  { key:'업무담당', header:'관리' },
+  { key:'공종', header:'공종' },
+  { key:'위치', header:'위치' },
+  { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
+  { key:'하자사진', header:'하자사진', photo:true, width:18 },
+  { key:'조치일', header:'조치일' },
+  { key:'조치사진', header:'조치사진', photo:true, width:18 },
+  { key:'조치여부', header:'조치여부' },
+  { key:'업체명', header:'업체명' },
+  { key:'업체담당자', header:'담당자' },
+  { key:'전화번호', header:'전화번호' },
+  { key:'비고', header:'비고', width:16, wrap:true, align:'left' }
+];
+
+// Excel 열 너비는 반각 문자 기준 단위 — 한글/전각 문자는 2칸으로 계산해 실제 표시폭에 근사시킨다.
+function excelCharWeight(ch){
+  var code = ch.codePointAt(0);
+  var cjk = (code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)
+    ||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)
+    ||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){
+  var w=0;
+  Array.from(String(s||'')).forEach(function(ch){ w+=excelCharWeight(ch); });
+  return w;
+}
+function excelAutoWidth(strings, min, max, padding){
+  min = min||8; max = max||40; padding = padding===undefined?5:padding;
+  var w = min;
+  strings.forEach(function(s){ w = Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+
+function excelGuessImageExt(contentType, url){
+  var t = contentType || '';
+  if(t.indexOf('png')>=0) return 'png';
+  if(t.indexOf('gif')>=0) return 'gif';
+  if(t.indexOf('jpeg')>=0) return 'jpeg';
+  var m = (url||'').toLowerCase().match(/\.(png|gif|jpe?g)(\?|$)/);
+  if(m) return m[1]==='jpg'?'jpeg':m[1];
+  return null;
+}
+function excelFetchImage(url){
+  if(!url || !/^https?:\/\//i.test(url)) return Promise.resolve(null);
+  // cache:'no-store' — 다른 origin에서 캐시된 CORS 헤더 없는 응답이 재사용돼
+  // fetch가 실패하는 사례가 있어 항상 네트워크에서 새로 받는다(2026-07-03 확인).
+  return fetch(url, { cache:'no-store' }).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var contentType = r.headers.get('content-type');
+    return r.arrayBuffer().then(function(buf){
+      var ext = excelGuessImageExt(contentType, url);
+      if(!ext){ console.warn('지원하지 않는 이미지 형식:', url, contentType); return null; }
+      return { buffer:buf, extension:ext };
+    });
+  }).catch(function(e){
+    console.warn('사진 로드 실패:', url, e.message);
+    return null;
+  });
+}
+
+// 사진 셀 앵커 — 열/행 폭을 직접 계산하지 않고 "다음 열/행의 시작점에서 인셋만큼
+// 음수 오프셋으로 당겨" 지정한다(EMU/폰트 근사식 의존 버그를 피하는 방식,
+// scripts/lib/xlsx_report_lib.mjs의 photoAnchor()와 동일 로직).
+function excelPhotoAnchor(col, rn0){
+  return {
+    tl: { nativeCol:col, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:rn0, nativeRowOff:EXCEL_PHOTO_INSET_EMU },
+    br: { nativeCol:col+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:rn0+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU },
+    editAs: 'twoCell' // "위치와 크기 변함" — exceljs 기본값(oneCell="위치만 변함")을 덮어씀
+  };
+}
+
+// exceljs는 삽입 이미지의 "가로 세로 비율 고정"을 항상 1로 하드코딩해서 옵션이 없음 —
+// 저장된 xlsx의 drawing XML을 직접 열어 0으로 바꿔준다.
+function excelUnlockAspectRatio(buffer){
+  return JSZip.loadAsync(buffer).then(function(zip){
+    var files = Object.keys(zip.files).filter(function(f){ return /^xl\/drawings\/drawing\d+\.xml$/.test(f); });
+    return Promise.all(files.map(function(f){
+      return zip.file(f).async('string').then(function(xml){
+        zip.file(f, xml.replace(/noChangeAspect="1"/g, 'noChangeAspect="0"'));
+      });
+    })).then(function(){
+      return zip.generateAsync({ type:'blob' });
+    });
+  });
+}
+
+function exportToExcel(){
+  var btn = document.getElementById('excelExportBtn');
+  var lbl = document.getElementById('excelExportLabel');
+  var rows = filtered().slice().sort(function(a,b){
+    var da=(a['날짜']||'').replace(/[.\/]/g,'-');
+    var db=(b['날짜']||'').replace(/[.\/]/g,'-');
+    return da<db?1:da>db?-1:0;
+  });
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+
+  btn.disabled = true;
+  lbl.textContent = '준비 중...';
+
+  loadExcelLib().then(function(){
+    var wb = new ExcelJS.Workbook();
+    var ws = wb.addWorksheet('하자현황', {
+      views: [{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
+      pageSetup: {
+        paperSize: 9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0,
+        horizontalCentered:true, verticalCentered:false,
+        margins: EXCEL_PAGE_MARGINS,
+        printTitlesRow: '2:2'
+      },
+      headerFooter: {
+        oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',
+        oddFooter: '&C&"맑은 고딕"&9&P / &N'
+      }
+    });
+
+    var colWidths = EXCEL_COLUMNS.map(function(col){
+      if(col.width) return col.width;
+      var strings = col.photo ? [col.header] : [col.header].concat(rows.map(function(r){ return r[col.key]; }));
+      return excelAutoWidth(strings);
+    });
+    ws.columns = colWidths.map(function(w){ return {width:w}; });
+
+    var titleRow = ws.getRow(1);
+    titleRow.height = EXCEL_ROW_HEIGHTS.title;
+    var titleCell = titleRow.getCell(1);
+    titleCell.value = '하자보수현황';
+    titleCell.font = EXCEL_TITLE_FONT;
+    titleCell.alignment = { vertical:'middle', horizontal:'left' };
+
+    var headerRow = ws.getRow(2);
+    headerRow.height = EXCEL_ROW_HEIGHTS.header;
+    EXCEL_COLUMNS.forEach(function(col, i){
+      var cell = headerRow.getCell(i+1);
+      cell.value = col.header;
+      cell.font = EXCEL_BODY_FONT;
+      cell.alignment = { vertical:'middle', horizontal:'center' };
+      cell.border = EXCEL_CELL_BORDER;
+      cell.fill = EXCEL_HEADER_FILL;
+    });
+
+    var photoCol1 = -1, photoCol2 = -1;
+    EXCEL_COLUMNS.forEach(function(c, i){
+      if(c.key==='하자사진') photoCol1 = i;
+      if(c.key==='조치사진') photoCol2 = i;
+    });
+
+    rows.forEach(function(r, i){
+      var rn = 3+i;
+      var row = ws.getRow(rn);
+      var hasPhoto = !!(r['하자사진_URL']||r['조치사진_URL']);
+      row.height = hasPhoto ? EXCEL_ROW_HEIGHTS.dataWithPhoto : EXCEL_ROW_HEIGHTS.data;
+      var statusColIdx = -1;
+      EXCEL_COLUMNS.forEach(function(col, ci){
+        var cell = row.getCell(ci+1);
+        cell.font = EXCEL_BODY_FONT;
+        cell.border = EXCEL_CELL_BORDER;
+        cell.alignment = col.align==='left'
+          ? { vertical:'middle', horizontal:'left', wrapText: !!col.wrap }
+          : { vertical:'middle', horizontal:'center', wrapText: !!col.wrap };
+        if(!col.photo) cell.value = r[col.key];
+        if(col.key==='조치여부') statusColIdx = ci;
+      });
+      if(r['조치여부']==='완료' && statusColIdx>=0){
+        row.getCell(statusColIdx+1).font = { name:EXCEL_BODY_FONT.name, size:EXCEL_BODY_FONT.size, color:{argb:'FFFF0000'} };
+      }
+      row.commit();
+    });
+
+    lbl.textContent = '사진 불러오는 중...';
+    var photoJobs = [];
+    rows.forEach(function(r, i){
+      var rn0 = 2+i;
+      if(r['하자사진_URL']){
+        photoJobs.push(excelFetchImage(r['하자사진_URL']).then(function(img){
+          if(!img) return;
+          var imgId = wb.addImage(img);
+          ws.addImage(imgId, excelPhotoAnchor(photoCol1, rn0));
+        }));
+      }
+      if(r['조치사진_URL']){
+        photoJobs.push(excelFetchImage(r['조치사진_URL']).then(function(img){
+          if(!img) return;
+          var imgId = wb.addImage(img);
+          ws.addImage(imgId, excelPhotoAnchor(photoCol2, rn0));
+        }));
+      }
+    });
+
+    return Promise.all(photoJobs).then(function(){
+      lbl.textContent = '파일 저장 중...';
+      return wb.xlsx.writeBuffer();
+    }).then(function(buf){
+      return excelUnlockAspectRatio(buf);
+    });
+  }).then(function(blob){
+    var url = URL.createObjectURL(blob);
+    var now = new Date();
+    var fname = '하자보수현황_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes())+'.xlsx';
+    var a = document.createElement('a');
+    a.href = url; a.download = fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    lbl.textContent = '완료!';
+    setTimeout(function(){ lbl.textContent = '엑셀 생성'; }, 1500);
+  }).catch(function(e){
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent = '엑셀 생성';
+  }).finally(function(){ btn.disabled = false; });
+}
 
 </script>
 
