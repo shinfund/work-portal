@@ -156,7 +156,7 @@ body{
 .sb-nav::-webkit-scrollbar{display:none}
 /* 노션 스타일 — 홈은 섹션 라벨 없이 최상단에 단독 퀵액세스 항목으로 */
 .sb-home{margin-top:6px;}
-.sb-sec{font-size:10.5px;font-weight:700;color:var(--nav-sec-text);letter-spacing:.06em;text-transform:uppercase;padding:9px 14px 3px;}
+.sb-sec{font-size:10.5px;font-weight:700;color:var(--nav-sec-text);letter-spacing:.06em;text-transform:uppercase;margin-top:6px;padding:6px 14px 3px;border-top:1px solid var(--nav-border2);}
 .sb-item{
   display:flex;align-items:center;gap:10px;
   padding:6px 10px 6px 12px;
@@ -184,8 +184,8 @@ body{
 
 .sb-footer-btn{
   display:flex;align-items:center;gap:8px;flex-shrink:0;
-  padding:7px 10px;margin:8px 6px 4px;margin-top:auto;border-radius:7px;
-  border-top:1px solid var(--nav-footer-border);padding-top:12px;
+  padding:6px 10px;margin:6px 6px 4px;margin-top:auto;border-radius:7px;
+  border-top:1px solid var(--nav-footer-border);padding-top:8px;
   color:var(--nav-footer-text);font-size:12px;font-weight:600;
   cursor:pointer;transition:all .12s;
   -webkit-tap-highlight-color:transparent;
@@ -219,15 +219,20 @@ body{
 .tb-icon-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tb-icon-btn.disabled{opacity:.32;pointer-events:none;}
 
-.tb-tabs{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;height:100%;}
+.tb-tabs{display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;height:100%;}
 .tb-tabs::-webkit-scrollbar{display:none}
 .tb-tab{
+  position:relative;
   display:flex;align-items:center;gap:6px;flex-shrink:0;
   height:24px;padding:0 7px;border-radius:6px;
   font-size:12.5px;font-weight:500;color:var(--nav-tab-text);
   cursor:pointer;max-width:170px;
   transition:background .12s,color .12s;
   -webkit-tap-highlight-color:transparent;
+}
+.tb-tab:not(:first-child)::before{
+  content:'';position:absolute;left:-4px;top:24%;bottom:24%;width:1px;
+  background:var(--nav-border2);
 }
 .tb-tab:hover{background:var(--nav-tab-hover-bg);color:var(--nav-text);}
 .tb-tab.on{background:var(--bg);color:var(--txt2);font-weight:600;}
@@ -562,7 +567,7 @@ body{
       <span>홈</span>
     </div>
 
-    <div class="sb-sec" style="margin-top:8px">업무 앱</div>
+    <div class="sb-sec">업무 앱</div>
     <div class="sb-item" id="sbn-defect" onclick="go('defect')">
       <span>하자보수현황</span>
     </div>
@@ -570,7 +575,7 @@ body{
       <span>연장근무현황</span>
     </div>
 
-    <div class="sb-sec" style="margin-top:6px">추가 예정</div>
+    <div class="sb-sec">추가 예정</div>
     <div class="sb-item sb-disabled">
       <span>태양광발전량</span><span class="sb-badge">준비중</span>
     </div>
