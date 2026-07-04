@@ -231,7 +231,7 @@ body{
 .tb-icon-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .tb-icon-btn.disabled{opacity:.32;pointer-events:none;}
 
-.tb-tabs{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;height:100%;}
+.tb-tabs{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:0 1 auto;min-width:0;height:100%;}
 .tb-tabs::-webkit-scrollbar{display:none}
 .tb-tab{
   display:flex;align-items:center;gap:6px;flex-shrink:0;
@@ -277,7 +277,7 @@ body{
 .tb-add-item:hover{background:var(--bg);}
 .tb-add-empty{padding:10px;font-size:12px;color:var(--txt3);text-align:center;white-space:nowrap;}
 
-.tb-spacer{flex:0 0 8px;}
+.tb-spacer{flex:1;min-width:8px;}
 .topbar-clock{
   font-size:12px;font-weight:700;color:var(--nav-pill-text);
   background:var(--nav-pill-bg);border-radius:6px;padding:3px 10px;
