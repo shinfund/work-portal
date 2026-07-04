@@ -26,24 +26,27 @@
   --hdr-btn-hover-bg:rgba(255,255,255,.25);
   --hdr-btn-text:#fff;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
   --hdr-text:#0C447C;
-  --hdr-text-dim:#5E86AC;
+  --hdr-text-dim:#355E82;
   --hdr-btn-bg:#E6F1FB;
   --hdr-btn-border:#B7CEE8;
   --hdr-btn-hover-bg:#D3E7FA;
   --hdr-btn-text:#185FA5;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
 }
 html[data-theme="dark"]{
   --bg:#191919;--card:#242424;
-  --border:rgba(255,255,255,.094);--border2:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
   --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
   --shadow:0 2px 14px rgba(0,0,0,.45);
   --hdr-bg:#242424;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
   /* sky */
   --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
   --sky600:#6FB4F0;--sky800:#A9D3F5;
@@ -71,13 +74,12 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
 .header-left{display:flex;align-items:center;gap:10px}
 .logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
-.logo-sub{font-size:11px;color:var(--hdr-text-dim)}
 .header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
 .header-btns{display:flex;gap:6px}
 .hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
 .hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
 .hdr-btn:disabled{opacity:.4;cursor:not-allowed}
-.last-update{font-size:11px;color:var(--hdr-text-dim)}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
@@ -206,8 +208,9 @@ tr:hover td{background:var(--sky50)}
 @media(max-width:480px){
   .main{padding:10px 10px}
   .header{padding:11px 12px}
-  td{font-size:13px;padding:10px 10px}
-  th{font-size:12px;padding:9px 10px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -267,11 +270,10 @@ tr:hover td{background:var(--sky50)}
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div>
-      <div class="logo-title">연장근무현황</div>
-    </div>
+    <div class="logo-title">연장근무현황</div>
   </div>
   <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
     <div class="header-btns">
       <button class="hdr-btn" onclick="openCfgModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -282,7 +284,6 @@ tr:hover td{background:var(--sky50)}
         <span id="syncLabel">새로고침</span>
       </button>
     </div>
-    <div class="last-update" id="lastUpdate"></div>
   </div>
 </div>
 
@@ -707,7 +708,7 @@ async function loadData(){
       if(lu){lu.textContent='마지막 업데이트: '+ts;lu.style.color='';}
     }else{
       if(!ALL_RECORDS.length){ALL_RECORDS=DEMO_DATA;renderAll();}
-      if(lu){lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인';lu.style.color='rgba(255,150,130,.9)';}
+      if(lu){lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인';lu.style.color='var(--hdr-error-text)';}
     }
   }catch(e){
     if(!ALL_RECORDS.length){
@@ -724,7 +725,7 @@ async function loadData(){
     else if(msg.includes('400'))errMsg='⚠ HTTP 400 — Worker URL 또는 DB ID 확인';
     else if(msg.includes('JSON')||msg.includes('content-type'))errMsg='⚠ Worker URL 오류 — Worker 주소를 확인하세요';
     else if(msg.includes('Failed to fetch'))errMsg='⚠ 네트워크 오류 — Worker URL 확인';
-    if(lu){lu.textContent=errMsg;lu.style.color='rgba(255,150,130,.9)';}
+    if(lu){lu.textContent=errMsg;lu.style.color='var(--hdr-error-text)';}
   }finally{
     _isLoading=false;
     if(btn)btn.disabled=false;
@@ -1067,7 +1068,7 @@ function renderDetail(recs){
   const emps=[...new Set(recs.map(r=>r.employee).filter(Boolean))].sort();
   const types=[...new Set(recs.map(r=>r.type).filter(Boolean))].sort();
 
-  selEmp.innerHTML='<option value="">전체 직원</option>'+emps.map(e=>`<option value="${esc(e)}">${e}</option>`).join('');
+  selEmp.innerHTML='<option value="">전체 직원</option>'+emps.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
   selEmp.value=prevEmp;
   if(selType){
     selType.innerHTML='<option value="">전체 근무형태</option>'+types.map(t=>`<option value="${esc(t)}">${t}</option>`).join('');

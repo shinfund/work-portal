@@ -16,7 +16,7 @@
   --purple:#534AB7; --purple50:#EEEDFE; --purple100:#CECBF6;
   --gray50:#F1EFE8; --gray100:#D3D1C7; --gray200:#B4B2A9; --gray600:#5F5E5A;
   --bg:#F5F8FF; --card:#FFFFFF; --border:#E0EAF5; --border2:#EBF3FF;
-  --txt:#1A2535; --txt2:#3D4F68; --txt3:#6B7E99;
+  --txt:#1A2535; --txt2:#3D4F68; --txt3:#3D5269;
   --r6:6px; --r8:8px; --r10:10px; --r12:12px; --r14:14px; --r16:16px; --r20:20px;
   --shadow:0 2px 12px rgba(55,138,221,.08);
   --hdr-bg:#0C447C;
@@ -28,29 +28,32 @@
   --hdr-btn-text:#fff;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
   --hdr-warn-text:#FFC876;
+  --hdr-error-text:rgba(255,150,130,.9);
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
   --hdr-text:#0C447C;
-  --hdr-text-dim:#5E86AC;
+  --hdr-text-dim:#355E82;
   --hdr-btn-bg:#E6F1FB;
   --hdr-btn-border:#B7CEE8;
   --hdr-btn-hover-bg:#D3E7FA;
   --hdr-btn-text:#185FA5;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
   --hdr-warn-text:#B8860B;
+  --hdr-error-text:#B3261E;
 }
 html[data-theme="dark"]{
   --bg:#191919;
   --card:#242424;
-  --border:rgba(255,255,255,.094);
-  --border2:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.13);
+  --border2:rgba(255,255,255,.09);
   --txt:rgba(255,255,255,.92);
   --txt2:rgba(255,255,255,.75);
   --txt3:rgba(255,255,255,.5);
   --shadow:0 2px 14px rgba(0,0,0,.45);
   --hdr-bg:#242424;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
   /* 색상군 50/100 틴트 → 다크 카드 위 반투명 오버레이로 전환 */
   --sky50:rgba(55,138,221,.16); --sky100:rgba(55,138,221,.32);
   --teal50:rgba(29,158,117,.16); --teal100:rgba(29,158,117,.32);
@@ -85,7 +88,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 .hdr{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
 .hdr-left{display:flex;align-items:center;gap:10px}
 .hdr-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
-.hdr-sub{font-size:11px;color:var(--hdr-text-dim);margin-top:1px}
 .hdr-right{display:flex;flex-direction:row;align-items:center;gap:10px}
 .hdr-btns{display:flex;gap:6px}
 .hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;min-height:27px;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background .15s}
@@ -151,8 +153,8 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 .badge-done{background:var(--teal50);color:var(--teal600)}
-.badge-prog{background:var(--coral50);color:var(--coral)}
-.badge-poor{background:var(--amber50);color:var(--amber)}
+.badge-prog{background:var(--coral50);color:var(--coral800)}
+.badge-poor{background:var(--amber50);color:var(--amber800)}
 
 /* ── DASHBOARD ── */
 .sc{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -170,8 +172,8 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 .status-card .num{font-size:24px;font-weight:900;line-height:1}
 .status-card .lbl{font-size:12px;margin-top:4px;font-weight:600}
 .status-done{background:var(--teal50);color:var(--teal600)}
-.status-prog{background:var(--coral50);color:var(--coral)}
-.status-poor{background:var(--amber50);color:var(--amber)}
+.status-prog{background:var(--coral50);color:var(--coral800)}
+.status-poor{background:var(--amber50);color:var(--amber800)}
 
 /* ── MODAL ── */
 #cfgModal, #detailModal{
@@ -250,7 +252,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
   /* 헤더 */
   .hdr{padding:9px 12px;min-height:unset}
   .hdr-title{font-size:14px;white-space:nowrap}
-  .hdr-sub{font-size:10px}
   .hdr-right{flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
   .hdr-btns{gap:5px}
   /* [개선2] 터치 타겟 40px 확보 */
@@ -321,8 +322,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
   .col-remark{display:table-cell}
   .col-manager{display:table-cell}
   table{width:100%;min-width:1200px}
-  .hdr-right{flex-direction:row;align-items:center;gap:10px}
-  .last-update{font-size:11px}
 }
 
 @media(max-width:640px){
@@ -688,11 +687,10 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 <div class="hdr-wrap">
   <div class="hdr">
     <div class="hdr-left">
-      <div>
-        <div class="hdr-title">하자보수현황</div>
-      </div>
+      <div class="hdr-title">하자보수현황</div>
     </div>
     <div class="hdr-right">
+      <div class="last-update" id="lastUpdate"></div>
       <div class="hdr-btns">
         <button class="hdr-btn" onclick="openCfgModal()" aria-label="연동 설정">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -703,7 +701,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
           <span id="syncLabel">새로고침</span>
         </button>
       </div>
-      <div class="last-update" id="lastUpdate"></div>
     </div>
   </div>
   <!-- 탭 -->
@@ -1304,7 +1301,7 @@ function loadData(){
         startRetryCountdown(30);
       }
       else if(e.message.indexOf('fetch')>=0||e.message.indexOf('network')>=0) msg='⚠ 네트워크 오류 — Worker URL을 확인하세요';
-      if(lu){ lu.textContent=msg; lu.style.color='rgba(255,150,130,.9)'; }
+      if(lu){ lu.textContent=msg; lu.style.color='var(--hdr-error-text)'; }
       console.error(e);
     });
 }

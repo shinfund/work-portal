@@ -23,9 +23,9 @@
 
   /* 사이드바·상단탭바 전용 색상(화면모드) — 기본값: 다크(검정 계열, 콘텐츠 배경과 통일) */
   --nav-bg:#191919;
-  --nav-border:rgba(255,255,255,.2);
-  --nav-border2:rgba(255,255,255,.08);
-  --nav-logo-border:rgba(255,255,255,.12);
+  --nav-border:rgba(255,255,255,.22);
+  --nav-border2:rgba(255,255,255,.16);
+  --nav-logo-border:rgba(255,255,255,.16);
   --nav-icon-bg:rgba(255,255,255,.14);
   --nav-text:#fff;
   --nav-text-dim:rgba(255,255,255,.75);
@@ -33,13 +33,11 @@
   --nav-item-text:rgba(255,255,255,.9);
   --nav-item-hover-bg:rgba(255,255,255,.1);
   --nav-item-on-bg:rgba(255,255,255,.18);
-  --nav-item-icon-bg:rgba(255,255,255,.1);
   --nav-badge-bg:rgba(255,255,255,.15);
   --nav-badge-text:rgba(255,255,255,.9);
-  --nav-footer-border:rgba(255,255,255,.12);
+  --nav-footer-border:rgba(255,255,255,.16);
   --nav-footer-text:rgba(255,255,255,.85);
   --nav-footer-hover-bg:rgba(255,255,255,.12);
-  --nav-version-text:rgba(255,255,255,.55);
   --nav-tab-text:rgba(255,255,255,.68);
   --nav-tab-hover-bg:rgba(255,255,255,.09);
   --nav-tab-x-text:rgba(255,255,255,.5);
@@ -59,21 +57,19 @@ html[data-theme="light"]{
   --nav-logo-border:#DCE9F7;
   --nav-icon-bg:#E6F1FB;
   --nav-text:#0C447C;
-  --nav-text-dim:#4C7CA6;
-  --nav-sec-text:#4C7CA6;
+  --nav-text-dim:#355E82;
+  --nav-sec-text:#355E82;
   --nav-item-text:#1E3148;
   --nav-item-hover-bg:#EAF3FC;
   --nav-item-on-bg:#E6F1FB;
-  --nav-item-icon-bg:#B5D4F4;
   --nav-badge-bg:#DCE9F7;
   --nav-badge-text:#185FA5;
   --nav-footer-border:#DCE9F7;
   --nav-footer-text:#1E3148;
   --nav-footer-hover-bg:#E6F1FB;
-  --nav-version-text:#5E86AC;
   --nav-tab-text:#3D5269;
   --nav-tab-hover-bg:#EAF3FC;
-  --nav-tab-x-text:#5E86AC;
+  --nav-tab-x-text:#355E82;
   --nav-tab-x-hover-bg:#DCE9F7;
   --nav-icon-btn-text:#3D5269;
   --nav-icon-btn-hover-bg:#E6F1FB;
@@ -86,8 +82,8 @@ html[data-theme="light"]{
 html[data-theme="dark"]{
   --bg:#191919;
   --card:#242424;
-  --border:rgba(255,255,255,.094);
-  --border2:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.13);
+  --border2:rgba(255,255,255,.09);
   --txt:rgba(255,255,255,.92);
   --txt2:rgba(255,255,255,.75);
   --txt3:rgba(255,255,255,.5);
@@ -178,14 +174,6 @@ body{
   content:'';position:absolute;left:-6px;top:22%;bottom:22%;
   width:3px;background:var(--sky);border-radius:0 3px 3px 0;
 }
-.sb-icon{
-  width:26px;height:26px;border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;font-size:13px;
-  background:var(--nav-item-icon-bg);
-  transition:background .12s;
-}
-.sb-item.on .sb-icon{background:var(--sky);}
 .sb-badge{
   margin-left:auto;font-size:9.5px;font-weight:700;
   padding:2px 7px;border-radius:10px;
@@ -1052,8 +1040,7 @@ function addMenuItemsHtml(onSelect) {
   return remaining.length
     ? remaining.map(id => {
         const a = APPS[id];
-        return `<div class="tb-add-item" onclick="go('${id}',{newTab:true});${onSelect}">`
-          + `<span style="font-size:14px">${a.icon}</span>${a.name}</div>`;
+        return `<div class="tb-add-item" onclick="go('${id}',{newTab:true});${onSelect}">${a.name}</div>`;
       }).join('')
     : `<div class="tb-add-empty">추가할 앱이 없습니다</div>`;
 }
