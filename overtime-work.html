@@ -18,14 +18,40 @@
   --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
   --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
   --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
 }
+html[data-theme="dark"]{
+  --bg:#191919;--card:#242424;
+  --border:rgba(255,255,255,.094);--border2:rgba(255,255,255,.06);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#10192B;
+  /* sky */
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#A9D3F5;
+  /* teal */
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  /* coral (used as plain text-on-tint accent for '증가' state) */
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);
+  /* amber */
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  /* green (reserved, unused by current work types) */
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  /* purple (reserved, unused by current work types) */
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+  /* 근무형태 뱃지 — 다크 톤 */
+}
+html[data-theme="dark"] .type-당직근무{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .type-비상대기{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .type-비상출동{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .type-비상근무{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:16px;line-height:1.75;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
 /* ── HEADER ── */
-.header{background:#0C447C;height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(12,68,124,.3);}
+.header{background:var(--hdr-bg);height:64px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(12,68,124,.3);}
 .header-left{display:flex;align-items:center;gap:10px}
-.logo-mark{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em}
 .logo-sub{font-size:12px;color:rgba(255,255,255,.85)}
 .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
@@ -135,11 +161,29 @@ tr:hover td{background:var(--sky50)}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
-.modal-input:focus{border-color:var(--sky);background:#fff}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+
+/* ── 설정 모달: 탭 ── */
+.modal-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r8);padding:4px;margin-bottom:18px;}
+.modal-tab{flex:1;text-align:center;padding:8px 10px;border-radius:6px;font-size:13px;font-weight:700;color:var(--txt3);cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+.modal-tab.on{background:var(--card);color:var(--sky600);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.modal-tab-panel{display:none;}
+.modal-tab-panel.on{display:block;}
+.theme-opts{display:flex;gap:12px;}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
+.theme-opt.on{border-color:var(--sky);}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
+.theme-swatch-light{background:#F8FAFC;}
+.theme-swatch-dark{background:#191919;}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
+.theme-swatch-dark .ts-side{background:#10192B;border-right:1px solid rgba(255,255,255,.08);}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
 
 @media(max-width:480px){
   .main{padding:10px 10px}
@@ -152,6 +196,7 @@ tr:hover td{background:var(--sky50)}
 </style>
 </head>
 <body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
 
 <!-- MODAL -->
 <div id="cfgModal">
@@ -159,21 +204,40 @@ tr:hover td{background:var(--sky50)}
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-title">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
-        Notion DB 연동 설정
+        설정
       </div>
-      <div class="modal-field">
-        <label class="modal-label">Cloudflare Worker URL</label>
-        <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
-        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      <div class="modal-tabs">
+        <div class="modal-tab on" id="cfgtab-btn-db" onclick="switchCfgTab('db')">DB 연동</div>
+        <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
       </div>
-      <div class="modal-field">
-        <label class="modal-label">노션 DB ID</label>
-        <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      <div class="modal-tab-panel on" id="cfgtab-db">
+        <div class="modal-field">
+          <label class="modal-label">Cloudflare Worker URL</label>
+          <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
+          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">노션 DB ID</label>
+          <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
+          <button class="modal-save" onclick="saveCfg()">저장</button>
+        </div>
       </div>
-      <div class="modal-btns">
-        <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
-        <button class="modal-save" onclick="saveCfg()">저장</button>
+      <div class="modal-tab-panel" id="cfgtab-theme">
+        <div class="theme-opts">
+          <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+            <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">다크</div>
+          </div>
+          <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+            <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">라이트</div>
+          </div>
+        </div>
+        <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
       </div>
     </div>
   </div>
@@ -185,9 +249,6 @@ tr:hover td{background:var(--sky50)}
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-mark">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </div>
     <div>
       <div class="logo-title">연장근무현황</div>
     </div>
@@ -385,12 +446,38 @@ function openCfgModal(){
   else{wEl.value='';wEl.placeholder='https://your-worker.workers.dev';delete wEl.dataset.saved;}
   if(db){dEl.value='';dEl.placeholder=maskVal(db);dEl.dataset.saved='1';}
   else{dEl.value='';dEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';delete dEl.dataset.saved;}
+  switchCfgTab('db');
+  syncThemeOptUI();
   const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
 }
 function closeCfgModal(e){
   if(e&&e.target!==e.currentTarget)return;
   const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
 }
+
+// ── 화면모드(테마) ────────────────────────────────────
+function switchCfgTab(tab){
+  document.getElementById('cfgtab-btn-db')?.classList.toggle('on',tab==='db');
+  document.getElementById('cfgtab-btn-theme')?.classList.toggle('on',tab==='theme');
+  document.getElementById('cfgtab-db')?.classList.toggle('on',tab==='db');
+  document.getElementById('cfgtab-theme')?.classList.toggle('on',tab==='theme');
+}
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
 function saveCfg(){
   const wEl=document.getElementById('cfgWorkerUrl'),dEl=document.getElementById('cfgDbId');
@@ -925,7 +1012,7 @@ function renderTrend(){
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
     const h=Math.max(totalPay/maxPay*110,totalPay>0?5:2);
     return `<div class="trend-col">
-      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'#378ADD':'#B5D4F4'};width:100%;border-radius:4px 4px 0 0"></div>
+      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'var(--sky)':'var(--sky100)'};width:100%;border-radius:4px 4px 0 0"></div>
       <div class="trend-lbl">${esc(label)}</div>
       <div class="trend-val">${totalPay>0?fmtWon(Math.round(totalPay/10000))+'만':'-'}</div>
     </div>`;

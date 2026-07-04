@@ -21,6 +21,98 @@
   --sidebar-bg:#1E2B38;
   --mobile-nav-h:58px;
   --header-h:52px;
+
+  /* 사이드바·상단탭바 전용 색상(화면모드) — 기본값: 다크 */
+  --nav-bg:#1E2B38;
+  --nav-border:rgba(255,255,255,.1);
+  --nav-border2:rgba(255,255,255,.08);
+  --nav-logo-border:rgba(255,255,255,.12);
+  --nav-icon-bg:rgba(255,255,255,.14);
+  --nav-text:#fff;
+  --nav-text-dim:rgba(255,255,255,.75);
+  --nav-sec-text:rgba(255,255,255,.85);
+  --nav-item-text:rgba(255,255,255,.9);
+  --nav-item-hover-bg:rgba(255,255,255,.1);
+  --nav-item-on-bg:rgba(255,255,255,.18);
+  --nav-item-icon-bg:rgba(255,255,255,.1);
+  --nav-badge-bg:rgba(255,255,255,.15);
+  --nav-badge-text:rgba(255,255,255,.9);
+  --nav-footer-border:rgba(255,255,255,.12);
+  --nav-footer-text:rgba(255,255,255,.85);
+  --nav-footer-hover-bg:rgba(255,255,255,.12);
+  --nav-version-text:rgba(255,255,255,.55);
+  --nav-tab-text:rgba(255,255,255,.68);
+  --nav-tab-hover-bg:rgba(255,255,255,.09);
+  --nav-tab-x-text:rgba(255,255,255,.5);
+  --nav-tab-x-hover-bg:rgba(255,255,255,.2);
+  --nav-icon-btn-text:rgba(255,255,255,.65);
+  --nav-icon-btn-hover-bg:rgba(255,255,255,.12);
+  --nav-add-text:rgba(255,255,255,.55);
+  --nav-pill-bg:rgba(255,255,255,.14);
+  --nav-pill-text:#fff;
+  --nav-pill-sep:rgba(255,255,255,.4);
+}
+/* 라이트 모드 — 카드/본문 색상은 그대로, 사이드바·상단탭바만 전환 */
+html[data-theme="light"]{
+  --nav-bg:#F7FAFE;
+  --nav-border:#DCE9F7;
+  --nav-border2:#DCE9F7;
+  --nav-logo-border:#DCE9F7;
+  --nav-icon-bg:#E6F1FB;
+  --nav-text:#0C447C;
+  --nav-text-dim:#6B93B8;
+  --nav-sec-text:#7CA0C4;
+  --nav-item-text:#1E3148;
+  --nav-item-hover-bg:#EAF3FC;
+  --nav-item-on-bg:#E6F1FB;
+  --nav-item-icon-bg:#B5D4F4;
+  --nav-badge-bg:#DCE9F7;
+  --nav-badge-text:#185FA5;
+  --nav-footer-border:#DCE9F7;
+  --nav-footer-text:#1E3148;
+  --nav-footer-hover-bg:#E6F1FB;
+  --nav-version-text:#7CA0C4;
+  --nav-tab-text:#3D5269;
+  --nav-tab-hover-bg:#EAF3FC;
+  --nav-tab-x-text:#7CA0C4;
+  --nav-tab-x-hover-bg:#DCE9F7;
+  --nav-icon-btn-text:#3D5269;
+  --nav-icon-btn-hover-bg:#E6F1FB;
+  --nav-add-text:#3D5269;
+  --nav-pill-bg:#E6F1FB;
+  --nav-pill-text:#185FA5;
+  --nav-pill-sep:#B5D4F4;
+}
+/* 다크 모드 — 사이드바·상단탭바(기본값 유지) + 카드/본문 전체를 Notion 다크 팔레트로 전환 */
+html[data-theme="dark"]{
+  --bg:#191919;
+  --card:#242424;
+  --border:rgba(255,255,255,.094);
+  --border2:rgba(255,255,255,.06);
+  --txt:rgba(255,255,255,.92);
+  --txt2:rgba(255,255,255,.75);
+  --txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+
+  --sky50:rgba(55,138,221,.16);
+  --sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;
+  --sky800:#9DD1FF;
+
+  --teal50:rgba(29,158,117,.18);
+  --teal100:rgba(29,158,117,.34);
+  --teal600:#5FE0B0;
+
+  --coral50:rgba(216,90,48,.18);
+  --coral100:rgba(216,90,48,.34);
+
+  --amber50:rgba(186,117,23,.22);
+  --amber100:rgba(186,117,23,.38);
+  --amber:#E0A845;
+
+  --purple50:rgba(83,74,183,.26);
+  --purple100:rgba(83,74,183,.4);
+  --purple:#A79BE8;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;}
@@ -35,71 +127,53 @@ body{
 /* ═══ 사이드바 (PC) ═══════════════════════════════════════ */
 .sidebar{
   width:var(--sidebar-w);flex-shrink:0;
-  background:var(--sidebar-bg);
-  border-right:1px solid rgba(255,255,255,.1);
-  display:flex;flex-direction:column;
+  background:var(--nav-bg);
+  border-right:1px solid var(--nav-border);
   height:100dvh;
   position:relative;z-index:100;
-  transition:width .22s ease;
+  overflow:hidden;
+  transition:width .2s ease,border-color .2s ease,background .18s ease;
 }
-/* 접힌 상태 */
-.sidebar.collapsed{ width:60px; }
-.sidebar.collapsed .sb-logo-text,
-.sidebar.collapsed .sb-sec,
-.sidebar.collapsed .sb-item > span,
-.sidebar.collapsed .sb-badge,
-.sidebar.collapsed .sb-version{ display:none; }
-.sidebar.collapsed .sb-logo{ padding:10px 8px;justify-content:center; }
-.sidebar.collapsed .sb-item{ justify-content:center;padding:10px 6px;margin:1px 4px;font-size:0; }
-.sidebar.collapsed .sb-item.on::before{ display:none; }
-.sidebar.collapsed .sb-footer-btn{ justify-content:center;padding:9px 6px;font-size:0; }
-.sidebar.collapsed .sb-footer-btn svg{ width:16px;height:16px; }
-/* 토글 버튼 */
-.sb-toggle{
-  position:absolute;right:-11px;top:22px;
-  width:22px;height:22px;
-  background:var(--sky);border:2px solid var(--sidebar-bg);
-  border-radius:50%;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  z-index:200;box-shadow:0 1px 4px rgba(0,0,0,.15);
-  transition:transform .22s ease;
+/* 완전히 닫힌 상태 (Notion 방식 — 폭 0으로 숨김) */
+.sidebar.collapsed{ width:0;border-right-color:transparent; }
+.sb-inner{
+  width:var(--sidebar-w);height:100%;
+  display:flex;flex-direction:column;
 }
-.sb-toggle svg{ width:10px;height:10px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round; }
-.sidebar.collapsed .sb-toggle{ right:-11px; }
 .sb-logo{
   padding:0 12px;
   height:64px;
-  border-bottom:1px solid rgba(255,255,255,.12);
+  border-bottom:1px solid var(--nav-logo-border);
   flex-shrink:0;
   display:flex;align-items:center;gap:10px;
 }
 .sb-logo-text{min-width:0;flex:1;}
 .sb-logo-icon{
   width:38px;height:38px;flex-shrink:0;
-  background:rgba(255,255,255,.14);
+  background:var(--nav-icon-bg);
   border-radius:10px;
   display:flex;align-items:center;justify-content:center;
 }
-.sb-logo-icon svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
-.sb-logo-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sb-logo-sub{font-size:10px;color:rgba(255,255,255,.75);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-logo-icon svg{width:20px;height:20px;fill:none;stroke:var(--nav-text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.sb-logo-title{font-size:16px;font-weight:800;color:var(--nav-text);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-logo-sub{font-size:10px;color:var(--nav-text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
 .sb-nav{flex:1;overflow-y:auto;padding:8px 0;scrollbar-width:none;}
 .sb-nav::-webkit-scrollbar{display:none}
-.sb-sec{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);letter-spacing:.06em;text-transform:uppercase;padding:12px 16px 5px;}
+.sb-sec{font-size:11px;font-weight:700;color:var(--nav-sec-text);letter-spacing:.06em;text-transform:uppercase;padding:12px 16px 5px;}
 .sb-item{
   display:flex;align-items:center;gap:10px;
   padding:10px 10px 10px 12px;
   margin:1px 8px;border-radius:8px;
-  color:rgba(255,255,255,.9);
+  color:var(--nav-item-text);
   font-size:13px;font-weight:600;
   cursor:pointer;
   transition:background .12s,color .12s;
   -webkit-tap-highlight-color:transparent;
   position:relative;
 }
-.sb-item:hover{background:rgba(255,255,255,.1);color:#fff;}
-.sb-item.on{background:rgba(255,255,255,.18);color:#fff;}
+.sb-item:hover{background:var(--nav-item-hover-bg);color:var(--nav-text);}
+.sb-item.on{background:var(--nav-item-on-bg);color:var(--nav-text);}
 .sb-item.on::before{
   content:'';position:absolute;left:-8px;top:22%;bottom:22%;
   width:3.5px;background:var(--sky);border-radius:0 3px 3px 0;
@@ -108,29 +182,29 @@ body{
   width:30px;height:30px;border-radius:7px;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;font-size:15px;
-  background:rgba(255,255,255,.1);
+  background:var(--nav-item-icon-bg);
   transition:background .12s;
 }
 .sb-item.on .sb-icon{background:var(--sky);}
 .sb-badge{
   margin-left:auto;font-size:10px;font-weight:700;
   padding:2px 8px;border-radius:10px;
-  background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);
+  background:var(--nav-badge-bg);color:var(--nav-badge-text);
 }
 .sb-disabled{opacity:.5;cursor:not-allowed !important;}
-.sb-disabled:hover{background:transparent !important;color:rgba(255,255,255,.5) !important;}
+.sb-disabled:hover{background:transparent !important;color:var(--nav-item-text) !important;}
 
-.sb-footer{padding:10px 8px;border-top:1px solid rgba(255,255,255,.12);flex-shrink:0;}
+.sb-footer{padding:10px 8px;border-top:1px solid var(--nav-footer-border);flex-shrink:0;}
 .sb-footer-btn{
   display:flex;align-items:center;gap:9px;
   padding:9px 10px;border-radius:8px;
-  color:rgba(255,255,255,.85);font-size:12px;font-weight:600;
+  color:var(--nav-footer-text);font-size:12px;font-weight:600;
   cursor:pointer;transition:all .12s;
   -webkit-tap-highlight-color:transparent;
 }
-.sb-footer-btn:hover{background:rgba(255,255,255,.12);color:#fff;}
+.sb-footer-btn:hover{background:var(--nav-footer-hover-bg);color:var(--nav-text);}
 .sb-footer-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.sb-version{font-size:10px;color:rgba(255,255,255,.55);padding:4px 10px;}
+.sb-version{font-size:10px;color:var(--nav-version-text);padding:4px 10px;}
 
 /* ═══ 메인 영역 ════════════════════════════════════════════ */
 .main-area{
@@ -138,38 +212,108 @@ body{
   height:100dvh;overflow:hidden;min-width:0;
 }
 
-/* PC 상단 바 */
-.topbar{
+/* PC 상단 탭 바 (사이드바 토글 + 뒤로/앞으로 + 멀티탭) */
+.tab-bar{
   height:var(--header-h);flex-shrink:0;
-  background:#0C447C;
-  display:flex;align-items:center;padding:0 20px;gap:12px;
-  box-shadow:0 2px 8px rgba(12,68,124,.3);
+  background:var(--nav-bg);
+  display:flex;align-items:center;gap:4px;padding:0 10px;
+  border-bottom:1px solid var(--nav-border2);
+  transition:background .18s ease;
 }
-.topbar-title{font-size:15px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
-.topbar-spacer{flex:1;}
-.topbar-clock{
-  font-size:13px;font-weight:700;color:#fff;
-  background:rgba(255,255,255,.14);border-radius:var(--r8);padding:5px 12px;
-}
-.topbar-info{
-  display:flex;align-items:center;gap:8px;
-  background:rgba(255,255,255,.14);border-radius:var(--r8);padding:5px 14px;
-  font-size:13px;font-weight:600;color:#fff;
-}
-.topbar-info-sep{color:rgba(255,255,255,.4);font-weight:300;}
-.topbar-weather{display:flex;align-items:center;gap:4px;}
-.topbar-weather-icon{font-size:15px;line-height:1;}
-.weather-loading{color:rgba(255,255,255,.7);font-size:12px;}
-.topbar-btn{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 14px;border-radius:var(--r8);
-  font-size:13px;font-weight:600;color:#fff;
-  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
-  cursor:pointer;font-family:inherit;transition:all .12s;
+.tb-nav{display:flex;align-items:center;gap:1px;flex-shrink:0;}
+.tb-icon-btn{
+  width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--nav-icon-btn-text);background:transparent;border:none;
+  cursor:pointer;font-family:inherit;transition:background .12s,color .12s;
   -webkit-tap-highlight-color:transparent;
 }
-.topbar-btn:hover{background:rgba(255,255,255,.24);border-color:rgba(255,255,255,.45);}
-.topbar-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tb-icon-btn:hover{background:var(--nav-icon-btn-hover-bg);color:var(--nav-text);}
+.tb-icon-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tb-icon-btn.disabled{opacity:.32;pointer-events:none;}
+
+.tb-tabs{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;height:100%;}
+.tb-tabs::-webkit-scrollbar{display:none}
+.tb-tab{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  height:32px;padding:0 8px 0 11px;border-radius:8px;
+  font-size:12.5px;font-weight:600;color:var(--nav-tab-text);
+  cursor:pointer;max-width:170px;
+  transition:background .12s,color .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.tb-tab:hover{background:var(--nav-tab-hover-bg);color:var(--nav-text);}
+.tb-tab.on{background:var(--bg);color:var(--txt2);}
+.tb-icon{width:15px;height:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tb-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tb-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tb-x{
+  margin-left:1px;width:17px;height:17px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;color:var(--nav-tab-x-text);
+}
+.tb-x:hover{background:var(--nav-tab-x-hover-bg);color:var(--nav-text);}
+.tb-tab.on .tb-x{color:var(--txt3);}
+.tb-tab.on .tb-x:hover{background:var(--border2);color:var(--txt2);}
+
+.tb-add-wrap{position:relative;flex-shrink:0;}
+.tb-add-btn{
+  width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--nav-add-text);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.tb-add-btn:hover{background:var(--nav-icon-btn-hover-bg);color:var(--nav-text);}
+.tb-add-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.tb-add-menu{
+  position:absolute;top:calc(100% + 6px);left:0;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r12);
+  box-shadow:0 14px 32px rgba(0,0,0,.2);
+  min-width:180px;padding:6px;display:none;z-index:900;
+}
+.tb-add-menu.open{display:block;}
+.tb-add-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:8px;
+  font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;
+}
+.tb-add-item:hover{background:var(--bg);}
+.tb-add-empty{padding:10px;font-size:12px;color:var(--txt3);text-align:center;white-space:nowrap;}
+
+.tb-spacer{flex:0 0 8px;}
+.topbar-clock{
+  font-size:13px;font-weight:700;color:var(--nav-pill-text);
+  background:var(--nav-pill-bg);border-radius:var(--r8);padding:5px 12px;
+}
+.topbar-info{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  background:var(--nav-pill-bg);border-radius:var(--r8);padding:5px 14px;
+  font-size:13px;font-weight:600;color:var(--nav-pill-text);
+}
+.topbar-info-sep{color:var(--nav-pill-sep);font-weight:300;}
+.topbar-weather{display:flex;align-items:center;gap:4px;}
+.topbar-weather-icon{font-size:15px;line-height:1;}
+.weather-loading{color:var(--nav-pill-text);font-size:12px;opacity:.75;}
+
+/* 아이콘 위 마우스오버 툴팁 (Notion 스타일) */
+.tip{position:relative;}
+.tip::after{
+  content:attr(data-tip);position:absolute;
+  top:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#0D1520;color:#fff;font-size:11px;font-weight:600;
+  padding:4px 9px;border-radius:6px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .15s;z-index:950;
+}
+.tip::before{
+  content:'';position:absolute;
+  top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-bottom-color:#0D1520;
+  opacity:0;pointer-events:none;transition:opacity .15s;z-index:950;
+}
+.tip:hover::after,.tip:hover::before{opacity:1;}
+/* 좌측 끝(사이드바 토글) 툴팁이 화면 밖으로 잘리지 않도록 좌측 정렬 */
+.tb-nav .tip:first-child::after{left:0;transform:none;}
+.tb-nav .tip:first-child::before{left:14px;transform:none;}
 
 /* ═══ 패널/iframe ══════════════════════════════════════════ */
 .content-area{flex:1;overflow:hidden;position:relative;}
@@ -234,13 +378,6 @@ body{
 .ac-arrow{font-size:12px;color:var(--sky600);font-weight:700;margin-top:auto;}
 .ac-soon{font-size:12px;color:var(--txt3);font-weight:600;margin-top:auto;}
 
-/* KPI 그리드 */
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:22px;}
-.kc{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);padding:14px 16px;box-shadow:var(--shadow);}
-.kc-lbl{font-size:11px;color:var(--txt3);font-weight:600;margin-bottom:5px;letter-spacing:.02em;}
-.kc-val{font-size:22px;font-weight:900;line-height:1;}
-.kc-sub{font-size:12px;color:var(--txt2);margin-top:4px;}
-
 .sec-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 
 /* 안내 카드 */
@@ -266,22 +403,23 @@ body{
 /* ═══ 모바일 ════════════════════════════════════════════════ */
 .mobile-hdr{
   display:none;height:var(--header-h);
-  background:var(--sky800);
+  background:var(--nav-bg);
   padding:0 14px;align-items:center;justify-content:space-between;
-  box-shadow:0 2px 8px rgba(12,68,124,.2);
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
   flex-shrink:0;z-index:200;
+  transition:background .18s ease;
 }
 .m-logo{display:flex;align-items:center;gap:9px;}
 .m-logo-icon{
-  width:32px;height:32px;background:rgba(255,255,255,.15);
+  width:32px;height:32px;background:var(--nav-icon-bg);
   border-radius:8px;display:flex;align-items:center;justify-content:center;
 }
-.m-logo-icon svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-.m-logo-title{font-size:15px;font-weight:700;color:#fff;}
-.m-page-name{font-size:10px;color:rgba(255,255,255,.65);margin-top:1px;}
+.m-logo-icon svg{width:16px;height:16px;fill:none;stroke:var(--nav-text);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.m-logo-title{font-size:15px;font-weight:700;color:var(--nav-text);}
+.m-page-name{font-size:10px;color:var(--nav-text-dim);margin-top:1px;}
 .m-cfg-btn{
-  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
-  color:#fff;border-radius:20px;padding:6px 12px;
+  background:var(--nav-icon-bg);border:1px solid var(--nav-border);
+  color:var(--nav-text);border-radius:20px;padding:6px 12px;
   font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
   display:flex;align-items:center;gap:5px;
   -webkit-tap-highlight-color:transparent;
@@ -307,6 +445,29 @@ body{
 }
 .mn-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:20px;}
 
+/* 모바일 하단 탭 — 홈/설정/추가는 고정, 열린 앱 탭은 가운데서 스크롤 */
+.mn-item.mn-fixed{flex:0 0 64px;}
+.mn-scroll{
+  flex:1;display:flex;min-width:0;
+  overflow-x:auto;scrollbar-width:none;
+  justify-content:space-around;
+}
+.mn-scroll::-webkit-scrollbar{display:none}
+.mn-scroll .mn-item{flex:0 0 auto;min-width:64px;}
+.mn-x{
+  position:absolute;top:2px;right:14px;
+  width:15px;height:15px;border-radius:50%;
+  background:rgba(13,21,32,.4);color:#fff;
+  font-size:11px;line-height:15px;text-align:center;font-weight:700;
+}
+.mn-add-menu{
+  position:absolute;bottom:calc(100% + 8px);right:10px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r12);
+  box-shadow:0 -8px 28px rgba(0,0,0,.16);
+  min-width:170px;padding:6px;display:none;z-index:900;
+}
+.mn-add-menu.open{display:block;}
+
 /* ═══ 모달 ══════════════════════════════════════════════════ */
 #cfgModal{display:none}
 #cfgModal.open{display:block}
@@ -318,6 +479,36 @@ body{
 }
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px;color:var(--txt);}
 .modal-title svg{width:16px;height:16px;fill:none;stroke:var(--sky800);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* 설정창 탭 (DB ID / 화면모드) */
+.modal-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r8);padding:4px;margin-bottom:18px;}
+.modal-tab{flex:1;text-align:center;padding:8px 10px;border-radius:6px;font-size:13px;font-weight:700;color:var(--txt3);cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+.modal-tab.on{background:var(--card);color:var(--sky600);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.modal-tab-panel{display:none;}
+.modal-tab-panel.on{display:block;}
+
+/* 화면모드 선택 카드 */
+.theme-opts{display:flex;gap:12px;}
+.theme-opt{
+  flex:1;border:2px solid var(--border);border-radius:var(--r12);
+  padding:10px;cursor:pointer;text-align:center;position:relative;
+  transition:border-color .12s;-webkit-tap-highlight-color:transparent;
+}
+.theme-opt.on{border-color:var(--sky);}
+.theme-opt.on::after{
+  content:'✓';position:absolute;top:7px;right:9px;
+  width:17px;height:17px;background:var(--sky);color:#fff;
+  border-radius:50%;font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
+.theme-swatch-light{background:#F8FAFC;}
+.theme-swatch-dark{background:#191919;}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
+.theme-swatch-dark .ts-side{background:#10192B;border-right:1px solid rgba(255,255,255,.08);}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+
 .modal-sec{
   font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.07em;text-transform:uppercase;
   margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2);
@@ -330,7 +521,7 @@ body{
   border-radius:var(--r8);padding:9px 12px;font-size:14px;
   font-family:inherit;color:var(--txt);outline:none;transition:border .18s;
 }
-.mi:focus{border-color:var(--sky);background:#fff;}
+.mi:focus{border-color:var(--sky);background:var(--card);}
 .mh{font-size:11px;color:var(--txt3);margin-top:3px;}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid var(--border2);padding-top:16px;}
 .btn-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;}
@@ -342,13 +533,12 @@ body{
 /* ═══ 반응형 ════════════════════════════════════════════════ */
 @media(max-width:768px){
   .sidebar{display:none;}
-  .topbar{display:none;}
+  .tab-bar{display:none;}
   .mobile-hdr{display:flex;}
   .mobile-nav{display:block;}
   .main-area{height:calc(100dvh - var(--header-h) - var(--mobile-nav-h));}
   .home-inner{padding:12px;}
   .app-grid{grid-template-columns:1fr 1fr;}
-  .kpi-grid{grid-template-columns:1fr 1fr;}
 }
 @media(max-width:380px){
   .app-grid{grid-template-columns:1fr;}
@@ -356,9 +546,14 @@ body{
 </style>
 </head>
 <body>
+<script>
+// 화면모드(라이트/다크)를 렌더링 전에 즉시 적용 (전환 시 깜빡임 방지)
+(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();
+</script>
 
 <!-- ─────────────── 사이드바 ─────────────── -->
 <aside class="sidebar" id="sidebar">
+ <div class="sb-inner">
   <div class="sb-logo">
     <div class="sb-logo-icon">
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -367,10 +562,6 @@ body{
       <div class="sb-logo-title">업무용 포털</div>
       <div class="sb-logo-sub">현장 전산 통합 관리</div>
     </div>
-  </div>
-  <!-- 사이드바 토글 버튼 -->
-  <div class="sb-toggle" id="sb-toggle" onclick="toggleSidebar()" title="메뉴 접기/펼치기">
-    <svg id="sb-toggle-icon" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
   </div>
 
   <nav class="sb-nav">
@@ -417,10 +608,11 @@ body{
   <div class="sb-footer">
     <div class="sb-footer-btn" onclick="openCfg()">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      DB 통합 설정
+      설정
     </div>
     <div class="sb-version">현장 업무 포털 v1.0</div>
   </div>
+ </div>
 </aside>
 
 <!-- ─────────────── 메인 ─────────────── -->
@@ -441,10 +633,30 @@ body{
     </button>
   </div>
 
-  <!-- PC 상단 바 -->
-  <div class="topbar">
-    <div class="topbar-title" id="topbar-title">🏠 홈 대시보드</div>
-    <div class="topbar-spacer"></div>
+  <!-- PC 상단 탭 바 -->
+  <div class="tab-bar">
+    <div class="tb-nav">
+      <button class="tb-icon-btn tip" id="nav-toggle" data-tip="사이드바 닫기" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+      </button>
+      <button class="tb-icon-btn tip" id="nav-back" data-tip="뒤로가기" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="tb-icon-btn tip" id="nav-fwd" data-tip="앞으로가기" onclick="goForward()">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+
+    <div class="tb-tabs" id="tb-tabs"></div>
+
+    <div class="tb-add-wrap">
+      <div class="tb-add-btn tip" data-tip="새 탭 추가" onclick="toggleAddMenu(event)">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="tb-add-menu" id="tb-add-menu"></div>
+    </div>
+
+    <div class="tb-spacer"></div>
     <div class="topbar-info">
       <span id="topbar-date">--</span>
       <span class="topbar-info-sep">|</span>
@@ -472,7 +684,7 @@ body{
         <div class="sec-hd"><span>업무 앱 바로가기</span></div>
         <div class="app-grid">
           <div class="app-card" onclick="go('defect')">
-            <div class="ac-icon" style="background:#E1F5EE;color:#0F6E56;">🔧</div>
+            <div class="ac-icon" style="background:var(--teal50);color:var(--teal600);">🔧</div>
             <div>
               <div class="ac-name">하자보수현황</div>
               <div class="ac-desc">하자 접수·처리·완료 현황 조회 및 등록. Notion DB 연동.</div>
@@ -480,7 +692,7 @@ body{
             <div class="ac-arrow">앱 열기 →</div>
           </div>
           <div class="app-card" onclick="go('overtime')">
-            <div class="ac-icon" style="background:#E6F1FB;color:#185FA5;">⏰</div>
+            <div class="ac-icon" style="background:var(--sky50);color:var(--sky600);">⏰</div>
             <div>
               <div class="ac-name">연장근무현황</div>
               <div class="ac-desc">당직·비상대기·비상출동 지급액 월별 현황. Notion DB 연동.</div>
@@ -488,7 +700,7 @@ body{
             <div class="ac-arrow">앱 열기 →</div>
           </div>
           <div class="app-card disabled">
-            <div class="ac-icon" style="background:#FFF8E1;color:#B8860B;">☀️</div>
+            <div class="ac-icon" style="background:var(--amber50);color:var(--amber);">☀️</div>
             <div>
               <div class="ac-name">태양광발전량일지</div>
               <div class="ac-desc">일별 태양광 발전량 기록 및 현황 조회.</div>
@@ -496,7 +708,7 @@ body{
             <div class="ac-soon">준비중</div>
           </div>
           <div class="app-card disabled">
-            <div class="ac-icon" style="background:#EEEDFE;color:#534AB7;">📦</div>
+            <div class="ac-icon" style="background:var(--purple50);color:var(--purple);">📦</div>
             <div>
               <div class="ac-name">비품관리대장</div>
               <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
@@ -511,7 +723,7 @@ body{
             Notion DB 연동 설정 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>DB 통합 설정</strong> 버튼에서 Cloudflare Worker URL과 각 앱의 DB ID를 입력하면 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼의 DB ID 탭에서 Cloudflare Worker URL과 각 앱의 DB ID를 입력하면 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 설정하기</button>
         </div>
@@ -529,7 +741,7 @@ body{
             <div class="notice-dot"></div>
             <div>
               <div>설정값은 기기 로컬 스토리지에 저장됩니다. 기기별 별도 설정이 필요합니다.</div>
-              <div class="notice-sub">좌측 메뉴 하단 DB 통합 설정 버튼에서 Worker URL · DB ID 입력</div>
+              <div class="notice-sub">좌측 메뉴 하단 설정 버튼의 DB ID 탭에서 Worker URL · DB ID 입력</div>
             </div>
           </div>
           <div class="notice-item">
@@ -551,7 +763,7 @@ body{
           <div class="spin-ring"></div>
           <div class="overlay-txt">하자보수현황 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-defect" class="app-iframe" title="하자보수현황" onload="onIframeLoad('defect')"></iframe>
+        <iframe id="ifr-defect" class="app-iframe" title="하자보수현황"></iframe>
       </div>
     </div>
 
@@ -562,28 +774,27 @@ body{
           <div class="spin-ring"></div>
           <div class="overlay-txt">연장근무현황 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-overtime" class="app-iframe" title="연장근무현황" onload="onIframeLoad('overtime')"></iframe>
+        <iframe id="ifr-overtime" class="app-iframe" title="연장근무현황"></iframe>
       </div>
     </div>
 
   </div>
 
-  <!-- 모바일 하단 탭 -->
+  <!-- 모바일 하단 탭 (열린 앱 탭을 데스크톱과 동일하게 동기화, 가운데 영역만 스크롤) -->
   <nav class="mobile-nav">
     <div class="mn-inner">
-      <div class="mn-item on" id="mn-home" onclick="go('home')">
+      <div class="mn-item mn-fixed on" id="mn-home" onclick="go('home')">
         <div class="mn-icon">🏠</div><span>홈</span>
       </div>
-      <div class="mn-item" id="mn-defect" onclick="go('defect')">
-        <div class="mn-icon">🔧</div><span>하자보수</span>
+      <div class="mn-scroll" id="mn-scroll"></div>
+      <div class="mn-item mn-fixed" onclick="toggleMobileAddSheet(event)">
+        <div class="mn-icon">➕</div><span>추가</span>
       </div>
-      <div class="mn-item" id="mn-overtime" onclick="go('overtime')">
-        <div class="mn-icon">⏰</div><span>연장근무</span>
-      </div>
-      <div class="mn-item" onclick="openCfg()">
+      <div class="mn-item mn-fixed" onclick="openCfg()">
         <div class="mn-icon">⚙️</div><span>설정</span>
       </div>
     </div>
+    <div class="mn-add-menu" id="mn-add-menu"></div>
   </nav>
 
 </div>
@@ -593,36 +804,62 @@ body{
   <div class="modal-back" onclick="closeCfg(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-title">
-        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
-        DB 통합 설정
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
       </div>
 
-      <div class="mf">
-        <label class="ml">Cloudflare Worker URL <span style="font-size:11px;color:var(--txt3);font-weight:400">(공통)</span></label>
-        <input id="c-hw" class="mi" type="text" placeholder="https://xxx.workers.dev" autocomplete="off"/>
-        <div class="mh">변경 시에만 입력. 저장된 값은 마스킹 표시됩니다.</div>
+      <div class="modal-tabs">
+        <div class="modal-tab on" id="cfgtab-btn-dbid" onclick="switchCfgTab('dbid')">DB ID</div>
+        <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
       </div>
 
-      <div class="modal-sec">하자보수현황 앱</div>
-      <div class="mf">
-        <label class="ml">하자보수 DB ID</label>
-        <input id="c-hd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-      </div>
-      <div class="mf">
-        <label class="ml">업체연락처 DB ID <span style="font-size:11px;color:var(--txt3);font-weight:400">(선택)</span></label>
-        <input id="c-hc" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-        <div class="mh">업체 연락처 기능 사용 시 입력</div>
+      <div class="modal-tab-panel on" id="cfgtab-dbid">
+        <div class="mf">
+          <label class="ml">Cloudflare Worker URL <span style="font-size:11px;color:var(--txt3);font-weight:400">(공통)</span></label>
+          <input id="c-hw" class="mi" type="text" placeholder="https://xxx.workers.dev" autocomplete="off"/>
+          <div class="mh">변경 시에만 입력. 저장된 값은 마스킹 표시됩니다.</div>
+        </div>
+
+        <div class="modal-sec">하자보수현황 앱</div>
+        <div class="mf">
+          <label class="ml">하자보수 DB ID</label>
+          <input id="c-hd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+        </div>
+        <div class="mf">
+          <label class="ml">업체연락처 DB ID <span style="font-size:11px;color:var(--txt3);font-weight:400">(선택)</span></label>
+          <input id="c-hc" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+          <div class="mh">업체 연락처 기능 사용 시 입력</div>
+        </div>
+
+        <div class="modal-sec">연장근무현황 앱</div>
+        <div class="mf">
+          <label class="ml">연장근무 DB ID</label>
+          <input id="c-od" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+        </div>
+
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeCfg()">취소</button>
+          <button class="btn-save" onclick="saveCfg()">저장 및 적용</button>
+        </div>
       </div>
 
-      <div class="modal-sec">연장근무현황 앱</div>
-      <div class="mf">
-        <label class="ml">연장근무 DB ID</label>
-        <input id="c-od" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-      </div>
+      <div class="modal-tab-panel" id="cfgtab-theme">
+        <div class="modal-sec" style="margin-top:0">화면모드</div>
+        <div class="theme-opts">
+          <div class="theme-opt" id="theme-opt-dark" onclick="setNavTheme('dark')">
+            <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">다크</div>
+          </div>
+          <div class="theme-opt" id="theme-opt-light" onclick="setNavTheme('light')">
+            <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">라이트</div>
+          </div>
+        </div>
+        <div class="mh" style="margin-top:12px"><strong>다크</strong>는 사이드바·상단 탭 바는 물론 홈 화면 콘텐츠까지 전체가 어둡게 전환됩니다. <strong>라이트</strong>는 사이드바·헤더만 밝은 톤으로 바뀌고 콘텐츠는 원래 색상을 유지합니다. 선택 즉시 적용됩니다.</div>
 
-      <div class="modal-btns">
-        <button class="btn-cancel" onclick="closeCfg()">취소</button>
-        <button class="btn-save" onclick="saveCfg()">저장 및 적용</button>
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeCfg()">닫기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -639,39 +876,160 @@ const APPS = {
               keys:{ workerUrl:'ot_workerUrl', dbId:'ot_dbId' } }
 };
 const PAGES = {
-  home:     { title:'🏠 홈 대시보드', mName:'홈 대시보드' },
-  defect:   { title:'🔧 하자보수현황', mName:'하자보수현황' },
-  overtime: { title:'⏰ 연장근무현황', mName:'연장근무현황' }
+  home:     { icon:'<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>', mName:'홈 대시보드' },
+  defect:   { mName:'하자보수현황' },
+  overtime: { mName:'연장근무현황' }
 };
 
 let _cur = 'home';
 const _loaded = {};
 
-// ── 페이지 전환 ──────────────────────────────────────────
-function go(id) {
+// 멀티탭 상태 — 홈은 항상 첫 탭으로 고정, 앱은 열 때마다 탭에 추가됨(APPS가 늘어나도 그대로 동작)
+let openTabs = ['home'];
+// 뒤로가기/앞으로가기용 방문 기록 스택
+let history = ['home'];
+let historyIndex = 0;
+
+// ── 페이지 전환 (사이드바/모바일탭/탭바 공통 진입점) ──────────────
+function go(id, opts) {
+  opts = opts || {};
+  const record = opts.record !== false;
   if (id === _cur) return;
+  if (!openTabs.includes(id)) openTabs.push(id);
   _cur = id;
 
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
   document.getElementById('panel-' + id).classList.add('on');
 
-  ['home','defect','overtime'].forEach(k => {
+  ['home', ...Object.keys(APPS)].forEach(k => {
     document.getElementById('sbn-' + k)?.classList.toggle('on', k === id);
-    document.getElementById('mn-' + k)?.classList.toggle('on', k === id);
   });
 
-  const page = PAGES[id] || { title: id, mName: id };
-  document.getElementById('topbar-title').textContent = page.title;
+  const page = PAGES[id] || { mName: id };
   document.getElementById('m-page-name').textContent = page.mName;
-
-  // 앱 iframe 볼 때는 포털 topbar 숨김 (앱 자체 헤더와 중복 방지)
-  const topbar = document.querySelector('.topbar');
-  if (topbar) topbar.style.display = id === 'home' ? 'flex' : 'none';
 
   if (id !== 'home' && !_loaded[id]) {
     document.getElementById('ifr-' + id).src = APPS[id].file;
   }
+
+  if (record) {
+    history = history.slice(0, historyIndex + 1);
+    history.push(id);
+    historyIndex = history.length - 1;
+  }
+
+  renderTabs();
+  updateNavButtons();
 }
+
+function goBack() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  go(history[historyIndex], { record:false });
+}
+function goForward() {
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  go(history[historyIndex], { record:false });
+}
+function updateNavButtons() {
+  document.getElementById('nav-back')?.classList.toggle('disabled', historyIndex <= 0);
+  document.getElementById('nav-fwd')?.classList.toggle('disabled', historyIndex >= history.length - 1);
+}
+
+function closeTab(id) {
+  if (id === 'home') return; // 홈 탭은 닫을 수 없음
+  const idx = openTabs.indexOf(id);
+  if (idx === -1) return;
+  openTabs.splice(idx, 1);
+
+  if (_loaded[id]) {
+    delete _loaded[id];
+    const ifr = document.getElementById('ifr-' + id);
+    if (ifr) ifr.src = '';
+    document.getElementById('ov-' + id)?.classList.remove('done');
+  }
+
+  if (_cur === id) {
+    const next = openTabs[idx - 1] || openTabs[0] || 'home';
+    _cur = null; // go()의 동일 id 얼리리턴 방지
+    go(next);
+  } else {
+    renderTabs();
+  }
+}
+
+// ── 탭 렌더링 ────────────────────────────────────────────
+function tabMeta(id) {
+  if (id === 'home') return { iconHtml: PAGES.home.icon, label: PAGES.home.mName, closable: false };
+  const a = APPS[id];
+  return { iconHtml: `<span style="font-size:13px;line-height:1">${a.icon}</span>`, label: a.name, closable: true };
+}
+
+function renderTabs() {
+  const wrap = document.getElementById('tb-tabs');
+  if (wrap) {
+    wrap.innerHTML = openTabs.map(id => {
+      const m = tabMeta(id);
+      const on = id === _cur ? ' on' : '';
+      const closeBtn = m.closable
+        ? `<span class="tb-x tip" data-tip="탭 닫기" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
+        : '';
+      return `<div class="tb-tab${on}" onclick="go('${id}')" title="${m.label}">`
+        + `<span class="tb-icon">${m.iconHtml}</span>`
+        + `<span class="tb-label">${m.label}</span>`
+        + closeBtn
+        + `</div>`;
+    }).join('');
+  }
+  renderMobileNav();
+}
+
+// ── 모바일 하단 탭 렌더링 (홈 고정 + 열린 앱탭 스크롤 영역, 데스크톱과 상태 동기화) ──
+function renderMobileNav() {
+  document.getElementById('mn-home')?.classList.toggle('on', _cur === 'home');
+  const scroll = document.getElementById('mn-scroll');
+  if (!scroll) return;
+  scroll.innerHTML = openTabs.filter(id => id !== 'home').map(id => {
+    const a = APPS[id];
+    const on = id === _cur ? ' on' : '';
+    return `<div class="mn-item${on}" onclick="go('${id}')">`
+      + `<div class="mn-icon">${a.icon}</div><span>${a.name}</span>`
+      + `<span class="mn-x" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
+      + `</div>`;
+  }).join('');
+}
+
+// ── 탭 추가(+) 메뉴 (PC 탭바 / 모바일 하단탭 공통) ─────────────
+function addMenuItemsHtml(onSelect) {
+  const remaining = Object.keys(APPS).filter(id => !openTabs.includes(id));
+  return remaining.length
+    ? remaining.map(id => {
+        const a = APPS[id];
+        return `<div class="tb-add-item" onclick="go('${id}');${onSelect}">`
+          + `<span style="font-size:14px">${a.icon}</span>${a.name}</div>`;
+      }).join('')
+    : `<div class="tb-add-empty">추가할 앱이 없습니다</div>`;
+}
+function toggleAddMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('tb-add-menu');
+  menu.innerHTML = addMenuItemsHtml('closeAddMenu();');
+  menu.classList.toggle('open');
+}
+function closeAddMenu() {
+  document.getElementById('tb-add-menu')?.classList.remove('open');
+}
+function toggleMobileAddSheet(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('mn-add-menu');
+  menu.innerHTML = addMenuItemsHtml('closeMobileAddSheet();');
+  menu.classList.toggle('open');
+}
+function closeMobileAddSheet() {
+  document.getElementById('mn-add-menu')?.classList.remove('open');
+}
+document.addEventListener('click', () => { closeAddMenu(); closeMobileAddSheet(); });
 
 function onIframeLoad(id) {
   _loaded[id] = true;
@@ -685,6 +1043,14 @@ function onIframeLoad(id) {
     });
   } catch(e) {}
 }
+// onIframeLoad 정의 이후에 리스너를 붙여, 초기 빈 iframe이 즉시 발생시키는 load 이벤트에서
+// (스크립트 실행 전이라 함수가 없어 ReferenceError가 나던) 시점 문제를 피한다.
+Object.keys(APPS).forEach(id => {
+  document.getElementById('ifr-' + id)?.addEventListener('load', () => onIframeLoad(id));
+});
+
+renderTabs();
+updateNavButtons();
 
 // ── 설정 모달 ────────────────────────────────────────────
 const CFG_FIELDS = [
@@ -712,6 +1078,8 @@ function openCfg() {
     el.value = '';
     el.placeholder = saved ? mask(saved) : '(미설정)';
   });
+  switchCfgTab('dbid');
+  syncThemeOptUI();
   document.getElementById('cfgModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -721,6 +1089,33 @@ function closeCfg(e) {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfg(); });
+
+// ── 설정창 탭 전환 (DB ID / 화면모드) ──────────────────────
+function switchCfgTab(tab) {
+  document.getElementById('cfgtab-btn-dbid')?.classList.toggle('on', tab === 'dbid');
+  document.getElementById('cfgtab-btn-theme')?.classList.toggle('on', tab === 'theme');
+  document.getElementById('cfgtab-dbid')?.classList.toggle('on', tab === 'dbid');
+  document.getElementById('cfgtab-theme')?.classList.toggle('on', tab === 'theme');
+}
+
+// ── 화면모드 (라이트: 사이드바·헤더만 / 다크: 전체 콘텐츠 포함) ──
+function syncThemeOptUI() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on', cur === 'dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on', cur === 'light');
+}
+function setNavTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  syncThemeOptUI();
+}
+// 개별 앱(같은 origin의 iframe)의 설정창에서 화면모드를 바꿔도 실시간 동기화
+window.addEventListener('storage', e => {
+  if (e.key === 'theme' && e.newValue) {
+    document.documentElement.setAttribute('data-theme', e.newValue);
+    syncThemeOptUI();
+  }
+});
 
 function saveCfg() {
   let changed = 0;
@@ -792,7 +1187,13 @@ function loadWeather() {
       const code = parseInt(cur.weatherCode);
       const icon = WEATHER_CODE[code] || '🌡️';
       const desc = cur.lang_ko?.[0]?.value || cur.weatherDesc[0].value;
-      el.innerHTML = `<span class="topbar-weather-icon">${icon}</span><span>${cur.temp_C}°C</span>`;
+      el.textContent = '';
+      const iconEl = document.createElement('span');
+      iconEl.className = 'topbar-weather-icon';
+      iconEl.textContent = icon;
+      const tempEl = document.createElement('span');
+      tempEl.textContent = cur.temp_C + '°C';
+      el.append(iconEl, tempEl);
       el.title = desc;
     })
     .catch(() => { el.innerHTML = '<span style="color:var(--txt3)">날씨 오류</span>'; });
@@ -800,24 +1201,18 @@ function loadWeather() {
 loadWeather();
 setInterval(loadWeather, 1800000); // 30분마다 갱신
 
-// ── 사이드바 접기/펼치기 ──────────────────────────────────
+// ── 사이드바 접기/펼치기 (Notion 방식 — 완전히 숨김) ──────────────
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
-  const icon = document.getElementById('sb-toggle-icon');
   const collapsed = sb.classList.toggle('collapsed');
-  // 화살표 방향 전환 (< → >)
-  icon.innerHTML = collapsed
-    ? '<polyline points="9 18 15 12 9 6"/>'
-    : '<polyline points="15 18 9 12 15 6"/>';
+  document.getElementById('nav-toggle')?.setAttribute('data-tip', collapsed ? '사이드바 열기' : '사이드바 닫기');
   localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
 }
 // 새로고침 후 상태 복원
 (function() {
   if (localStorage.getItem('sb_collapsed') === '1') {
-    const sb = document.getElementById('sidebar');
-    const icon = document.getElementById('sb-toggle-icon');
-    if (sb) sb.classList.add('collapsed');
-    if (icon) icon.innerHTML = '<polyline points="9 18 15 12 9 6"/>';
+    document.getElementById('sidebar')?.classList.add('collapsed');
+    document.getElementById('nav-toggle')?.setAttribute('data-tip', '사이드바 열기');
   }
 })();
 
