@@ -868,6 +868,9 @@ body{
 <div id="toast"></div>
 
 <script>
+// 매 페이지 로드마다 새 값 — iframe이 브라우저 캐시된 구버전을 계속 붙잡고 있는 문제 방지
+const PORTAL_BOOT_TS = Date.now();
+
 // ── 앱 정의 ──────────────────────────────────────────────
 const APPS = {
   defect:   { name:'하자보수현황', file:'defect-management.html',
@@ -932,7 +935,9 @@ function go(id, opts) {
   renderBreadcrumb(id);
 
   if (id !== 'home' && !_loaded[id]) {
-    document.getElementById('ifr-' + id).src = APPS[id].file;
+    // 캐시버스터: 브라우저가 iframe 리소스를 새로고침해도 재검증하지 않는 경우가 있어
+    // 세션마다 새 쿼리스트링으로 항상 최신 파일을 받아오도록 강제
+    document.getElementById('ifr-' + id).src = APPS[id].file + '?v=' + PORTAL_BOOT_TS;
   }
 
   if (record) {
@@ -1178,7 +1183,7 @@ function saveCfg() {
         _loaded[id] = false;
         const ifr = document.getElementById('ifr-' + id);
         if (ifr) { ifr.src = ''; document.getElementById('ov-' + id)?.classList.remove('done'); }
-        if (_cur === id) setTimeout(() => { document.getElementById('ifr-'+id).src = APPS[id].file; }, 80);
+        if (_cur === id) setTimeout(() => { document.getElementById('ifr-'+id).src = APPS[id].file + '?v=' + Date.now(); }, 80);
       }
     });
     showToast('설정이 저장되었습니다.');
