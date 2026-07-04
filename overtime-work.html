@@ -148,7 +148,7 @@ th.r,td.r{text-align:right}
 td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
-.pay-cell{font-weight:800;color:var(--teal600);font-size:15px}
+.pay-cell{font-weight:400;color:var(--teal600);font-size:15px}
 
 /* ── RANK ── */
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
@@ -160,7 +160,7 @@ tr:hover td{background:var(--sky50)}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
 
 /* ── 근무형태 뱃지 ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
 .type-당직근무{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
 .type-비상대기{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 .type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
@@ -812,7 +812,7 @@ function buildStackBars(arr, typeList, valueKey, totalKey, labelFn){
 function buildDetailRow(r, showEmployee){
   return `<tr>
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
-    ${showEmployee?`<td style="font-weight:600;white-space:nowrap">${esc(r.employee)}</td>`:''}
+    ${showEmployee?`<td style="white-space:nowrap">${esc(r.employee)}</td>`:''}
     <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
     <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtH(r.hours)}h</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
@@ -944,7 +944,7 @@ function renderEmployee(recs){
         <td><div style="display:flex;align-items:center;gap:5px">
           <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
         </div></td>
-        <td style="font-weight:700">${esc(name)}</td>
+        <td>${esc(name)}</td>
         <td class="r">${d.count}회</td>
         <td class="r pay-cell">${fmtWon(d.pay)}</td>
       </tr>`).join('')

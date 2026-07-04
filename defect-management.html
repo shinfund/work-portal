@@ -149,7 +149,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 @media(max-width:640px){.col-photo{display:none}}
 
 /* ── STATUS BADGE ── */
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:12px;font-weight:400;white-space:nowrap}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
 .badge-done{background:var(--teal50);color:var(--teal600)}
 .badge-prog{background:var(--coral50);color:var(--coral800)}
@@ -1738,7 +1738,7 @@ function renderList(){
       var val = r[key]||'';
       if(key==='날짜')     return '<td class="td-nowrap">'+shortDate(val)+'</td>';
       if(key==='조치일')   return '<td class="td-nowrap">'+shortDate(val)+'</td>';
-      if(key==='터널명')   return '<td class="td-nowrap"><strong>'+esc(val)+'</strong></td>';
+      if(key==='터널명')   return '<td class="td-nowrap">'+esc(val)+'</td>';
       if(key==='조치여부') return '<td><span class="badge '+badge+'">'+esc(s||'-')+'</span></td>';
       if(key==='하자내용') return '<td><span class="td-content">'+esc(val)+'</span></td>';
       if(key==='하자사진_URL'||key==='조치사진_URL') return '<td class="col-photo">'+makePhotoThumb(val)+'</td>';
@@ -1931,7 +1931,7 @@ function updateTabCounts(){
 var CELL_RENDERERS = {
   status:  function(r,b){ return '<td><span class="badge '+b+'">'+esc(r['조치여부']||'-')+'</span></td>'; },
   date:    function(r){ return '<td class="td-nowrap">'+shortDate(r['날짜'])+'</td>'; },
-  tunnel:  function(r){ return '<td class="td-nowrap"><strong>'+esc(r['터널명']||'-')+'</strong></td>'; },
+  tunnel:  function(r){ return '<td class="td-nowrap">'+esc(r['터널명']||'-')+'</td>'; },
   type:    function(r){ return '<td class="td-nowrap">'+esc(r['공종']||'-')+'</td>'; },
   loc:     function(r){ return '<td class="td-nowrap">'+esc(r['위치']||'-')+'</td>'; },
   content: function(r){ return '<td><span class="td-content">'+esc(r['하자내용']||'-')+'</span></td>'; },
@@ -3096,7 +3096,7 @@ function renderContactTable(){
       : '-';
     return '<tr onclick="openContactDetail('+r._idx+')" style="cursor:pointer">'
       +'<td class="td-nowrap">'+gBadge+'</td>'
-      +'<td class="td-nowrap"><strong>'+esc(r.터널명||'-')+'</strong></td>'
+      +'<td class="td-nowrap">'+esc(r.터널명||'-')+'</td>'
       +'<td class="td-nowrap">'+esc(r.업체명||'-')+'</td>'
       +'<td class="td-nowrap">'+esc(r.담당자||'-')+'</td>'
       +'<td class="td-nowrap">'+telHtml+'</td>'
