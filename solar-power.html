@@ -98,16 +98,12 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
 .dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
-.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
+.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;max-height:280px;overflow-y:auto;display:none}
 .dd-menu.open{display:block}
-.dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+/* 목록방식(3-9 표준) — 년/월/터널 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
+.dd-opt{padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt2);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
-.dd-opt.has{color:var(--sky600)}
-.dd-year-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border)}
-.dd-year-nav{background:none;border:none;font-size:16px;font-weight:700;color:var(--sky600);cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
-.dd-year-val{font-size:13px;font-weight:700;color:var(--txt)}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 
@@ -158,11 +154,12 @@ tr:hover td{background:var(--sky50)}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 #tunnelDdMenu .dd-opt{text-align:left}
+/* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.tb-action-btn.tb-add{background:var(--sky)}
-.tb-action-btn.tb-add:hover{background:var(--sky600)}
-.tb-action-btn.tb-excel{background:var(--teal600)}
-.tb-action-btn.tb-excel:hover{background:var(--teal)}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
 /* 발전내역 툴바 안으로 이동했을 때 month-sel 자체 카드 스타일(배경/테두리/그림자)을 지우고
    내부 년/월 pill 버튼만 툴바에 자연스럽게 섞이도록 함 */
 .month-sel.inline-in-toolbar{background:transparent;border:none;box-shadow:none;padding:0;margin-bottom:0;width:auto}
@@ -317,34 +314,49 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="modal-field">
         <label class="modal-label">터널 <span class="modal-required">*</span></label>
-        <select id="addTunnel" class="modal-select" onchange="onSelectChange(this,'addTunnelCustom')">
+        <select id="addTunnel" class="modal-select" onchange="onAddTunnelChange()">
           <option value="">선택</option>
         </select>
         <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널 직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">발전량(kWh) <span class="modal-required">*</span></label>
-        <input id="addGen" class="modal-input" type="number" step="0.1" placeholder="예) 356"/>
-      </div>
-      <div class="modal-field">
         <label class="modal-label">용량(kW)</label>
-        <input id="addCapacity" class="modal-input" type="number" step="0.1" placeholder="터널 설비 용량"/>
+        <select id="addCapacity" class="modal-select" onchange="onSelectChange(this,'addCapacityCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addCapacityCustom" class="modal-input" type="number" step="0.1" placeholder="예) 99.6" style="display:none;margin-top:6px"/>
+        <div class="modal-hint">터널 선택 시 해당 터널의 기존 용량이 자동 선택됩니다. 목록에 없으면 "직접입력"</div>
       </div>
       <div class="modal-field">
-        <label class="modal-label">누적량(kWh)</label>
-        <input id="addCumGen" class="modal-input" type="number" step="0.1"/>
+        <label class="modal-label">누적량(kWh) <span class="modal-required">*</span></label>
+        <input id="addCumGen" class="modal-input" type="number" step="0.1" placeholder="예) 185,334" oninput="recomputeGenAndFee()"/>
+        <div class="modal-hint">계량기에 표시된 누적 발전량을 직접 입력하는 값입니다.</div>
       </div>
       <div class="modal-field">
-        <label class="modal-label">전일누적량(kWh)</label>
-        <input id="addPrevCumGen" class="modal-input" type="number" step="0.1"/>
+        <label class="modal-label">전일누적량(kWh) <span class="modal-required">*</span></label>
+        <select id="addPrevCumGen" class="modal-select" onchange="onPrevCumSelectChange()">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="__latest__" id="addPrevCumLatestOpt" disabled>최근 누적발전량</option>
+        </select>
+        <input id="addPrevCumGenCustom" class="modal-input" type="number" step="0.1" placeholder="예) 184,919" style="display:none;margin-top:6px" oninput="recomputeGenAndFee()"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">요금(원)</label>
-        <input id="addFee" class="modal-input" type="number" step="1"/>
+        <label class="modal-label">발전량(kWh)</label>
+        <input id="addGen" class="modal-input" type="number" step="0.1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <div class="modal-hint">= 누적량 − 전일누적량 (자동 계산)</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">단가(원)</label>
-        <input id="addUnitPrice" class="modal-input" type="number" step="0.1"/>
+        <select id="addUnitPrice" class="modal-select" onchange="onUnitPriceSelectChange()">
+          <option value="">선택</option>
+        </select>
+        <input id="addUnitPriceCustom" class="modal-input" type="number" step="0.1" placeholder="예) 112.6" style="display:none;margin-top:6px" oninput="recomputeGenAndFee()"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">요금(원)</label>
+        <input id="addFee" class="modal-input" type="number" step="1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <div class="modal-hint">= 발전량 × 단가 (자동 계산, 노션 수식 컬럼과 동일)</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -418,11 +430,6 @@ tr:hover td{background:var(--sky50)}
           <span id="ddYearLabel">2026년</span>
         </div>
         <div class="dd-menu" id="ddYearMenu">
-          <div class="dd-year-row">
-            <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
-            <span class="dd-year-val" id="ddYearCenter">2026</span>
-            <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
-          </div>
           <div id="ddYearOpts"></div>
         </div>
       </div>
@@ -432,7 +439,7 @@ tr:hover td{background:var(--sky50)}
           <span id="ddMonthLabel">4월</span>
         </div>
         <div class="dd-menu" id="ddMonthMenu">
-          <div class="dd-grid" id="ddMonthOpts"></div>
+          <div id="ddMonthOpts"></div>
         </div>
       </div>
       <div class="month-sub-row" id="monthSub"></div>
@@ -629,6 +636,20 @@ function saveCfg(){
 // ── 신규추가/수정/삭제 ────────────────────────────────
 var EDIT_PAGE_ID = null;
 function getUniqueTunnels(){ return [...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort(); }
+function getUniqueCapacities(){ return [...new Set(ALL_RECORDS.map(r=>r.capacity).filter(Boolean))].sort((a,b)=>a-b); }
+function getUniqueUnitPrices(){ return [...new Set(ALL_RECORDS.map(r=>r.unitPrice).filter(Boolean))].sort((a,b)=>a-b); }
+function getTunnelCapacity(tunnel){
+  if(!tunnel) return null;
+  const rec=[...ALL_RECORDS].reverse().find(r=>r.tunnel===tunnel && r.capacity);
+  return rec ? rec.capacity : null;
+}
+function getTunnelLatestCumGen(tunnel){
+  if(!tunnel) return null;
+  const recs=ALL_RECORDS.filter(r=>r.tunnel===tunnel && r.cumGen!=null).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!recs.length) return null;
+  const last=recs[recs.length-1];
+  return { date:last.date, cumGen:last.cumGen };
+}
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
   if(!ci) return;
@@ -650,14 +671,78 @@ function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
   else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
 }
 
+// ── 발전량/요금 자동계산 + 용량/전일누적량/단가 드롭다운(직접입력·최근값 지원) ──
+function getPrevCumGenValue(){
+  const sel=document.getElementById('addPrevCumGen');
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById('addPrevCumGenCustom')||{}).value||'').trim();
+  if(sel.value==='__latest__') return sel.options[sel.selectedIndex].dataset.val||'';
+  return '';
+}
+function recomputeGenAndFee(){
+  const cumGen=parseFloat(document.getElementById('addCumGen').value);
+  const prevCumGen=parseFloat(getPrevCumGenValue());
+  const unitPrice=parseFloat(getSelectValue('addUnitPrice','addUnitPriceCustom'));
+  const genEl=document.getElementById('addGen'), feeEl=document.getElementById('addFee');
+  if(!isNaN(cumGen) && !isNaN(prevCumGen)){
+    const gen=cumGen-prevCumGen;
+    genEl.value=gen;
+    feeEl.value=!isNaN(unitPrice) ? Math.round(gen*unitPrice) : '';
+  } else {
+    genEl.value=''; feeEl.value='';
+  }
+}
+function onPrevCumSelectChange(){
+  const sel=document.getElementById('addPrevCumGen');
+  const ci=document.getElementById('addPrevCumGenCustom');
+  if(sel.value==='__custom__'){ ci.style.display=''; ci.value=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+  recomputeGenAndFee();
+}
+function onUnitPriceSelectChange(){
+  onSelectChange(document.getElementById('addUnitPrice'),'addUnitPriceCustom');
+  recomputeGenAndFee();
+}
+function refreshPrevCumLatestOpt(tunnel){
+  const opt=document.getElementById('addPrevCumLatestOpt');
+  const latest=getTunnelLatestCumGen(tunnel);
+  if(latest){
+    opt.textContent=`최근 누적발전량 (${fmtDate(latest.date)}) ${fmtWon(latest.cumGen)}`;
+    opt.dataset.val=latest.cumGen;
+    opt.disabled=false;
+  } else {
+    opt.textContent='최근 누적발전량 (해당 터널 데이터 없음)';
+    opt.dataset.val='';
+    opt.disabled=true;
+  }
+}
+function onAddTunnelChange(){
+  onSelectChange(document.getElementById('addTunnel'),'addTunnelCustom');
+  const tunnel=getSelectValue('addTunnel','addTunnelCustom');
+  const capSel=document.getElementById('addCapacity');
+  const cap=getTunnelCapacity(tunnel);
+  if(cap!=null && [...capSel.options].some(o=>o.value===String(cap))){
+    capSel.value=String(cap);
+    onSelectChange(capSel,'addCapacityCustom');
+  }
+  refreshPrevCumLatestOpt(tunnel);
+  recomputeGenAndFee();
+}
+
 function openAddModal(){
   EDIT_PAGE_ID = null;
   document.getElementById('addModalTitleText').textContent='신규 발전량 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
   const today=new Date();
   document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  ['addGen','addCapacity','addCumGen','addPrevCumGen','addFee','addUnitPrice','addNote'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['addGen','addCumGen','addFee','addNote','addTunnelCustom','addCapacityCustom','addUnitPriceCustom'].forEach(id=>{ document.getElementById(id).value=''; });
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), '');
+  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getUniqueCapacities().map(String), '');
+  buildGenericSelectOpts(document.getElementById('addUnitPrice'), document.getElementById('addUnitPriceCustom'), getUniqueUnitPrices().map(String), '');
+  document.getElementById('addPrevCumGen').value='';
+  document.getElementById('addPrevCumGenCustom').style.display='none';
+  document.getElementById('addPrevCumGenCustom').value='';
+  refreshPrevCumLatestOpt('');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -674,31 +759,35 @@ function openEditModal(pageId){
   document.getElementById('addModalTitleText').textContent='발전량 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value = r.date||'';
-  document.getElementById('addGen').value = r.gen||'';
-  document.getElementById('addCapacity').value = r.capacity||'';
   document.getElementById('addCumGen').value = r.cumGen||'';
-  document.getElementById('addPrevCumGen').value = r.prevCumGen||'';
-  document.getElementById('addFee').value = r.fee||'';
-  document.getElementById('addUnitPrice').value = r.unitPrice||'';
   document.getElementById('addNote').value = r.note||'';
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), r.tunnel||'');
+  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getUniqueCapacities().map(String), r.capacity?String(r.capacity):'');
+  buildGenericSelectOpts(document.getElementById('addUnitPrice'), document.getElementById('addUnitPriceCustom'), getUniqueUnitPrices().map(String), r.unitPrice?String(r.unitPrice):'');
+  refreshPrevCumLatestOpt(r.tunnel||'');
+  // 기존 레코드의 전일누적량은 실제 값으로 확정돼 있으므로 직접입력 값으로 표시(최근값 드롭다운은 필요시 전환용으로만 남겨둠)
+  const prevSel=document.getElementById('addPrevCumGen'), prevCi=document.getElementById('addPrevCumGenCustom');
+  prevSel.value='__custom__'; prevCi.value=r.prevCumGen||''; prevCi.style.display='';
+  recomputeGenAndFee();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
 function submitAddForm(){
   const date = document.getElementById('addDate').value.trim();
   const tunnel = getSelectValue('addTunnel','addTunnelCustom');
-  const gen = document.getElementById('addGen').value.trim();
+  const cumGen=document.getElementById('addCumGen').value.trim();
+  const prevCumGen=getPrevCumGenValue();
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!tunnel){ alert('터널을 선택해주세요.'); return; }
-  if(gen===''){ alert('발전량을 입력해주세요.'); return; }
+  if(cumGen===''){ alert('누적량을 입력해주세요.'); return; }
+  if(prevCumGen===''){ alert('전일누적량을 입력하거나 "최근 누적발전량"을 선택해주세요.'); return; }
   if(!CFG.workerUrl||!CFG.dbId){ alert('연동 설정(Worker URL, DB ID)을 먼저 입력해주세요.'); closeAddModal(); openCfgModal(); return; }
 
-  const capacity=document.getElementById('addCapacity').value.trim();
-  const cumGen=document.getElementById('addCumGen').value.trim();
-  const prevCumGen=document.getElementById('addPrevCumGen').value.trim();
+  recomputeGenAndFee();
+  const gen=document.getElementById('addGen').value.trim();
+  const capacity=getSelectValue('addCapacity','addCapacityCustom');
   const fee=document.getElementById('addFee').value.trim();
-  const unitPrice=document.getElementById('addUnitPrice').value.trim();
+  const unitPrice=getSelectValue('addUnitPrice','addUnitPriceCustom');
   const note=document.getElementById('addNote').value.trim();
 
   const btn=document.getElementById('addSubmitBtn');
@@ -787,7 +876,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();}
 // ── 날짜 ──────────────────────────────────────────────
 const _now=new Date();
 let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
-let ddYearBase=curYear;
 
 function toggleDD(type){
   const yMenu=document.getElementById('ddYearMenu');
@@ -806,35 +894,23 @@ function closeAllDD(){
   document.getElementById('ddYearMenu').classList.remove('open');
   document.getElementById('ddMonthMenu').classList.remove('open');
 }
-function shiftDDYear(d){
-  ddYearBase+=d;
-  document.getElementById('ddYearCenter').textContent=ddYearBase;
-  renderDDYear();
-}
 function renderDDYear(){
   const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
   dataYears.add(curYear);
-  const minY=Math.min(ddYearBase-2,...dataYears);
-  const maxY=Math.max(ddYearBase+2,...dataYears);
-  const years=[];
-  for(let y=minY;y<=maxY;y++) years.push(y);
+  const years=[...dataYears].sort((a,b)=>b-a); // 목록방식(3-9 표준): 최신순 단일 리스트, 그리드/이전·다음 없음
   document.getElementById('ddYearOpts').innerHTML=
-    `<div style="display:grid;grid-template-columns:repeat(3,1fr);">`+
-    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}${dataYears.has(y)&&y!==curYear?' has':''}" onclick="pickYear(${y})">${y}년</div>`).join('')+
-    `</div>`;
+    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}" onclick="pickYear(${y})">${y}년</div>`).join('');
 }
 function renderDDMonth(){
   const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" style="grid-column:1/-1;border-bottom:1px solid var(--border2)" onclick="pickMonth(0)">전체</div>`;
+  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" onclick="pickMonth(0)">전체</div>`;
   document.getElementById('ddMonthOpts').innerHTML=allOpt+MONTHS.map((lbl,i)=>{
     const m=i+1;
-    const ym=`${curYear}-${String(m).padStart(2,'0')}`;
-    const has=ALL_RECORDS.some(r=>r.date.startsWith(ym));
-    return `<div class="dd-opt${m===curMonth?' sel':''}${has&&m!==curMonth?' has':''}" onclick="pickMonth(${m})">${lbl}</div>`;
+    return `<div class="dd-opt${m===curMonth?' sel':''}" onclick="pickMonth(${m})">${lbl}</div>`;
   }).join('');
 }
 function pickYear(y){
-  curYear=y; ddYearBase=y; _userPickedMonth=true;
+  curYear=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
   if(CFG.workerUrl){ loadData(); }
@@ -1062,7 +1138,7 @@ async function loadData(){
       ensureTunnelColors();
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
-        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
       }
       renderAll();
       const now=new Date();
@@ -1079,7 +1155,7 @@ async function loadData(){
       ensureTunnelColors();
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
-        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
       }
       renderAll();
     }
@@ -1625,7 +1701,6 @@ ensureTunnelColors();
     if(latest){
       curYear=parseInt(latest.slice(0,4));
       curMonth=parseInt(latest.slice(5,7));
-      ddYearBase=curYear;
     }
   }
 })();

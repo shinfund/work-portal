@@ -1090,11 +1090,16 @@ function closeMobileAddSheet() {
 document.addEventListener('click', () => { closeAddMenu(); closeMobileAddSheet(); });
 
 function onIframeLoad(id) {
+  // 탭 교체 시 이전 탭의 iframe을 src='' 로 비우는데, 그 자체도 load 이벤트를 다시 발생시켜
+  // 방금 지운 _loaded[id]를 즉시 true로 되돌리는 레이스 컨디션이 있었음(2026-07-05 발견) —
+  // 실제로 앱 파일이 로드된 경우에만(빈 src로 인한 스푸리어스 load 이벤트가 아닐 때만) 처리
+  const ifr = document.getElementById('ifr-' + id);
+  if (!ifr || !ifr.src || !ifr.src.includes(APPS[id].file)) return;
   _loaded[id] = true;
   document.getElementById('ov-' + id)?.classList.add('done');
   // 같은 origin이므로 iframe 내 localStorage 직접 주입
   try {
-    const iw = document.getElementById('ifr-' + id).contentWindow;
+    const iw = ifr.contentWindow;
     Object.entries(APPS[id].keys).forEach(([, lsKey]) => {
       const v = localStorage.getItem(lsKey);
       if (v) iw.localStorage.setItem(lsKey, v);
