@@ -153,10 +153,22 @@ tr:hover td{background:var(--sky50)}
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
 .r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
 
-/* ── FILTER ── */
-.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+/* ── FILTER (발전내역 툴바 — 하자보수현황 앱 필터바 패턴 재사용) ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+#tunnelDdMenu .dd-opt{text-align:left}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:var(--sky)}
+.tb-action-btn.tb-add:hover{background:var(--sky600)}
+.tb-action-btn.tb-excel{background:var(--teal600)}
+.tb-action-btn.tb-excel:hover{background:var(--teal)}
+/* 발전내역 툴바 안으로 이동했을 때 month-sel 자체 카드 스타일(배경/테두리/그림자)을 지우고
+   내부 년/월 pill 버튼만 툴바에 자연스럽게 섞이도록 함 */
+.month-sel.inline-in-toolbar{background:transparent;border:none;box-shadow:none;padding:0;margin-bottom:0;width:auto}
+.month-sel.inline-in-toolbar .month-sub-row{display:none}
 
 /* ── 터널명 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
@@ -350,10 +362,6 @@ tr:hover td{background:var(--sky50)}
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
     <div class="header-btns">
-      <button class="hdr-btn" onclick="openAddModal()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        추가
-      </button>
       <button class="hdr-btn" onclick="openCfgModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         설정
@@ -368,9 +376,9 @@ tr:hover td{background:var(--sky50)}
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-summary" role="tab" aria-selected="true" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">발전내역</button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')">터널별</button>
-  <button class="top-tab" id="nav-detail" role="tab" aria-selected="false" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
+  <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
   <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
 </div>
 </div>
@@ -378,39 +386,70 @@ tr:hover td{background:var(--sky50)}
 <!-- MAIN -->
 <div class="main">
 
-  <!-- MONTH SELECTOR -->
-  <div class="month-sel" id="monthSel">
-    <div class="dd-wrap" id="ddYearWrap">
-      <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
-        <span id="ddYearLabel">2026년</span>
-      </div>
-      <div class="dd-menu" id="ddYearMenu">
-        <div class="dd-year-row">
-          <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
-          <span class="dd-year-val" id="ddYearCenter">2026</span>
-          <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
+  <!-- 다른 탭(요약/터널별/월별추이) 활성 시 날짜 선택 박스가 복귀하는 기본 위치 -->
+  <div id="monthSelDefaultSlot">
+    <div class="month-sel" id="monthSel">
+      <div class="dd-wrap" id="ddYearWrap">
+        <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
+          <span id="ddYearLabel">2026년</span>
         </div>
-        <div id="ddYearOpts"></div>
+        <div class="dd-menu" id="ddYearMenu">
+          <div class="dd-year-row">
+            <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
+            <span class="dd-year-val" id="ddYearCenter">2026</span>
+            <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
+          </div>
+          <div id="ddYearOpts"></div>
+        </div>
       </div>
+      <span class="dd-sep">·</span>
+      <div class="dd-wrap" id="ddMonthWrap">
+        <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
+          <span id="ddMonthLabel">4월</span>
+        </div>
+        <div class="dd-menu" id="ddMonthMenu">
+          <div class="dd-grid" id="ddMonthOpts"></div>
+        </div>
+      </div>
+      <div class="month-sub-row" id="monthSub"></div>
     </div>
-    <span class="dd-sep">·</span>
-    <div class="dd-wrap" id="ddMonthWrap">
-      <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
-        <span id="ddMonthLabel">4월</span>
-      </div>
-      <div class="dd-menu" id="ddMonthMenu">
-        <div class="dd-grid" id="ddMonthOpts"></div>
-      </div>
-    </div>
-    <div class="month-sub-row" id="monthSub"></div>
   </div>
 
-  <!-- ▸ 요약 -->
-  <div id="panel-summary" class="panel active" role="tabpanel" aria-labelledby="nav-summary">
-    <div id="sumCompare"></div>
+  <!-- ▸ 발전내역 (기본 탭 — 신규등록·수정·삭제·엑셀생성·검색 등 모든 편집 작업이 이루어지는 공간) -->
+  <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
     <div class="sc">
-      <div class="sc-hd">터널별 발전현황 <span class="badge" id="donutBadge"></span></div>
-      <div id="donutInline"></div>
+      <div class="filter-row">
+        <div id="monthSelDetailSlot" style="display:contents"></div>
+        <div class="dd-wrap" id="tunnelDdWrap">
+          <button class="dd-btn" id="tunnelDdBtn" onclick="toggleDetailTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+            <span id="tunnelDdLabel">전체 터널</span>
+          </button>
+          <div class="dd-menu" id="tunnelDdMenu"></div>
+        </div>
+        <input class="search-box" id="detailSearchBox" placeholder="🔍 터널, 비고 검색..." oninput="renderDetail()"/>
+        <button class="tb-action-btn tb-add" onclick="openAddModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          신규등록
+        </button>
+        <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportSolarExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="detail-count" id="detailCount"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">터널</th>
+            <th class="r" style="white-space:nowrap;width:1%">발전량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
+            <th style="width:1%;white-space:nowrap">비고</th>
+            <th style="width:1%;white-space:nowrap">관리</th>
+          </tr></thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -436,6 +475,15 @@ tr:hover td{background:var(--sky50)}
     </div>
   </div>
 
+  <!-- ▸ 요약 -->
+  <div id="panel-summary" class="panel" role="tabpanel" aria-labelledby="nav-summary">
+    <div id="sumCompare"></div>
+    <div class="sc">
+      <div class="sc-hd">터널별 발전현황 <span class="badge" id="donutBadge"></span></div>
+      <div id="donutInline"></div>
+    </div>
+  </div>
+
   <!-- ▸ 월별추이 -->
   <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
     <div id="trendTotalCard"></div>
@@ -454,37 +502,6 @@ tr:hover td{background:var(--sky50)}
             <th>터널별</th><th class="r">발전일수</th>
           </tr></thead>
           <tbody id="trendTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ▸ 상세내역 -->
-  <div id="panel-detail" class="panel" role="tabpanel" aria-labelledby="nav-detail">
-    <div class="sc">
-      <div class="sc-hd">
-        상세 내역
-        <button class="hdr-btn" id="excelExportBtn" style="margin-left:auto;background:var(--teal50);border-color:var(--teal100);color:var(--teal600)" onclick="exportSolarExcel()">
-          <span id="excelExportLabel">엑셀 생성</span>
-        </button>
-      </div>
-      <div class="filter-row">
-        <select class="filter-select" id="filterTunnel" onchange="renderDetail()">
-          <option value="">전체 터널</option>
-        </select>
-      </div>
-      <div class="detail-count" id="detailCount"></div>
-      <div class="tbl-wrap">
-        <table>
-          <thead><tr>
-            <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">터널</th>
-            <th class="r" style="white-space:nowrap;width:1%">발전량(kWh)</th>
-            <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
-            <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
-            <th style="width:1%;white-space:nowrap">비고</th>
-            <th style="width:1%;white-space:nowrap">관리</th>
-          </tr></thead>
-          <tbody id="detailTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -780,11 +797,54 @@ function updateMonthLabel(){
 document.addEventListener('click',e=>{
   const sel=document.getElementById('monthSel');
   if(sel&&!sel.contains(e.target)) closeAllDD();
+  const tw=document.getElementById('tunnelDdWrap');
+  if(tw&&!tw.contains(e.target)) closeDetailTunnelDd();
 });
 
+// ── 발전내역 탭 터널 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ──
+function toggleDd(menuId,btnId){
+  const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId,btnId){
+  document.getElementById(menuId)?.classList.remove('open');
+  document.getElementById(btnId)?.classList.remove('active');
+}
+function toggleDetailTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
+function closeDetailTunnelDd(){ closeDd('tunnelDdMenu','tunnelDdBtn'); }
+let _detailTunnelFilter='';
+let _detailSearchQ='';
+function buildDetailTunnelDd(tunnels){
+  const menu=document.getElementById('tunnelDdMenu');
+  if(!menu) return;
+  const opts=[{val:'',label:'전체 터널'}].concat(tunnels.map(t=>({val:t,label:t})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailTunnelFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('tunnelDdLabel').textContent = _detailTunnelFilter || '전체 터널';
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailTunnelFilter=opt.dataset.val;
+      closeDetailTunnelDd();
+      renderDetail();
+    });
+  }
+}
+
 // ── 하단 네비 ─────────────────────────────────────────
-const PANELS=['summary','tunnel','detail','trend'];
-let _activePanel='summary';
+const PANELS=['detail','tunnel','summary','trend'];
+let _activePanel='detail';
+// 날짜 선택 박스(연/월 드롭다운)는 발전내역 탭에서는 툴바 안으로, 다른 탭에서는 원래 위치로 이동
+function relocateMonthSel(name){
+  const sel=document.getElementById('monthSel');
+  if(!sel) return;
+  const target=document.getElementById(name==='detail' ? 'monthSelDetailSlot' : 'monthSelDefaultSlot');
+  if(target && sel.parentElement!==target) target.appendChild(sel);
+  sel.classList.toggle('inline-in-toolbar', name==='detail');
+}
 function switchPanel(name){
   if(name===_activePanel) return;
   _activePanel=name;
@@ -794,6 +854,7 @@ function switchPanel(name){
     btn.classList.toggle('active',p===name);
     btn.setAttribute('aria-selected',p===name?'true':'false');
   });
+  relocateMonthSel(name);
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
 }
 
@@ -1258,18 +1319,19 @@ function renderTrend(){
   }).join('');
 }
 
-// ── 상세내역 ──────────────────────────────────────────
+// ── 발전내역 ──────────────────────────────────────────
 function renderDetail(recs){
   recs=recs||filteredRecords();
-  const selTunnel=document.getElementById('filterTunnel');
-  const prevTunnel=selTunnel.value;
 
   const tunnels=[...new Set(recs.map(r=>r.tunnel).filter(Boolean))].sort();
-  selTunnel.innerHTML='<option value="">전체 터널</option>'+tunnels.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
-  selTunnel.value=prevTunnel;
+  if(_detailTunnelFilter && !tunnels.includes(_detailTunnelFilter)) _detailTunnelFilter='';
+  buildDetailTunnelDd(tunnels);
+
+  _detailSearchQ=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
 
   let filtered=recs;
-  if(selTunnel.value) filtered=filtered.filter(r=>r.tunnel===selTunnel.value);
+  if(_detailTunnelFilter) filtered=filtered.filter(r=>r.tunnel===_detailTunnelFilter);
+  if(_detailSearchQ) filtered=filtered.filter(r=>(r.tunnel+' '+(r.note||'')).toLowerCase().includes(_detailSearchQ));
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
@@ -1517,6 +1579,9 @@ ensureTunnelColors();
 
 updateMonthLabel();
 renderAll();
+// switchPanel()은 탭이 바뀔 때만 동작해서 최초 로드 시(발전내역이 이미 기본 활성 탭) 호출되지
+// 않는다 — 날짜 선택 박스를 초기 위치(발전내역 툴바)로 옮기기 위해 최초 1회 직접 호출
+relocateMonthSel(_activePanel);
 
 // 설정값이 있으면 페이지 로드 시 자동 새로고침
 (()=>{

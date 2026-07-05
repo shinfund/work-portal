@@ -428,7 +428,7 @@ body{
 .mobile-nav{
   display:none;height:var(--mobile-nav-h);
   background:var(--card);border-top:1.5px solid var(--border);
-  flex-shrink:0;z-index:200;
+  flex-shrink:0;z-index:200;position:relative;
 }
 .mn-inner{display:flex;height:100%;}
 .mn-item{
@@ -530,7 +530,7 @@ body{
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 
 /* ═══ 반응형 ════════════════════════════════════════════════ */
-@media(max-width:768px){
+@media(max-width:480px){
   .sidebar{display:none;}
   .tab-bar{display:none;}
   .mobile-hdr{display:flex;}
@@ -568,15 +568,14 @@ body{
     </div>
 
     <div class="sb-sec">업무 앱</div>
+    <div class="sb-item" id="sbn-solar" onclick="go('solar')">
+      <span>태양광발전량</span>
+    </div>
     <div class="sb-item" id="sbn-defect" onclick="go('defect')">
       <span>하자보수현황</span>
     </div>
     <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
       <span>연장근무현황</span>
-    </div>
-
-    <div class="sb-item" id="sbn-solar" onclick="go('solar')">
-      <span>태양광발전량</span>
     </div>
 
     <div class="sb-sec">추가 예정</div>
