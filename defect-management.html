@@ -749,6 +749,13 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 <!-- 패널1: 목록 -->
 <div class="panel on" id="p1">
   <div class="filter-row">
+    <div class="dd-wrap" id="monthDdWrap">
+      <button class="dd-btn" id="monthDdBtn" onclick="toggleMonthDd()" aria-haspopup="listbox" aria-label="날짜 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="monthDdLabel">전체 날짜</span>
+      </button>
+      <div class="dd-menu" id="monthDdMenu"></div>
+    </div>
     <div class="dd-wrap" id="tunnelDdWrap">
       <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널명 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
@@ -911,7 +918,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 
 <script>
 var ALL_DATA = [];
-var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL' };
+var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', month:'ALL' };
 var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
 var CURRENT_TAB = 1;
 
@@ -1019,6 +1026,7 @@ function loadDemo(){
   buildStatusFilter();
   buildTunnelFilter();
   buildManagerFilter();
+  buildMonthFilter();
   buildTabDropdowns();
   updateKPI();
   renderAll(); // 내부에서 rebuildListHeader() 포함
@@ -1273,6 +1281,7 @@ function loadData(){
             buildStatusFilter();
             buildTunnelFilter();
             buildManagerFilter();
+            buildMonthFilter();
             buildTabDropdowns();
             updateKPI();
             renderAll();
@@ -1408,6 +1417,58 @@ function buildManagerFilter(){
   }
 }
 
+/* ── BUILD 날짜(월) DROPDOWN (하자내역 탭 — 목록/엑셀 탭 표준 툴바 규칙) ── */
+// 날짜 드롭다운 기본값은 "전체"가 아닌 최신 데이터가 있는 년/월(다른 앱의 기간 선택기와 동일 원칙)
+function buildMonthFilter(){
+  var months = {};
+  ALL_DATA.forEach(function(r){
+    var d = (r['날짜']||'').replace(/[.\/]/g,'-');
+    var ym = d.slice(0,7);
+    if(/^\d{4}-\d{2}$/.test(ym)) months[ym] = true;
+  });
+  var sorted = Object.keys(months).sort().reverse();
+  var menu = document.getElementById('monthDdMenu');
+  if(!menu) return;
+  FILTER.month = sorted.length ? sorted[0] : 'ALL';
+  var opts = [{ val:'ALL', label:'전체 날짜' }];
+  sorted.forEach(function(ym){
+    var parts = ym.split('-');
+    opts.push({ val:ym, label:parts[0]+'년 '+parseInt(parts[1],10)+'월' });
+  });
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val===FILTER.month?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  var lbl = document.getElementById('monthDdLabel');
+  if(lbl) lbl.textContent = FILTER.month==='ALL' ? '전체 날짜' : (function(){ var p=FILTER.month.split('-'); return p[0]+'년 '+parseInt(p[1],10)+'월'; })();
+  var btn = document.getElementById('monthDdBtn');
+  if(btn) btn.classList.toggle('active', FILTER.month!=='ALL');
+  if(!buildMonthFilter._bound){
+    buildMonthFilter._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectMonth(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('monthDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeMonthDd();
+    });
+  }
+}
+function toggleMonthDd(){ toggleDd('monthDdMenu','monthDdBtn'); }
+function closeMonthDd()  { closeDd('monthDdMenu','monthDdBtn'); }
+function selectMonth(val, el){
+  document.querySelectorAll('#monthDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById('monthDdLabel').textContent = val==='ALL' ? '전체 날짜' : (function(){
+    var p = val.split('-'); return p[0]+'년 '+parseInt(p[1],10)+'월';
+  })();
+  var btn = document.getElementById('monthDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  FILTER.month = val;
+  closeMonthDd();
+  renderList();
+}
+
 /* ── 드롭다운 공통 toggle/close 헬퍼 ── */
 function toggleDd(menuId, btnId){
   var menu = document.getElementById(menuId);
@@ -1514,6 +1575,7 @@ function filtered(){
     var stMatch = FILTER.status==='ALL' || r['조치여부']===FILTER.status;
     var tnMatch = FILTER.tunnel==='ALL' || r['터널명']===FILTER.tunnel;
     var mgMatch = FILTER.manager==='ALL' || r['업무담당']===FILTER.manager;
+    var moMatch = FILTER.month==='ALL' || (r['날짜']||'').replace(/[.\/]/g,'-').slice(0,7)===FILTER.month;
     var qMatch  = !q || (r['하자내용']||'').toLowerCase().includes(q)
                      || (r['터널명']||'').toLowerCase().includes(q)
                      || (r['위치']||'').toLowerCase().includes(q)
@@ -1521,7 +1583,7 @@ function filtered(){
                      || (r['업무담당']||'').toLowerCase().includes(q)
                      || (r['업체명']||'').toLowerCase().includes(q)
                      || (r['비고']||'').toLowerCase().includes(q);
-    return stMatch && tnMatch && mgMatch && qMatch;
+    return stMatch && tnMatch && mgMatch && moMatch && qMatch;
   });
 }
 
@@ -1622,7 +1684,7 @@ function updateKpiForList(){
   // 하자내역 탭: 필터 결과 기준, "총 N건" 라인에 진행중/완료/미흡 함께 표시
   var rows = filtered();
   var c = countStatus(rows);
-  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL'
+  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL' || FILTER.month!=='ALL'
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
   renderKpiCountLine('filterCount', [
     { label:isFiltered?'필터 결과':'전체', value:rows.length },

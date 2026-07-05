@@ -155,7 +155,6 @@ tr:hover td{background:var(--sky50)}
 
 /* ── FILTER (발전내역 툴바 — 하자보수현황 앱 필터바 패턴 재사용) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -190,9 +189,19 @@ tr:hover td{background:var(--sky50)}
 #cfgModal.modal-open{display:block}
 #addModal{display:none}
 #addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
 .add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
 .detail-modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--txt3);line-height:1;padding:4px}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
@@ -351,6 +360,22 @@ tr:hover td{background:var(--sky50)}
   </div>
 </div>
 
+<!-- DETAIL MODAL (레코드 클릭 시 상세 조회 + 수정/삭제 — 하자보수현황 앱 detailModal 패턴) -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">발전량 상세</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">✕</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <div>
@@ -441,11 +466,13 @@ tr:hover td{background:var(--sky50)}
         <table>
           <thead><tr>
             <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">터널</th>
+            <th class="r" style="white-space:nowrap;width:1%">용량(kW)</th>
             <th class="r" style="white-space:nowrap;width:1%">발전량(kWh)</th>
             <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">전일누적량(kWh)</th>
             <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
+            <th class="r" style="white-space:nowrap;width:1%">단가(원)</th>
             <th style="width:1%;white-space:nowrap">비고</th>
-            <th style="width:1%;white-space:nowrap">관리</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
         </table>
@@ -643,7 +670,7 @@ function closeAddModal(e){
 function openEditModal(pageId){
   const r = ALL_RECORDS.find(x=>x.id===pageId);
   if(!r) return;
-  if(!CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  if(!CFG.workerUrl || !isRealPageId(pageId)){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
   EDIT_PAGE_ID = pageId;
   document.getElementById('addModalTitleText').textContent='발전량 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
@@ -716,14 +743,47 @@ function submitAddForm(){
     });
 }
 function deleteRecord(pageId){
-  if(!CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  if(!CFG.workerUrl || !isRealPageId(pageId)){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
   if(!confirm('이 발전량 기록을 삭제(휴지통 이동)할까요?')) return;
   fetch(CFG.workerUrl+'/v1/pages/'+pageId, {
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(()=>{ loadData(); toast('삭제되었습니다.'); })
+    .then(()=>{ closeDetailModal(); loadData(); toast('삭제되었습니다.'); })
     .catch(e=>{ alert('삭제 실패: '+e.message); console.error(e); });
 }
+
+// ── 상세 모달 (레코드 클릭 시 조회 + 수정/삭제 — 하자보수현황 앱 detailModal 패턴,
+//    항상 버튼을 보여주고 노션 미연동/데모 데이터일 때는 클릭 시점에 안내) ──
+function openDetailModal(id){
+  const r = ALL_RECORDS.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent = `${r.tunnel||'—'} · ${fmtDate(r.date)}`;
+  const rows=[
+    ['날짜', esc(fmtDate(r.date))],
+    ['터널', esc(r.tunnel||'-')],
+    ['용량(kW)', r.capacity?fmtKw(r.capacity):'-'],
+    ['발전량(kWh)', fmtWon(getGenAmt(r))],
+    ['누적량(kWh)', fmtWon(r.cumGen)],
+    ['전일누적량(kWh)', fmtWon(r.prevCumGen)],
+    ['요금(원)', fmtWon(getFeeAmt(r))],
+    ['단가(원)', r.unitPrice?fmtWon(r.unitPrice):'-'],
+    ['비고', esc(r.note||'-')]
+  ];
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'
+    +rows.map(rv=>`<div class="detail-info-row"><div class="detail-info-key">${rv[0]}</div><div class="detail-info-val">${rv[1]}</div></div>`).join('')
+    +'</div>';
+  document.getElementById('detailModalActions').innerHTML=
+    `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
+    +`<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>`;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeDetailModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
 
 // ── 날짜 ──────────────────────────────────────────────
 const _now=new Date();
@@ -1086,34 +1146,30 @@ function buildCompareCard(cells){
 }
 
 // ── 공통: 상세 행 HTML 빌더 ─────────────────────────
-// Notion 실제 페이지(UUID)만 수정/삭제 가능 — 데모 데이터(id가 UUID가 아님)는 관리 버튼 숨김
+// Notion 실제 페이지(UUID)인지 판별 — 데모 데이터(id가 UUID가 아님)는 클릭 시 상세모달의
+// 수정/삭제 버튼이 노션 미연동 안내로 대응(하자보수현황 앱과 동일 원칙: 버튼은 항상 노출,
+// 실제 동작 가능 여부만 클릭 시점에 판별)
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
-function buildActBtns(id){
-  if(!isRealPageId(id)) return '';
-  return `<div style="display:flex;gap:5px">
-    <button class="detail-act-btn detail-edit-btn" onclick="openEditModal('${id}')">수정</button>
-    <button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>
-  </div>`;
-}
-function buildDetailRow(r, showTunnel){
-  return `<tr>
+function buildDetailRow(r){
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
-    ${showTunnel?`<td style="white-space:nowrap"><span class="type-badge ${tunnelSlug(r.tunnel||'기타')}">${esc(r.tunnel||'—')}</span></td>`:''}
+    <td style="white-space:nowrap"><span class="type-badge ${tunnelSlug(r.tunnel||'기타')}">${esc(r.tunnel||'—')}</span></td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${r.capacity?fmtKw(r.capacity):'-'}</td>
     <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.prevCumGen)}</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${r.unitPrice?fmtWon(r.unitPrice):'-'}</td>
     <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
-    <td style="white-space:nowrap">${buildActBtns(r.id)}</td>
   </tr>`;
 }
 function buildTunnelDetailRow(r){
-  return `<tr>
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
     <td style="white-space:nowrap;width:1%;min-width:52px">${fmtDate(r.date)}</td>
     <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
     <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
-    <td style="white-space:nowrap">${buildActBtns(r.id)}</td>
   </tr>`;
 }
 
@@ -1231,7 +1287,6 @@ function renderTunnel(recs){
             <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
             <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
             <th style="width:1%;white-space:nowrap">비고</th>
-            <th style="width:1%;white-space:nowrap">관리</th>
           </tr></thead>
           <tbody>
             ${tRecs.map(r=>buildTunnelDetailRow(r)).join('')}
@@ -1240,7 +1295,6 @@ function renderTunnel(recs){
               <td class="r" style="font-weight:700;color:var(--sky600)">${fmtWon(tRecs.reduce((s,r)=>s+getGenAmt(r),0))}</td>
               <td></td>
               <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(tRecs.reduce((s,r)=>s+getFeeAmt(r),0))}</td>
-              <td></td>
               <td></td>
             </tr>
           </tbody>
@@ -1335,8 +1389,8 @@ function renderDetail(recs){
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
-    ?filtered.map(r=>buildDetailRow(r,true)).join('')
-    :`<tr><td colspan="7">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+    ?filtered.map(r=>buildDetailRow(r)).join('')
+    :`<tr><td colspan="9">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
 }
 
 function emptyState(desc, icon='📋'){
@@ -1488,7 +1542,7 @@ function exportSolarExcel(){
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'태양광발전량', title:'태양광발전량', fnamePrefix:'태양광발전량',
-    columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'landscape'
+    columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'portrait'
   });
 }
 

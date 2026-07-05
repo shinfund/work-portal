@@ -97,6 +97,8 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
 .dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
 .dd-menu.open{display:block}
 .dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
@@ -154,10 +156,12 @@ tr:hover td{background:var(--sky50)}
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
 .r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
 
-/* ── FILTER ── */
-.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
+/* ── FILTER (목록/엑셀 탭 표준 툴바 — 하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+#empDdMenu .dd-opt,#typeDdMenu .dd-opt{text-align:left}
 
 /* ── 근무형태 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
@@ -403,12 +407,19 @@ tr:hover td{background:var(--sky50)}
         상세 내역
       </div>
       <div class="filter-row">
-        <select class="filter-select" id="filterEmployee" onchange="renderDetail()">
-          <option value="">전체 직원</option>
-        </select>
-        <select class="filter-select" id="filterType" onchange="renderDetail()">
-          <option value="">전체 근무형태</option>
-        </select>
+        <div class="dd-wrap" id="empDdWrap">
+          <button class="dd-btn" id="empDdBtn" onclick="toggleEmpDd()" aria-haspopup="listbox" aria-label="직원 선택">
+            <span id="empDdLabel">전체 직원</span>
+          </button>
+          <div class="dd-menu" id="empDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="typeDdWrap">
+          <button class="dd-btn" id="typeDdBtn" onclick="toggleTypeDd()" aria-haspopup="listbox" aria-label="근무형태 선택">
+            <span id="typeDdLabel">전체 근무형태</span>
+          </button>
+          <div class="dd-menu" id="typeDdMenu"></div>
+        </div>
+        <input class="search-box" id="detailSearchBox" placeholder="🔍 직원명, 비고 검색..." oninput="renderDetail()"/>
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap">
@@ -588,7 +599,63 @@ function updateMonthLabel(){
 document.addEventListener('click',e=>{
   const sel=document.getElementById('monthSel');
   if(sel&&!sel.contains(e.target)) closeAllDD();
+  const ew=document.getElementById('empDdWrap');
+  if(ew&&!ew.contains(e.target)) closeEmpDd();
+  const tw=document.getElementById('typeDdWrap');
+  if(tw&&!tw.contains(e.target)) closeTypeDd();
 });
+
+// ── 상세내역 탭 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용, 기본값=전체) ──
+function toggleDd(menuId,btnId){
+  const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId,btnId){
+  document.getElementById(menuId)?.classList.remove('open');
+  document.getElementById(btnId)?.classList.remove('active');
+}
+function toggleEmpDd(){ toggleDd('empDdMenu','empDdBtn'); }
+function closeEmpDd(){ closeDd('empDdMenu','empDdBtn'); }
+function toggleTypeDd(){ toggleDd('typeDdMenu','typeDdBtn'); }
+function closeTypeDd(){ closeDd('typeDdMenu','typeDdBtn'); }
+let _empFilter='';
+let _typeFilter='';
+function buildEmpDd(emps){
+  const menu=document.getElementById('empDdMenu');
+  if(!menu) return;
+  const opts=[{val:'',label:'전체 직원'}].concat(emps.map(e=>({val:e,label:e})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_empFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('empDdLabel').textContent=_empFilter||'전체 직원';
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _empFilter=opt.dataset.val;
+      closeEmpDd();
+      renderDetail();
+    });
+  }
+}
+function buildTypeDd(types){
+  const menu=document.getElementById('typeDdMenu');
+  if(!menu) return;
+  const opts=[{val:'',label:'전체 근무형태'}].concat(types.map(t=>({val:t,label:t})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_typeFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('typeDdLabel').textContent=_typeFilter||'전체 근무형태';
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _typeFilter=opt.dataset.val;
+      closeTypeDd();
+      renderDetail();
+    });
+  }
+}
 
 // ── 하단 네비 ─────────────────────────────────────────
 const PANELS=['summary','employee','detail','trend'];
@@ -1060,24 +1127,21 @@ function renderTrend(){
 // ── 상세내역 ──────────────────────────────────────────
 function renderDetail(recs){
   recs=recs||filteredRecords();
-  const selEmp=document.getElementById('filterEmployee');
-  const selType=document.getElementById('filterType');
-  const prevEmp=selEmp.value, prevType=selType?selType.value:'';
 
-  // 필터 select 옵션은 현재 년/월 전체 기준(recs)으로 구성
+  // 드롭다운 옵션은 현재 년/월 기준(recs)으로 구성
   const emps=[...new Set(recs.map(r=>r.employee).filter(Boolean))].sort();
   const types=[...new Set(recs.map(r=>r.type).filter(Boolean))].sort();
+  if(_empFilter && !emps.includes(_empFilter)) _empFilter='';
+  if(_typeFilter && !types.includes(_typeFilter)) _typeFilter='';
+  buildEmpDd(emps);
+  buildTypeDd(types);
 
-  selEmp.innerHTML='<option value="">전체 직원</option>'+emps.map(e=>`<option value="${esc(e)}">${esc(e)}</option>`).join('');
-  selEmp.value=prevEmp;
-  if(selType){
-    selType.innerHTML='<option value="">전체 근무형태</option>'+types.map(t=>`<option value="${esc(t)}">${t}</option>`).join('');
-    selType.value=prevType;
-  }
+  const q=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
 
   let filtered=recs;
-  if(selEmp.value) filtered=filtered.filter(r=>r.employee===selEmp.value);
-  if(selType&&selType.value) filtered=filtered.filter(r=>r.type===selType.value);
+  if(_empFilter) filtered=filtered.filter(r=>r.employee===_empFilter);
+  if(_typeFilter) filtered=filtered.filter(r=>r.type===_typeFilter);
+  if(q) filtered=filtered.filter(r=>(r.employee+' '+(r.type||'')+' '+(r.note||'')).toLowerCase().includes(q));
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
