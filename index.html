@@ -674,6 +674,7 @@ body{
     <!-- ▸ 홈 패널 -->
     <div class="panel on" id="panel-home">
       <div class="home-inner">
+        <div id="kpi-preload-zone" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;top:-9999px;left:-9999px"></div>
 
         <div class="greeting-box">
           <div class="greeting-date" id="home-date"></div>
@@ -1334,6 +1335,25 @@ renderHomeKpi();
 window.addEventListener('storage', e => {
   if (e.key && e.key.startsWith('portal_summary_')) renderHomeKpi();
 });
+
+// 설정은 돼 있지만 요약 캐시가 없거나 오래된(10분+) 앱은, 앱 탭을 열지 않아도 홈 진입 시
+// 숨김 iframe으로 잠깐 백그라운드 로딩시켜 자동으로 최신 숫자를 채운다.
+// (각 앱은 워커/DB ID가 있으면 로드 시 스스로 데이터를 불러오도록 이미 구현돼 있음 — 그 로직을 그대로 재사용)
+function preloadHomeKpis() {
+  const STALE_MS = 10 * 60 * 1000;
+  const zone = document.getElementById('kpi-preload-zone');
+  if (!zone) return;
+  Object.keys(APPS).forEach(id => {
+    if (!isAppConfigured(id)) return;
+    const s = readPortalSummary(id);
+    if (s && s.updatedAt && (Date.now() - s.updatedAt) < STALE_MS) return;
+    const ifr = document.createElement('iframe');
+    ifr.src = APPS[id].file + '?kpiPreload=1&v=' + Date.now();
+    zone.appendChild(ifr);
+    setTimeout(() => { ifr.remove(); renderHomeKpi(); }, 8000);
+  });
+}
+preloadHomeKpis();
 
 // ── 날씨 로딩 (wttr.in, API 키 불필요) ──────────────────────
 const WEATHER_CODE = {
