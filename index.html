@@ -575,10 +575,11 @@ body{
       <span>연장근무현황</span>
     </div>
 
-    <div class="sb-sec">추가 예정</div>
-    <div class="sb-item sb-disabled">
-      <span>태양광발전량</span><span class="sb-badge">준비중</span>
+    <div class="sb-item" id="sbn-solar" onclick="go('solar')">
+      <span>태양광발전량</span>
     </div>
+
+    <div class="sb-sec">추가 예정</div>
     <div class="sb-item sb-disabled">
       <span>비품관리대장</span><span class="sb-badge">준비중</span>
     </div>
@@ -694,12 +695,12 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card disabled">
+          <div class="app-card" onclick="go('solar')">
             <div>
               <div class="ac-name">태양광발전량</div>
-              <div class="ac-desc">일별 태양광 발전량 기록 및 현황 조회.</div>
+              <div class="ac-desc">터널별 일별 태양광 발전량·전기요금 기록 및 현황 조회. Notion DB 연동.</div>
             </div>
-            <div class="ac-soon">준비중</div>
+            <div class="ac-arrow">앱 열기 →</div>
           </div>
           <div class="app-card disabled">
             <div>
@@ -741,7 +742,7 @@ body{
             <div class="notice-dot"></div>
             <div>
               <div>새 업무 앱 추가 시 사이드바 메뉴에 자동으로 반영됩니다.</div>
-              <div class="notice-sub">추가 예정: 태양광발전량 · 비품관리대장 · 차량운행일지 · 일일점검일지 외</div>
+              <div class="notice-sub">추가 예정: 비품관리대장 · 차량운행일지 · 일일점검일지 외</div>
             </div>
           </div>
         </div>
@@ -768,6 +769,17 @@ body{
           <div class="overlay-txt">연장근무현황 앱 로딩 중...</div>
         </div>
         <iframe id="ifr-overtime" class="app-iframe" title="연장근무현황"></iframe>
+      </div>
+    </div>
+
+    <!-- ▸ 태양광발전량 iframe -->
+    <div class="panel" id="panel-solar">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-solar">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">태양광발전량 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-solar" class="app-iframe" title="태양광발전량"></iframe>
       </div>
     </div>
 
@@ -830,6 +842,12 @@ body{
           <input id="c-od" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
         </div>
 
+        <div class="modal-sec">태양광발전량 앱</div>
+        <div class="mf">
+          <label class="ml">태양광발전량 DB ID</label>
+          <input id="c-sd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
+        </div>
+
         <div class="modal-btns">
           <button class="btn-cancel" onclick="closeCfg()">취소</button>
           <button class="btn-save" onclick="saveCfg()">저장 및 적용</button>
@@ -869,12 +887,15 @@ const APPS = {
   defect:   { name:'하자보수현황', file:'defect-management.html',
               keys:{ workerUrl:'haja_workerUrl', dbId:'haja_dbId', contactDbId:'haja_contactDbId' } },
   overtime: { name:'연장근무현황', file:'overtime-work.html',
-              keys:{ workerUrl:'ot_workerUrl', dbId:'ot_dbId' } }
+              keys:{ workerUrl:'ot_workerUrl', dbId:'ot_dbId' } },
+  solar:    { name:'태양광발전량', file:'solar-power.html',
+              keys:{ workerUrl:'solar_workerUrl', dbId:'solar_dbId' } }
 };
 const PAGES = {
   home:     { mName:'홈' },
   defect:   { mName:'하자보수현황' },
-  overtime: { mName:'연장근무현황' }
+  overtime: { mName:'연장근무현황' },
+  solar:    { mName:'태양광발전량' }
 };
 
 let _cur = 'home';
@@ -1092,10 +1113,11 @@ updateNavButtons();
 
 // ── 설정 모달 ────────────────────────────────────────────
 const CFG_FIELDS = [
-  { elId:'c-hw', lsKey:'haja_workerUrl', alsoKey:'ot_workerUrl' },
+  { elId:'c-hw', lsKey:'haja_workerUrl', alsoKeys:['ot_workerUrl','solar_workerUrl'] },
   { elId:'c-hd', lsKey:'haja_dbId' },
   { elId:'c-hc', lsKey:'haja_contactDbId' },
   { elId:'c-od', lsKey:'ot_dbId' },
+  { elId:'c-sd', lsKey:'solar_dbId' },
 ];
 
 function mask(v) {
@@ -1163,9 +1185,9 @@ window.addEventListener('storage', e => {
 
 function saveCfg() {
   let changed = 0;
-  CFG_FIELDS.forEach(({ elId, lsKey, alsoKey }) => {
+  CFG_FIELDS.forEach(({ elId, lsKey, alsoKeys }) => {
     const v = document.getElementById(elId)?.value.trim();
-    if (v) { localStorage.setItem(lsKey, v); if(alsoKey) localStorage.setItem(alsoKey, v); changed++; }
+    if (v) { localStorage.setItem(lsKey, v); (alsoKeys||[]).forEach(k => localStorage.setItem(k, v)); changed++; }
   });
   closeCfg();
   if (changed > 0) {

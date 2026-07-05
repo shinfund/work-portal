@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>태양광발전량</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
+  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
+  --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#0C447C;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#185FA5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#191919;--card:#242424;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  /* sky */
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#A9D3F5;
+  /* teal */
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  /* coral */
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  /* amber */
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  /* green */
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  /* purple */
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+}
+html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .tunnel-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .tunnel-c4{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+html[data-theme="dark"] .tunnel-c5{background:rgba(29,158,117,.18);color:#7BE0BE;border-color:rgba(29,158,117,.35)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER ── */
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
+.header-btns{display:flex;gap:6px}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV ── */
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
+.top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
+.top-tab.active{color:var(--sky600)}
+.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
+/* ── MAIN ── */
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
+
+/* ── MONTH SELECTOR ── */
+.month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
+.dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
+.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
+.dd-menu.open{display:block}
+.dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
+.dd-opt.has{color:var(--sky600)}
+.dd-year-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border)}
+.dd-year-nav{background:none;border:none;font-size:16px;font-weight:700;color:var(--sky600);cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
+.dd-year-val{font-size:13px;font-weight:700;color:var(--txt)}
+.dd-sep{font-size:14px;font-weight:300;color:var(--border)}
+.month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
+
+/* ── 터널별 가로 바 차트 ── */
+.typebar-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border2)}
+.typebar-row:last-child{border-bottom:none}
+.typebar-name{font-size:14px;font-weight:700;color:var(--txt);width:88px;flex-shrink:0}
+.typebar-track{flex:1;height:22px;background:var(--border);border-radius:5px;overflow:hidden}
+.typebar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.typebar-pay{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;text-align:right;width:95px;flex-shrink:0}
+.typebar-cnt{font-size:13px;font-weight:700;color:var(--txt2);white-space:nowrap;width:92px;flex-shrink:0;text-align:right}
+.typebar-pct{font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
+
+/* ── SECTION CARD ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
+
+/* ── PANEL ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── TREND CHART ── */
+.trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.trend-chart{display:flex;align-items:flex-end;gap:8px;min-width:300px;height:140px}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px}
+.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
+.trend-bar.cur{box-shadow:0 0 0 2px var(--sky600)}
+.trend-lbl{font-size:13px;color:var(--txt2);font-weight:700}
+.trend-val{font-size:12px;color:var(--sky600);font-weight:700}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+.pay-cell{font-weight:400;color:var(--teal600);font-size:15px}
+
+/* ── RANK ── */
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
+
+/* ── FILTER ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
+.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+
+/* ── 터널명 뱃지 ── */
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.tunnel-c2{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.tunnel-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+.tunnel-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+/* ── MODAL ── */
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--txt3);line-height:1;padding:4px}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+
+/* ── 설정 모달: 탭 ── */
+.modal-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r8);padding:4px;margin-bottom:18px;}
+.modal-tab{flex:1;text-align:center;padding:8px 10px;border-radius:6px;font-size:13px;font-weight:700;color:var(--txt3);cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
+.modal-tab.on{background:var(--card);color:var(--sky600);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.modal-tab-panel{display:none;}
+.modal-tab-panel.on{display:block;}
+.theme-opts{display:flex;gap:12px;}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
+.theme-opt.on{border-color:var(--sky);}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
+.theme-swatch-light{background:#F8FAFC;}
+.theme-swatch-dark{background:#191919;}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+
+<!-- MODAL -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        설정
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab on" id="cfgtab-btn-db" onclick="switchCfgTab('db')">DB 연동</div>
+        <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
+      </div>
+      <div class="modal-tab-panel on" id="cfgtab-db">
+        <div class="modal-field">
+          <label class="modal-label">Cloudflare Worker URL</label>
+          <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
+          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">노션 DB ID</label>
+          <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+        </div>
+        <div class="modal-btns">
+          <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
+          <button class="modal-save" onclick="saveCfg()">저장</button>
+        </div>
+      </div>
+      <div class="modal-tab-panel" id="cfgtab-theme">
+        <div class="theme-opts">
+          <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+            <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">다크</div>
+          </div>
+          <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+            <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+            <div class="theme-opt-label">라이트</div>
+          </div>
+        </div>
+        <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 발전량 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+
+      <div class="modal-field">
+        <label class="modal-label">날짜 <span class="modal-required">*</span></label>
+        <input id="addDate" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">터널 <span class="modal-required">*</span></label>
+        <select id="addTunnel" class="modal-select" onchange="onSelectChange(this,'addTunnelCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">발전량(kWh) <span class="modal-required">*</span></label>
+        <input id="addGen" class="modal-input" type="number" step="0.1" placeholder="예) 356"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">용량(kW)</label>
+        <input id="addCapacity" class="modal-input" type="number" step="0.1" placeholder="터널 설비 용량"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">누적량(kWh)</label>
+        <input id="addCumGen" class="modal-input" type="number" step="0.1"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">전일누적량(kWh)</label>
+        <input id="addPrevCumGen" class="modal-input" type="number" step="0.1"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">요금(원)</label>
+        <input id="addFee" class="modal-input" type="number" step="1"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">단가(원)</label>
+        <input id="addUnitPrice" class="modal-input" type="number" step="0.1"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-title">태양광발전량</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        추가
+      </button>
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadData()">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-summary" role="tab" aria-selected="true" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
+  <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')">터널별</button>
+  <button class="top-tab" id="nav-detail" role="tab" aria-selected="false" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
+  <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- MONTH SELECTOR -->
+  <div class="month-sel" id="monthSel">
+    <div class="dd-wrap" id="ddYearWrap">
+      <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
+        <span id="ddYearLabel">2026년</span>
+      </div>
+      <div class="dd-menu" id="ddYearMenu">
+        <div class="dd-year-row">
+          <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
+          <span class="dd-year-val" id="ddYearCenter">2026</span>
+          <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
+        </div>
+        <div id="ddYearOpts"></div>
+      </div>
+    </div>
+    <span class="dd-sep">·</span>
+    <div class="dd-wrap" id="ddMonthWrap">
+      <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
+        <span id="ddMonthLabel">4월</span>
+      </div>
+      <div class="dd-menu" id="ddMonthMenu">
+        <div class="dd-grid" id="ddMonthOpts"></div>
+      </div>
+    </div>
+    <div class="month-sub-row" id="monthSub"></div>
+  </div>
+
+  <!-- ▸ 요약 -->
+  <div id="panel-summary" class="panel active" role="tabpanel" aria-labelledby="nav-summary">
+    <div id="sumCompare"></div>
+    <div class="sc">
+      <div class="sc-hd">터널별 발전현황 <span class="badge" id="donutBadge"></span></div>
+      <div id="donutInline"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 터널별 -->
+  <div id="panel-tunnel" class="panel" role="tabpanel" aria-labelledby="nav-tunnel">
+    <div class="sc">
+      <div class="sc-hd">
+        터널별 상세 <span class="badge" id="tunnelBadge">0개소</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>터널</th>
+            <th class="r">용량(kW)</th>
+            <th class="r">발전일수</th>
+            <th class="r">발전량(kWh)</th>
+            <th class="r">요금(원)</th>
+          </tr></thead>
+          <tbody id="tunnelTableBody"></tbody>
+        </table>
+      </div>
+      <div id="tunnelDetailWrap" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 월별추이 -->
+  <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
+    <div id="trendTotalCard"></div>
+    <div class="sc">
+      <div class="sc-hd">최근 12개월 발전량 추이</div>
+      <div class="trend-wrap">
+        <div class="trend-chart" id="trendChart"></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">월별 요약 <span class="badge">최근 12개월</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>월</th><th class="r">발전량(kWh)</th>
+            <th>터널별</th><th class="r">발전일수</th>
+          </tr></thead>
+          <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 상세내역 -->
+  <div id="panel-detail" class="panel" role="tabpanel" aria-labelledby="nav-detail">
+    <div class="sc">
+      <div class="sc-hd">
+        상세 내역
+        <button class="hdr-btn" id="excelExportBtn" style="margin-left:auto;background:var(--teal50);border-color:var(--teal100);color:var(--teal600)" onclick="exportSolarExcel()">
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="filterTunnel" onchange="renderDetail()">
+          <option value="">전체 터널</option>
+        </select>
+      </div>
+      <div class="detail-count" id="detailCount"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">터널</th>
+            <th class="r" style="white-space:nowrap;width:1%">발전량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
+            <th style="width:1%;white-space:nowrap">비고</th>
+            <th style="width:1%;white-space:nowrap">관리</th>
+          </tr></thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── 설정 ──────────────────────────────────────────────
+// 노션 "태양광DB" 기본 DB ID (제공된 페이지 링크에서 추출) — Worker URL만 입력하면 바로 연동됨
+const DEFAULT_DB_ID="7fe27ab8-4161-4177-bad9-6bb8aa148ff7";
+let CFG=(()=>{
+  try{return{workerUrl:localStorage.getItem('solar_workerUrl')||'',dbId:localStorage.getItem('solar_dbId')||DEFAULT_DB_ID};}
+  catch(e){return{workerUrl:'',dbId:DEFAULT_DB_ID};}
+})();
+
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+function fmtDate(d){
+  if(!d) return '';
+  const days=['일','월','화','수','목','금','토'];
+  const s=String(d).slice(0,10);
+  const dt=new Date(s+'T00:00:00');
+  if(isNaN(dt)) return s;
+  return `${s.slice(5).replace('-','/')} (${days[dt.getDay()]})`;
+}
+function getGenAmt(r){ return r.gen||0; }
+function getFeeAmt(r){ return r.fee||0; }
+function fmtWon(n){ return Math.round(Number(n)||0).toLocaleString('ko-KR'); }
+function fmtKw(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:1}); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 모달 헬퍼 ─────────────────────────────────────────
+function maskVal(v){
+  if(!v)return'';
+  if(v.startsWith('http')){
+    try{
+      const u=new URL(v);
+      const parts=u.hostname.split('.');
+      const first=parts[0] ? parts[0][0]+'*'.repeat(Math.max(parts[0].length-1,3)) : '***';
+      const mid=parts.slice(1,-1).map(()=>'***');
+      const tld=parts.length>1 ? parts[parts.length-1] : '';
+      return u.protocol+'//'+[first,...mid,...(tld?[tld]:[])].join('.');
+    }catch(e){return v.slice(0,2)+'***';}
+  }
+  if(/^[0-9a-f\-]{32,36}$/i.test(v)){const clean=v.replace(/-/g,'');return clean.slice(0,2)+'-****-****-****-'+clean.slice(-2);}
+  return v.slice(0,2)+'***';
+}
+function openCfgModal(){
+  const wEl=document.getElementById('cfgWorkerUrl'),dEl=document.getElementById('cfgDbId');
+  const wu=CFG.workerUrl,db=CFG.dbId;
+  if(wu){wEl.value='';wEl.placeholder=maskVal(wu);wEl.dataset.saved='1';}
+  else{wEl.value='';wEl.placeholder='https://your-worker.workers.dev';delete wEl.dataset.saved;}
+  if(db){dEl.value='';dEl.placeholder=maskVal(db);dEl.dataset.saved='1';}
+  else{dEl.value='';dEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx';delete dEl.dataset.saved;}
+  switchCfgTab('db');
+  syncThemeOptUI();
+  const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+}
+
+// ── 화면모드(테마) ────────────────────────────────────
+function switchCfgTab(tab){
+  document.getElementById('cfgtab-btn-db')?.classList.toggle('on',tab==='db');
+  document.getElementById('cfgtab-btn-theme')?.classList.toggle('on',tab==='theme');
+  document.getElementById('cfgtab-db')?.classList.toggle('on',tab==='db');
+  document.getElementById('cfgtab-theme')?.classList.toggle('on',tab==='theme');
+}
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
+function saveCfg(){
+  const wEl=document.getElementById('cfgWorkerUrl'),dEl=document.getElementById('cfgDbId');
+  const newWu=wEl.value.trim(),newDb=dEl.value.trim();
+  if(newWu)CFG.workerUrl=newWu;
+  if(newDb)CFG.dbId=newDb;
+  try{localStorage.setItem('solar_workerUrl',CFG.workerUrl);localStorage.setItem('solar_dbId',CFG.dbId);}catch(e){}
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  if(CFG.workerUrl&&CFG.dbId){ALL_RECORDS=[];loadData();}
+}
+
+// ── 신규추가/수정/삭제 ────────────────────────────────
+var EDIT_PAGE_ID = null;
+function getUniqueTunnels(){ return [...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort(); }
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  const sel=document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
+  selectEl.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
+    + values.filter(Boolean).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(!currentValue) return;
+  if(values.indexOf(currentValue)>=0){ selectEl.value=currentValue; }
+  else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
+}
+
+function openAddModal(){
+  EDIT_PAGE_ID = null;
+  document.getElementById('addModalTitleText').textContent='신규 발전량 등록';
+  document.getElementById('addSubmitLabel').textContent='등록';
+  const today=new Date();
+  document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  ['addGen','addCapacity','addCumGen','addPrevCumGen','addFee','addUnitPrice','addNote'].forEach(id=>{ document.getElementById(id).value=''; });
+  buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), '');
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeAddModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+}
+function openEditModal(pageId){
+  const r = ALL_RECORDS.find(x=>x.id===pageId);
+  if(!r) return;
+  if(!CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  EDIT_PAGE_ID = pageId;
+  document.getElementById('addModalTitleText').textContent='발전량 수정';
+  document.getElementById('addSubmitLabel').textContent='수정';
+  document.getElementById('addDate').value = r.date||'';
+  document.getElementById('addGen').value = r.gen||'';
+  document.getElementById('addCapacity').value = r.capacity||'';
+  document.getElementById('addCumGen').value = r.cumGen||'';
+  document.getElementById('addPrevCumGen').value = r.prevCumGen||'';
+  document.getElementById('addFee').value = r.fee||'';
+  document.getElementById('addUnitPrice').value = r.unitPrice||'';
+  document.getElementById('addNote').value = r.note||'';
+  buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), r.tunnel||'');
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function submitAddForm(){
+  const date = document.getElementById('addDate').value.trim();
+  const tunnel = getSelectValue('addTunnel','addTunnelCustom');
+  const gen = document.getElementById('addGen').value.trim();
+  if(!date){ alert('날짜를 입력해주세요.'); return; }
+  if(!tunnel){ alert('터널을 선택해주세요.'); return; }
+  if(gen===''){ alert('발전량을 입력해주세요.'); return; }
+  if(!CFG.workerUrl||!CFG.dbId){ alert('연동 설정(Worker URL, DB ID)을 먼저 입력해주세요.'); closeAddModal(); openCfgModal(); return; }
+
+  const capacity=document.getElementById('addCapacity').value.trim();
+  const cumGen=document.getElementById('addCumGen').value.trim();
+  const prevCumGen=document.getElementById('addPrevCumGen').value.trim();
+  const fee=document.getElementById('addFee').value.trim();
+  const unitPrice=document.getElementById('addUnitPrice').value.trim();
+  const note=document.getElementById('addNote').value.trim();
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  lbl.textContent = EDIT_PAGE_ID ? '수정 중...' : '등록 중...';
+
+  const properties = {};
+  function setProp(role, rawValue){
+    const key = NOTION_PROP_MAP[role];
+    if(!key) return;
+    const val = buildPropValue(role, rawValue);
+    if(val) properties[key] = val;
+  }
+  setProp('터널명', tunnel);
+  setProp('일자', date);
+  setProp('발전량', gen);
+  if(capacity!=='')   setProp('용량', capacity);
+  if(cumGen!=='')     setProp('누적발전량', cumGen);
+  if(prevCumGen!=='') setProp('전일누적발전량', prevCumGen);
+  if(fee!=='')        setProp('전기요금', fee);
+  if(unitPrice!=='')  setProp('전력량요금', unitPrice);
+  if(note)            setProp('비고', note);
+
+  const isEdit = !!EDIT_PAGE_ID;
+  const reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
+  const reqBody = isEdit ? JSON.stringify({properties}) : JSON.stringify({parent:{database_id:CFG.dbId},properties});
+
+  fetch(reqUrl, { method: isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      closeAddModal();
+      loadData();
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message+'\n\nWorker가 해당 라우트를 지원하는지 확인하세요.');
+      console.error(e);
+    });
+}
+function deleteRecord(pageId){
+  if(!CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  if(!confirm('이 발전량 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ loadData(); toast('삭제되었습니다.'); })
+    .catch(e=>{ alert('삭제 실패: '+e.message); console.error(e); });
+}
+
+// ── 날짜 ──────────────────────────────────────────────
+const _now=new Date();
+let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
+let ddYearBase=curYear;
+
+function toggleDD(type){
+  const yMenu=document.getElementById('ddYearMenu');
+  const mMenu=document.getElementById('ddMonthMenu');
+  if(type==='year'){
+    const isOpen=yMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDYear(); yMenu.classList.add('open'); }
+  } else {
+    const isOpen=mMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDMonth(); mMenu.classList.add('open'); }
+  }
+}
+function closeAllDD(){
+  document.getElementById('ddYearMenu').classList.remove('open');
+  document.getElementById('ddMonthMenu').classList.remove('open');
+}
+function shiftDDYear(d){
+  ddYearBase+=d;
+  document.getElementById('ddYearCenter').textContent=ddYearBase;
+  renderDDYear();
+}
+function renderDDYear(){
+  const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
+  dataYears.add(curYear);
+  const minY=Math.min(ddYearBase-2,...dataYears);
+  const maxY=Math.max(ddYearBase+2,...dataYears);
+  const years=[];
+  for(let y=minY;y<=maxY;y++) years.push(y);
+  document.getElementById('ddYearOpts').innerHTML=
+    `<div style="display:grid;grid-template-columns:repeat(3,1fr);">`+
+    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}${dataYears.has(y)&&y!==curYear?' has':''}" onclick="pickYear(${y})">${y}년</div>`).join('')+
+    `</div>`;
+}
+function renderDDMonth(){
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" style="grid-column:1/-1;border-bottom:1px solid var(--border2)" onclick="pickMonth(0)">전체</div>`;
+  document.getElementById('ddMonthOpts').innerHTML=allOpt+MONTHS.map((lbl,i)=>{
+    const m=i+1;
+    const ym=`${curYear}-${String(m).padStart(2,'0')}`;
+    const has=ALL_RECORDS.some(r=>r.date.startsWith(ym));
+    return `<div class="dd-opt${m===curMonth?' sel':''}${has&&m!==curMonth?' has':''}" onclick="pickMonth(${m})">${lbl}</div>`;
+  }).join('');
+}
+function pickYear(y){
+  curYear=y; ddYearBase=y; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(CFG.workerUrl){ loadData(); }
+  else if(ALL_RECORDS.length){ renderAll(); }
+}
+function pickMonth(m){
+  curMonth=m; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(CFG.workerUrl){ loadData(); }
+  else if(ALL_RECORDS.length){ renderAll(); }
+}
+function updateMonthLabel(){
+  document.getElementById('ddYearLabel').textContent=curYear+'년';
+  document.getElementById('ddMonthLabel').textContent=curMonth===0?'전체':curMonth+'월';
+  const n=filteredRecords().length;
+  document.getElementById('monthSub').textContent=n?`총 ${n}건`:'데이터 없음';
+}
+document.addEventListener('click',e=>{
+  const sel=document.getElementById('monthSel');
+  if(sel&&!sel.contains(e.target)) closeAllDD();
+});
+
+// ── 하단 네비 ─────────────────────────────────────────
+const PANELS=['summary','tunnel','detail','trend'];
+let _activePanel='summary';
+function switchPanel(name){
+  if(name===_activePanel) return;
+  _activePanel=name;
+  PANELS.forEach(p=>{
+    document.getElementById('panel-'+p).classList.toggle('active',p===name);
+    const btn=document.getElementById('nav-'+p);
+    btn.classList.toggle('active',p===name);
+    btn.setAttribute('aria-selected',p===name?'true':'false');
+  });
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+}
+
+// ── 전역 데이터 ───────────────────────────────────────
+let ALL_RECORDS=[];
+let _isLoading=false;
+let _userPickedMonth=false;
+
+// ── Notion fetch 헬퍼 ────────────────────────────────
+async function fetchNotion(body){
+  const res=await fetch(`${CFG.workerUrl}/v1/databases/${CFG.dbId}/query`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const ct=res.headers.get('content-type')||'';
+  if(!ct.includes('application/json'))throw new Error('응답이 JSON이 아닙니다 (content-type: '+ct+') — Worker URL을 확인하세요');
+  let json;
+  try{json=await res.json();}catch(e){throw new Error('JSON 파싱 실패 — Worker 응답을 확인하세요');}
+  if(json&&json.error){throw new Error('Worker 오류: '+(json.error.message||json.error||'알 수 없는 오류'));}
+  return json;
+}
+
+// ── Notion 실제 속성명 매핑 (신규추가/수정 시 정확한 속성명으로 쓰기 위해 probe 1건으로 감지) ──
+var NOTION_PROP_MAP = {};
+// 실제 노션 속성명은 환경에 따라 다를 수 있어(예: "일자"가 title 타입, "터널"이 select 타입인
+// 케이스 확인됨— date 타입 속성이 아예 없는 스키마도 있음) 타입이 아닌 키워드로 내부 키를
+// 분류한다. 순서 중요: "전일누적"을 "누적"보다 먼저 판별해야 겹치는 키워드가 오분류되지 않는다.
+function classifyPropKey(k){
+  const lk=k.toLowerCase().replace(/\s/g,'');
+  if(lk.includes('일자')||lk.includes('날짜'))return'일자';
+  if(lk.includes('터널'))return'터널명';
+  if(lk.includes('용량'))return'용량';
+  if(lk.includes('전일')&&lk.includes('누적'))return'전일누적발전량';
+  if(lk.includes('단가')||lk.includes('전력량요금'))return'전력량요금';
+  if(lk.includes('누적'))return'누적발전량';
+  if(lk.includes('발전량')||lk.includes('발전'))return'발전량';
+  if(lk.includes('요금'))return'전기요금';
+  if(lk.includes('비고')||lk==='note')return'비고';
+  return null;
+}
+var NOTION_PROP_TYPE = {};
+function buildNotionPropMap(props){
+  NOTION_PROP_MAP = {};
+  NOTION_PROP_TYPE = {};
+  Object.keys(props).forEach(k=>{
+    const cls=classifyPropKey(k);
+    if(cls && !NOTION_PROP_MAP[cls]){ NOTION_PROP_MAP[cls]=k; NOTION_PROP_TYPE[cls]=props[k].type; }
+  });
+}
+// 실제 노션 속성 타입은 스키마마다 달라질 수 있어(예: "용량"이 title, "터널"이 select인 경우가
+// 실제로 확인됨) 내부 역할별 타입을 하드코딩하지 않고 probe로 감지한 실제 타입에 맞춰 쓰기
+// payload를 구성한다. formula 등 쓰기 미지원 타입은 null을 반환해 그 속성만 전송을 생략한다.
+// probe 이전(감지된 타입이 없을 때)에 한해서만 일반적인 기본 타입으로 폴백한다.
+const DEFAULT_PROP_TYPE = { 터널명:'select', 일자:'date', 용량:'number', 발전량:'number', 누적발전량:'number', 전일누적발전량:'number', 전력량요금:'number', 비고:'rich_text' };
+function buildPropValue(role, rawValue){
+  const key = NOTION_PROP_MAP[role];
+  if(!key) return null;
+  const type = NOTION_PROP_TYPE[role] || DEFAULT_PROP_TYPE[role];
+  if(type==='title') return { title: [{ text: { content: String(rawValue) } }] };
+  if(type==='rich_text') return { rich_text: [{ text: { content: String(rawValue) } }] };
+  if(type==='select') return { select: { name: String(rawValue) } };
+  if(type==='date') return { date: { start: String(rawValue) } };
+  if(type==='number') return { number: parseFloat(rawValue)||0 };
+  return null; // formula 등 읽기 전용/미지원 타입
+}
+
+// ── Notion 페이지 파싱 (태양광DB: 일자/터널/용량/발전량/누적/전일누적/요금/단가/비고) ──
+function parseNotionPage(page){
+  const props=page.properties||{};
+  function getText(p){
+    if(!p)return'';
+    if(p.type==='title')return(p.title||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='rich_text')return(p.rich_text||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='select')return p.select?.name||'';
+    if(p.type==='number')return String(p.number??0);
+    if(p.type==='formula')return String(p.formula?.number??p.formula?.string??'');
+    return'';
+  }
+  function getNum(p){
+    if(!p)return 0;
+    if(p.type==='number')return parseFloat(p.number||0)||0;
+    if(p.type==='formula')return parseFloat(p.formula?.number||0)||0;
+    return parseFloat(getText(p))||0;
+  }
+  // 일자 — title/rich_text 등 텍스트로 저장된 경우 구분자(.,/,-)를 정규화, date 타입이면 그대로 사용
+  function getDateStr(p){
+    if(!p)return'';
+    if(p.type==='date')return p.date?.start ? p.date.start.slice(0,10) : '';
+    const raw=getText(p).trim();
+    const m=raw.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+    return m ? `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` : raw.slice(0,10);
+  }
+  const map={};
+  Object.keys(props).forEach(k=>{
+    const cls=classifyPropKey(k);
+    if(cls && !map[cls]) map[cls]=k;
+  });
+  const date = map['일자'] ? getDateStr(props[map['일자']]) : '';
+  if(!date) return null;
+  return{
+    id:page.id, date,
+    tunnel: map['터널명'] ? getText(props[map['터널명']]).trim() : '',
+    capacity: map['용량'] ? getNum(props[map['용량']]) : 0,
+    gen: map['발전량'] ? getNum(props[map['발전량']]) : 0,
+    cumGen: map['누적발전량'] ? getNum(props[map['누적발전량']]) : 0,
+    prevCumGen: map['전일누적발전량'] ? getNum(props[map['전일누적발전량']]) : 0,
+    fee: map['전기요금'] ? getNum(props[map['전기요금']]) : 0,
+    unitPrice: map['전력량요금'] ? getNum(props[map['전력량요금']]) : 0,
+    note: map['비고'] ? getText(props[map['비고']]).trim() : ''
+  };
+}
+
+// ── 데이터 로드 ──────────────────────────────────────
+async function loadData(){
+  if(!CFG.workerUrl||!CFG.dbId){openCfgModal();return;}
+  if(_isLoading) return;
+  _isLoading=true;
+  const btn=document.getElementById('syncBtn');
+  const lu=document.getElementById('lastUpdate');
+  const syncIcon=document.getElementById('syncIcon');
+  const syncLabel=document.getElementById('syncLabel');
+  if(btn)btn.disabled=true;
+  if(syncIcon)syncIcon.classList.add('spinning');
+  if(syncLabel)syncLabel.textContent='불러오는 중...';
+  if(lu)lu.textContent='';
+  try{
+    const probe=await fetchNotion({page_size:1});
+    let dateProp='날짜';
+    if(probe.results&&probe.results.length){
+      const pp=probe.results[0].properties||{};
+      buildNotionPropMap(pp);
+      if(NOTION_PROP_MAP['일자']) dateProp = NOTION_PROP_MAP['일자'];
+    }
+    const body={page_size:100,sorts:[{property:dateProp,direction:'ascending'}]};
+    const data=await fetchNotion(body);
+    let pages=data.results||[];
+    let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
+    while(cursor&&hasMore&&++pageCount<20){
+      const d2=await fetchNotion({...body,start_cursor:cursor});
+      pages=[...pages,...(d2.results||[])];
+      cursor=d2.next_cursor;hasMore=d2.has_more;
+    }
+    const parsed=pages.map(parseNotionPage).filter(Boolean);
+    if(parsed.length>0){
+      ALL_RECORDS=parsed;
+      ensureTunnelColors();
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+      }
+      renderAll();
+      const now=new Date();
+      const ts=`${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getDate()).padStart(2,'0')}. `
+               +now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      if(lu){lu.textContent='마지막 업데이트: '+ts;lu.style.color='';}
+    }else{
+      if(!ALL_RECORDS.length){ALL_RECORDS=DEMO_DATA;ensureTunnelColors();renderAll();}
+      if(lu){lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인';lu.style.color='var(--hdr-error-text)';}
+    }
+  }catch(e){
+    if(!ALL_RECORDS.length){
+      ALL_RECORDS=DEMO_DATA;
+      ensureTunnelColors();
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
+      }
+      renderAll();
+    }
+    const msg=e.message||'';let errMsg='⚠ '+msg;
+    if(msg.includes('401')||msg.includes('403'))errMsg='⚠ 인증 오류 — Worker API 키 확인';
+    else if(msg.includes('404'))errMsg='⚠ DB를 찾을 수 없음 — DB ID 확인';
+    else if(msg.includes('400'))errMsg='⚠ HTTP 400 — Worker URL 또는 DB ID 확인';
+    else if(msg.includes('JSON')||msg.includes('content-type'))errMsg='⚠ Worker URL 오류 — Worker 주소를 확인하세요';
+    else if(msg.includes('Failed to fetch'))errMsg='⚠ 네트워크 오류 — Worker URL 확인';
+    if(lu){lu.textContent=errMsg;lu.style.color='var(--hdr-error-text)';}
+  }finally{
+    _isLoading=false;
+    if(btn)btn.disabled=false;
+    if(syncIcon)syncIcon.classList.remove('spinning');
+    if(syncLabel)syncLabel.textContent='새로고침';
+  }
+}
+
+// ── 필터/집계 ─────────────────────────────────────────
+function recordsForYM(y,m){
+  const ym=`${y}-${String(m).padStart(2,'0')}`;
+  return ALL_RECORDS.filter(r=>r.date.startsWith(ym));
+}
+function filteredRecords(){
+  if(curMonth===0) return ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+  return recordsForYM(curYear,curMonth);
+}
+function calcTunnelMap(recs){
+  const m={};
+  recs.forEach(r=>{
+    if(!r.tunnel)return;
+    if(!m[r.tunnel])m[r.tunnel]={gen:0,fee:0,count:0,capacity:0};
+    m[r.tunnel].gen+=getGenAmt(r);
+    m[r.tunnel].fee+=getFeeAmt(r);
+    m[r.tunnel].count++;
+    if(r.capacity)m[r.tunnel].capacity=r.capacity;
+  });
+  return m;
+}
+
+// ── 터널 색상 팔레트 (전체 데이터 기준 알파벳순 고정 배정) ──
+const TUNNEL_COLORS=['#378ADD','#1D9E75','#D85A30','#BA7517','#534AB7','#0F6E56'];
+let _tunnelColorMap={};
+function ensureTunnelColors(){
+  const all=[...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort();
+  _tunnelColorMap={};
+  all.forEach((t,i)=>{ _tunnelColorMap[t]=i%TUNNEL_COLORS.length; });
+}
+function tunnelIdx(t){ return _tunnelColorMap[t]??0; }
+function tunnelColorHex(t){ return TUNNEL_COLORS[tunnelIdx(t)]; }
+function tunnelSlug(t){ return 'tunnel-c'+tunnelIdx(t); }
+
+// ── 공통: 3셀 요약 카드 빌더 ─────────────────────────
+function buildCompareCard(cells){
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">`+
+    cells.map(({bg,border,labelColor,label,value,sub,subColor})=>`
+      <div style="background:${bg};border:1px solid ${border};border-radius:var(--r12);padding:10px 12px">
+        <div style="font-size:12px;font-weight:600;color:${labelColor};margin-bottom:3px">${label}</div>
+        <div style="font-size:15px;font-weight:800;color:${labelColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div>
+        <div style="font-size:12px;${subColor?'color:'+subColor+';font-weight:600':'color:var(--txt2)'};margin-top:2px">${sub}</div>
+      </div>`).join('')+
+  `</div>`;
+}
+
+// ── 공통: 상세 행 HTML 빌더 ─────────────────────────
+// Notion 실제 페이지(UUID)만 수정/삭제 가능 — 데모 데이터(id가 UUID가 아님)는 관리 버튼 숨김
+function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
+function buildActBtns(id){
+  if(!isRealPageId(id)) return '';
+  return `<div style="display:flex;gap:5px">
+    <button class="detail-act-btn detail-edit-btn" onclick="openEditModal('${id}')">수정</button>
+    <button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>
+  </div>`;
+}
+function buildDetailRow(r, showTunnel){
+  return `<tr>
+    <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+    ${showTunnel?`<td style="white-space:nowrap"><span class="type-badge ${tunnelSlug(r.tunnel||'기타')}">${esc(r.tunnel||'—')}</span></td>`:''}
+    <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
+    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
+    <td style="white-space:nowrap">${buildActBtns(r.id)}</td>
+  </tr>`;
+}
+function buildTunnelDetailRow(r){
+  return `<tr>
+    <td style="white-space:nowrap;width:1%;min-width:52px">${fmtDate(r.date)}</td>
+    <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
+    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
+    <td style="white-space:nowrap">${buildActBtns(r.id)}</td>
+  </tr>`;
+}
+
+// ── renderAll ─────────────────────────────────────────
+function renderAll(){
+  updateMonthLabel();
+  const recs=filteredRecords();
+  renderSummary(recs);
+  renderTunnel(recs);
+  renderTrend();
+  renderDetail(recs);
+}
+
+// ── 요약 ──────────────────────────────────────────────
+function renderSummary(recs){
+  recs=recs||filteredRecords();
+  const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
+  const tunnelMap=calcTunnelMap(recs);
+
+  renderTunnelBars(tunnelMap);
+
+  if(curMonth===0){
+    const allRecs2=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+    const yearGen=allRecs2.reduce((s,r)=>s+getGenAmt(r),0);
+    const yearFee=allRecs2.reduce((s,r)=>s+getFeeAmt(r),0);
+    const yearTunnels=new Set(allRecs2.map(r=>r.tunnel).filter(Boolean)).size;
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtWon(yearGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(yearFee),sub:'연간 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${yearTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'연간 합산'}
+    ]);
+  } else {
+    let pm=curMonth-1,py=curYear;
+    if(pm<1){pm=12;py--;}
+    const prevRecs=recordsForYM(py,pm);
+    const prevGen=prevRecs.reduce((s,r)=>s+getGenAmt(r),0);
+    const diffGen=totalGen-prevGen;
+    const sign=n=>n>=0?'+':'';
+    const isUp=diffGen>=0;
+    const diffColor=isUp?'var(--teal600)':'var(--coral)';
+    const diffBg=isUp?'var(--teal50)':'var(--coral50)';
+    const diffBorder=isUp?'var(--teal100)':'var(--coral100)';
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 발전량',value:`${fmtWon(prevGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:`${py}년 ${pm}월`},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 발전량',value:`${fmtWon(totalGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:`${curYear}년 ${curMonth}월`},
+      {bg:diffBg,border:diffBorder,labelColor:diffColor,label:'전월 대비',value:`${sign(diffGen)}${fmtWon(Math.abs(diffGen))}kWh`,sub:diffGen===0?'변동 없음':isUp?'증가':'감소',subColor:diffColor}
+    ]);
+  }
+}
+
+// ── 터널별 발전현황 (가로 바) ─────────────────────────
+function renderTunnelBars(tunnelMap){
+  if(!tunnelMap) return;
+  const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
+  const totalGen=arr.reduce((s,[,d])=>s+d.gen,0);
+  const totalFee=arr.reduce((s,[,d])=>s+d.fee,0);
+  const maxGen=Math.max(...arr.map(([,d])=>d.gen),1);
+
+  document.getElementById('donutBadge').textContent=`${arr.length}개소`;
+  document.getElementById('donutInline').innerHTML=`
+    <div class="typebar-row" style="background:var(--sky50);border-radius:var(--r8);padding:8px 10px;margin-bottom:6px;border:1px solid var(--sky100)">
+      <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:700">합계</div>
+      <div style="flex:1"></div>
+      <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:900">${fmtWon(totalGen)}kWh</div>
+      <div class="typebar-cnt" style="color:var(--sky600)">${fmtWon(totalFee)}원</div>
+      <div class="typebar-pct" style="color:var(--sky600)">100%</div>
+    </div>`+
+  arr.map(([t,d])=>{
+    const barPct=Math.round(d.gen/maxGen*100);
+    const genPct=totalGen>0?Math.round(d.gen/totalGen*100):0;
+    return `<div class="typebar-row">
+      <div class="typebar-name">${esc(t)}</div>
+      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${tunnelColorHex(t)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtWon(d.gen)+'kWh':''}</div></div>
+      <div class="typebar-pay">${fmtWon(d.gen)}kWh</div>
+      <div class="typebar-cnt">${fmtWon(d.fee)}원</div>
+      <div class="typebar-pct">${genPct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ── 터널별 ────────────────────────────────────────────
+function renderTunnel(recs){
+  recs=recs||filteredRecords();
+  const tunnelMap=calcTunnelMap(recs);
+  const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
+  document.getElementById('tunnelBadge').textContent=`${arr.length}개소`;
+
+  document.getElementById('tunnelTableBody').innerHTML=arr.length
+    ?arr.map(([name,d],i)=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:5px">
+          <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
+        </div></td>
+        <td><span class="type-badge ${tunnelSlug(name)}">${esc(name)}</span></td>
+        <td class="r">${fmtKw(d.capacity)}</td>
+        <td class="r">${d.count}일</td>
+        <td class="r">${fmtWon(d.gen)}</td>
+        <td class="r pay-cell">${fmtWon(d.fee)}</td>
+      </tr>`).join('')
+    :`<tr><td colspan="6">${emptyState('이번 달 터널 데이터가 없습니다.')}</td></tr>`;
+
+  const wrap = document.getElementById('tunnelDetailWrap');
+  if(!arr.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = arr.map(([name])=>{
+    const tRecs = recs.filter(r=>r.tunnel===name).sort((a,b)=>a.date.localeCompare(b.date));
+    return `<div class="sc" style="margin-bottom:10px">
+      <div class="sc-hd" style="margin-bottom:8px">
+        <span class="type-badge ${tunnelSlug(name)}" style="font-weight:700">${esc(name)}</span>
+        <span class="badge">${tRecs.length}일</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%;min-width:52px">날짜</th>
+            <th class="r" style="white-space:nowrap;width:1%">발전량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">누적량(kWh)</th>
+            <th class="r" style="white-space:nowrap;width:1%">요금(원)</th>
+            <th style="width:1%;white-space:nowrap">비고</th>
+            <th style="width:1%;white-space:nowrap">관리</th>
+          </tr></thead>
+          <tbody>
+            ${tRecs.map(r=>buildTunnelDetailRow(r)).join('')}
+            <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
+              <td style="font-weight:700;color:var(--txt2)">합계</td>
+              <td class="r" style="font-weight:700;color:var(--sky600)">${fmtWon(tRecs.reduce((s,r)=>s+getGenAmt(r),0))}</td>
+              <td></td>
+              <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(tRecs.reduce((s,r)=>s+getFeeAmt(r),0))}</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 월별 추이 ─────────────────────────────────────────
+function renderTrend(){
+  const months=[];
+  const baseMonth=curMonth===0?12:curMonth;
+  for(let i=11;i>=0;i--){
+    let m=baseMonth-i,y=curYear;
+    if(m<1){m+=12;y--;}
+    months.push({y,m});
+  }
+  const data=months.map(({y,m})=>{
+    const recs=recordsForYM(y,m);
+    const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
+    const tunnelMap=calcTunnelMap(recs);
+    return {y,m,label:`${m}월`,totalGen,cnt:recs.length,tunnelMap};
+  });
+  const maxGen=Math.max(...data.map(d=>d.totalGen),1);
+
+  const allMonths=new Set(ALL_RECORDS.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
+  const totalAllGen=ALL_RECORDS.reduce((s,r)=>s+getGenAmt(r),0);
+  const totalAllFee=ALL_RECORDS.reduce((s,r)=>s+getFeeAmt(r),0);
+  const monthRange=(()=>{
+    const sorted=[...allMonths].sort();
+    if(!sorted.length) return '—';
+    const s=sorted[0].replace('-','/');
+    const e=sorted[sorted.length-1].replace('-','/');
+    return s===e?s:`${s} ~ ${e}`;
+  })();
+  document.getElementById('trendTotalCard').innerHTML=`
+    <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
+          <div style="font-size:16px;font-weight:800;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 발전량</div>
+          <div style="font-size:15px;font-weight:800;color:var(--sky600)">${fmtWon(totalAllGen)}<span style="font-size:11px;font-weight:500">kWh</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 전기요금</div>
+          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${fmtWon(totalAllFee)}</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('trendChart').innerHTML=data.map(({y,m,label,totalGen})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const h=Math.max(totalGen/maxGen*110,totalGen>0?5:2);
+    return `<div class="trend-col">
+      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'var(--sky)':'var(--sky100)'};width:100%;border-radius:4px 4px 0 0"></div>
+      <div class="trend-lbl">${esc(label)}</div>
+      <div class="trend-val">${totalGen>0?fmtWon(Math.round(totalGen/1000))+'천':'-'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
+    const tunnelBadges=arr.map(([t,d])=>`<span class="type-badge ${tunnelSlug(t)}">${esc(t)} ${fmtWon(d.gen)}kWh</span>`).join('<br style="margin:1px">');
+    return `<tr${isCur?' style="background:var(--sky50)"':''}>
+      <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
+      <td class="r pay-cell">${fmtWon(totalGen)}</td>
+      <td>${tunnelBadges||'—'}</td>
+      <td class="r">${cnt}건</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 상세내역 ──────────────────────────────────────────
+function renderDetail(recs){
+  recs=recs||filteredRecords();
+  const selTunnel=document.getElementById('filterTunnel');
+  const prevTunnel=selTunnel.value;
+
+  const tunnels=[...new Set(recs.map(r=>r.tunnel).filter(Boolean))].sort();
+  selTunnel.innerHTML='<option value="">전체 터널</option>'+tunnels.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  selTunnel.value=prevTunnel;
+
+  let filtered=recs;
+  if(selTunnel.value) filtered=filtered.filter(r=>r.tunnel===selTunnel.value);
+
+  document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
+  document.getElementById('detailTableBody').innerHTML=filtered.length
+    ?filtered.map(r=>buildDetailRow(r,true)).join('')
+    :`<tr><td colspan="7">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+}
+
+function emptyState(desc, icon='📋'){
+  return `<div class="empty"><div class="empty-icon">${icon}</div>
+    <div class="empty-title">데이터 없음</div>
+    <div class="empty-desc">${desc}</div></div>`;
+}
+
+// ── 엑셀 생성 (하자보수현황 앱의 buildExcelReport 패턴 재사용 — 사진 컬럼 없는 축소판) ──
+var EXCEL_LIB_LOADING = null;
+function loadExcelLib(){
+  if(window.ExcelJS) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING = loadScript(
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+  ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+const EXCEL_COMPANY_NAME='수자원기술(주)';
+const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
+const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
+const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
+const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+function excelCm2in(cm){ return cm/2.54; }
+const EXCEL_PAGE_PRESETS={
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(0.5),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(2),bottom:excelCm2in(0.5),left:excelCm2in(1),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+};
+const EXCEL_COLUMNS_SOLAR=[
+  {key:'일자',header:'날짜',dateCol:true},
+  {key:'터널명',header:'터널'},
+  {key:'용량',header:'용량(kW)'},
+  {key:'발전량',header:'발전량(kWh)'},
+  {key:'누적발전량',header:'누적량(kWh)'},
+  {key:'전일누적발전량',header:'전일누적량(kWh)'},
+  {key:'전기요금',header:'요금(원)'},
+  {key:'전력량요금',header:'단가(원)'},
+  {key:'비고',header:'비고',width:16,wrap:true,align:'left'}
+];
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min=8, max=40, padding=5){
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelEstimateWrappedLines(text, colWidthChars){
+  const w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  let maxLines=1;
+  columns.forEach((col,i)=>{ if(!col.wrap) return; const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]); if(lines>maxLines) maxLines=lines; });
+  const lineHeightPt=fontSize*1.4;
+  return Math.max(baseHeight, maxLines*lineHeightPt+6);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+function buildExcelReport(opts){
+  const btn=document.getElementById(opts.btnId);
+  const lbl=document.getElementById(opts.lblId);
+  const rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  const columns=opts.columns;
+  const orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+  loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(opts.sheetName,{
+      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
+      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+    });
+    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    ws.columns=colWidths.map(w=>({width:w}));
+    const titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    const titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
+    const headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach((col,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    });
+    rows.forEach((r,i)=>{
+      const rn=3+i;
+      const row=ws.getRow(rn);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      columns.forEach((col,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
+        if(col.dateCol && r[col.key]){
+          const d=excelParseDate(r[col.key]);
+          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+        } else {
+          cell.value = r[col.key];
+        }
+      });
+      row.commit();
+    });
+    lbl.textContent='파일 저장 중...';
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const p2=n=>String(n).padStart(2,'0');
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes())+'.xlsx';
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(e=>{
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(()=>{ btn.disabled=false; });
+}
+function exportSolarExcel(){
+  const rows=filteredRecords().slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).map(r=>({
+    일자:r.date, 터널명:r.tunnel, 용량:r.capacity||'', 발전량:getGenAmt(r),
+    누적발전량:r.cumGen||'', 전일누적발전량:r.prevCumGen||'', 전기요금:getFeeAmt(r),
+    전력량요금:r.unitPrice||'', 비고:r.note||''
+  }));
+  buildExcelReport({
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'태양광발전량', title:'태양광발전량', fnamePrefix:'태양광발전량',
+    columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'landscape'
+  });
+}
+
+// ── 내장 데이터 (태양광DB 샘플 데이터 — 2026-05 ~ 2026-06, 실제 연동 전 시연용) ──
+const DEMO_DATA = [
+  // ── 홍해터널 (용량 99.6kW) ──
+  {id:'h01',date:'2026-05-02',tunnel:'홍해터널',capacity:99.6,gen:356,cumGen:182806,prevCumGen:182450,fee:46992,unitPrice:132},
+  {id:'h02',date:'2026-05-06',tunnel:'홍해터널',capacity:99.6,gen:410,cumGen:183216,prevCumGen:182806,fee:54120,unitPrice:132},
+  {id:'h03',date:'2026-05-10',tunnel:'홍해터널',capacity:99.6,gen:298,cumGen:183514,prevCumGen:183216,fee:39336,unitPrice:132},
+  {id:'h04',date:'2026-05-15',tunnel:'홍해터널',capacity:99.6,gen:440,cumGen:183954,prevCumGen:183514,fee:58080,unitPrice:132},
+  {id:'h05',date:'2026-05-20',tunnel:'홍해터널',capacity:99.6,gen:372,cumGen:184326,prevCumGen:183954,fee:49104,unitPrice:132},
+  {id:'h06',date:'2026-05-24',tunnel:'홍해터널',capacity:99.6,gen:205,cumGen:184531,prevCumGen:184326,fee:27060,unitPrice:132,note:'흐림'},
+  {id:'h07',date:'2026-05-29',tunnel:'홍해터널',capacity:99.6,gen:388,cumGen:184919,prevCumGen:184531,fee:51216,unitPrice:132},
+  {id:'h08',date:'2026-06-02',tunnel:'홍해터널',capacity:99.6,gen:415,cumGen:185334,prevCumGen:184919,fee:54780,unitPrice:132},
+  {id:'h09',date:'2026-06-06',tunnel:'홍해터널',capacity:99.6,gen:330,cumGen:185664,prevCumGen:185334,fee:43560,unitPrice:132},
+  {id:'h10',date:'2026-06-10',tunnel:'홍해터널',capacity:99.6,gen:460,cumGen:186124,prevCumGen:185664,fee:60720,unitPrice:132},
+  {id:'h11',date:'2026-06-15',tunnel:'홍해터널',capacity:99.6,gen:250,cumGen:186374,prevCumGen:186124,fee:33000,unitPrice:132,note:'우천'},
+  {id:'h12',date:'2026-06-20',tunnel:'홍해터널',capacity:99.6,gen:395,cumGen:186769,prevCumGen:186374,fee:52140,unitPrice:132},
+  {id:'h13',date:'2026-06-24',tunnel:'홍해터널',capacity:99.6,gen:402,cumGen:187171,prevCumGen:186769,fee:53064,unitPrice:132},
+  {id:'h14',date:'2026-06-29',tunnel:'홍해터널',capacity:99.6,gen:370,cumGen:187541,prevCumGen:187171,fee:48840,unitPrice:132},
+
+  // ── 청하터널(주) (용량 148.5kW) ──
+  {id:'j01',date:'2026-05-02',tunnel:'청하터널(주)',capacity:148.5,gen:540,cumGen:269440,prevCumGen:268900,fee:71280,unitPrice:132},
+  {id:'j02',date:'2026-05-06',tunnel:'청하터널(주)',capacity:148.5,gen:610,cumGen:270050,prevCumGen:269440,fee:80520,unitPrice:132},
+  {id:'j03',date:'2026-05-10',tunnel:'청하터널(주)',capacity:148.5,gen:470,cumGen:270520,prevCumGen:270050,fee:62040,unitPrice:132},
+  {id:'j04',date:'2026-05-15',tunnel:'청하터널(주)',capacity:148.5,gen:655,cumGen:271175,prevCumGen:270520,fee:86460,unitPrice:132},
+  {id:'j05',date:'2026-05-20',tunnel:'청하터널(주)',capacity:148.5,gen:505,cumGen:271680,prevCumGen:271175,fee:66660,unitPrice:132},
+  {id:'j06',date:'2026-05-24',tunnel:'청하터널(주)',capacity:148.5,gen:340,cumGen:272020,prevCumGen:271680,fee:44880,unitPrice:132,note:'흐림'},
+  {id:'j07',date:'2026-05-29',tunnel:'청하터널(주)',capacity:148.5,gen:580,cumGen:272600,prevCumGen:272020,fee:76560,unitPrice:132},
+  {id:'j08',date:'2026-06-02',tunnel:'청하터널(주)',capacity:148.5,gen:615,cumGen:273215,prevCumGen:272600,fee:81180,unitPrice:132},
+  {id:'j09',date:'2026-06-06',tunnel:'청하터널(주)',capacity:148.5,gen:480,cumGen:273695,prevCumGen:273215,fee:63360,unitPrice:132},
+  {id:'j10',date:'2026-06-10',tunnel:'청하터널(주)',capacity:148.5,gen:660,cumGen:274355,prevCumGen:273695,fee:87120,unitPrice:132},
+  {id:'j11',date:'2026-06-15',tunnel:'청하터널(주)',capacity:148.5,gen:380,cumGen:274735,prevCumGen:274355,fee:50160,unitPrice:132,note:'우천'},
+  {id:'j12',date:'2026-06-20',tunnel:'청하터널(주)',capacity:148.5,gen:575,cumGen:275310,prevCumGen:274735,fee:75900,unitPrice:132},
+  {id:'j13',date:'2026-06-24',tunnel:'청하터널(주)',capacity:148.5,gen:590,cumGen:275900,prevCumGen:275310,fee:77880,unitPrice:132},
+  {id:'j14',date:'2026-06-29',tunnel:'청하터널(주)',capacity:148.5,gen:545,cumGen:276445,prevCumGen:275900,fee:71940,unitPrice:132},
+
+  // ── 청하터널(부) (용량 49.5kW) ──
+  {id:'b01',date:'2026-05-02',tunnel:'청하터널(부)',capacity:49.5,gen:178,cumGen:91378,prevCumGen:91200,fee:23496,unitPrice:132},
+  {id:'b02',date:'2026-05-06',tunnel:'청하터널(부)',capacity:49.5,gen:205,cumGen:91583,prevCumGen:91378,fee:27060,unitPrice:132},
+  {id:'b03',date:'2026-05-10',tunnel:'청하터널(부)',capacity:49.5,gen:152,cumGen:91735,prevCumGen:91583,fee:20064,unitPrice:132},
+  {id:'b04',date:'2026-05-15',tunnel:'청하터널(부)',capacity:49.5,gen:222,cumGen:91957,prevCumGen:91735,fee:29304,unitPrice:132},
+  {id:'b05',date:'2026-05-20',tunnel:'청하터널(부)',capacity:49.5,gen:168,cumGen:92125,prevCumGen:91957,fee:22176,unitPrice:132},
+  {id:'b06',date:'2026-05-24',tunnel:'청하터널(부)',capacity:49.5,gen:112,cumGen:92237,prevCumGen:92125,fee:14784,unitPrice:132,note:'흐림'},
+  {id:'b07',date:'2026-05-29',tunnel:'청하터널(부)',capacity:49.5,gen:195,cumGen:92432,prevCumGen:92237,fee:25740,unitPrice:132},
+  {id:'b08',date:'2026-06-02',tunnel:'청하터널(부)',capacity:49.5,gen:210,cumGen:92642,prevCumGen:92432,fee:27720,unitPrice:132},
+  {id:'b09',date:'2026-06-06',tunnel:'청하터널(부)',capacity:49.5,gen:160,cumGen:92802,prevCumGen:92642,fee:21120,unitPrice:132},
+  {id:'b10',date:'2026-06-10',tunnel:'청하터널(부)',capacity:49.5,gen:225,cumGen:93027,prevCumGen:92802,fee:29700,unitPrice:132},
+  {id:'b11',date:'2026-06-15',tunnel:'청하터널(부)',capacity:49.5,gen:125,cumGen:93152,prevCumGen:93027,fee:16500,unitPrice:132,note:'우천'},
+  {id:'b12',date:'2026-06-20',tunnel:'청하터널(부)',capacity:49.5,gen:198,cumGen:93350,prevCumGen:93152,fee:26136,unitPrice:132},
+  {id:'b13',date:'2026-06-24',tunnel:'청하터널(부)',capacity:49.5,gen:202,cumGen:93552,prevCumGen:93350,fee:26664,unitPrice:132},
+  {id:'b14',date:'2026-06-29',tunnel:'청하터널(부)',capacity:49.5,gen:182,cumGen:93734,prevCumGen:93552,fee:24024,unitPrice:132},
+
+  // ── 남정5터널 (용량 74.8kW) ──
+  {id:'n01',date:'2026-05-02',tunnel:'남정5터널',capacity:74.8,gen:268,cumGen:134868,prevCumGen:134600,fee:35376,unitPrice:132},
+  {id:'n02',date:'2026-05-06',tunnel:'남정5터널',capacity:74.8,gen:310,cumGen:135178,prevCumGen:134868,fee:40920,unitPrice:132},
+  {id:'n03',date:'2026-05-10',tunnel:'남정5터널',capacity:74.8,gen:230,cumGen:135408,prevCumGen:135178,fee:30360,unitPrice:132},
+  {id:'n04',date:'2026-05-15',tunnel:'남정5터널',capacity:74.8,gen:335,cumGen:135743,prevCumGen:135408,fee:44220,unitPrice:132},
+  {id:'n05',date:'2026-05-20',tunnel:'남정5터널',capacity:74.8,gen:255,cumGen:135998,prevCumGen:135743,fee:33660,unitPrice:132},
+  {id:'n06',date:'2026-05-24',tunnel:'남정5터널',capacity:74.8,gen:170,cumGen:136168,prevCumGen:135998,fee:22440,unitPrice:132,note:'흐림'},
+  {id:'n07',date:'2026-05-29',tunnel:'남정5터널',capacity:74.8,gen:295,cumGen:136463,prevCumGen:136168,fee:38940,unitPrice:132},
+  {id:'n08',date:'2026-06-02',tunnel:'남정5터널',capacity:74.8,gen:320,cumGen:136783,prevCumGen:136463,fee:42240,unitPrice:132},
+  {id:'n09',date:'2026-06-06',tunnel:'남정5터널',capacity:74.8,gen:245,cumGen:137028,prevCumGen:136783,fee:32340,unitPrice:132},
+  {id:'n10',date:'2026-06-10',tunnel:'남정5터널',capacity:74.8,gen:340,cumGen:137368,prevCumGen:137028,fee:44880,unitPrice:132},
+  {id:'n11',date:'2026-06-15',tunnel:'남정5터널',capacity:74.8,gen:190,cumGen:137558,prevCumGen:137368,fee:25080,unitPrice:132,note:'우천'},
+  {id:'n12',date:'2026-06-20',tunnel:'남정5터널',capacity:74.8,gen:300,cumGen:137858,prevCumGen:137558,fee:39600,unitPrice:132},
+  {id:'n13',date:'2026-06-24',tunnel:'남정5터널',capacity:74.8,gen:305,cumGen:138163,prevCumGen:137858,fee:40260,unitPrice:132},
+  {id:'n14',date:'2026-06-29',tunnel:'남정5터널',capacity:74.8,gen:278,cumGen:138441,prevCumGen:138163,fee:36696,unitPrice:132},
+];
+
+// 초기화
+ALL_RECORDS = DEMO_DATA;
+ensureTunnelColors();
+
+// 현재 달에 데이터가 없으면 데이터가 있는 가장 최근 달로 자동 이동
+(()=>{
+  const ym=`${curYear}-${String(curMonth).padStart(2,'0')}`;
+  const hasCur=ALL_RECORDS.some(r=>r.date.startsWith(ym));
+  if(!hasCur && ALL_RECORDS.length){
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(latest){
+      curYear=parseInt(latest.slice(0,4));
+      curMonth=parseInt(latest.slice(5,7));
+      ddYearBase=curYear;
+    }
+  }
+})();
+
+updateMonthLabel();
+renderAll();
+
+// 설정값이 있으면 페이지 로드 시 자동 새로고침
+(()=>{
+  if(CFG.workerUrl&&CFG.dbId){
+    loadData();
+  }
+})();
+</script>
+</body>
+</html>
