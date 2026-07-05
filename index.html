@@ -1304,24 +1304,30 @@ function readPortalSummary(key) {
   try { const v = localStorage.getItem('portal_summary_' + key); return v ? JSON.parse(v) : null; }
   catch (e) { return null; }
 }
+function isAppConfigured(id) {
+  const k = APPS[id] && APPS[id].keys;
+  if (!k) return false;
+  return !!(localStorage.getItem(k.workerUrl) && localStorage.getItem(k.dbId));
+}
+function emptyKpiLabel(id) { return isAppConfigured(id) ? '앱을 열면 표시됩니다' : '설정 필요'; }
 function renderHomeKpi() {
   const dEl = document.getElementById('kpi-defect');
   if (dEl) {
     const s = readPortalSummary('defect');
     if (s) { dEl.textContent = `미해결 ${s.unresolved}건`; dEl.className = 'ac-kpi' + (s.unresolved > 0 ? ' warn' : ''); }
-    else { dEl.textContent = '설정 필요'; dEl.className = 'ac-kpi empty'; }
+    else { dEl.textContent = emptyKpiLabel('defect'); dEl.className = 'ac-kpi empty'; }
   }
   const oEl = document.getElementById('kpi-overtime');
   if (oEl) {
     const s = readPortalSummary('overtime');
     if (s) { oEl.textContent = `이달 ${fmtWonHome(s.thisMonthPay)}원`; oEl.className = 'ac-kpi'; }
-    else { oEl.textContent = '설정 필요'; oEl.className = 'ac-kpi empty'; }
+    else { oEl.textContent = emptyKpiLabel('overtime'); oEl.className = 'ac-kpi empty'; }
   }
   const sEl = document.getElementById('kpi-solar');
   if (sEl) {
     const s = readPortalSummary('solar');
     if (s) { sEl.textContent = `이달 ${fmtWonHome(s.thisMonthGen)}kWh`; sEl.className = 'ac-kpi'; }
-    else { sEl.textContent = '설정 필요'; sEl.className = 'ac-kpi empty'; }
+    else { sEl.textContent = emptyKpiLabel('solar'); sEl.className = 'ac-kpi empty'; }
   }
 }
 renderHomeKpi();
