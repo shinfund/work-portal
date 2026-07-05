@@ -102,7 +102,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
 .dd-menu.open{display:block}
 .dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt2);text-align:center;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
 .dd-opt.has{color:var(--sky600)}
@@ -448,16 +448,62 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 
 function fmtDate(d){
   if(!d) return '';
-  const days=['일','월','화','수','목','금','토'];
-  const s=String(d).slice(0,10); // ISO timestamp 등 앞 10자리로 정규화
-  const dt=new Date(s+'T00:00:00');
-  if(isNaN(dt)) return s;
-  return `${s.slice(5).replace('-','/')} (${days[dt.getDay()]})`;
+  return String(d).slice(0,10); // yyyy-mm-dd 고정(2026-07-05 확정 — 요일 표기 제거, work-portal 공통)
 }
 function getPayAmt(r){ return r.pay||0; }
 function fmtWon(n){ return Number(n).toLocaleString('ko-KR'); }
 function fmtH(h){ const n=parseFloat(h)||0; return n%1===0?String(n):n.toFixed(1).replace(/\.0$/,''); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
 
 // ── 모달 헬퍼 ─────────────────────────────────────────
 function maskVal(v){
@@ -489,6 +535,7 @@ function openCfgModal(){
 function closeCfgModal(e){
   if(e&&e.target!==e.currentTarget)return;
   const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  resetModalDragPos('cfgModal');
 }
 
 // ── 화면모드(테마) ────────────────────────────────────
@@ -1277,6 +1324,7 @@ ALL_RECORDS = DEMO_DATA;
 
 updateMonthLabel();
 renderAll();
+initDraggableModals();
 
 // 설정값이 있으면 페이지 로드 시 자동 새로고침
 (()=>{

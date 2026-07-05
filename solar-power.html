@@ -101,7 +101,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;max-height:280px;overflow-y:auto;display:none}
 .dd-menu.open{display:block}
 /* 목록방식(3-9 표준) — 년/월/터널 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
-.dd-opt{padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt2);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt{padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt2);text-align:left;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
@@ -160,10 +160,6 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
-/* 발전내역 툴바 안으로 이동했을 때 month-sel 자체 카드 스타일(배경/테두리/그림자)을 지우고
-   내부 년/월 pill 버튼만 툴바에 자연스럽게 섞이도록 함 */
-.month-sel.inline-in-toolbar{background:transparent;border:none;box-shadow:none;padding:0;margin-bottom:0;width:auto}
-.month-sel.inline-in-toolbar .month-sub-row{display:none}
 
 /* ── 터널명 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
@@ -450,7 +446,18 @@ tr:hover td{background:var(--sky50)}
   <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
     <div class="sc">
       <div class="filter-row">
-        <div id="monthSelDetailSlot" style="display:contents"></div>
+        <div class="dd-wrap" id="detailYearDdWrap">
+          <button class="dd-btn" id="detailYearDdBtn" onclick="toggleDetailYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
+            <span id="detailYearDdLabel">전체 연도</span>
+          </button>
+          <div class="dd-menu" id="detailYearDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="detailMonthDdWrap">
+          <button class="dd-btn" id="detailMonthDdBtn" onclick="toggleDetailMonthDd()" aria-haspopup="listbox" aria-label="월 선택">
+            <span id="detailMonthDdLabel">전체 월</span>
+          </button>
+          <div class="dd-menu" id="detailMonthDdMenu"></div>
+        </div>
         <div class="dd-wrap" id="tunnelDdWrap">
           <button class="dd-btn" id="tunnelDdBtn" onclick="toggleDetailTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
             <span id="tunnelDdLabel">전체 터널</span>
@@ -555,17 +562,63 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 
 function fmtDate(d){
   if(!d) return '';
-  const days=['일','월','화','수','목','금','토'];
-  const s=String(d).slice(0,10);
-  const dt=new Date(s+'T00:00:00');
-  if(isNaN(dt)) return s;
-  return `${s.slice(5).replace('-','/')} (${days[dt.getDay()]})`;
+  return String(d).slice(0,10); // yyyy-mm-dd 고정(2026-07-05 확정 — 요일 표기 제거)
 }
 function getGenAmt(r){ return r.gen||0; }
 function getFeeAmt(r){ return r.fee||0; }
 function fmtWon(n){ return Math.round(Number(n)||0).toLocaleString('ko-KR'); }
 function fmtKw(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:1}); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
 
 // ── 모달 헬퍼 ─────────────────────────────────────────
 function maskVal(v){
@@ -597,6 +650,7 @@ function openCfgModal(){
 function closeCfgModal(e){
   if(e&&e.target!==e.currentTarget)return;
   const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  resetModalDragPos('cfgModal');
 }
 
 // ── 화면모드(테마) ────────────────────────────────────
@@ -750,6 +804,7 @@ function closeAddModal(e){
   if(e&&e.target!==e.currentTarget)return;
   document.getElementById('addModal').classList.remove('modal-open');
   document.body.style.overflow='';
+  resetModalDragPos('addModal');
 }
 function openEditModal(pageId){
   const r = ALL_RECORDS.find(x=>x.id===pageId);
@@ -870,6 +925,7 @@ function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget)return;
   document.getElementById('detailModal').classList.remove('modal-open');
   document.body.style.overflow='';
+  resetModalDragPos('detailModal');
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
 
@@ -896,9 +952,10 @@ function closeAllDD(){
 }
 function renderDDYear(){
   const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
-  dataYears.add(curYear);
+  if(curYear!=='ALL') dataYears.add(curYear);
   const years=[...dataYears].sort((a,b)=>b-a); // 목록방식(3-9 표준): 최신순 단일 리스트, 그리드/이전·다음 없음
-  document.getElementById('ddYearOpts').innerHTML=
+  const allOpt=`<div class="dd-opt${curYear==='ALL'?' sel':''}" onclick="pickYear('ALL')">전체 연도</div>`;
+  document.getElementById('ddYearOpts').innerHTML=allOpt+
     years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}" onclick="pickYear(${y})">${y}년</div>`).join('');
 }
 function renderDDMonth(){
@@ -924,7 +981,7 @@ function pickMonth(m){
   else if(ALL_RECORDS.length){ renderAll(); }
 }
 function updateMonthLabel(){
-  document.getElementById('ddYearLabel').textContent=curYear+'년';
+  document.getElementById('ddYearLabel').textContent=curYear==='ALL'?'전체 연도':curYear+'년';
   document.getElementById('ddMonthLabel').textContent=curMonth===0?'전체':curMonth+'월';
   const n=filteredRecords().length;
   document.getElementById('monthSub').textContent=n?`총 ${n}건`:'데이터 없음';
@@ -934,6 +991,10 @@ document.addEventListener('click',e=>{
   if(sel&&!sel.contains(e.target)) closeAllDD();
   const tw=document.getElementById('tunnelDdWrap');
   if(tw&&!tw.contains(e.target)) closeDetailTunnelDd();
+  const yw=document.getElementById('detailYearDdWrap');
+  if(yw&&!yw.contains(e.target)) closeDetailYearDd();
+  const mw=document.getElementById('detailMonthDdWrap');
+  if(mw&&!mw.contains(e.target)) closeDetailMonthDd();
 });
 
 // ── 발전내역 탭 터널 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ──
@@ -951,6 +1012,9 @@ function toggleDetailTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
 function closeDetailTunnelDd(){ closeDd('tunnelDdMenu','tunnelDdBtn'); }
 let _detailTunnelFilter='';
 let _detailSearchQ='';
+let _detailYearFilter='ALL';
+let _detailMonthFilter='ALL';
+let _detailUserPicked=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
 function buildDetailTunnelDd(tunnels){
   const menu=document.getElementById('tunnelDdMenu');
   if(!menu) return;
@@ -969,16 +1033,62 @@ function buildDetailTunnelDd(tunnels){
   }
 }
 
+// ── 발전내역 탭 연/월 필터 드롭다운 (요약·터널별·월별추이의 curYear/curMonth와 독립,
+//    기본값 "전체 연도"·"전체 월" — 2026-07-05 확정) ──
+function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
+function closeDetailYearDd(){ closeDd('detailYearDdMenu','detailYearDdBtn'); }
+function toggleDetailMonthDd(){ toggleDd('detailMonthDdMenu','detailMonthDdBtn'); }
+function closeDetailMonthDd(){ closeDd('detailMonthDdMenu','detailMonthDdBtn'); }
+function buildDetailYearDd(){
+  const menu=document.getElementById('detailYearDdMenu');
+  if(!menu) return;
+  const years=[...new Set(ALL_RECORDS.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const opts=[{val:'ALL',label:'전체 연도'}].concat(years.map(y=>({val:y,label:y+'년'})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailYearFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailYearDdLabel').textContent = _detailYearFilter==='ALL' ? '전체 연도' : _detailYearFilter+'년';
+  document.getElementById('detailYearDdBtn').classList.toggle('active', _detailYearFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailYearFilter=opt.dataset.val;
+      _detailUserPicked=true;
+      closeDetailYearDd();
+      renderDetail();
+    });
+  }
+}
+function buildDetailMonthDd(){
+  const menu=document.getElementById('detailMonthDdMenu');
+  if(!menu) return;
+  const opts=[{val:'ALL',label:'전체 월'}];
+  for(let m=1;m<=12;m++) opts.push({val:String(m).padStart(2,'0'),label:m+'월'});
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailMonthFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailMonthDdLabel').textContent = _detailMonthFilter==='ALL' ? '전체 월' : parseInt(_detailMonthFilter,10)+'월';
+  document.getElementById('detailMonthDdBtn').classList.toggle('active', _detailMonthFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailMonthFilter=opt.dataset.val;
+      _detailUserPicked=true;
+      closeDetailMonthDd();
+      renderDetail();
+    });
+  }
+}
+
 // ── 하단 네비 ─────────────────────────────────────────
 const PANELS=['detail','tunnel','summary','trend'];
 let _activePanel='detail';
-// 날짜 선택 박스(연/월 드롭다운)는 발전내역 탭에서는 툴바 안으로, 다른 탭에서는 원래 위치로 이동
+// 공용 연/월 선택기(요약·터널별·월별추이가 공유)는 발전내역 탭에서는 숨김 — 발전내역은
+// 2026-07-05부터 독립된 자체 연/월 드롭다운(detailYearDd/detailMonthDd, 기본값 전체)을 사용
 function relocateMonthSel(name){
-  const sel=document.getElementById('monthSel');
-  if(!sel) return;
-  const target=document.getElementById(name==='detail' ? 'monthSelDetailSlot' : 'monthSelDefaultSlot');
-  if(target && sel.parentElement!==target) target.appendChild(sel);
-  sel.classList.toggle('inline-in-toolbar', name==='detail');
+  const wrap=document.getElementById('monthSelDefaultSlot');
+  if(!wrap) return;
+  wrap.style.display = name==='detail' ? 'none' : '';
 }
 function switchPanel(name){
   if(name===_activePanel) return;
@@ -1180,6 +1290,10 @@ function recordsForYM(y,m){
   return ALL_RECORDS.filter(r=>r.date.startsWith(ym));
 }
 function filteredRecords(){
+  if(curYear==='ALL'){
+    if(curMonth===0) return ALL_RECORDS.slice();
+    return ALL_RECORDS.filter(r=>r.date.slice(5,7)===String(curMonth).padStart(2,'0'));
+  }
   if(curMonth===0) return ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
   return recordsForYM(curYear,curMonth);
 }
@@ -1255,7 +1369,7 @@ function renderAll(){
   renderSummary(recs);
   renderTunnel(recs);
   renderTrend();
-  renderDetail(recs);
+  renderDetail();
 }
 
 // ── 요약 ──────────────────────────────────────────────
@@ -1266,7 +1380,16 @@ function renderSummary(recs){
 
   renderTunnelBars(tunnelMap);
 
-  if(curMonth===0){
+  if(curYear==='ALL'){
+    const allGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
+    const allFee=recs.reduce((s,r)=>s+getFeeAmt(r),0);
+    const allTunnels=new Set(recs.map(r=>r.tunnel).filter(Boolean)).size;
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtWon(allGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(allFee),sub:'전체 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'전체 합산'}
+    ]);
+  } else if(curMonth===0){
     const allRecs2=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
     const yearGen=allRecs2.reduce((s,r)=>s+getGenAmt(r),0);
     const yearFee=allRecs2.reduce((s,r)=>s+getFeeAmt(r),0);
@@ -1382,9 +1505,11 @@ function renderTunnel(recs){
 // ── 월별 추이 ─────────────────────────────────────────
 function renderTrend(){
   const months=[];
-  const baseMonth=curMonth===0?12:curMonth;
+  // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
+  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
+  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
   for(let i=11;i>=0;i--){
-    let m=baseMonth-i,y=curYear;
+    let m=anchorMonth-i,y=anchorYear;
     if(m<1){m+=12;y--;}
     months.push({y,m});
   }
@@ -1449,10 +1574,24 @@ function renderTrend(){
 }
 
 // ── 발전내역 ──────────────────────────────────────────
-function renderDetail(recs){
-  recs=recs||filteredRecords();
+// 발전내역 탭은 요약/터널별/월별추이가 공유하는 curYear/curMonth와 무관하게 독립된 연/월 필터를
+// 쓴다(기본값 전체 — 2026-07-05 확정, 아래 _detailYearFilter/_detailMonthFilter 참고)
+function renderDetail(){
+  // 발전내역 탭 날짜 드롭다운 기본값 = 최신 연/월(전체 아님) — "전체" 선택 시 데이터가 너무 많아져
+  // 성능/가독성 문제가 있어 2026-07-05 재확정. "전체"는 선택 가능한 옵션으로는 유지.
+  if(!_detailUserPicked && ALL_RECORDS.length){
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(latest){ _detailYearFilter=latest.slice(0,4); _detailMonthFilter=latest.slice(5,7); }
+  }
+  buildDetailYearDd();
+  buildDetailMonthDd();
+  const recs=ALL_RECORDS.filter(r=>{
+    if(_detailYearFilter!=='ALL' && !(r.date||'').startsWith(_detailYearFilter)) return false;
+    if(_detailMonthFilter!=='ALL' && (r.date||'').slice(5,7)!==_detailMonthFilter) return false;
+    return true;
+  });
 
-  const tunnels=[...new Set(recs.map(r=>r.tunnel).filter(Boolean))].sort();
+  const tunnels=[...new Set(recs.map(r=>r.tunnel).filter(Boolean))].sort().reverse();
   if(_detailTunnelFilter && !tunnels.includes(_detailTunnelFilter)) _detailTunnelFilter='';
   buildDetailTunnelDd(tunnels);
 
@@ -1461,6 +1600,13 @@ function renderDetail(recs){
   let filtered=recs;
   if(_detailTunnelFilter) filtered=filtered.filter(r=>r.tunnel===_detailTunnelFilter);
   if(_detailSearchQ) filtered=filtered.filter(r=>(r.tunnel+' '+(r.note||'')).toLowerCase().includes(_detailSearchQ));
+
+  // 내역 탭 정렬 표준(3-9): 날짜 내림차순(최신 우선) → 동일 날짜 내에선 터널명 내림차순
+  filtered=filtered.slice().sort((a,b)=>{
+    if(a.date!==b.date) return a.date<b.date?1:-1;
+    const at=a.tunnel||'', bt=b.tunnel||'';
+    return at<bt?1:at>bt?-1:0;
+  });
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
@@ -1710,6 +1856,7 @@ renderAll();
 // switchPanel()은 탭이 바뀔 때만 동작해서 최초 로드 시(발전내역이 이미 기본 활성 탭) 호출되지
 // 않는다 — 날짜 선택 박스를 초기 위치(발전내역 툴바)로 옮기기 위해 최초 1회 직접 호출
 relocateMonthSel(_activePanel);
+initDraggableModals();
 
 // 설정값이 있으면 페이지 로드 시 자동 새로고침
 (()=>{

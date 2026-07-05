@@ -1114,6 +1114,7 @@ Object.keys(APPS).forEach(id => {
 
 renderTabs();
 updateNavButtons();
+initDraggableModals();
 
 // ── 설정 모달 ────────────────────────────────────────────
 const CFG_FIELDS = [
@@ -1140,6 +1141,56 @@ function mask(v) {
   return v.slice(0,2) + '***';
 }
 
+// ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동) ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+
 function openCfg() {
   CFG_FIELDS.forEach(({ elId, lsKey }) => {
     const el = document.getElementById(elId);
@@ -1157,6 +1208,7 @@ function closeCfg(e) {
   if (e && e.target !== e.currentTarget) return;
   document.getElementById('cfgModal').classList.remove('open');
   document.body.style.overflow = '';
+  resetModalDragPos('cfgModal');
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfg(); });
 

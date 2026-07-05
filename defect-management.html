@@ -749,10 +749,17 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 <!-- 패널1: 목록 -->
 <div class="panel on" id="p1">
   <div class="filter-row">
-    <div class="dd-wrap" id="monthDdWrap">
-      <button class="dd-btn" id="monthDdBtn" onclick="toggleMonthDd()" aria-haspopup="listbox" aria-label="날짜 선택">
+    <div class="dd-wrap" id="yearDdWrap">
+      <button class="dd-btn" id="yearDdBtn" onclick="toggleYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span id="monthDdLabel">전체 날짜</span>
+        <span id="yearDdLabel">전체 연도</span>
+      </button>
+      <div class="dd-menu" id="yearDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="monthDdWrap">
+      <button class="dd-btn" id="monthDdBtn" onclick="toggleMonthDd()" aria-haspopup="listbox" aria-label="월 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="monthDdLabel">전체 월</span>
       </button>
       <div class="dd-menu" id="monthDdMenu"></div>
     </div>
@@ -918,7 +925,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 
 <script>
 var ALL_DATA = [];
-var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', month:'ALL' };
+var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', year:'ALL', month:'ALL' };
 var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
 var CURRENT_TAB = 1;
 
@@ -1018,6 +1025,7 @@ var DEMO_DATA = [
 function init(){
   if(CFG.workerUrl && CFG.dbId){ loadData(); }
   else { loadDemo(); }
+  initDraggableModals();
 }
 document.addEventListener('DOMContentLoaded', init);
 
@@ -1077,6 +1085,7 @@ window.addEventListener('storage', e => {
 function closeCfgModal(){
   document.getElementById('cfgModal').classList.remove('modal-open');
   document.body.style.overflow='';
+  resetModalDragPos('cfgModal');
 }
 function saveCfg(){
   var wEl=document.getElementById('cfgWorkerUrl');
@@ -1417,33 +1426,65 @@ function buildManagerFilter(){
   }
 }
 
-/* ── BUILD 날짜(월) DROPDOWN (하자내역 탭 — 목록/엑셀 탭 표준 툴바 규칙) ── */
+/* ── BUILD 날짜(년/월 각각) DROPDOWN (하자내역 탭 — 목록/엑셀 탭 표준 툴바 규칙, 2026-07-05: 하나의
+   "YYYY년 M월" 드롭다운에서 년/월 독립 드롭다운 2개로 분리) ── */
 // 날짜 드롭다운 기본값은 "전체"가 아닌 최신 데이터가 있는 년/월(다른 앱의 기간 선택기와 동일 원칙)
+// 내역 탭 날짜(년/월) 드롭다운 기본값은 최신 연/월("전체"는 데이터가 너무 많아져 성능/가독성 문제가
+// 있어 기본값에서 제외, 선택 가능한 옵션으로는 유지 — 2026-07-05 최종 확정)
+var _filterDateUserPicked = false;
 function buildMonthFilter(){
-  var months = {};
+  var dates = {};
   ALL_DATA.forEach(function(r){
     var d = (r['날짜']||'').replace(/[.\/]/g,'-');
-    var ym = d.slice(0,7);
-    if(/^\d{4}-\d{2}$/.test(ym)) months[ym] = true;
+    if(/^\d{4}-\d{2}/.test(d)) dates[d.slice(0,7)] = true;
   });
-  var sorted = Object.keys(months).sort().reverse();
+  var sortedYm = Object.keys(dates).sort().reverse();
+  if(!_filterDateUserPicked){
+    var latest = sortedYm.length ? sortedYm[0].split('-') : null;
+    FILTER.year  = latest ? latest[0] : 'ALL';
+    FILTER.month = latest ? latest[1] : 'ALL';
+  }
+  var years = [...new Set(sortedYm.map(function(ym){ return ym.slice(0,4); }))].sort().reverse();
+  buildYearDd(years);
+  buildMonthDd();
+}
+function buildYearDd(years){
+  var menu = document.getElementById('yearDdMenu');
+  if(!menu) return;
+  var opts = [{ val:'ALL', label:'전체 연도' }].concat(years.map(function(y){ return { val:y, label:y+'년' }; }));
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val===FILTER.year?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  var lbl = document.getElementById('yearDdLabel');
+  if(lbl) lbl.textContent = FILTER.year==='ALL' ? '전체 연도' : FILTER.year+'년';
+  var btn = document.getElementById('yearDdBtn');
+  if(btn) btn.classList.toggle('active', FILTER.year!=='ALL');
+  if(!buildYearDd._bound){
+    buildYearDd._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectYear(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('yearDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeYearDd();
+    });
+  }
+}
+function buildMonthDd(){
   var menu = document.getElementById('monthDdMenu');
   if(!menu) return;
-  FILTER.month = sorted.length ? sorted[0] : 'ALL';
-  var opts = [{ val:'ALL', label:'전체 날짜' }];
-  sorted.forEach(function(ym){
-    var parts = ym.split('-');
-    opts.push({ val:ym, label:parts[0]+'년 '+parseInt(parts[1],10)+'월' });
-  });
+  var opts = [{ val:'ALL', label:'전체 월' }];
+  for(var m=1;m<=12;m++) opts.push({ val:String(m).padStart(2,'0'), label:m+'월' });
   menu.innerHTML = opts.map(function(o){
     return '<div class="dd-opt'+(o.val===FILTER.month?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
   }).join('');
   var lbl = document.getElementById('monthDdLabel');
-  if(lbl) lbl.textContent = FILTER.month==='ALL' ? '전체 날짜' : (function(){ var p=FILTER.month.split('-'); return p[0]+'년 '+parseInt(p[1],10)+'월'; })();
+  if(lbl) lbl.textContent = FILTER.month==='ALL' ? '전체 월' : parseInt(FILTER.month,10)+'월';
   var btn = document.getElementById('monthDdBtn');
   if(btn) btn.classList.toggle('active', FILTER.month!=='ALL');
-  if(!buildMonthFilter._bound){
-    buildMonthFilter._bound = true;
+  if(!buildMonthDd._bound){
+    buildMonthDd._bound = true;
     menu.addEventListener('click', function(e){
       var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
       if(opt && opt.dataset && opt.dataset.val) selectMonth(opt.dataset.val, opt);
@@ -1454,17 +1495,29 @@ function buildMonthFilter(){
     });
   }
 }
+function toggleYearDd()  { toggleDd('yearDdMenu','yearDdBtn'); }
+function closeYearDd()   { closeDd('yearDdMenu','yearDdBtn'); }
 function toggleMonthDd(){ toggleDd('monthDdMenu','monthDdBtn'); }
 function closeMonthDd()  { closeDd('monthDdMenu','monthDdBtn'); }
+function selectYear(val, el){
+  document.querySelectorAll('#yearDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById('yearDdLabel').textContent = val==='ALL' ? '전체 연도' : val+'년';
+  var btn = document.getElementById('yearDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  FILTER.year = val;
+  _filterDateUserPicked = true;
+  closeYearDd();
+  renderList();
+}
 function selectMonth(val, el){
   document.querySelectorAll('#monthDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
-  document.getElementById('monthDdLabel').textContent = val==='ALL' ? '전체 날짜' : (function(){
-    var p = val.split('-'); return p[0]+'년 '+parseInt(p[1],10)+'월';
-  })();
+  document.getElementById('monthDdLabel').textContent = val==='ALL' ? '전체 월' : parseInt(val,10)+'월';
   var btn = document.getElementById('monthDdBtn');
   if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.month = val;
+  _filterDateUserPicked = true;
   closeMonthDd();
   renderList();
 }
@@ -1575,7 +1628,9 @@ function filtered(){
     var stMatch = FILTER.status==='ALL' || r['조치여부']===FILTER.status;
     var tnMatch = FILTER.tunnel==='ALL' || r['터널명']===FILTER.tunnel;
     var mgMatch = FILTER.manager==='ALL' || r['업무담당']===FILTER.manager;
-    var moMatch = FILTER.month==='ALL' || (r['날짜']||'').replace(/[.\/]/g,'-').slice(0,7)===FILTER.month;
+    var dNorm = (r['날짜']||'').replace(/[.\/]/g,'-');
+    var yrMatch = FILTER.year==='ALL' || dNorm.slice(0,4)===FILTER.year;
+    var moMatch = FILTER.month==='ALL' || dNorm.slice(5,7)===FILTER.month;
     var qMatch  = !q || (r['하자내용']||'').toLowerCase().includes(q)
                      || (r['터널명']||'').toLowerCase().includes(q)
                      || (r['위치']||'').toLowerCase().includes(q)
@@ -1583,7 +1638,7 @@ function filtered(){
                      || (r['업무담당']||'').toLowerCase().includes(q)
                      || (r['업체명']||'').toLowerCase().includes(q)
                      || (r['비고']||'').toLowerCase().includes(q);
-    return stMatch && tnMatch && mgMatch && moMatch && qMatch;
+    return stMatch && tnMatch && mgMatch && yrMatch && moMatch && qMatch;
   });
 }
 
@@ -1684,7 +1739,7 @@ function updateKpiForList(){
   // 하자내역 탭: 필터 결과 기준, "총 N건" 라인에 진행중/완료/미흡 함께 표시
   var rows = filtered();
   var c = countStatus(rows);
-  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL' || FILTER.month!=='ALL'
+  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL' || FILTER.year!=='ALL' || FILTER.month!=='ALL'
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
   renderKpiCountLine('filterCount', [
     { label:isFiltered?'필터 결과':'전체', value:rows.length },
@@ -1778,10 +1833,13 @@ function rebuildListHeader(){
 /* ── LIST ── */
 function renderList(){
   var rows = filtered();
+  // 내역 탭 정렬 표준(3-9): 날짜 내림차순(최신 우선) → 동일 날짜 내에선 터널명 내림차순
   rows = rows.map(function(r){
     return { r:r, d:(r['날짜']||'').replace(/[.\/]/g,'-') };
   }).sort(function(a,b){
-    return a.d < b.d ? 1 : a.d > b.d ? -1 : 0;
+    if(a.d !== b.d) return a.d < b.d ? 1 : -1;
+    var at = a.r['터널명']||'', bt = b.r['터널명']||'';
+    return at < bt ? 1 : at > bt ? -1 : 0;
   }).map(function(o){ return o.r; });
 
   var visKeys = getVisibleCols();
@@ -2143,6 +2201,7 @@ function openDetail(idx){
 function closeDetail(){
   document.getElementById('detailModal').classList.remove('modal-open');
   document.body.style.overflow='';
+  resetModalDragPos('detailModal');
 }
 
 /* ── TAB ── */
@@ -2201,6 +2260,56 @@ function groupBy(arr, key){
   return obj;
 }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ── */
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  var dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    var p=e.touches?e.touches[0]:e;
+    var rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    var p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  var box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(function(box){
+    var handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
 
 /* ── 사진 업로드 (R2) ── */
 function uploadPhoto(input, key){
@@ -2408,6 +2517,7 @@ function openAddModal(){
 function closeAddModal(){
   document.getElementById('addModal').classList.remove('modal-open');
   document.body.style.overflow = '';
+  resetModalDragPos('addModal');
 }
 
 /* ── 터널 드롭다운 공통 헬퍼 ── */
@@ -2955,6 +3065,7 @@ function openContactAddModal(){
 function closeContactEditModal(){
   document.getElementById('contactEditModal').classList.remove('modal-open');
   document.body.style.overflow='';
+  resetModalDragPos('contactEditModal');
 }
 
 function submitContactForm(confirmed){
