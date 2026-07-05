@@ -8,15 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
 <style>
 :root{
+  /* 하자보수현황 앱과 수치 동일(2026-07-05 확정 — work-portal 공통 색상 팔레트 기준) */
   --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
-  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
-  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
-  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
-  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
-  --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --bg:#F5F8FF;--card:#FFFFFF;--border:#E0EAF5;--border2:#EBF3FF;
+  --txt:#1A2535;--txt2:#3D4F68;--txt3:#3D5269;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
   --shadow:0 2px 12px rgba(55,138,221,.09);
   --hdr-bg:#0C447C;
   --hdr-text:#fff;
@@ -49,7 +51,7 @@ html[data-theme="dark"]{
   --hdr-error-text:rgba(255,150,130,.9);
   /* sky */
   --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
-  --sky600:#6FB4F0;--sky800:#A9D3F5;
+  --sky600:#6FB4F0;--sky800:#8FCBFF;
   /* teal */
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
@@ -96,15 +98,20 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 /* ── MONTH SELECTOR ── */
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
-.dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
-.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;max-height:280px;overflow-y:auto;display:none}
+/* 하자보수현황 앱 dd-btn/dd-menu/dd-opt와 수치·색상 완전 동일(2026-07-05 확정 — work-portal 공통 기준) */
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:20px;padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 /* 목록방식(3-9 표준) — 년/월/터널 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
-.dd-opt{padding:9px 12px;font-size:13px;font-weight:600;color:var(--txt2);text-align:left;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 
 /* ── 터널별 가로 바 차트 ── */
@@ -119,6 +126,9 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── SECTION CARD ── */
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+/* 발전내역 탭: 하자보수현황 앱 기준(툴바는 페이지 배경색, 테이블만 카드색) — 3-9 표준 */
+.detail-sc{background:transparent;border:none;box-shadow:none}
+.detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
 .sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
 
@@ -444,7 +454,7 @@ tr:hover td{background:var(--sky50)}
 
   <!-- ▸ 발전내역 (기본 탭 — 신규등록·수정·삭제·엑셀생성·검색 등 모든 편집 작업이 이루어지는 공간) -->
   <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
-    <div class="sc">
+    <div class="sc detail-sc">
       <div class="filter-row">
         <div class="dd-wrap" id="detailYearDdWrap">
           <button class="dd-btn" id="detailYearDdBtn" onclick="toggleDetailYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
