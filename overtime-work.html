@@ -810,6 +810,12 @@ async function loadData(){
     const parsed=pages.map(parseNotionPage).filter(Boolean);
     if(parsed.length>0){
       ALL_RECORDS=parsed;
+      try{
+        const now=new Date();
+        const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const thisMonthPay=ALL_RECORDS.filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+getPayAmt(r),0);
+        localStorage.setItem('portal_summary_overtime', JSON.stringify({thisMonthPay, updatedAt:Date.now()}));
+      }catch(e){}
       // 사용자가 수동으로 월을 선택하지 않은 경우 → 항상 최신 월로 이동
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();

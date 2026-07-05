@@ -1287,6 +1287,10 @@ function loadData(){
           }
           return fetchNext(cursor, hasMore).then(function(){
             ALL_DATA = allPages.map(parseNotionPage).filter(function(r){ return r['하자내용']&&r['하자내용'].length>0; });
+            try{
+              var _c=countStatus(ALL_DATA);
+              localStorage.setItem('portal_summary_defect', JSON.stringify({unresolved:_c.prog+_c.poor, total:ALL_DATA.length, updatedAt:Date.now()}));
+            }catch(e){}
             buildStatusFilter();
             buildTunnelFilter();
             buildManagerFilter();

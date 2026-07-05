@@ -1256,6 +1256,11 @@ async function loadData(){
     if(parsed.length>0){
       ALL_RECORDS=parsed;
       ensureTunnelColors();
+      try{
+        const now=new Date();
+        const thisMonthGen=recordsForYM(now.getFullYear(), now.getMonth()+1).reduce((s,r)=>s+getGenAmt(r),0);
+        localStorage.setItem('portal_summary_solar', JSON.stringify({thisMonthGen, updatedAt:Date.now()}));
+      }catch(e){}
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
         if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
@@ -1573,7 +1578,7 @@ function renderTrend(){
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
     const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
-    const tunnelBadges=arr.map(([t,d])=>`<span class="type-badge ${tunnelSlug(t)}">${esc(t)} ${fmtWon(d.gen)}kWh</span>`).join('<br style="margin:1px">');
+    const tunnelBadges=arr.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${arr.map(([t,d])=>`<span class="type-badge ${tunnelSlug(t)}">${esc(t)} ${fmtWon(d.gen)}kWh</span>`).join('')}</div>`:'';
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
       <td style="font-weight:${isCur?'700':'400'};color:var(--txt2)">${y}/${String(m).padStart(2,'0')}</td>
       <td class="r" style="color:var(--txt2)">${fmtWon(totalGen)}</td>

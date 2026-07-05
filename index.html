@@ -373,6 +373,9 @@ body{
 .app-card.disabled{opacity:.42;cursor:not-allowed;border-style:dashed;}
 .app-card.disabled:hover{transform:none;box-shadow:var(--shadow);border-color:var(--border);}
 .ac-name{font-size:14px;font-weight:700;color:var(--txt);}
+.ac-kpi{font-size:13px;font-weight:700;color:var(--sky600);}
+.ac-kpi.warn{color:var(--coral);}
+.ac-kpi.empty{font-size:12px;font-weight:500;color:var(--txt3);}
 .ac-desc{font-size:12px;color:var(--txt2);line-height:1.55;}
 .ac-arrow{font-size:12px;color:var(--sky600);font-weight:700;margin-top:auto;}
 .ac-soon{font-size:12px;color:var(--txt3);font-weight:600;margin-top:auto;}
@@ -683,6 +686,7 @@ body{
           <div class="app-card" onclick="go('defect')">
             <div>
               <div class="ac-name">하자보수현황</div>
+              <div class="ac-kpi" id="kpi-defect">—</div>
               <div class="ac-desc">하자 접수·처리·완료 현황 조회 및 등록. Notion DB 연동.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -690,6 +694,7 @@ body{
           <div class="app-card" onclick="go('overtime')">
             <div>
               <div class="ac-name">연장근무현황</div>
+              <div class="ac-kpi" id="kpi-overtime">—</div>
               <div class="ac-desc">당직·비상대기·비상출동 지급액 월별 현황. Notion DB 연동.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -697,6 +702,7 @@ body{
           <div class="app-card" onclick="go('solar')">
             <div>
               <div class="ac-name">태양광발전량</div>
+              <div class="ac-kpi" id="kpi-solar">—</div>
               <div class="ac-desc">터널별 일별 태양광 발전량·전기요금 기록 및 현황 조회. Notion DB 연동.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -740,7 +746,14 @@ body{
           <div class="notice-item">
             <div class="notice-dot"></div>
             <div>
-              <div>새 업무 앱 추가 시 사이드바 메뉴에 자동으로 반영됩니다.</div>
+              <div>앱 카드의 숫자는 각 앱을 마지막으로 열었을 때 조회된 값입니다.</div>
+              <div class="notice-sub">최신값을 보려면 해당 앱을 한 번 열어 새로고침하세요</div>
+            </div>
+          </div>
+          <div class="notice-item">
+            <div class="notice-dot"></div>
+            <div>
+              <div>새 업무 앱 추가 시 사이드바 메뉴와 이 화면에 자동으로 반영됩니다.</div>
               <div class="notice-sub">추가 예정: 비품관리대장 · 차량운행일지 · 일일점검일지 외</div>
             </div>
           </div>
@@ -1284,6 +1297,37 @@ function tick() {
 }
 tick();
 setInterval(tick, 10000);
+
+// ── 홈 앱 카드 KPI (각 앱이 마지막으로 데이터를 불러왔을 때 localStorage에 남긴 요약값) ──
+function fmtWonHome(n) { return Math.round(Number(n) || 0).toLocaleString('ko-KR'); }
+function readPortalSummary(key) {
+  try { const v = localStorage.getItem('portal_summary_' + key); return v ? JSON.parse(v) : null; }
+  catch (e) { return null; }
+}
+function renderHomeKpi() {
+  const dEl = document.getElementById('kpi-defect');
+  if (dEl) {
+    const s = readPortalSummary('defect');
+    if (s) { dEl.textContent = `미해결 ${s.unresolved}건`; dEl.className = 'ac-kpi' + (s.unresolved > 0 ? ' warn' : ''); }
+    else { dEl.textContent = '설정 필요'; dEl.className = 'ac-kpi empty'; }
+  }
+  const oEl = document.getElementById('kpi-overtime');
+  if (oEl) {
+    const s = readPortalSummary('overtime');
+    if (s) { oEl.textContent = `이달 ${fmtWonHome(s.thisMonthPay)}원`; oEl.className = 'ac-kpi'; }
+    else { oEl.textContent = '설정 필요'; oEl.className = 'ac-kpi empty'; }
+  }
+  const sEl = document.getElementById('kpi-solar');
+  if (sEl) {
+    const s = readPortalSummary('solar');
+    if (s) { sEl.textContent = `이달 ${fmtWonHome(s.thisMonthGen)}kWh`; sEl.className = 'ac-kpi'; }
+    else { sEl.textContent = '설정 필요'; sEl.className = 'ac-kpi empty'; }
+  }
+}
+renderHomeKpi();
+window.addEventListener('storage', e => {
+  if (e.key && e.key.startsWith('portal_summary_')) renderHomeKpi();
+});
 
 // ── 날씨 로딩 (wttr.in, API 키 불필요) ──────────────────────
 const WEATHER_CODE = {
