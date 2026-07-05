@@ -147,7 +147,6 @@ th.r,td.r{text-align:right}
 td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
-.pay-cell{font-weight:400;color:var(--teal600);font-size:15px}
 
 /* ── RANK ── */
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
@@ -1152,23 +1151,23 @@ function buildCompareCard(cells){
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
 function buildDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
-    <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+    <td style="white-space:nowrap;color:var(--txt2)">${fmtDate(r.date)}</td>
     <td style="white-space:nowrap"><span class="type-badge ${tunnelSlug(r.tunnel||'기타')}">${esc(r.tunnel||'—')}</span></td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${r.capacity?fmtKw(r.capacity):'-'}</td>
-    <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.prevCumGen)}</td>
-    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(getFeeAmt(r))}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${r.unitPrice?fmtWon(r.unitPrice):'-'}</td>
     <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
 function buildTunnelDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
-    <td style="white-space:nowrap;width:1%;min-width:52px">${fmtDate(r.date)}</td>
-    <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtWon(getGenAmt(r))}</td>
+    <td style="white-space:nowrap;width:1%;min-width:52px;color:var(--txt2)">${fmtDate(r.date)}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(r.cumGen)}</td>
-    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td class="r" style="white-space:nowrap;color:var(--txt2)">${fmtWon(getFeeAmt(r))}</td>
     <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
@@ -1263,10 +1262,10 @@ function renderTunnel(recs){
           <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
         </div></td>
         <td><span class="type-badge ${tunnelSlug(name)}">${esc(name)}</span></td>
-        <td class="r">${fmtKw(d.capacity)}</td>
-        <td class="r">${d.count}일</td>
-        <td class="r">${fmtWon(d.gen)}</td>
-        <td class="r pay-cell">${fmtWon(d.fee)}</td>
+        <td class="r" style="color:var(--txt2)">${fmtKw(d.capacity)}</td>
+        <td class="r" style="color:var(--txt2)">${d.count}일</td>
+        <td class="r" style="color:var(--txt2)">${fmtWon(d.gen)}</td>
+        <td class="r" style="color:var(--txt2)">${fmtWon(d.fee)}</td>
       </tr>`).join('')
     :`<tr><td colspan="6">${emptyState('이번 달 터널 데이터가 없습니다.')}</td></tr>`;
 
@@ -1292,9 +1291,9 @@ function renderTunnel(recs){
             ${tRecs.map(r=>buildTunnelDetailRow(r)).join('')}
             <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
               <td style="font-weight:700;color:var(--txt2)">합계</td>
-              <td class="r" style="font-weight:700;color:var(--sky600)">${fmtWon(tRecs.reduce((s,r)=>s+getGenAmt(r),0))}</td>
+              <td class="r" style="font-weight:700;color:var(--txt2)">${fmtWon(tRecs.reduce((s,r)=>s+getGenAmt(r),0))}</td>
               <td></td>
-              <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(tRecs.reduce((s,r)=>s+getFeeAmt(r),0))}</td>
+              <td class="r" style="font-weight:700;color:var(--txt2)">${fmtWon(tRecs.reduce((s,r)=>s+getFeeAmt(r),0))}</td>
               <td></td>
             </tr>
           </tbody>
@@ -1365,10 +1364,10 @@ function renderTrend(){
     const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
     const tunnelBadges=arr.map(([t,d])=>`<span class="type-badge ${tunnelSlug(t)}">${esc(t)} ${fmtWon(d.gen)}kWh</span>`).join('<br style="margin:1px">');
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
-      <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
-      <td class="r pay-cell">${fmtWon(totalGen)}</td>
+      <td style="font-weight:${isCur?'700':'400'};color:var(--txt2)">${y}/${String(m).padStart(2,'0')}</td>
+      <td class="r" style="color:var(--txt2)">${fmtWon(totalGen)}</td>
       <td>${tunnelBadges||'—'}</td>
-      <td class="r">${cnt}건</td>
+      <td class="r" style="color:var(--txt2)">${cnt}건</td>
     </tr>`;
   }).join('');
 }
