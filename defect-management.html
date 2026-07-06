@@ -2616,13 +2616,6 @@ function submitAddForm(confirmed){
     btn.disabled = false;
     lbl.textContent = isEdit ? '수정' : '등록';
     closeAddModal();
-    if(!isEdit && saved && saved.id){
-      var newId = saved.id;
-      AFTER_RELOAD_CB = function(){
-        var r = ALL_DATA.find(function(d){ return d._pageId===newId; });
-        if(r) openDetail(r._idx);
-      };
-    }
     // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (터널명·관리·업체명·담당자·전화번호) 미존재 (관련업무 제외)
     if(!isEdit && company && CFG.contactDbId){
       // 하자보수DB 터널명은 "남정5" 같은 축약형, 업체연락처DB는 "남정5터널" 같은 전체형 사용 → 저장 전 통일
