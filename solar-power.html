@@ -1587,6 +1587,24 @@ function renderTrend(){
 // ── 발전내역 ──────────────────────────────────────────
 // 발전내역 탭은 요약/터널별/월별추이가 공유하는 curYear/curMonth와 무관하게 독립된 연/월 필터를
 // 쓴다(기본값 전체 — 2026-07-05 확정, 아래 _detailYearFilter/_detailMonthFilter 참고)
+// 발전내역 탭 화면 표시와 엑셀 생성이 동일한 필터(연/월/터널/검색)를 쓰도록 공용 헬퍼로 추출
+function getDetailFilteredRecords(){
+  const recs=ALL_RECORDS.filter(r=>{
+    if(_detailYearFilter!=='ALL' && !(r.date||'').startsWith(_detailYearFilter)) return false;
+    if(_detailMonthFilter!=='ALL' && (r.date||'').slice(5,7)!==_detailMonthFilter) return false;
+    return true;
+  });
+  let filtered=recs;
+  if(_detailTunnelFilter) filtered=filtered.filter(r=>r.tunnel===_detailTunnelFilter);
+  const q=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
+  if(q) filtered=filtered.filter(r=>(r.tunnel+' '+(r.note||'')).toLowerCase().includes(q));
+  // 내역 탭 정렬 표준(3-9): 날짜 내림차순(최신 우선) → 동일 날짜 내에선 터널명 내림차순
+  return filtered.slice().sort((a,b)=>{
+    if(a.date!==b.date) return a.date<b.date?1:-1;
+    const at=a.tunnel||'', bt=b.tunnel||'';
+    return at<bt?1:at>bt?-1:0;
+  });
+}
 function renderDetail(){
   // 발전내역 탭 날짜 드롭다운 기본값 = 최신 연/월(전체 아님) — "전체" 선택 시 데이터가 너무 많아져
   // 성능/가독성 문제가 있어 2026-07-05 재확정. "전체"는 선택 가능한 옵션으로는 유지.
@@ -1608,16 +1626,7 @@ function renderDetail(){
 
   _detailSearchQ=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
 
-  let filtered=recs;
-  if(_detailTunnelFilter) filtered=filtered.filter(r=>r.tunnel===_detailTunnelFilter);
-  if(_detailSearchQ) filtered=filtered.filter(r=>(r.tunnel+' '+(r.note||'')).toLowerCase().includes(_detailSearchQ));
-
-  // 내역 탭 정렬 표준(3-9): 날짜 내림차순(최신 우선) → 동일 날짜 내에선 터널명 내림차순
-  filtered=filtered.slice().sort((a,b)=>{
-    if(a.date!==b.date) return a.date<b.date?1:-1;
-    const at=a.tunnel||'', bt=b.tunnel||'';
-    return at<bt?1:at>bt?-1:0;
-  });
+  const filtered=getDetailFilteredRecords();
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
@@ -1766,7 +1775,7 @@ function buildExcelReport(opts){
   }).finally(()=>{ btn.disabled=false; });
 }
 function exportSolarExcel(){
-  const rows=filteredRecords().slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0).map(r=>({
+  const rows=getDetailFilteredRecords().slice().reverse().map(r=>({
     일자:r.date, 터널명:r.tunnel, 용량:r.capacity||'', 발전량:getGenAmt(r),
     누적발전량:r.cumGen||'', 전일누적발전량:r.prevCumGen||'', 전기요금:getFeeAmt(r),
     전력량요금:r.unitPrice||'', 비고:r.note||''
