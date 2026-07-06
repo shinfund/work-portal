@@ -387,7 +387,7 @@ tr:hover td{background:var(--sky50)}
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         설정
       </button>
-      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadData()">
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadData({full:_fullHistoryLoaded})">
         <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         <span id="syncLabel">새로고침</span>
       </button>
@@ -581,7 +581,7 @@ function fmtDate(d){
 }
 function getGenAmt(r){ return r.gen||0; }
 function getFeeAmt(r){ return r.fee||0; }
-function fmtWon(n){ return Math.round(Number(n)||0).toLocaleString('ko-KR'); }
+function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function fmtKw(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:1}); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -970,15 +970,16 @@ function pickYear(y){
   curYear=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(isAuthed()){ loadData(); }
-  else if(ALL_RECORDS.length){ renderAll(); }
+  if(y==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  else if(_dataLoadedOnce){ renderAll(); }
+  else if(isAuthed()){ loadData(); }
 }
 function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(isAuthed()){ loadData(); }
-  else if(ALL_RECORDS.length){ renderAll(); }
+  if(_dataLoadedOnce){ renderAll(); }
+  else if(isAuthed()){ loadData(); }
 }
 function updateMonthLabel(){
   document.getElementById('ddYearLabel').textContent=curYear==='ALL'?'전체 연도':curYear+'년';
@@ -1054,7 +1055,8 @@ function buildDetailYearDd(){
       _detailYearFilter=opt.dataset.val;
       _detailUserPicked=true;
       closeDetailYearDd();
-      renderDetail();
+      if(_detailYearFilter==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+      else renderDetail();
     });
   }
 }
@@ -1100,6 +1102,8 @@ function switchPanel(name){
   });
   relocateMonthSel(name);
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충
+  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
 }
 
 // ── 전역 데이터 ───────────────────────────────────────
@@ -1212,7 +1216,16 @@ function parseNotionPage(page){
 }
 
 // ── 데이터 로드 ──────────────────────────────────────
-async function loadData(){
+// 태양광DB는 레코드가 많아(터널별 일일 기록 누적, 실측 1,191건=12페이지=15초 이상) 매번 전체
+// 이력을 다 불러오면 느리다. 발전내역·터널별·요약 탭은 기본이 "이번 달"이라 최근 2개월(이번 달+
+// 지난달)만 서버측 날짜 필터로 불러오면 충분하고, 12개월치가 필요한 월별추이 탭이나 "전체 연도"
+// 선택 시에만 전체 이력을 한 번 더 불러온다(loadData({full:true}), switchPanel('trend') 참고).
+const DEFAULT_LOAD_MONTHS=2;
+let _fullHistoryLoaded=false;
+let _dataLoadedOnce=false;
+async function loadData(opts){
+  opts=opts||{};
+  const needFull=opts.full===true;
   if(!isAuthed()){openLoginModal();return;}
   if(_isLoading) return;
   _isLoading=true;
@@ -1233,6 +1246,12 @@ async function loadData(){
       if(NOTION_PROP_MAP['일자']) dateProp = NOTION_PROP_MAP['일자'];
     }
     const body={page_size:100,sorts:[{property:dateProp,direction:'ascending'}]};
+    if(!needFull){
+      const cutoff=new Date();
+      cutoff.setDate(1);
+      cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
+      body.filter={property:dateProp,date:{on_or_after:cutoff.toISOString().slice(0,10)}};
+    }
     const data=await fetchNotion(body);
     let pages=data.results||[];
     let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
@@ -1244,6 +1263,8 @@ async function loadData(){
     const parsed=pages.map(parseNotionPage).filter(Boolean);
     if(parsed.length>0){
       ALL_RECORDS=parsed;
+      _fullHistoryLoaded=needFull;
+      _dataLoadedOnce=true;
       ensureTunnelColors();
       try{
         const now=new Date();
