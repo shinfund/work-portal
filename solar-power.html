@@ -892,7 +892,12 @@ function deleteRecord(pageId){
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
     .then(()=>{ closeDetailModal(); loadData(); toast('삭제되었습니다.'); })
-    .catch(e=>{ alert('삭제 실패: '+e.message); console.error(e); });
+    .catch(e=>{
+      // 이미 휴지통으로 이동된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
+      // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침(2026-07-06 수정)
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadData(); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
 }
 
 // ── 상세 모달 (레코드 클릭 시 조회 + 수정/삭제 — 하자보수현황 앱 detailModal 패턴,

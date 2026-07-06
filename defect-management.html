@@ -2446,6 +2446,13 @@ function deleteItem(idx){
   })
   .catch(function(e){
     if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+    // 이미 삭제(휴지통 이동)된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
+    // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침(2026-07-06 수정)
+    if((e.message||'').indexOf('archived')>-1){
+      closeDetail();
+      loadData();
+      return;
+    }
     alert('삭제 실패: '+e.message);
     console.error(e);
   });
@@ -3212,6 +3219,12 @@ function deleteContactItem(idx){
   })
   .catch(function(e){
     if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+    if((e.message||'').indexOf('archived')>-1){
+      closeDetail();
+      CONTACT_LOADED=false;
+      loadContactData();
+      return;
+    }
     alert('삭제 실패: '+e.message);
     console.error(e);
   });
