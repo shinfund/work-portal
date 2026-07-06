@@ -720,12 +720,12 @@ body{
         <div class="guide-card" id="guide-card">
           <div class="guide-card-title">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--sky800)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Notion DB 연동 설정 안내
+            로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼의 DB ID 탭에서 Cloudflare Worker URL과 각 앱의 DB ID를 입력하면 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·연장근무·태양광 3개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
-          <button class="guide-btn" onclick="openCfg()">지금 설정하기</button>
+          <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
 
         <div class="sec-hd"><span>포털 이용 안내</span></div>
@@ -740,8 +740,8 @@ body{
           <div class="notice-item">
             <div class="notice-dot"></div>
             <div>
-              <div>설정값은 기기 로컬 스토리지에 저장됩니다. 기기별 별도 설정이 필요합니다.</div>
-              <div class="notice-sub">좌측 메뉴 하단 설정 버튼의 DB ID 탭에서 Worker URL · DB ID 입력</div>
+              <div>로그인 상태는 이 기기의 브라우저에만 저장됩니다. 기기가 바뀌면 다시 로그인해야 합니다.</div>
+              <div class="notice-sub">좌측 메뉴 하단 설정 버튼에서 로그인 · 만료(7일) 시 재로그인</div>
             </div>
           </div>
           <div class="notice-item">
@@ -827,43 +827,21 @@ body{
       </div>
 
       <div class="modal-tabs">
-        <div class="modal-tab on" id="cfgtab-btn-dbid" onclick="switchCfgTab('dbid')">DB ID</div>
+        <div class="modal-tab on" id="cfgtab-btn-dbid" onclick="switchCfgTab('dbid')">로그인</div>
         <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
       </div>
 
       <div class="modal-tab-panel on" id="cfgtab-dbid">
         <div class="mf">
-          <label class="ml">Cloudflare Worker URL <span style="font-size:11px;color:var(--txt3);font-weight:400">(공통)</span></label>
-          <input id="c-hw" class="mi" type="text" placeholder="https://xxx.workers.dev" autocomplete="off"/>
-          <div class="mh">변경 시에만 입력. 저장된 값은 마스킹 표시됩니다.</div>
+          <label class="ml">공용 비밀번호</label>
+          <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <div class="mh" id="loginStatusHint"></div>
         </div>
-
-        <div class="modal-sec">하자보수현황 앱</div>
-        <div class="mf">
-          <label class="ml">하자보수 DB ID</label>
-          <input id="c-hd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-        </div>
-        <div class="mf">
-          <label class="ml">업체연락처 DB ID <span style="font-size:11px;color:var(--txt3);font-weight:400">(선택)</span></label>
-          <input id="c-hc" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-          <div class="mh">업체 연락처 기능 사용 시 입력</div>
-        </div>
-
-        <div class="modal-sec">연장근무현황 앱</div>
-        <div class="mf">
-          <label class="ml">연장근무 DB ID</label>
-          <input id="c-od" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-        </div>
-
-        <div class="modal-sec">태양광발전량 앱</div>
-        <div class="mf">
-          <label class="ml">태양광발전량 DB ID</label>
-          <input id="c-sd" class="mi" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off"/>
-        </div>
+        <div class="mh">여기서 한 번 로그인하면 하자보수·연장근무·태양광 3개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
-          <button class="btn-cancel" onclick="closeCfg()">취소</button>
-          <button class="btn-save" onclick="saveCfg()">저장 및 적용</button>
+          <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
+          <button class="btn-save" onclick="doLogin()">로그인</button>
         </div>
       </div>
 
@@ -897,12 +875,9 @@ const PORTAL_BOOT_TS = Date.now();
 
 // ── 앱 정의 ──────────────────────────────────────────────
 const APPS = {
-  defect:   { name:'하자보수현황', file:'defect-management.html',
-              keys:{ workerUrl:'haja_workerUrl', dbId:'haja_dbId', contactDbId:'haja_contactDbId' } },
-  overtime: { name:'연장근무현황', file:'overtime-work.html',
-              keys:{ workerUrl:'ot_workerUrl', dbId:'ot_dbId' } },
-  solar:    { name:'태양광발전량', file:'solar-power.html',
-              keys:{ workerUrl:'solar_workerUrl', dbId:'solar_dbId' } }
+  defect:   { name:'하자보수현황', file:'defect-management.html' },
+  overtime: { name:'연장근무현황', file:'overtime-work.html' },
+  solar:    { name:'태양광발전량', file:'solar-power.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
@@ -1111,14 +1086,7 @@ function onIframeLoad(id) {
   if (!ifr || !ifr.src || !ifr.src.includes(APPS[id].file)) return;
   _loaded[id] = true;
   document.getElementById('ov-' + id)?.classList.add('done');
-  // 같은 origin이므로 iframe 내 localStorage 직접 주입
-  try {
-    const iw = ifr.contentWindow;
-    Object.entries(APPS[id].keys).forEach(([, lsKey]) => {
-      const v = localStorage.getItem(lsKey);
-      if (v) iw.localStorage.setItem(lsKey, v);
-    });
-  } catch(e) {}
+  // 같은 origin이라 iframe이 로그인 토큰(wp_authToken) 등 localStorage를 그대로 공유해서 읽는다
 }
 // onIframeLoad 정의 이후에 리스너를 붙여, 초기 빈 iframe이 즉시 발생시키는 load 이벤트에서
 // (스크립트 실행 전이라 함수가 없어 ReferenceError가 나던) 시점 문제를 피한다.
@@ -1130,29 +1098,58 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 설정 모달 ────────────────────────────────────────────
-const CFG_FIELDS = [
-  { elId:'c-hw', lsKey:'haja_workerUrl', alsoKeys:['ot_workerUrl','solar_workerUrl'] },
-  { elId:'c-hd', lsKey:'haja_dbId' },
-  { elId:'c-hc', lsKey:'haja_contactDbId' },
-  { elId:'c-od', lsKey:'ot_dbId' },
-  { elId:'c-sd', lsKey:'solar_dbId' },
-];
-
-function mask(v) {
-  if (!v) return '';
-  if (v.startsWith('http')) {
-    try {
-      const u = new URL(v);
-      const labels = u.hostname.split('.');
-      const first = labels[0] ? labels[0][0] + '*'.repeat(Math.max(labels[0].length - 1, 3)) : '***';
-      const mid = labels.slice(1, -1).map(() => '***');
-      const tld = labels.length > 1 ? labels[labels.length - 1] : '';
-      return u.protocol + '//' + [first, ...mid, tld].filter(Boolean).join('.');
-    } catch(e) { return v.slice(0,2) + '***'; }
-  }
-  if (/^[0-9a-f\-]{20,36}$/i.test(v)) { const c = v.replace(/-/g,''); return c.slice(0,2)+'-****-****-****-'+c.slice(-2); }
-  return v.slice(0,2) + '***';
+// ── 로그인 (하자보수·연장근무·태양광 3개 앱 공용 토큰) ──────
+const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
+let AUTH_TOKEN = '';
+let AUTH_EXPIRES = 0;
+(function(){
+  try{
+    AUTH_TOKEN = localStorage.getItem('wp_authToken') || '';
+    AUTH_EXPIRES = parseInt(localStorage.getItem('wp_authExpires') || '0', 10) || 0;
+  }catch(e){}
+})();
+function isAuthed(){ return !!AUTH_TOKEN && Date.now() < AUTH_EXPIRES; }
+function updateLoginStatusHint(){
+  const h = document.getElementById('loginStatusHint');
+  if (!h) return;
+  h.textContent = isAuthed() ? '로그인 상태 (만료: ' + new Date(AUTH_EXPIRES).toLocaleString('ko-KR') + ')' : '로그인이 필요합니다';
+}
+function doLogin(){
+  const pEl = document.getElementById('c-pw');
+  const pw = pEl.value.trim();
+  if (!pw) { showToast('비밀번호를 입력해주세요.'); return; }
+  fetch(WORKER_URL + '/login', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw })
+  }).then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+    .then(({ ok, data }) => {
+      if (!ok) { showToast(data && data.error ? data.error : '로그인 실패'); return; }
+      AUTH_TOKEN = data.token; AUTH_EXPIRES = data.expires;
+      try {
+        localStorage.setItem('wp_authToken', AUTH_TOKEN);
+        localStorage.setItem('wp_authExpires', String(AUTH_EXPIRES));
+      } catch(e) {}
+      closeCfg();
+      showToast('로그인되었습니다.');
+      reloadLoadedApps();
+    })
+    .catch(() => showToast('로그인 요청 실패 — 네트워크를 확인하세요.'));
+}
+function doLogout(){
+  AUTH_TOKEN = ''; AUTH_EXPIRES = 0;
+  try { localStorage.removeItem('wp_authToken'); localStorage.removeItem('wp_authExpires'); } catch(e) {}
+  updateLoginStatusHint();
+  showToast('로그아웃되었습니다.');
+  reloadLoadedApps();
+}
+function reloadLoadedApps(){
+  Object.keys(APPS).forEach(id => {
+    if (_loaded[id]) {
+      _loaded[id] = false;
+      const ifr = document.getElementById('ifr-' + id);
+      if (ifr) { ifr.src = ''; document.getElementById('ov-' + id)?.classList.remove('done'); }
+      if (_cur === id) setTimeout(() => { document.getElementById('ifr-'+id).src = APPS[id].file + '?v=' + Date.now(); }, 80);
+    }
+  });
 }
 
 // ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동) ──
@@ -1206,13 +1203,9 @@ function initDraggableModals(){
 }
 
 function openCfg() {
-  CFG_FIELDS.forEach(({ elId, lsKey }) => {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    const saved = localStorage.getItem(lsKey);
-    el.value = '';
-    el.placeholder = saved ? mask(saved) : '(미설정)';
-  });
+  const pEl = document.getElementById('c-pw');
+  if (pEl) pEl.value = '';
+  updateLoginStatusHint();
   switchCfgTab('dbid');
   syncThemeOptUI();
   document.getElementById('cfgModal').classList.add('open');
@@ -1226,7 +1219,7 @@ function closeCfg(e) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfg(); });
 
-// ── 설정창 탭 전환 (DB ID / 화면모드) ──────────────────────
+// ── 설정창 탭 전환 (로그인 / 화면모드) ──────────────────────
 function switchCfgTab(tab) {
   document.getElementById('cfgtab-btn-dbid')?.classList.toggle('on', tab === 'dbid');
   document.getElementById('cfgtab-btn-theme')?.classList.toggle('on', tab === 'theme');
@@ -1252,29 +1245,6 @@ window.addEventListener('storage', e => {
     syncThemeOptUI();
   }
 });
-
-function saveCfg() {
-  let changed = 0;
-  CFG_FIELDS.forEach(({ elId, lsKey, alsoKeys }) => {
-    const v = document.getElementById(elId)?.value.trim();
-    if (v) { localStorage.setItem(lsKey, v); (alsoKeys||[]).forEach(k => localStorage.setItem(k, v)); changed++; }
-  });
-  closeCfg();
-  if (changed > 0) {
-    // 이미 로드된 iframe 재로드 (설정 반영)
-    Object.keys(APPS).forEach(id => {
-      if (_loaded[id]) {
-        _loaded[id] = false;
-        const ifr = document.getElementById('ifr-' + id);
-        if (ifr) { ifr.src = ''; document.getElementById('ov-' + id)?.classList.remove('done'); }
-        if (_cur === id) setTimeout(() => { document.getElementById('ifr-'+id).src = APPS[id].file + '?v=' + Date.now(); }, 80);
-      }
-    });
-    showToast('설정이 저장되었습니다.');
-  } else {
-    showToast('변경된 설정이 없습니다.');
-  }
-}
 
 // ── 시계 / 날짜 ──────────────────────────────────────────
 function tick() {
@@ -1306,9 +1276,7 @@ function readPortalSummary(key) {
   catch (e) { return null; }
 }
 function isAppConfigured(id) {
-  const k = APPS[id] && APPS[id].keys;
-  if (!k) return false;
-  return !!(localStorage.getItem(k.workerUrl) && localStorage.getItem(k.dbId));
+  return isAuthed();
 }
 function emptyKpiLabel(id) { return isAppConfigured(id) ? '앱을 열면 표시됩니다' : '설정 필요'; }
 function renderHomeKpi() {

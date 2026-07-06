@@ -267,33 +267,23 @@ tr:hover td{background:var(--sky50)}
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
         설정
       </div>
-      <div class="modal-tabs">
-        <div class="modal-tab on" id="cfgtab-btn-db" onclick="switchCfgTab('db')">로그인</div>
-        <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
+      <div class="modal-field">
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
       </div>
-      <div class="modal-tab-panel on" id="cfgtab-db">
-        <div class="modal-field">
-          <label class="modal-label">공용 비밀번호</label>
-          <input id="cfgPassword" class="modal-input" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
-          <div class="modal-hint" id="loginStatusHint"></div>
+      <div class="theme-opts">
+        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
         </div>
-        <div class="modal-btns">
-          <button class="modal-cancel" onclick="doLogout()">로그아웃</button>
-          <button class="modal-save" onclick="doLogin()">로그인</button>
+        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
         </div>
       </div>
-      <div class="modal-tab-panel" id="cfgtab-theme">
-        <div class="theme-opts">
-          <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
-            <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
-            <div class="theme-opt-label">다크</div>
-          </div>
-          <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
-            <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
-            <div class="theme-opt-label">라이트</div>
-          </div>
-        </div>
-        <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
       </div>
     </div>
   </div>
@@ -561,8 +551,8 @@ const DB_ID="7fe27ab8-4161-4177-bad9-6bb8aa148ff7";
 let CFG={workerUrl:WORKER_URL,dbId:DB_ID,authToken:'',authExpires:0};
 (()=>{
   try{
-    CFG.authToken=localStorage.getItem('solar_authToken')||'';
-    CFG.authExpires=parseInt(localStorage.getItem('solar_authExpires')||'0',10)||0;
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
   }catch(e){}
 })();
 function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
@@ -581,7 +571,7 @@ function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
     return _fetch(input,init).then(res=>{
       if(res.status===401&&urlStr.indexOf(WORKER_URL)===0){
         CFG.authToken='';CFG.authExpires=0;
-        try{localStorage.removeItem('solar_authToken');localStorage.removeItem('solar_authExpires');}catch(e){}
+        try{localStorage.removeItem('wp_authToken');localStorage.removeItem('wp_authExpires');}catch(e){}
         openLoginModal();
       }
       return res;
@@ -658,14 +648,17 @@ function updateLoginStatusHint(){
   h.textContent=isAuthed()?'로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')':'로그인이 필요합니다';
 }
 function openCfgModal(){
-  const pEl=document.getElementById('cfgPassword');
-  if(pEl) pEl.value='';
   updateLoginStatusHint();
-  switchCfgTab('db');
   syncThemeOptUI();
   const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
 }
-function openLoginModal(){ openCfgModal(); }
+// 이 앱 자체에는 로그인 UI가 없음 — 포털 사이드바 하단 설정에서 로그인하면
+// 공유 토큰(wp_authToken)을 storage 이벤트로 감지해 자동으로 데이터를 불러온다.
+function openLoginModal(){
+  const lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
 function closeCfgModal(e){
   if(e&&e.target!==e.currentTarget)return;
   const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
@@ -673,12 +666,6 @@ function closeCfgModal(e){
 }
 
 // ── 화면모드(테마) ────────────────────────────────────
-function switchCfgTab(tab){
-  document.getElementById('cfgtab-btn-db')?.classList.toggle('on',tab==='db');
-  document.getElementById('cfgtab-btn-theme')?.classList.toggle('on',tab==='theme');
-  document.getElementById('cfgtab-db')?.classList.toggle('on',tab==='db');
-  document.getElementById('cfgtab-theme')?.classList.toggle('on',tab==='theme');
-}
 function syncThemeOptUI(){
   const cur=document.documentElement.getAttribute('data-theme')||'dark';
   document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
@@ -696,29 +683,15 @@ window.addEventListener('storage',e=>{
   }
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
-function doLogin(){
-  const pEl=document.getElementById('cfgPassword');
-  const pw=pEl.value.trim();
-  if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
-  fetch(WORKER_URL+'/login',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({password:pw})
-  }).then(r=>r.json().then(d=>({ok:r.ok,data:d})))
-    .then(({ok,data})=>{
-      if(!ok){ alert(data&&data.error?data.error:'로그인 실패'); return; }
-      CFG.authToken=data.token; CFG.authExpires=data.expires;
-      try{localStorage.setItem('solar_authToken',CFG.authToken);localStorage.setItem('solar_authExpires',String(CFG.authExpires));}catch(e){}
-      const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
-      ALL_RECORDS=[];loadData();
-    })
-    .catch(()=>alert('로그인 요청 실패 — 네트워크를 확인하세요.'));
-}
-function doLogout(){
-  CFG.authToken='';CFG.authExpires=0;
-  try{localStorage.removeItem('solar_authToken');localStorage.removeItem('solar_authExpires');}catch(e){}
-  updateLoginStatusHint();
-}
+window.addEventListener('storage',e=>{
+  if(e.key==='wp_authToken'){
+    CFG.authToken=e.newValue||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()){ ALL_RECORDS=[]; loadData(); }
+    else { ALL_RECORDS=DEMO_DATA; ensureTunnelColors(); renderAll(); }
+  }
+});
 
 // ── 신규추가/수정/삭제 ────────────────────────────────
 var EDIT_PAGE_ID = null;
