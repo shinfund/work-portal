@@ -164,7 +164,7 @@ tr:hover td{background:var(--sky50)}
 #empDdMenu .dd-opt,#typeDdMenu .dd-opt{text-align:left}
 
 /* ── 근무형태 뱃지 ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 6px 2px 0}
 .type-당직근무{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
 .type-비상대기{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 .type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
@@ -1177,11 +1177,11 @@ function renderTrend(){
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalPay,cnt,empCnt,typeMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
     const typeBadges=Object.entries(typeMap).sort((a,b)=>b[1]-a[1])
-      .map(([t,n])=>`<span class="type-badge type-${typeSlug(t)}">${esc(t)} ${n}</span>`).join('<br style="margin:1px">');
+      .map(([t,n])=>`<span class="type-badge type-${typeSlug(t)}">${esc(t)} ${n}</span>`).join('');
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
       <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
       <td class="r pay-cell">${fmtWon(totalPay)}</td>
-      <td>${typeBadges||'—'}</td>
+      <td style="white-space:normal">${typeBadges||'—'}</td>
       <td class="r">${cnt}건</td>
       <td class="r">${empCnt}명</td>
     </tr>`;
