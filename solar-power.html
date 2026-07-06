@@ -1674,12 +1674,12 @@ const EXCEL_PAGE_PRESETS={
 const EXCEL_COLUMNS_SOLAR=[
   {key:'일자',header:'날짜',dateCol:true},
   {key:'터널명',header:'터널'},
-  {key:'용량',header:'용량(kW)'},
-  {key:'발전량',header:'발전량(kWh)'},
-  {key:'누적발전량',header:'누적량(kWh)'},
-  {key:'전일누적발전량',header:'전일누적량(kWh)'},
-  {key:'전기요금',header:'요금(원)'},
-  {key:'전력량요금',header:'단가(원)'},
+  {key:'용량',header:'용량(kW)',numFmt:'#,##0.##'},
+  {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0.##'},
+  {key:'누적발전량',header:'누적량(kWh)',numFmt:'#,##0.##'},
+  {key:'전일누적발전량',header:'전일누적량(kWh)',numFmt:'#,##0.##'},
+  {key:'전기요금',header:'요금(원)',numFmt:'#,##0.##'},
+  {key:'전력량요금',header:'단가(원)',numFmt:'#,##0.##'},
   {key:'비고',header:'비고',width:16,wrap:true,align:'left'}
 ];
 function excelCharWeight(ch){
@@ -1751,6 +1751,7 @@ function buildExcelReport(opts){
           if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
         } else {
           cell.value = r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt=col.numFmt;
         }
       });
       row.commit();

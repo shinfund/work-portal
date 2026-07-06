@@ -3529,6 +3529,7 @@ function buildExcelReport(opts){
           if(d){ cell.value = d; cell.numFmt = 'yyyy-mm-dd'; } else { cell.value = r[col.key]; }
         } else {
           cell.value = r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = col.numFmt;
         }
       });
       statusColorRules.forEach(function(rule){
