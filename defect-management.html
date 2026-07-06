@@ -1397,6 +1397,11 @@ function buildManagerFilter(){
 // 내역 탭 날짜(년/월) 드롭다운 기본값은 최신 연/월("전체"는 데이터가 너무 많아져 성능/가독성 문제가
 // 있어 기본값에서 제외, 선택 가능한 옵션으로는 유지 — 2026-07-05 최종 확정)
 var _filterDateUserPicked = false;
+// 터널명/조치여부 드롭다운도 사용자가 이미 선택한 뒤에는 등록·수정 후 재조회(loadData→
+// buildTunnelFilter/buildStatusFilter)가 필터를 "전체"로 되돌리지 않도록 동일 패턴 적용
+// (2026-07-06 버그 수정 — 필터링 후 수정하면 전체 데이터로 풀리던 문제)
+var _filterTunnelUserPicked = false;
+var _filterStatusUserPicked = false;
 function buildMonthFilter(){
   var dates = {};
   ALL_DATA.forEach(function(r){
@@ -1516,7 +1521,7 @@ function selectManager(val, el){
 
 /* ── BUILD STATUS DROPDOWN (하자내역 탭) ── */
 function buildStatusFilter(){
-  FILTER.status = 'ALL';
+  if(!_filterStatusUserPicked){ FILTER.status = 'ALL'; }
   var menu = document.getElementById('statusDdMenu');
   if(!menu) return;
   var opts = [
@@ -1526,8 +1531,13 @@ function buildStatusFilter(){
     { val:'미흡',  label:'미흡' }
   ];
   menu.innerHTML = opts.map(function(o){
-    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+    return '<div class="dd-opt'+(o.val===FILTER.status?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
   }).join('');
+  var statusLblMap = { ALL:'조치여부 전체', '진행중':'진행중', '완료':'완료', '미흡':'미흡' };
+  var statusLbl = document.getElementById('statusDdLabel');
+  if(statusLbl) statusLbl.textContent = statusLblMap[FILTER.status] || FILTER.status;
+  var statusBtn = document.getElementById('statusDdBtn');
+  if(statusBtn) statusBtn.classList.toggle('active', FILTER.status!=='ALL');
   if(!buildStatusFilter._bound){
     buildStatusFilter._bound = true;
     menu.addEventListener('click', function(e){
@@ -1550,6 +1560,7 @@ function selectStatus(val, el){
   var btn = document.getElementById('statusDdBtn');
   if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.status = val;
+  _filterStatusUserPicked = true;
   closeStatusDd();
   renderList();
 }
@@ -1609,14 +1620,18 @@ function filtered(){
 
 /* ── BUILD TUNNEL DROPDOWN ── */
 function buildTunnelFilter(){
-  FILTER.tunnel = 'ALL';
+  if(!_filterTunnelUserPicked){ FILTER.tunnel = 'ALL'; }
   var tunnels = getUniqueValues('터널명').reverse();
   var menu = document.getElementById('tunnelDdMenu');
   var opts = [{ val:'ALL', label:'터널명 전체' }];
   tunnels.forEach(function(t){ opts.push({ val:t, label:t }); });
   menu.innerHTML = opts.map(function(o){
-    return '<div class="dd-opt'+(o.val==='ALL'?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+    return '<div class="dd-opt'+(o.val===FILTER.tunnel?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
   }).join('');
+  var tunnelLbl = document.getElementById('tunnelDdLabel');
+  if(tunnelLbl) tunnelLbl.textContent = FILTER.tunnel==='ALL' ? '터널명 전체' : FILTER.tunnel;
+  var tunnelBtn = document.getElementById('tunnelDdBtn');
+  if(tunnelBtn) tunnelBtn.classList.toggle('active', FILTER.tunnel!=='ALL');
   if(!buildTunnelFilter._bound){
     buildTunnelFilter._bound = true;
     menu.addEventListener('click', function(e){
@@ -1640,6 +1655,7 @@ function selectTunnel(val, el){
   var btn = document.getElementById('tunnelDdBtn');
   if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.tunnel = val;
+  _filterTunnelUserPicked = true;
   closeTunnelDd();
   renderList();
 }
