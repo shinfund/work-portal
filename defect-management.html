@@ -621,31 +621,21 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
     <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
       <div class="modal-title">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        연동 설정
+        설정
       </div>
       <div class="modal-tabs">
-        <div class="modal-tab on" id="cfgtab-btn-db" onclick="switchCfgTab('db')">DB 연동</div>
+        <div class="modal-tab on" id="cfgtab-btn-db" onclick="switchCfgTab('db')">로그인</div>
         <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
       </div>
       <div class="modal-tab-panel on" id="cfgtab-db">
         <div class="modal-field">
-          <label class="modal-label">Cloudflare Worker URL</label>
-          <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
-          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
-        </div>
-        <div class="modal-field">
-          <label class="modal-label">노션 DB ID (하자보수)</label>
-          <input id="cfgDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-          <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
-        </div>
-        <div class="modal-field">
-          <label class="modal-label">노션 DB ID (업체연락처)</label>
-          <input id="cfgContactDbId" class="modal-input" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
-          <div class="modal-hint">업체연락처 탭 전용 · 저장된 값은 XX로 마스킹 표시</div>
+          <label class="modal-label">공용 비밀번호</label>
+          <input id="cfgPassword" class="modal-input" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          <div class="modal-hint" id="loginStatusHint"></div>
         </div>
         <div class="modal-btns">
-          <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
-          <button class="modal-save" onclick="saveCfg()">저장</button>
+          <button class="modal-cancel" onclick="doLogout()">로그아웃</button>
+          <button class="modal-save" onclick="doLogin()">로그인</button>
         </div>
       </div>
       <div class="modal-tab-panel" id="cfgtab-theme">
@@ -961,36 +951,40 @@ function getVisibleCols(){
 var MAX_PAGES = 20; // 노션 페이지네이션 최대 페이지 수 (100건/페이지 × 20 = 2,000건)
 var EDIT_PAGE_ID = null; // 수정 모드: 노션 페이지 ID (null이면 등록 모드)
 
-// ── 설정 (localStorage) ──
-var CFG = (function(){
+// ── Worker/DB 연동 정보 (고정값 — 더 이상 사용자 입력 아님, 접근 제어는 로그인 토큰으로) ──
+var WORKER_URL    = 'https://notion-proxy.shinfund.workers.dev';
+var DB_ID         = '2e159c8c9c0a80d4afa2d9421e1fdc0e';
+var CONTACT_DB_ID = '5104d4ad640e4c69884d3d32dc2d4b11';
+var CFG = { workerUrl: WORKER_URL, dbId: DB_ID, contactDbId: CONTACT_DB_ID, authToken:'', authExpires:0 };
+(function(){
   try{
-    return {
-      workerUrl:    localStorage.getItem('haja_workerUrl')||'',
-      dbId:         localStorage.getItem('haja_dbId')||'',
-      contactDbId:  localStorage.getItem('haja_contactDbId')||'5104d4ad640e4c69884d3d32dc2d4b11'
-    };
-  }catch(e){ return {workerUrl:'',dbId:'',contactDbId:'5104d4ad640e4c69884d3d32dc2d4b11'}; }
+    CFG.authToken   = localStorage.getItem('haja_authToken') || '';
+    CFG.authExpires = parseInt(localStorage.getItem('haja_authExpires')||'0', 10) || 0;
+  }catch(e){}
 })();
+function isAuthed(){ return !!CFG.authToken && Date.now() < CFG.authExpires; }
 
-// ── 마스킹 헬퍼 ──
-function maskVal(v){
-  if(!v) return '';
-  if(v.startsWith('http')){
-    try{
-      var u=new URL(v);
-      var parts=u.hostname.split('.');
-      var first=parts[0] ? parts[0][0]+'*'.repeat(Math.max(parts[0].length-1,3)) : '***';
-      var mid=parts.slice(1,-1).map(function(){return '***';});
-      var tld=parts.length>1 ? parts[parts.length-1] : '';
-      return u.protocol+'//'+[first].concat(mid).concat(tld?[tld]:[]).join('.');
-    }catch(e){ return v.slice(0,2)+'***'; }
-  }
-  if(/^[0-9a-f\-]{32,36}$/i.test(v)){
-    var clean=v.replace(/-/g,'');
-    return clean.slice(0,2)+'-****-****-****-'+clean.slice(-2);
-  }
-  return v.slice(0,2)+'***';
-}
+// ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
+(function(){
+  var _fetch = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    init = init || {};
+    var urlStr = typeof input === 'string' ? input : (input && input.url) || '';
+    if(urlStr.indexOf(WORKER_URL) === 0){
+      var headers = new Headers(init.headers || {});
+      if(CFG.authToken) headers.set('Authorization', 'Bearer '+CFG.authToken);
+      init = Object.assign({}, init, {headers: headers});
+    }
+    return _fetch(input, init).then(function(res){
+      if(res.status === 401 && urlStr.indexOf(WORKER_URL) === 0){
+        CFG.authToken=''; CFG.authExpires=0;
+        try{ localStorage.removeItem('haja_authToken'); localStorage.removeItem('haja_authExpires'); }catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
 
 /* ── 데모 데이터 (노션 하자보수DB · 2025년 11~12월 샘플) ── */
 var DEMO_DATA = [
@@ -1023,8 +1017,8 @@ var DEMO_DATA = [
 
 /* ── INIT ── */
 function init(){
-  if(CFG.workerUrl && CFG.dbId){ loadData(); }
-  else { loadDemo(); }
+  if(isAuthed()){ loadData(); }
+  else { loadDemo(); openLoginModal(); }
   initDraggableModals();
 }
 document.addEventListener('DOMContentLoaded', init);
@@ -1044,20 +1038,18 @@ function loadDemo(){
 
 /* ── CONFIG MODAL ── */
 function openCfgModal(){
-  var wu=CFG.workerUrl, db=CFG.dbId, cdb=CFG.contactDbId;
-  var wEl=document.getElementById('cfgWorkerUrl');
-  var dEl=document.getElementById('cfgDbId');
-  var cEl=document.getElementById('cfgContactDbId');
-  if(wu){ wEl.value=''; wEl.placeholder=maskVal(wu); wEl.dataset.saved='1'; }
-  else   { wEl.value=''; wEl.placeholder='https://your-worker.workers.dev'; delete wEl.dataset.saved; }
-  if(db){ dEl.value=''; dEl.placeholder=maskVal(db); dEl.dataset.saved='1'; }
-  else   { dEl.value=''; dEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'; delete dEl.dataset.saved; }
-  if(cdb&&cEl){ cEl.value=''; cEl.placeholder=maskVal(cdb); cEl.dataset.saved='1'; }
-  else if(cEl){ cEl.value=''; cEl.placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'; delete cEl.dataset.saved; }
+  var pEl=document.getElementById('cfgPassword');
+  if(pEl) pEl.value='';
+  updateLoginStatusHint();
   switchCfgTab('db');
   syncThemeOptUI();
   document.getElementById('cfgModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
+}
+function updateLoginStatusHint(){
+  var h=document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent = isAuthed() ? '로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')' : '로그인이 필요합니다';
 }
 /* ── 설정 모달 탭 전환 (DB 연동 / 화면모드) ── */
 function switchCfgTab(tab) {
@@ -1087,28 +1079,39 @@ function closeCfgModal(){
   document.body.style.overflow='';
   resetModalDragPos('cfgModal');
 }
-function saveCfg(){
-  var wEl=document.getElementById('cfgWorkerUrl');
-  var dEl=document.getElementById('cfgDbId');
-  var cEl=document.getElementById('cfgContactDbId');
-  var newWu=wEl.value.trim();
-  var newDb=dEl.value.trim();
-  var newCdb=cEl ? cEl.value.trim() : '';
-  if(newWu && !/^https:\/\/.+/.test(newWu)){ alert('Worker URL은 https:// 로 시작해야 합니다.'); wEl.focus(); return; }
-  if(newWu) CFG.workerUrl=newWu;
-  if(newDb) CFG.dbId=newDb;
-  if(newCdb){ CFG.contactDbId=newCdb; CONTACT_LOADED=false; CONTACT_PROP_MAP={}; }
-  if(!CFG.workerUrl||!CFG.dbId){ alert('Worker URL과 DB ID를 모두 입력해주세요.'); return; }
-  try{
-    localStorage.setItem('haja_workerUrl',   CFG.workerUrl);
-    localStorage.setItem('haja_dbId',        CFG.dbId);
-    if(CFG.contactDbId) localStorage.setItem('haja_contactDbId', CFG.contactDbId);
-  }catch(e){}
-  document.getElementById('cfgModal').classList.remove('modal-open');
-  document.body.style.overflow='';
-  ALL_DATA=[];
-  NOTION_PROP_MAP={};
-  loadData();
+function openLoginModal(){
+  openCfgModal();
+}
+function doLogin(){
+  var pEl=document.getElementById('cfgPassword');
+  var pw=pEl.value.trim();
+  if(!pw){ alert('비밀번호를 입력해주세요.'); return; }
+  fetch(WORKER_URL+'/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({password:pw})
+  }).then(function(r){ return r.json().then(function(d){ return {ok:r.ok, data:d}; }); })
+    .then(function(res){
+      if(!res.ok){ alert(res.data && res.data.error ? res.data.error : '로그인 실패'); return; }
+      CFG.authToken=res.data.token;
+      CFG.authExpires=res.data.expires;
+      try{
+        localStorage.setItem('haja_authToken', CFG.authToken);
+        localStorage.setItem('haja_authExpires', String(CFG.authExpires));
+      }catch(e){}
+      document.getElementById('cfgModal').classList.remove('modal-open');
+      document.body.style.overflow='';
+      ALL_DATA=[];
+      NOTION_PROP_MAP={};
+      loadData();
+    })
+    .catch(function(){ alert('로그인 요청 실패 — 네트워크를 확인하세요.'); });
+}
+function doLogout(){
+  CFG.authToken=''; CFG.authExpires=0;
+  try{ localStorage.removeItem('haja_authToken'); localStorage.removeItem('haja_authExpires'); }catch(e){}
+  updateLoginStatusHint();
+  loadDemo();
 }
 // ESC 키로 모달 닫기
 document.addEventListener('keydown',function(e){
@@ -1256,7 +1259,7 @@ function parseNotionPage(page, idx){
 /* ── LOAD DATA (Notion) ── */
 function loadData(){
   if(_retryTimer){ clearInterval(_retryTimer); _retryTimer=null; }
-  if(!CFG.workerUrl||!CFG.dbId){ openCfgModal(); return; }
+  if(!isAuthed()){ openLoginModal(); return; }
   setSync(true);
   var lu = document.getElementById('lastUpdate');
   if(lu){ lu.textContent=''; }
@@ -2333,8 +2336,8 @@ function uploadPhoto(input, key){
   };
   reader.readAsDataURL(file);
 
-  if(!CFG.workerUrl){
-    statusEl.textContent = '⚠ Worker URL 미설정';
+  if(!isAuthed()){
+    statusEl.textContent = '⚠ 로그인 필요';
     statusEl.className = 'photo-upload-status err';
     return;
   }
@@ -2366,7 +2369,7 @@ function uploadPhoto(input, key){
 function openEditModal(idx){
   var r = ALL_DATA.find(function(d){ return d._idx===idx; });
   if(!r){ return; }
-  if(!CFG.workerUrl || !r._pageId){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  if(!isAuthed() || !r._pageId){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   EDIT_PAGE_ID = r._pageId;
 
   // 터널 목록
@@ -2417,7 +2420,7 @@ function openEditModal(idx){
 /* ── 삭제 확인 ── */
 function showDeleteConfirm(idx){
   var r = ALL_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !CFG.workerUrl || !r._pageId){ alert('노션 연동 설정 후 사용 가능합니다.\n설정 버튼에서 Worker URL과 DB ID를 입력해주세요.'); return; }
+  if(!r || !isAuthed() || !r._pageId){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   var footer = document.getElementById('detailFooter');
   if(!footer) return;
   footer.innerHTML = '<div class="del-confirm-bar">'
@@ -2581,7 +2584,7 @@ function submitAddForm(confirmed){
     return;
   }
 
-  if(!CFG.workerUrl || !CFG.dbId) { alert('연동 설정(Worker URL, DB ID)을 먼저 입력해주세요.'); closeAddModal(); openCfgModal(); return; }
+  if(!isAuthed()) { alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
   var s1t = (document.getElementById('photo1Status')||{}).textContent||'';
   var s2t = (document.getElementById('photo2Status')||{}).textContent||'';
   if(s1t==='업로드 중...' || s2t==='업로드 중...'){ alert('사진 업로드가 완료될 때까지 기다려주세요.'); return; }
@@ -2796,7 +2799,7 @@ var CONTACT_DEMO_DATA = [
 ];
 
 function loadContactData(){
-  if(!CFG.workerUrl){
+  if(!isAuthed()){
     CONTACT_DATA = CONTACT_DEMO_DATA.map(function(r,i){ return Object.assign({},r,{_idx:i+1,_pageId:null}); });
     CONTACT_LOADED = true;
     renderContactPanel();
@@ -3103,7 +3106,7 @@ function submitContactForm(confirmed){
 
   if(isAdd){
     // 노션 미연동: 로컬에 추가
-    if(!CFG.workerUrl || !CFG.contactDbId){
+    if(!isAuthed() || !CFG.contactDbId){
       var newIdx = CONTACT_DATA.length
         ? Math.max.apply(null, CONTACT_DATA.map(function(d){ return d._idx; })) + 1
         : 1;
@@ -3169,7 +3172,7 @@ function submitContactForm(confirmed){
   } else {
     var r = CONTACT_DATA.find(function(d){ return d._idx===CONTACT_EDIT_IDX; });
     if(!r || !r._pageId){
-      alert('노션 연동 설정 후 사용 가능합니다.');
+      alert('로그인 후 사용 가능합니다.');
       resetBtn('저장');
       return;
     }
@@ -3205,7 +3208,7 @@ function submitContactForm(confirmed){
 
 function showContactDeleteConfirm(idx){
   var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId || !CFG.workerUrl){ alert('노션 연동 설정 후 사용 가능합니다.'); return; }
+  if(!r || !r._pageId || !isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
   var footer = document.getElementById('detailFooter');
   if(!footer) return;
   footer.innerHTML = '<div class="del-confirm-bar">'
