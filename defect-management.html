@@ -194,12 +194,6 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
 .modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 
-/* ── 설정 모달 탭 (DB 연동 / 화면모드) ── */
-.modal-tabs{display:flex;gap:4px;background:var(--bg);border-radius:var(--r8);padding:4px;margin-bottom:18px;}
-.modal-tab{flex:1;text-align:center;padding:8px 10px;border-radius:6px;font-size:13px;font-weight:700;color:var(--txt3);cursor:pointer;transition:background .12s,color .12s;-webkit-tap-highlight-color:transparent;}
-.modal-tab.on{background:var(--card);color:var(--sky600);box-shadow:0 1px 4px rgba(0,0,0,.08);}
-.modal-tab-panel{display:none;}
-.modal-tab-panel.on{display:block;}
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
 .theme-opt.on{border-color:var(--sky);}
@@ -671,7 +665,7 @@ td.col-remark{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-lin
     <div class="hdr-right">
       <div class="last-update" id="lastUpdate"></div>
       <div class="hdr-btns">
-        <button class="hdr-btn" onclick="openCfgModal()" aria-label="연동 설정">
+        <button class="hdr-btn" onclick="openCfgModal()" aria-label="설정 (로그인 상태·화면모드)">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
           설정
         </button>
@@ -1072,6 +1066,9 @@ window.addEventListener('storage', function(e){
     updateLoginStatusHint();
     if(isAuthed()){ ALL_DATA=[]; NOTION_PROP_MAP={}; loadData(); }
     else { loadDemo(); }
+    // 업체연락처 탭도 로그인 상태 변경에 맞춰 다시 불러오도록 리셋(현재 그 탭이면 즉시 재조회)
+    CONTACT_LOADED = false;
+    if(CURRENT_TAB === 5){ loadContactData(); }
   }
 });
 // ESC 키로 모달 닫기
