@@ -1698,7 +1698,7 @@ const EXCEL_COLUMNS_SOLAR=[
   {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0.##'},
   {key:'누적발전량',header:'누적량(kWh)',numFmt:'#,##0.##'},
   {key:'전일누적발전량',header:'전일누적량(kWh)',numFmt:'#,##0.##'},
-  {key:'전기요금',header:'요금(원)',numFmt:'#,##0.##'},
+  {key:'전기요금',header:'요금(원)',numFmt:'#,##0'},
   {key:'전력량요금',header:'단가(원)',numFmt:'#,##0.##'},
   {key:'비고',header:'비고',width:16,wrap:true,align:'left'}
 ];
@@ -1771,7 +1771,7 @@ function buildExcelReport(opts){
           if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
         } else {
           cell.value = r[col.key];
-          if(col.numFmt && typeof cell.value==='number') cell.numFmt=col.numFmt;
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
         }
       });
       row.commit();
@@ -1798,7 +1798,7 @@ function buildExcelReport(opts){
 function exportSolarExcel(){
   const rows=getDetailFilteredRecords().slice().reverse().map(r=>({
     일자:r.date, 터널명:r.tunnel, 용량:r.capacity||'', 발전량:getGenAmt(r),
-    누적발전량:r.cumGen||'', 전일누적발전량:r.prevCumGen||'', 전기요금:getFeeAmt(r),
+    누적발전량:r.cumGen||'', 전일누적발전량:r.prevCumGen||'', 전기요금:Math.trunc(getFeeAmt(r)),
     전력량요금:r.unitPrice||'', 비고:r.note||''
   }));
   buildExcelReport({
