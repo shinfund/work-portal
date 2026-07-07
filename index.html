@@ -577,6 +577,9 @@ body{
     <div class="sb-item" id="sbn-defect" onclick="go('defect')">
       <span>하자보수현황</span>
     </div>
+    <div class="sb-item" id="sbn-vehicle" onclick="go('vehicle')">
+      <span>차량운행일지</span>
+    </div>
     <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
       <span>연장근무현황</span>
     </div>
@@ -584,9 +587,6 @@ body{
     <div class="sb-sec">추가 예정</div>
     <div class="sb-item sb-disabled">
       <span>비품관리대장</span><span class="sb-badge">준비중</span>
-    </div>
-    <div class="sb-item sb-disabled">
-      <span>차량운행일지</span><span class="sb-badge">준비중</span>
     </div>
     <div class="sb-item sb-disabled">
       <span>일일점검일지</span><span class="sb-badge">준비중</span>
@@ -700,6 +700,14 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
+          <div class="app-card" onclick="go('vehicle')">
+            <div>
+              <div class="ac-name">차량운행일지</div>
+              <div class="ac-kpi" id="kpi-vehicle">—</div>
+              <div class="ac-desc">차량 운행 이력 기록 및 조회.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
           <div class="app-card" onclick="go('overtime')">
             <div>
               <div class="ac-name">연장근무현황</div>
@@ -723,7 +731,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·연장근무·태양광 3개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광 4개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -755,7 +763,7 @@ body{
             <div class="notice-dot"></div>
             <div>
               <div>새 업무 앱 추가 시 사이드바 메뉴와 이 화면에 자동으로 반영됩니다.</div>
-              <div class="notice-sub">추가 예정: 비품관리대장 · 차량운행일지 · 일일점검일지 외</div>
+              <div class="notice-sub">추가 예정: 비품관리대장 · 일일점검일지 외</div>
             </div>
           </div>
         </div>
@@ -771,6 +779,17 @@ body{
           <div class="overlay-txt">하자보수현황 앱 로딩 중...</div>
         </div>
         <iframe id="ifr-defect" class="app-iframe" title="하자보수현황"></iframe>
+      </div>
+    </div>
+
+    <!-- ▸ 차량운행일지 iframe -->
+    <div class="panel" id="panel-vehicle">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-vehicle">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">차량운행일지 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-vehicle" class="app-iframe" title="차량운행일지"></iframe>
       </div>
     </div>
 
@@ -837,7 +856,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 하자보수·연장근무·태양광 3개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광 4개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -876,12 +895,14 @@ const PORTAL_BOOT_TS = Date.now();
 // ── 앱 정의 ──────────────────────────────────────────────
 const APPS = {
   defect:   { name:'하자보수현황', file:'defect-management.html' },
+  vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무현황', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
   defect:   { mName:'하자보수현황' },
+  vehicle:  { mName:'차량운행일지' },
   overtime: { mName:'연장근무현황' },
   solar:    { mName:'태양광발전량' }
 };
@@ -1098,7 +1119,7 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 로그인 (하자보수·연장근무·태양광 3개 앱 공용 토큰) ──────
+// ── 로그인 (하자보수·차량운행·연장근무·태양광 4개 앱 공용 토큰) ──────
 const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 let AUTH_TOKEN = '';
 let AUTH_EXPIRES = 0;
@@ -1292,6 +1313,12 @@ function renderHomeKpi() {
     const s = readPortalSummary('defect');
     if (s) { dEl.textContent = `미해결 ${s.unresolved}건`; dEl.className = 'ac-kpi' + (s.unresolved > 0 ? ' warn' : ''); }
     else { dEl.textContent = emptyKpiLabel(); dEl.className = 'ac-kpi empty'; }
+  }
+  const vEl = document.getElementById('kpi-vehicle');
+  if (vEl) {
+    const s = readPortalSummary('vehicle');
+    if (s) { vEl.textContent = `이달 ${fmtWonHome(s.thisMonthDist)}km`; vEl.className = 'ac-kpi'; }
+    else { vEl.textContent = emptyKpiLabel(); vEl.className = 'ac-kpi empty'; }
   }
   const oEl = document.getElementById('kpi-overtime');
   if (oEl) {

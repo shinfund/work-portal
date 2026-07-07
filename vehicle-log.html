@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>차량운행일지</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* work-portal 공통 색상 팔레트 기준(하자보수현황 앱과 수치 동일 — 2026-07-05 확정) */
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --bg:#F5F8FF;--card:#FFFFFF;--border:#E0EAF5;--border2:#EBF3FF;
+  --txt:#1A2535;--txt2:#3D4F68;--txt3:#3D5269;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#0C447C;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#185FA5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#191919;--card:#242424;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#8FCBFF;
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+}
+html[data-theme="dark"] .veh-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .veh-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .veh-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .veh-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .veh-c4{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+html[data-theme="dark"] .veh-c5{background:rgba(29,158,117,.18);color:#7BE0BE;border-color:rgba(29,158,117,.35)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER ── */
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
+.header-btns{display:flex;gap:6px}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV ── */
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
+.top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
+.top-tab.active{color:var(--sky600)}
+.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
+/* ── MAIN ── */
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
+
+/* ── MONTH SELECTOR ── */
+.month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:20px;padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu.open{display:block}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
+.dd-sep{font-size:14px;font-weight:300;color:var(--border)}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
+.month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
+
+/* ── 가로 바 차트 ── */
+.typebar-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border2)}
+.typebar-row:last-child{border-bottom:none}
+.typebar-name{font-size:14px;font-weight:700;color:var(--txt);width:88px;flex-shrink:0}
+.typebar-track{flex:1;height:22px;background:var(--border);border-radius:5px;overflow:hidden}
+.typebar-fill{height:100%;border-radius:5px;transition:width .5s ease}
+.typebar-pay{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;text-align:right;width:95px;flex-shrink:0}
+.typebar-cnt{font-size:13px;font-weight:700;color:var(--txt2);white-space:nowrap;width:92px;flex-shrink:0;text-align:right}
+.typebar-pct{font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
+
+/* ── SECTION CARD ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.detail-sc{background:transparent;border:none;box-shadow:none}
+.detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
+.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
+
+/* ── PANEL ── */
+.panel{display:none}.panel.active{display:block}
+
+/* ── TREND CHART ── */
+.trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.trend-chart{display:flex;align-items:flex-end;gap:8px;min-width:300px;height:140px}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px}
+.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
+.trend-bar.cur{box-shadow:0 0 0 2px var(--sky600)}
+.trend-lbl{font-size:13px;color:var(--txt2);font-weight:700}
+.trend-val{font-size:12px;color:var(--sky600);font-weight:700}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+
+/* ── RANK ── */
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
+
+/* ── FILTER ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+/* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
+
+/* ── 뱃지 ── */
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.veh-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.veh-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.veh-c2{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.veh-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.veh-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+.veh-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+/* ── MODAL ── */
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
+.detail-modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--txt3);line-height:1;padding:4px}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+
+.theme-opts{display:flex;gap:12px}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent}
+.theme-opt.on{border-color:var(--sky)}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px}
+.theme-swatch-light{background:#F8FAFC}
+.theme-swatch-dark{background:#191919}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08)}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2)}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+
+<!-- MODAL -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        설정
+      </div>
+      <div class="modal-field">
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
+      </div>
+      <div class="theme-opts">
+        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
+        </div>
+        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 운행 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">✕</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+
+      <div class="modal-field">
+        <label class="modal-label">날짜 <span class="modal-required">*</span></label>
+        <input id="addDate" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">차량번호 <span class="modal-required">*</span></label>
+        <select id="addCarNo" class="modal-select" onchange="onAddCarNoChange()">
+          <option value="">선택</option>
+        </select>
+        <input id="addCarNoCustom" class="modal-input" type="text" placeholder="차량번호 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">차량구분</label>
+        <select id="addCarType" class="modal-select" onchange="onSelectChange(this,'addCarTypeCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addCarTypeCustom" class="modal-input" type="text" placeholder="예) 업무용" style="display:none;margin-top:6px"/>
+        <div class="modal-hint">차량번호 선택 시 해당 차량의 최근 구분이 자동 선택됩니다.</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">운전자 <span class="modal-required">*</span></label>
+        <select id="addDriver" class="modal-select" onchange="onSelectChange(this,'addDriverCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addDriverCustom" class="modal-input" type="text" placeholder="운전자 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">용무 <span class="modal-required">*</span></label>
+        <input id="addPurpose" class="modal-input" type="text" placeholder="예) 남정5터널 점검 지원"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">출발지</label>
+        <select id="addFrom" class="modal-select" onchange="onSelectChange(this,'addFromCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addFromCustom" class="modal-input" type="text" placeholder="출발지 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">경유지</label>
+        <select id="addVia" class="modal-select" onchange="onSelectChange(this,'addViaCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addViaCustom" class="modal-input" type="text" placeholder="경유지 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">도착지</label>
+        <select id="addTo" class="modal-select" onchange="onSelectChange(this,'addToCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addToCustom" class="modal-input" type="text" placeholder="도착지 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
+        <input id="addDist" class="modal-input" type="number" step="0.1" placeholder="예) 32.5"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">운행누계(km) <span class="modal-required">*</span></label>
+        <input id="addCumDist" class="modal-input" type="number" step="0.1" placeholder="예) 45230"/>
+        <div class="modal-hint">계기판에 표시된 누적 주행거리를 직접 입력하는 값입니다.</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">운행 상세</h3>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">✕</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-title">차량운행일지</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadData({full:_fullHistoryLoaded})">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">운행내역</button>
+  <button class="top-tab" id="nav-vehicle" role="tab" aria-selected="false" aria-controls="panel-vehicle" onclick="switchPanel('vehicle')">차량별</button>
+  <button class="top-tab" id="nav-driver" role="tab" aria-selected="false" aria-controls="panel-driver" onclick="switchPanel('driver')">운전자별</button>
+  <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- 다른 탭(차량별/운전자별/월별추이) 활성 시 날짜 선택 박스가 복귀하는 기본 위치 -->
+  <div id="monthSelDefaultSlot">
+    <div class="month-sel" id="monthSel">
+      <div class="dd-wrap" id="ddYearWrap">
+        <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
+          <span id="ddYearLabel">2026년</span>
+        </div>
+        <div class="dd-menu" id="ddYearMenu">
+          <div id="ddYearOpts"></div>
+        </div>
+      </div>
+      <span class="dd-sep">·</span>
+      <div class="dd-wrap" id="ddMonthWrap">
+        <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
+          <span id="ddMonthLabel">4월</span>
+        </div>
+        <div class="dd-menu" id="ddMonthMenu">
+          <div id="ddMonthOpts"></div>
+        </div>
+      </div>
+      <div class="month-sub-row" id="monthSub"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 운행내역 (기본 탭 — 신규등록·수정·삭제·엑셀생성·검색 등 모든 편집 작업이 이루어지는 공간) -->
+  <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
+    <div class="sc detail-sc">
+      <div class="filter-row">
+        <div class="dd-wrap" id="detailYearDdWrap">
+          <button class="dd-btn" id="detailYearDdBtn" onclick="toggleDetailYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
+            <span id="detailYearDdLabel">전체 연도</span>
+          </button>
+          <div class="dd-menu" id="detailYearDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="detailMonthDdWrap">
+          <button class="dd-btn" id="detailMonthDdBtn" onclick="toggleDetailMonthDd()" aria-haspopup="listbox" aria-label="월 선택">
+            <span id="detailMonthDdLabel">전체 월</span>
+          </button>
+          <div class="dd-menu" id="detailMonthDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="carDdWrap">
+          <button class="dd-btn" id="carDdBtn" onclick="toggleDetailCarDd()" aria-haspopup="listbox" aria-label="차량번호 선택">
+            <span id="carDdLabel">전체 차량</span>
+          </button>
+          <div class="dd-menu" id="carDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="driverDdWrap">
+          <button class="dd-btn" id="driverDdBtn" onclick="toggleDetailDriverDd()" aria-haspopup="listbox" aria-label="운전자 선택">
+            <span id="driverDdLabel">전체 운전자</span>
+          </button>
+          <div class="dd-menu" id="driverDdMenu"></div>
+        </div>
+        <input class="search-box" id="detailSearchBox" placeholder="🔍 용무, 경로, 비고 검색..." aria-label="용무·경로·비고 검색" oninput="renderDetail()"/>
+        <button class="tb-action-btn tb-add" onclick="openAddModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          신규등록
+        </button>
+        <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportVehicleExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="detail-count" id="detailCount"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%">날짜</th>
+            <th style="white-space:nowrap;width:1%">차량번호</th>
+            <th style="white-space:nowrap;width:1%">차량구분</th>
+            <th style="white-space:nowrap;width:1%">운전자</th>
+            <th style="width:1%;white-space:nowrap">용무</th>
+            <th style="white-space:nowrap;width:1%">출발지</th>
+            <th style="white-space:nowrap;width:1%">경유지</th>
+            <th style="white-space:nowrap;width:1%">도착지</th>
+            <th class="r" style="white-space:nowrap;width:1%">운행(km)</th>
+            <th class="r" style="white-space:nowrap;width:1%">운행누계(km)</th>
+            <th style="width:1%;white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 차량별 -->
+  <div id="panel-vehicle" class="panel" role="tabpanel" aria-labelledby="nav-vehicle">
+    <div id="vehCompare"></div>
+    <div class="sc">
+      <div class="sc-hd">차량별 운행현황 <span class="badge" id="vehBarBadge"></span></div>
+      <div id="vehBarsInline"></div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">
+        차량별 상세 <span class="badge" id="vehicleBadge">0대</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>차량번호</th><th>차량구분</th>
+            <th class="r">운행횟수</th>
+            <th class="r">총 운행거리(km)</th>
+          </tr></thead>
+          <tbody id="vehicleTableBody"></tbody>
+        </table>
+      </div>
+      <div id="vehicleDetailWrap" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 운전자별 -->
+  <div id="panel-driver" class="panel" role="tabpanel" aria-labelledby="nav-driver">
+    <div class="sc">
+      <div class="sc-hd">운전자별 운행현황 <span class="badge" id="drvBarBadge"></span></div>
+      <div id="drvBarsInline"></div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">
+        운전자별 상세 <span class="badge" id="driverBadge">0명</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>운전자</th>
+            <th class="r">운행횟수</th>
+            <th class="r">총 운행거리(km)</th>
+          </tr></thead>
+          <tbody id="driverTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 월별추이 -->
+  <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
+    <div id="trendTotalCard"></div>
+    <div class="sc">
+      <div class="sc-hd">최근 12개월 운행거리 추이</div>
+      <div class="trend-wrap">
+        <div class="trend-chart" id="trendChart"></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd">월별 요약 <span class="badge">최근 12개월</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>월</th><th class="r">운행거리(km)</th>
+            <th>차량별</th><th class="r">운행건수</th>
+          </tr></thead>
+          <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── Worker/DB 연동 정보 (고정값 — 더 이상 사용자 입력 아님, 접근 제어는 로그인 토큰으로) ──
+const WORKER_URL='https://notion-proxy.shinfund.workers.dev';
+const DB_ID="75c8e2bf-f577-4270-b172-46571430a23d";
+let CFG={workerUrl:WORKER_URL,dbId:DB_ID,authToken:'',authExpires:0};
+(()=>{
+  try{
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+  }catch(e){}
+})();
+function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+
+// ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
+(()=>{
+  const _fetch=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    init=init||{};
+    const urlStr=typeof input==='string'?input:(input&&input.url)||'';
+    if(urlStr.indexOf(WORKER_URL)===0){
+      const headers=new Headers(init.headers||{});
+      if(CFG.authToken) headers.set('Authorization','Bearer '+CFG.authToken);
+      init=Object.assign({},init,{headers});
+    }
+    return _fetch(input,init).then(res=>{
+      if(res.status===401&&urlStr.indexOf(WORKER_URL)===0){
+        CFG.authToken='';CFG.authExpires=0;
+        try{localStorage.removeItem('wp_authToken');localStorage.removeItem('wp_authExpires');}catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
+
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+
+function fmtDate(d){
+  if(!d) return '';
+  return String(d).slice(0,10); // yyyy-mm-dd 고정
+}
+function fmtKm(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function routeStr(r){ return [r.from,r.via,r.to].filter(Boolean).join(' → ') || '-'; }
+
+// ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+
+// ── 모달 헬퍼 ─────────────────────────────────────────
+function updateLoginStatusHint(){
+  const h=document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent=isAuthed()?'로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')':'로그인이 필요합니다';
+}
+function openCfgModal(){
+  updateLoginStatusHint();
+  syncThemeOptUI();
+  const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+}
+function openLoginModal(){
+  const lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  resetModalDragPos('cfgModal');
+}
+
+// ── 화면모드(테마) ────────────────────────────────────
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
+window.addEventListener('storage',e=>{
+  if(e.key==='wp_authToken'){
+    CFG.authToken=e.newValue||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()){ ALL_RECORDS=[]; loadData(); }
+    else { ALL_RECORDS=DEMO_DATA; ensureCarColors(); renderAll(); }
+  }
+});
+
+// ── 신규추가/수정/삭제 ────────────────────────────────
+var EDIT_PAGE_ID = null;
+function getUniqueCarNos(){ return [...new Set(ALL_RECORDS.map(r=>r.carNo).filter(Boolean))].sort(); }
+function getUniqueCarTypes(){ return [...new Set(ALL_RECORDS.map(r=>r.carType).filter(Boolean))].sort(); }
+function getUniqueDrivers(){ return [...new Set(ALL_RECORDS.map(r=>r.driver).filter(Boolean))].sort(); }
+function getUniqueFrom(){ return [...new Set(ALL_RECORDS.map(r=>r.from).filter(Boolean))].sort(); }
+function getUniqueVia(){ return [...new Set(ALL_RECORDS.map(r=>r.via).filter(Boolean))].sort(); }
+function getUniqueTo(){ return [...new Set(ALL_RECORDS.map(r=>r.to).filter(Boolean))].sort(); }
+function getCarLatestType(carNo){
+  if(!carNo) return null;
+  const rec=[...ALL_RECORDS].reverse().find(r=>r.carNo===carNo && r.carType);
+  return rec ? rec.carType : null;
+}
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  const sel=document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
+  selectEl.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
+    + values.filter(Boolean).map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(!currentValue) return;
+  if(values.indexOf(currentValue)>=0){ selectEl.value=currentValue; }
+  else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
+}
+function onAddCarNoChange(){
+  onSelectChange(document.getElementById('addCarNo'),'addCarNoCustom');
+  const carNo=getSelectValue('addCarNo','addCarNoCustom');
+  const typeSel=document.getElementById('addCarType');
+  const t=getCarLatestType(carNo);
+  if(t && [...typeSel.options].some(o=>o.value===t)){
+    typeSel.value=t;
+    onSelectChange(typeSel,'addCarTypeCustom');
+  }
+}
+
+function openAddModal(){
+  EDIT_PAGE_ID = null;
+  document.getElementById('addModalTitleText').textContent='신규 운행 등록';
+  document.getElementById('addSubmitLabel').textContent='등록';
+  const today=new Date();
+  document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  ['addPurpose','addDist','addCumDist','addNote','addCarNoCustom','addCarTypeCustom','addDriverCustom','addFromCustom','addViaCustom','addToCustom'].forEach(id=>{ document.getElementById(id).value=''; });
+  buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), '');
+  buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), '');
+  buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), '');
+  buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), '');
+  buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), '');
+  buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), '');
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeAddModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+}
+function openEditModal(pageId){
+  const r = ALL_RECORDS.find(x=>x.id===pageId);
+  if(!r) return;
+  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  EDIT_PAGE_ID = pageId;
+  document.getElementById('addModalTitleText').textContent='운행 수정';
+  document.getElementById('addSubmitLabel').textContent='수정';
+  document.getElementById('addDate').value = r.date||'';
+  document.getElementById('addPurpose').value = r.purpose||'';
+  document.getElementById('addDist').value = r.dist||'';
+  document.getElementById('addCumDist').value = r.cumDist||'';
+  document.getElementById('addNote').value = r.note||'';
+  buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), r.carNo||'');
+  buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), r.carType||'');
+  buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), r.driver||'');
+  buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), r.from||'');
+  buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), r.via||'');
+  buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), r.to||'');
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function submitAddForm(){
+  const date = document.getElementById('addDate').value.trim();
+  const carNo = getSelectValue('addCarNo','addCarNoCustom');
+  const driver = getSelectValue('addDriver','addDriverCustom');
+  const purpose = document.getElementById('addPurpose').value.trim();
+  const dist = document.getElementById('addDist').value.trim();
+  const cumDist = document.getElementById('addCumDist').value.trim();
+  if(!date){ alert('날짜를 입력해주세요.'); return; }
+  if(!carNo){ alert('차량번호를 선택해주세요.'); return; }
+  if(!driver){ alert('운전자를 선택해주세요.'); return; }
+  if(!purpose){ alert('용무를 입력해주세요.'); return; }
+  if(dist===''){ alert('운행(km)을 입력해주세요.'); return; }
+  if(cumDist===''){ alert('운행누계(km)를 입력해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const carType=getSelectValue('addCarType','addCarTypeCustom');
+  const from=getSelectValue('addFrom','addFromCustom');
+  const via=getSelectValue('addVia','addViaCustom');
+  const to=getSelectValue('addTo','addToCustom');
+  const note=document.getElementById('addNote').value.trim();
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  lbl.textContent = EDIT_PAGE_ID ? '수정 중...' : '등록 중...';
+
+  const properties = {};
+  function setProp(role, rawValue){
+    const key = NOTION_PROP_MAP[role];
+    if(!key) return;
+    const val = buildPropValue(role, rawValue);
+    if(val) properties[key] = val;
+  }
+  setProp('날짜', date);
+  setProp('차량번호', carNo);
+  setProp('운전자', driver);
+  setProp('용무', purpose);
+  setProp('운행거리', dist);
+  setProp('운행누계', cumDist);
+  if(carType) setProp('차량구분', carType);
+  if(from)    setProp('출발지', from);
+  if(via)     setProp('경유지', via);
+  if(to)      setProp('도착지', to);
+  if(note)    setProp('비고', note);
+
+  const isEdit = !!EDIT_PAGE_ID;
+  const reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
+  const reqBody = isEdit ? JSON.stringify({properties}) : JSON.stringify({parent:{database_id:CFG.dbId},properties});
+
+  fetch(reqUrl, { method: isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      closeAddModal();
+      loadData();
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message+'\n\nWorker가 해당 라우트를 지원하는지 확인하세요.');
+      console.error(e);
+    });
+}
+function deleteRecord(pageId){
+  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!confirm('이 운행 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ closeDetailModal(); loadData(); toast('삭제되었습니다.'); })
+    .catch(e=>{
+      // 이미 휴지통으로 이동된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
+      // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadData(); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+
+// ── 상세 모달 (레코드 클릭 시 조회 + 수정/삭제) ──
+function openDetailModal(id){
+  const r = ALL_RECORDS.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent = `${r.carNo||'—'} · ${fmtDate(r.date)}`;
+  const rows=[
+    ['날짜', esc(fmtDate(r.date))],
+    ['차량번호', esc(r.carNo||'-')],
+    ['차량구분', esc(r.carType||'-')],
+    ['운전자', esc(r.driver||'-')],
+    ['용무', esc(r.purpose||'-')],
+    ['출발지', esc(r.from||'-')],
+    ['경유지', esc(r.via||'-')],
+    ['도착지', esc(r.to||'-')],
+    ['운행(km)', fmtKm(r.dist)],
+    ['운행누계(km)', fmtKm(r.cumDist)],
+    ['비고', esc(r.note||'-')]
+  ];
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'
+    +rows.map(rv=>`<div class="detail-info-row"><div class="detail-info-key">${rv[0]}</div><div class="detail-info-val">${rv[1]}</div></div>`).join('')
+    +'</div>';
+  document.getElementById('detailModalActions').innerHTML=
+    `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
+    +`<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>`;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeDetailModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('detailModal');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
+
+// ── 날짜 ──────────────────────────────────────────────
+const _now=new Date();
+let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
+
+function toggleDD(type){
+  const yMenu=document.getElementById('ddYearMenu');
+  const mMenu=document.getElementById('ddMonthMenu');
+  if(type==='year'){
+    const isOpen=yMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDYear(); yMenu.classList.add('open'); }
+  } else {
+    const isOpen=mMenu.classList.contains('open');
+    closeAllDD();
+    if(!isOpen){ renderDDMonth(); mMenu.classList.add('open'); }
+  }
+}
+function closeAllDD(){
+  document.getElementById('ddYearMenu').classList.remove('open');
+  document.getElementById('ddMonthMenu').classList.remove('open');
+}
+function renderDDYear(){
+  const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
+  if(curYear!=='ALL') dataYears.add(curYear);
+  const years=[...dataYears].sort((a,b)=>b-a);
+  const allOpt=`<div class="dd-opt${curYear==='ALL'?' sel':''}" onclick="pickYear('ALL')">전체 연도</div>`;
+  document.getElementById('ddYearOpts').innerHTML=allOpt+
+    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}" onclick="pickYear(${y})">${y}년</div>`).join('');
+}
+function renderDDMonth(){
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" onclick="pickMonth(0)">전체</div>`;
+  document.getElementById('ddMonthOpts').innerHTML=allOpt+MONTHS.map((lbl,i)=>{
+    const m=i+1;
+    return `<div class="dd-opt${m===curMonth?' sel':''}" onclick="pickMonth(${m})">${lbl}</div>`;
+  }).join('');
+}
+function pickYear(y){
+  curYear=y; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(y==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  else if(_dataLoadedOnce){ renderAll(); }
+  else if(isAuthed()){ loadData(); }
+}
+function pickMonth(m){
+  curMonth=m; _userPickedMonth=true;
+  closeAllDD();
+  updateMonthLabel();
+  if(_dataLoadedOnce){ renderAll(); }
+  else if(isAuthed()){ loadData(); }
+}
+function updateMonthLabel(){
+  document.getElementById('ddYearLabel').textContent=curYear==='ALL'?'전체 연도':curYear+'년';
+  document.getElementById('ddMonthLabel').textContent=curMonth===0?'전체':curMonth+'월';
+  const n=filteredRecords().length;
+  document.getElementById('monthSub').textContent=n?`총 ${n}건`:'데이터 없음';
+}
+document.addEventListener('click',e=>{
+  const sel=document.getElementById('monthSel');
+  if(sel&&!sel.contains(e.target)) closeAllDD();
+  const cw=document.getElementById('carDdWrap');
+  if(cw&&!cw.contains(e.target)) closeDetailCarDd();
+  const dw=document.getElementById('driverDdWrap');
+  if(dw&&!dw.contains(e.target)) closeDetailDriverDd();
+  const yw=document.getElementById('detailYearDdWrap');
+  if(yw&&!yw.contains(e.target)) closeDetailYearDd();
+  const mw=document.getElementById('detailMonthDdWrap');
+  if(mw&&!mw.contains(e.target)) closeDetailMonthDd();
+});
+
+// ── 운행내역 탭 차량/운전자 필터 드롭다운 ──
+function toggleDd(menuId,btnId){
+  const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId,btnId){
+  document.getElementById(menuId)?.classList.remove('open');
+  document.getElementById(btnId)?.classList.remove('active');
+}
+function toggleDetailCarDd(){ toggleDd('carDdMenu','carDdBtn'); }
+function closeDetailCarDd(){ closeDd('carDdMenu','carDdBtn'); }
+function toggleDetailDriverDd(){ toggleDd('driverDdMenu','driverDdBtn'); }
+function closeDetailDriverDd(){ closeDd('driverDdMenu','driverDdBtn'); }
+let _detailCarFilter='';
+let _detailDriverFilter='';
+let _detailYearFilter='ALL';
+let _detailMonthFilter='ALL';
+let _detailUserPicked=false;
+function buildDetailCarDd(cars){
+  const menu=document.getElementById('carDdMenu');
+  if(!menu) return;
+  const opts=[{val:'',label:'전체 차량'}].concat(cars.map(t=>({val:t,label:t})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailCarFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('carDdLabel').textContent = _detailCarFilter || '전체 차량';
+  document.getElementById('carDdBtn').classList.toggle('active', !!_detailCarFilter);
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailCarFilter=opt.dataset.val;
+      closeDetailCarDd();
+      renderDetail();
+    });
+  }
+}
+function buildDetailDriverDd(drivers){
+  const menu=document.getElementById('driverDdMenu');
+  if(!menu) return;
+  const opts=[{val:'',label:'전체 운전자'}].concat(drivers.map(t=>({val:t,label:t})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailDriverFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('driverDdLabel').textContent = _detailDriverFilter || '전체 운전자';
+  document.getElementById('driverDdBtn').classList.toggle('active', !!_detailDriverFilter);
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailDriverFilter=opt.dataset.val;
+      closeDetailDriverDd();
+      renderDetail();
+    });
+  }
+}
+
+// ── 운행내역 탭 연/월 필터 드롭다운 (차량별·운전자별·월별추이의 curYear/curMonth와 독립) ──
+function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
+function closeDetailYearDd(){ closeDd('detailYearDdMenu','detailYearDdBtn'); }
+function toggleDetailMonthDd(){ toggleDd('detailMonthDdMenu','detailMonthDdBtn'); }
+function closeDetailMonthDd(){ closeDd('detailMonthDdMenu','detailMonthDdBtn'); }
+function buildDetailYearDd(){
+  const menu=document.getElementById('detailYearDdMenu');
+  if(!menu) return;
+  const years=[...new Set(ALL_RECORDS.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const opts=[{val:'ALL',label:'전체 연도'}].concat(years.map(y=>({val:y,label:y+'년'})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailYearFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailYearDdLabel').textContent = _detailYearFilter==='ALL' ? '전체 연도' : _detailYearFilter+'년';
+  document.getElementById('detailYearDdBtn').classList.toggle('active', _detailYearFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailYearFilter=opt.dataset.val;
+      _detailUserPicked=true;
+      closeDetailYearDd();
+      if(_detailYearFilter==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+      else renderDetail();
+    });
+  }
+}
+function buildDetailMonthDd(){
+  const menu=document.getElementById('detailMonthDdMenu');
+  if(!menu) return;
+  const opts=[{val:'ALL',label:'전체 월'}];
+  for(let m=1;m<=12;m++) opts.push({val:String(m).padStart(2,'0'),label:m+'월'});
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailMonthFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailMonthDdLabel').textContent = _detailMonthFilter==='ALL' ? '전체 월' : parseInt(_detailMonthFilter,10)+'월';
+  document.getElementById('detailMonthDdBtn').classList.toggle('active', _detailMonthFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailMonthFilter=opt.dataset.val;
+      _detailUserPicked=true;
+      closeDetailMonthDd();
+      renderDetail();
+    });
+  }
+}
+
+// ── 하단 네비 ─────────────────────────────────────────
+const PANELS=['detail','vehicle','driver','trend'];
+let _activePanel='detail';
+function relocateMonthSel(name){
+  const wrap=document.getElementById('monthSelDefaultSlot');
+  if(!wrap) return;
+  wrap.style.display = name==='detail' ? 'none' : '';
+}
+function switchPanel(name){
+  if(name===_activePanel) return;
+  _activePanel=name;
+  PANELS.forEach(p=>{
+    document.getElementById('panel-'+p).classList.toggle('active',p===name);
+    const btn=document.getElementById('nav-'+p);
+    btn.classList.toggle('active',p===name);
+    btn.setAttribute('aria-selected',p===name?'true':'false');
+  });
+  relocateMonthSel(name);
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충
+  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+}
+
+// ── 전역 데이터 ───────────────────────────────────────
+let ALL_RECORDS=[];
+let _isLoading=false;
+let _userPickedMonth=false;
+
+// ── Notion fetch 헬퍼 ────────────────────────────────
+async function fetchNotion(body){
+  const res=await fetch(`${CFG.workerUrl}/v1/databases/${CFG.dbId}/query`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const ct=res.headers.get('content-type')||'';
+  if(!ct.includes('application/json'))throw new Error('응답이 JSON이 아닙니다 (content-type: '+ct+') — Worker URL을 확인하세요');
+  let json;
+  try{json=await res.json();}catch(e){throw new Error('JSON 파싱 실패 — Worker 응답을 확인하세요');}
+  if(json&&json.error){throw new Error('Worker 오류: '+(json.error.message||json.error||'알 수 없는 오류'));}
+  return json;
+}
+
+// ── Notion 실제 속성명 매핑 (타입이 아닌 키워드로 분류 — 스키마가 바뀌어도 안전) ──
+var NOTION_PROP_MAP = {};
+// 순서 중요: "운행누계"를 "운행"보다 먼저 판별해야 겹치는 키워드가 오분류되지 않는다.
+function classifyPropKey(k){
+  const lk=k.toLowerCase().replace(/\s/g,'');
+  if(lk.includes('날짜')||lk.includes('일자'))return'날짜';
+  if(lk.includes('차량번호')||(lk.includes('차량')&&lk.includes('번호')))return'차량번호';
+  if(lk.includes('차량구분')||lk.includes('구분'))return'차량구분';
+  if(lk.includes('운전자')||lk.includes('기사'))return'운전자';
+  if(lk.includes('용무')||lk.includes('목적'))return'용무';
+  if(lk.includes('출발'))return'출발지';
+  if(lk.includes('경유'))return'경유지';
+  if(lk.includes('도착'))return'도착지';
+  if(lk.includes('운행')&&lk.includes('누계'))return'운행누계';
+  if(lk.includes('운행'))return'운행거리';
+  if(lk.includes('비고'))return'비고';
+  return null;
+}
+var NOTION_PROP_TYPE = {};
+function buildNotionPropMap(props){
+  NOTION_PROP_MAP = {};
+  NOTION_PROP_TYPE = {};
+  Object.keys(props).forEach(k=>{
+    const cls=classifyPropKey(k);
+    if(cls && !NOTION_PROP_MAP[cls]){ NOTION_PROP_MAP[cls]=k; NOTION_PROP_TYPE[cls]=props[k].type; }
+  });
+}
+// 쓰기(신규추가/수정)도 실제 감지된 타입에 맞춰 payload를 동적으로 구성 — 타입 하드코딩 금지
+const DEFAULT_PROP_TYPE = { 날짜:'date', 차량번호:'select', 차량구분:'select', 운전자:'select', 용무:'title', 출발지:'select', 경유지:'select', 도착지:'select', 운행거리:'number', 운행누계:'number', 비고:'rich_text' };
+function buildPropValue(role, rawValue){
+  const key = NOTION_PROP_MAP[role];
+  if(!key) return null;
+  const type = NOTION_PROP_TYPE[role] || DEFAULT_PROP_TYPE[role];
+  if(type==='title') return { title: [{ text: { content: String(rawValue) } }] };
+  if(type==='rich_text') return { rich_text: [{ text: { content: String(rawValue) } }] };
+  if(type==='select') return { select: { name: String(rawValue) } };
+  if(type==='date') return { date: { start: String(rawValue) } };
+  if(type==='number') return { number: parseFloat(rawValue)||0 };
+  return null; // formula 등 읽기 전용/미지원 타입
+}
+
+// ── Notion 페이지 파싱 (차량운행DB: 날짜/차량번호/차량구분/운전자/용무/출발지/경유지/도착지/운행/운행누계/비고) ──
+function parseNotionPage(page){
+  const props=page.properties||{};
+  function getText(p){
+    if(!p)return'';
+    if(p.type==='title')return(p.title||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='rich_text')return(p.rich_text||[]).map(t=>t.plain_text||'').join('')||'';
+    if(p.type==='select')return p.select?.name||'';
+    if(p.type==='number')return String(p.number??0);
+    if(p.type==='formula')return String(p.formula?.number??p.formula?.string??'');
+    return'';
+  }
+  function getNum(p){
+    if(!p)return 0;
+    if(p.type==='number')return parseFloat(p.number||0)||0;
+    if(p.type==='formula')return parseFloat(p.formula?.number||0)||0;
+    return parseFloat(getText(p))||0;
+  }
+  function getDateStr(p){
+    if(!p)return'';
+    if(p.type==='date')return p.date?.start ? p.date.start.slice(0,10) : '';
+    const raw=getText(p).trim();
+    const m=raw.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+    return m ? `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}` : raw.slice(0,10);
+  }
+  const map={};
+  Object.keys(props).forEach(k=>{
+    const cls=classifyPropKey(k);
+    if(cls && !map[cls]) map[cls]=k;
+  });
+  const date = map['날짜'] ? getDateStr(props[map['날짜']]) : '';
+  if(!date) return null;
+  return{
+    id:page.id, date,
+    carNo: map['차량번호'] ? getText(props[map['차량번호']]).trim() : '',
+    carType: map['차량구분'] ? getText(props[map['차량구분']]).trim() : '',
+    driver: map['운전자'] ? getText(props[map['운전자']]).trim() : '',
+    purpose: map['용무'] ? getText(props[map['용무']]).trim() : '',
+    from: map['출발지'] ? getText(props[map['출발지']]).trim() : '',
+    via: map['경유지'] ? getText(props[map['경유지']]).trim() : '',
+    to: map['도착지'] ? getText(props[map['도착지']]).trim() : '',
+    dist: map['운행거리'] ? getNum(props[map['운행거리']]) : 0,
+    cumDist: map['운행누계'] ? getNum(props[map['운행누계']]) : 0,
+    note: map['비고'] ? getText(props[map['비고']]).trim() : ''
+  };
+}
+
+// ── 데이터 로드 (기본 최근 2개월만 서버측 날짜 필터, 월별추이·전체연도 선택 시 전체 이력 보충) ──
+const DEFAULT_LOAD_MONTHS=2;
+let _fullHistoryLoaded=false;
+let _dataLoadedOnce=false;
+async function loadData(opts){
+  opts=opts||{};
+  const needFull=opts.full===true;
+  if(!isAuthed()){openLoginModal();return;}
+  if(_isLoading) return;
+  _isLoading=true;
+  const btn=document.getElementById('syncBtn');
+  const lu=document.getElementById('lastUpdate');
+  const syncIcon=document.getElementById('syncIcon');
+  const syncLabel=document.getElementById('syncLabel');
+  if(btn)btn.disabled=true;
+  if(syncIcon)syncIcon.classList.add('spinning');
+  if(syncLabel)syncLabel.textContent='불러오는 중...';
+  if(lu)lu.textContent='';
+  try{
+    const probe=await fetchNotion({page_size:1});
+    let dateProp='날짜';
+    if(probe.results&&probe.results.length){
+      const pp=probe.results[0].properties||{};
+      buildNotionPropMap(pp);
+      if(NOTION_PROP_MAP['날짜']) dateProp = NOTION_PROP_MAP['날짜'];
+    }
+    const body={page_size:100,sorts:[{property:dateProp,direction:'ascending'}]};
+    if(!needFull){
+      const cutoff=new Date();
+      cutoff.setDate(1);
+      cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
+      body.filter={property:dateProp,date:{on_or_after:cutoff.toISOString().slice(0,10)}};
+    }
+    const data=await fetchNotion(body);
+    let pages=data.results||[];
+    let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
+    while(cursor&&hasMore&&++pageCount<20){
+      const d2=await fetchNotion({...body,start_cursor:cursor});
+      pages=[...pages,...(d2.results||[])];
+      cursor=d2.next_cursor;hasMore=d2.has_more;
+    }
+    const parsed=pages.map(parseNotionPage).filter(Boolean);
+    if(parsed.length>0){
+      ALL_RECORDS=parsed;
+      _fullHistoryLoaded=needFull;
+      _dataLoadedOnce=true;
+      ensureCarColors();
+      try{
+        const now=new Date();
+        const thisMonthDist=recordsForYM(now.getFullYear(), now.getMonth()+1).reduce((s,r)=>s+(r.dist||0),0);
+        localStorage.setItem('portal_summary_vehicle', JSON.stringify({thisMonthDist, updatedAt:Date.now()}));
+      }catch(e){}
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
+      }
+      renderAll();
+      const now=new Date();
+      const ts=`${String(now.getMonth()+1).padStart(2,'0')}. ${String(now.getDate()).padStart(2,'0')}. `
+               +now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      if(lu){lu.textContent='마지막 업데이트: '+ts;lu.style.color='';}
+    }else{
+      if(!ALL_RECORDS.length){ALL_RECORDS=DEMO_DATA;ensureCarColors();renderAll();}
+      if(lu){lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인';lu.style.color='var(--hdr-error-text)';}
+    }
+  }catch(e){
+    const msg=e.message||'';
+    const isAuthErr=msg.includes('401');
+    if(!ALL_RECORDS.length || isAuthErr){
+      ALL_RECORDS=DEMO_DATA;
+      ensureCarColors();
+      if(!_userPickedMonth){
+        const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+        if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
+      }
+      renderAll();
+    }
+    let errMsg='⚠ '+msg;
+    if(isAuthErr)errMsg='⚠ 로그인 필요 — 포털 설정에서 로그인';
+    else if(msg.includes('403'))errMsg='⚠ Worker API 키 확인 (관리자 문의)';
+    else if(msg.includes('404'))errMsg='⚠ DB를 찾을 수 없음 (관리자 문의)';
+    else if(msg.includes('400'))errMsg='⚠ HTTP 400 오류 (관리자 문의)';
+    else if(msg.includes('JSON')||msg.includes('content-type'))errMsg='⚠ Worker 응답 오류 (관리자 문의)';
+    else if(msg.includes('Failed to fetch'))errMsg='⚠ 네트워크 오류 — 연결 상태를 확인하세요';
+    if(lu){lu.textContent=errMsg;lu.style.color='var(--hdr-error-text)';}
+  }finally{
+    _isLoading=false;
+    if(btn)btn.disabled=false;
+    if(syncIcon)syncIcon.classList.remove('spinning');
+    if(syncLabel)syncLabel.textContent='새로고침';
+  }
+}
+
+// ── 필터/집계 ─────────────────────────────────────────
+function recordsForYM(y,m){
+  const ym=`${y}-${String(m).padStart(2,'0')}`;
+  return ALL_RECORDS.filter(r=>r.date.startsWith(ym));
+}
+function filteredRecords(){
+  if(curYear==='ALL'){
+    if(curMonth===0) return ALL_RECORDS.slice();
+    return ALL_RECORDS.filter(r=>r.date.slice(5,7)===String(curMonth).padStart(2,'0'));
+  }
+  if(curMonth===0) return ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+  return recordsForYM(curYear,curMonth);
+}
+function calcCarMap(recs){
+  const m={};
+  recs.forEach(r=>{
+    if(!r.carNo)return;
+    if(!m[r.carNo])m[r.carNo]={dist:0,count:0,carType:''};
+    m[r.carNo].dist+=(r.dist||0);
+    m[r.carNo].count++;
+    if(r.carType)m[r.carNo].carType=r.carType;
+  });
+  return m;
+}
+function calcDriverMap(recs){
+  const m={};
+  recs.forEach(r=>{
+    if(!r.driver)return;
+    if(!m[r.driver])m[r.driver]={dist:0,count:0};
+    m[r.driver].dist+=(r.dist||0);
+    m[r.driver].count++;
+  });
+  return m;
+}
+
+// ── 차량 색상 팔레트 (전체 데이터 기준 알파벳순 고정 배정) ──
+const VEH_COLORS=['#378ADD','#1D9E75','#D85A30','#BA7517','#534AB7','#0F6E56'];
+let _carColorMap={};
+function ensureCarColors(){
+  const all=[...new Set(ALL_RECORDS.map(r=>r.carNo).filter(Boolean))].sort();
+  _carColorMap={};
+  all.forEach((t,i)=>{ _carColorMap[t]=i%VEH_COLORS.length; });
+}
+function carIdx(t){ return _carColorMap[t]??0; }
+function carColorHex(t){ return VEH_COLORS[carIdx(t)]; }
+function carSlug(t){ return 'veh-c'+carIdx(t); }
+
+// ── 공통: 3셀 요약 카드 빌더 ─────────────────────────
+function buildCompareCard(cells){
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">`+
+    cells.map(({bg,border,labelColor,label,value,sub,subColor})=>`
+      <div style="background:${bg};border:1px solid ${border};border-radius:var(--r12);padding:10px 12px">
+        <div style="font-size:12px;font-weight:600;color:${labelColor};margin-bottom:3px">${label}</div>
+        <div style="font-size:15px;font-weight:800;color:${labelColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div>
+        <div style="font-size:12px;${subColor?'color:'+subColor+';font-weight:600':'color:var(--txt2)'};margin-top:2px">${sub}</div>
+      </div>`).join('')+
+  `</div>`;
+}
+
+// ── 공통: 상세 행 HTML 빌더 ─────────────────────────
+function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
+function buildDetailRow(r){
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
+    <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+    <td style="white-space:nowrap"><span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carNo||'—')}</span></td>
+    <td style="white-space:nowrap">${esc(r.carType||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.driver||'-')}</td>
+    <td style="font-size:13px">${esc(r.purpose||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.from||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.via||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.to||'-')}</td>
+    <td class="r" style="white-space:nowrap">${fmtKm(r.dist)}</td>
+    <td class="r" style="white-space:nowrap">${fmtKm(r.cumDist)}</td>
+    <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
+  </tr>`;
+}
+function buildCarDetailRow(r){
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
+    <td style="white-space:nowrap;width:1%;min-width:52px">${fmtDate(r.date)}</td>
+    <td style="font-size:13px">${esc(r.purpose||'-')}</td>
+    <td style="font-size:13px;white-space:nowrap">${esc(routeStr(r))}</td>
+    <td class="r" style="white-space:nowrap">${fmtKm(r.dist)}</td>
+    <td class="r" style="white-space:nowrap">${fmtKm(r.cumDist)}</td>
+    <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
+  </tr>`;
+}
+
+// ── renderAll ─────────────────────────────────────────
+function renderAll(){
+  updateMonthLabel();
+  const recs=filteredRecords();
+  renderVehicle(recs);
+  renderDriver(recs);
+  renderTrend();
+  renderDetail();
+}
+
+// ── 차량별 ────────────────────────────────────────────
+function renderVehicle(recs){
+  recs=recs||filteredRecords();
+  const carMap=calcCarMap(recs);
+  const arr=Object.entries(carMap).sort((a,b)=>b[1].dist-a[1].dist);
+  const totalDist=arr.reduce((s,[,d])=>s+d.dist,0);
+  const maxDist=Math.max(...arr.map(([,d])=>d.dist),1);
+
+  if(curYear==='ALL'){
+    const allDist=recs.reduce((s,r)=>s+(r.dist||0),0);
+    const allCars=new Set(recs.map(r=>r.carNo).filter(Boolean)).size;
+    document.getElementById('vehCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtKm(allDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:'총 운행거리'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${recs.length}<span style="font-size:12px;font-weight:500">건</span>`,sub:'전체 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${allCars}<span style="font-size:12px;font-weight:500">대</span>`,sub:'전체 합산'}
+    ]);
+  } else if(curMonth===0){
+    const yearRecs=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
+    const yearDist=yearRecs.reduce((s,r)=>s+(r.dist||0),0);
+    const yearCars=new Set(yearRecs.map(r=>r.carNo).filter(Boolean)).size;
+    document.getElementById('vehCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtKm(yearDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:'총 운행거리'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${yearRecs.length}<span style="font-size:12px;font-weight:500">건</span>`,sub:'연간 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${yearCars}<span style="font-size:12px;font-weight:500">대</span>`,sub:'연간 합산'}
+    ]);
+  } else {
+    let pm=curMonth-1,py=curYear;
+    if(pm<1){pm=12;py--;}
+    const prevRecs=recordsForYM(py,pm);
+    const prevDist=prevRecs.reduce((s,r)=>s+(r.dist||0),0);
+    const diffDist=totalDist-prevDist;
+    const sign=n=>n>=0?'+':'';
+    const isUp=diffDist>=0;
+    const diffColor=isUp?'var(--teal600)':'var(--coral)';
+    const diffBg=isUp?'var(--teal50)':'var(--coral50)';
+    const diffBorder=isUp?'var(--teal100)':'var(--coral100)';
+    document.getElementById('vehCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 운행거리',value:`${fmtKm(prevDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:`${py}년 ${pm}월`},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 운행거리',value:`${fmtKm(totalDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:`${curYear}년 ${curMonth}월`},
+      {bg:diffBg,border:diffBorder,labelColor:diffColor,label:'전월 대비',value:`${sign(diffDist)}${fmtKm(Math.abs(diffDist))}km`,sub:diffDist===0?'변동 없음':isUp?'증가':'감소',subColor:diffColor}
+    ]);
+  }
+
+  document.getElementById('vehBarBadge').textContent=`${arr.length}대`;
+  document.getElementById('vehBarsInline').innerHTML=!arr.length?'':`
+    <div class="typebar-row" style="background:var(--sky50);border-radius:var(--r8);padding:8px 10px;margin-bottom:6px;border:1px solid var(--sky100)">
+      <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:700">합계</div>
+      <div style="flex:1"></div>
+      <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:900">${fmtKm(totalDist)}km</div>
+      <div class="typebar-cnt" style="color:var(--sky600)">${recs.length}건</div>
+      <div class="typebar-pct" style="color:var(--sky600)">100%</div>
+    </div>`+
+  arr.map(([carNo,d])=>{
+    const barPct=Math.round(d.dist/maxDist*100);
+    const distPct=totalDist>0?Math.round(d.dist/totalDist*100):0;
+    return `<div class="typebar-row">
+      <div class="typebar-name">${esc(carNo)}</div>
+      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${carColorHex(carNo)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtKm(d.dist)+'km':''}</div></div>
+      <div class="typebar-pay">${fmtKm(d.dist)}km</div>
+      <div class="typebar-cnt">${d.count}건</div>
+      <div class="typebar-pct">${distPct}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('vehicleBadge').textContent=`${arr.length}대`;
+  document.getElementById('vehicleTableBody').innerHTML=arr.length
+    ?arr.map(([carNo,d],i)=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:5px">
+          <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
+        </div></td>
+        <td><span class="type-badge ${carSlug(carNo)}">${esc(carNo)}</span></td>
+        <td>${esc(d.carType||'-')}</td>
+        <td class="r">${d.count}건</td>
+        <td class="r">${fmtKm(d.dist)}</td>
+      </tr>`).join('')
+    :`<tr><td colspan="5">${emptyState('이번 달 차량 운행 데이터가 없습니다.')}</td></tr>`;
+
+  const wrap = document.getElementById('vehicleDetailWrap');
+  if(!arr.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = arr.map(([carNo])=>{
+    const cRecs = recs.filter(r=>r.carNo===carNo).sort((a,b)=>a.date.localeCompare(b.date));
+    return `<div class="sc" style="margin-bottom:10px">
+      <div class="sc-hd" style="margin-bottom:8px">
+        <span class="type-badge ${carSlug(carNo)}" style="font-weight:700">${esc(carNo)}</span>
+        <span class="badge">${cRecs.length}건</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap;width:1%;min-width:52px">날짜</th>
+            <th style="width:1%">용무</th>
+            <th style="white-space:nowrap;width:1%">경로</th>
+            <th class="r" style="white-space:nowrap;width:1%">운행(km)</th>
+            <th class="r" style="white-space:nowrap;width:1%">운행누계(km)</th>
+            <th style="width:1%;white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody>
+            ${cRecs.map(r=>buildCarDetailRow(r)).join('')}
+            <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
+              <td style="font-weight:700">합계</td>
+              <td></td><td></td>
+              <td class="r" style="font-weight:700">${fmtKm(cRecs.reduce((s,r)=>s+(r.dist||0),0))}</td>
+              <td></td><td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 운전자별 ──────────────────────────────────────────
+function renderDriver(recs){
+  recs=recs||filteredRecords();
+  const driverMap=calcDriverMap(recs);
+  const arr=Object.entries(driverMap).sort((a,b)=>b[1].dist-a[1].dist);
+  const totalDist=arr.reduce((s,[,d])=>s+d.dist,0);
+  const maxDist=Math.max(...arr.map(([,d])=>d.dist),1);
+
+  document.getElementById('drvBarBadge').textContent=`${arr.length}명`;
+  document.getElementById('drvBarsInline').innerHTML=!arr.length?'':
+  arr.map(([driver,d])=>{
+    const barPct=Math.round(d.dist/maxDist*100);
+    const distPct=totalDist>0?Math.round(d.dist/totalDist*100):0;
+    return `<div class="typebar-row">
+      <div class="typebar-name">${esc(driver)}</div>
+      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtKm(d.dist)+'km':''}</div></div>
+      <div class="typebar-pay">${fmtKm(d.dist)}km</div>
+      <div class="typebar-cnt">${d.count}건</div>
+      <div class="typebar-pct">${distPct}%</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('driverBadge').textContent=`${arr.length}명`;
+  document.getElementById('driverTableBody').innerHTML=arr.length
+    ?arr.map(([driver,d],i)=>`<tr>
+        <td><div style="display:flex;align-items:center;gap:5px">
+          <div class="rank ${i===0?'r1':i===1?'r2':i===2?'r3':'rn'}">${i+1}</div>
+        </div></td>
+        <td>${esc(driver)}</td>
+        <td class="r">${d.count}건</td>
+        <td class="r">${fmtKm(d.dist)}</td>
+      </tr>`).join('')
+    :`<tr><td colspan="4">${emptyState('이번 달 운전자 데이터가 없습니다.')}</td></tr>`;
+}
+
+// ── 월별 추이 ─────────────────────────────────────────
+function renderTrend(){
+  const months=[];
+  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
+  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
+  for(let i=11;i>=0;i--){
+    let m=anchorMonth-i,y=anchorYear;
+    if(m<1){m+=12;y--;}
+    months.push({y,m});
+  }
+  const data=months.map(({y,m})=>{
+    const recs=recordsForYM(y,m);
+    const totalDist=recs.reduce((s,r)=>s+(r.dist||0),0);
+    const carMap=calcCarMap(recs);
+    return {y,m,label:`${m}월`,totalDist,cnt:recs.length,carMap};
+  });
+  const maxDist=Math.max(...data.map(d=>d.totalDist),1);
+
+  const allMonths=new Set(ALL_RECORDS.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
+  const totalAllDist=ALL_RECORDS.reduce((s,r)=>s+(r.dist||0),0);
+  const monthRange=(()=>{
+    const sorted=[...allMonths].sort();
+    if(!sorted.length) return '—';
+    const s=sorted[0].replace('-','/');
+    const e=sorted[sorted.length-1].replace('-','/');
+    return s===e?s:`${s} ~ ${e}`;
+  })();
+  document.getElementById('trendTotalCard').innerHTML=`
+    <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
+          <div style="font-size:16px;font-weight:800;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 운행거리</div>
+          <div style="font-size:15px;font-weight:800;color:var(--sky600)">${fmtKm(totalAllDist)}<span style="font-size:11px;font-weight:500">km</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 운행건수</div>
+          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${ALL_RECORDS.length}<span style="font-size:11px;font-weight:500">건</span></div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('trendChart').innerHTML=data.map(({y,m,label,totalDist})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const h=Math.max(totalDist/maxDist*110,totalDist>0?5:2);
+    return `<div class="trend-col">
+      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'var(--sky)':'var(--sky100)'};width:100%;border-radius:4px 4px 0 0"></div>
+      <div class="trend-lbl">${esc(label)}</div>
+      <div class="trend-val">${totalDist>0?fmtKm(totalDist)+'km':'-'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalDist,cnt,carMap})=>{
+    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
+    const arr=Object.entries(carMap).sort((a,b)=>b[1].dist-a[1].dist);
+    const carBadges=arr.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${arr.map(([t,d])=>`<span class="type-badge ${carSlug(t)}">${esc(t)} ${fmtKm(d.dist)}km</span>`).join('')}</div>`:'';
+    return `<tr${isCur?' style="background:var(--sky50)"':''}>
+      <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
+      <td class="r">${fmtKm(totalDist)}</td>
+      <td>${carBadges||'—'}</td>
+      <td class="r">${cnt}건</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 운행내역 ──────────────────────────────────────────
+function getYearMonthFilteredRecords(){
+  return ALL_RECORDS.filter(r=>{
+    if(_detailYearFilter!=='ALL' && !(r.date||'').startsWith(_detailYearFilter)) return false;
+    if(_detailMonthFilter!=='ALL' && (r.date||'').slice(5,7)!==_detailMonthFilter) return false;
+    return true;
+  });
+}
+function getDetailFilteredRecords(){
+  const recs=getYearMonthFilteredRecords();
+  let filtered=recs;
+  if(_detailCarFilter) filtered=filtered.filter(r=>r.carNo===_detailCarFilter);
+  if(_detailDriverFilter) filtered=filtered.filter(r=>r.driver===_detailDriverFilter);
+  const q=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
+  if(q) filtered=filtered.filter(r=>(r.purpose+' '+r.from+' '+r.via+' '+r.to+' '+(r.note||'')).toLowerCase().includes(q));
+  // 운행내역 탭 정렬 표준(3-9): 날짜 내림차순(최신 우선) → 동일 날짜 내에선 차량번호 내림차순
+  return filtered.slice().sort((a,b)=>{
+    if(a.date!==b.date) return a.date<b.date?1:-1;
+    const at=a.carNo||'', bt=b.carNo||'';
+    return at<bt?1:at>bt?-1:0;
+  });
+}
+function renderDetail(){
+  // 운행내역 탭 날짜 드롭다운 기본값 = 최신 연/월(전체 아님)
+  if(!_detailUserPicked && ALL_RECORDS.length){
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(latest){ _detailYearFilter=latest.slice(0,4); _detailMonthFilter=latest.slice(5,7); }
+  }
+  buildDetailYearDd();
+  buildDetailMonthDd();
+  const recs=getYearMonthFilteredRecords();
+
+  const cars=[...new Set(recs.map(r=>r.carNo).filter(Boolean))].sort();
+  if(_detailCarFilter && !cars.includes(_detailCarFilter)) _detailCarFilter='';
+  buildDetailCarDd(cars);
+
+  const drivers=[...new Set(recs.map(r=>r.driver).filter(Boolean))].sort();
+  if(_detailDriverFilter && !drivers.includes(_detailDriverFilter)) _detailDriverFilter='';
+  buildDetailDriverDd(drivers);
+
+  const filtered=getDetailFilteredRecords();
+
+  document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
+  document.getElementById('detailTableBody').innerHTML=filtered.length
+    ?filtered.map(r=>buildDetailRow(r)).join('')
+    :`<tr><td colspan="11">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+}
+
+function emptyState(desc, icon='📋'){
+  return `<div class="empty"><div class="empty-icon">${icon}</div>
+    <div class="empty-title">데이터 없음</div>
+    <div class="empty-desc">${desc}</div></div>`;
+}
+
+// ── 엑셀 생성 (하자보수현황 앱의 buildExcelReport 패턴 재사용) ──
+var EXCEL_LIB_LOADING = null;
+function loadExcelLib(){
+  if(window.ExcelJS) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING = loadScript(
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+  ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+const EXCEL_COMPANY_NAME='수자원기술(주)';
+const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
+const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
+const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
+const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+function excelCm2in(cm){ return cm/2.54; }
+const EXCEL_PAGE_PRESETS={
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(0.5),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(2),bottom:excelCm2in(0.5),left:excelCm2in(1),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+};
+const EXCEL_COLUMNS_VEHICLE=[
+  {key:'날짜',header:'날짜',dateCol:true},
+  {key:'차량번호',header:'차량번호'},
+  {key:'차량구분',header:'차량구분'},
+  {key:'운전자',header:'운전자'},
+  {key:'용무',header:'용무',width:18,wrap:true,align:'left'},
+  {key:'출발지',header:'출발지'},
+  {key:'경유지',header:'경유지'},
+  {key:'도착지',header:'도착지'},
+  {key:'운행',header:'운행(km)',numFmt:'#,##0.##'},
+  {key:'운행누계',header:'운행누계(km)',numFmt:'#,##0.##'},
+  {key:'비고',header:'비고',width:16,wrap:true,align:'left'}
+];
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min=8, max=40, padding=5){
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelEstimateWrappedLines(text, colWidthChars){
+  const w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  let maxLines=1;
+  columns.forEach((col,i)=>{ if(!col.wrap) return; const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]); if(lines>maxLines) maxLines=lines; });
+  const lineHeightPt=fontSize*1.4;
+  return Math.max(baseHeight, maxLines*lineHeightPt+6);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+function buildExcelReport(opts){
+  const btn=document.getElementById(opts.btnId);
+  const lbl=document.getElementById(opts.lblId);
+  const rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  const columns=opts.columns;
+  const orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+  loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(opts.sheetName,{
+      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
+      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+    });
+    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    ws.columns=colWidths.map(w=>({width:w}));
+    const titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    const titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
+    const headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach((col,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    });
+    rows.forEach((r,i)=>{
+      const rn=3+i;
+      const row=ws.getRow(rn);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      columns.forEach((col,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
+        if(col.dateCol && r[col.key]){
+          const d=excelParseDate(r[col.key]);
+          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+        } else {
+          cell.value = r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt=col.numFmt;
+        }
+      });
+      row.commit();
+    });
+    lbl.textContent='파일 저장 중...';
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const p2=n=>String(n).padStart(2,'0');
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes())+'.xlsx';
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(e=>{
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(()=>{ btn.disabled=false; });
+}
+function exportVehicleExcel(){
+  const rows=getDetailFilteredRecords().slice().reverse().map(r=>({
+    날짜:r.date, 차량번호:r.carNo, 차량구분:r.carType, 운전자:r.driver, 용무:r.purpose,
+    출발지:r.from, 경유지:r.via, 도착지:r.to, 운행:r.dist||0, 운행누계:r.cumDist||0, 비고:r.note||''
+  }));
+  buildExcelReport({
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'차량운행일지', title:'차량운행일지', fnamePrefix:'차량운행일지',
+    columns:EXCEL_COLUMNS_VEHICLE, rows, orientation:'landscape'
+  });
+}
+
+// ── 내장 데이터 (차량운행DB 샘플 데이터 — 2026-05 ~ 2026-06, 실제 연동 전 시연용) ──
+const DEMO_DATA = [
+  {id:'v01',date:'2026-05-02',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'남정5터널 점검 지원',from:'청하관리동',via:'남정5터널',to:'청하관리동',dist:52,cumDist:45120,note:''},
+  {id:'v02',date:'2026-05-04',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'흥해터널 정기점검',from:'청하터널',via:'흥해터널',to:'청하터널',dist:38,cumDist:31860,note:''},
+  {id:'v03',date:'2026-05-06',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'청송지사 서류 전달',from:'청하관리동',via:'청송지사',to:'청하관리동',dist:64,cumDist:45184,note:''},
+  {id:'v04',date:'2026-05-08',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구3터널 순회점검',from:'청하터널',via:'강구3터널',to:'청하터널',dist:71,cumDist:31931,note:''},
+  {id:'v05',date:'2026-05-11',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'포항시내 자재 구매',from:'청하관리동',via:'포항시내',to:'청하관리동',dist:46,cumDist:45230,note:''},
+  {id:'v06',date:'2026-05-14',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'남정1터널 점검',from:'청하터널',via:'남정1',to:'청하터널',dist:58,cumDist:31989,note:''},
+  {id:'v07',date:'2026-05-18',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'북포항IC 외부 미팅',from:'청하관리동',via:'북포항IC',to:'청하관리동',dist:40,cumDist:45270,note:''},
+  {id:'v08',date:'2026-05-21',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'남정터널 점검',from:'청하터널',via:'남정터널',to:'청하터널',dist:49,cumDist:32038,note:''},
+  {id:'v09',date:'2026-05-25',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'영일만IC 방향 출장',from:'청하관리동',via:'영일만IC',to:'청하관리동',dist:66,cumDist:45336,note:'우천'},
+  {id:'v10',date:'2026-05-28',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구터널 점검',from:'청하터널',via:'강구터널',to:'청하터널',dist:63,cumDist:32101,note:''},
+  {id:'v11',date:'2026-06-01',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'청하부변 점검 지원',from:'청하관리동',via:'청하부변',to:'청하관리동',dist:28,cumDist:45364,note:''},
+  {id:'v12',date:'2026-06-04',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'청하터널(부) 점검',from:'청하터널',via:'청하터널(부)',to:'청하터널',dist:22,cumDist:32123,note:''},
+  {id:'v13',date:'2026-06-08',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'흥해터널 자재 운반',from:'청하관리동',via:'흥해터널',to:'청하관리동',dist:55,cumDist:45419,note:''},
+  {id:'v14',date:'2026-06-11',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'남정5터널 점검',from:'청하터널',via:'남정5터널',to:'청하터널',dist:59,cumDist:32182,note:''},
+  {id:'v15',date:'2026-06-15',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'포항시내 회의 참석',from:'청하관리동',via:'포항시내',to:'청하관리동',dist:44,cumDist:45463,note:''},
+  {id:'v16',date:'2026-06-19',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구3터널 점검',from:'청하터널',via:'강구3터널',to:'청하터널',dist:70,cumDist:32252,note:''},
+  {id:'v17',date:'2026-06-23',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'청송지사 협의',from:'청하관리동',via:'청송지사',to:'청하관리동',dist:62,cumDist:45525,note:''},
+  {id:'v18',date:'2026-06-27',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'강구터널 순회점검',from:'청하터널',via:'강구터널',to:'청하터널',dist:65,cumDist:32317,note:''}
+];
+
+// 초기화
+ALL_RECORDS = DEMO_DATA;
+ensureCarColors();
+
+// 현재 달에 데이터가 없으면 데이터가 있는 가장 최근 달로 자동 이동
+(()=>{
+  const ym=`${curYear}-${String(curMonth).padStart(2,'0')}`;
+  const hasCur=ALL_RECORDS.some(r=>r.date.startsWith(ym));
+  if(!hasCur && ALL_RECORDS.length){
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(latest){
+      curYear=parseInt(latest.slice(0,4));
+      curMonth=parseInt(latest.slice(5,7));
+    }
+  }
+})();
+
+updateMonthLabel();
+renderAll();
+relocateMonthSel(_activePanel);
+initDraggableModals();
+
+// 로그인 상태면 페이지 로드 시 자동 새로고침, 아니면 로그인 모달 표시
+(()=>{
+  if(isAuthed()){ loadData(); }
+  else { openLoginModal(); }
+})();
+</script>
+</body>
+</html>
