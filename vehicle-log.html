@@ -160,6 +160,8 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-report{background:#534AB7}
+.tb-action-btn.tb-report:hover{background:#443a94}
 
 /* ── 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
@@ -467,6 +469,10 @@ tr:hover td{background:var(--sky50)}
         <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportVehicleExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+        <button class="tb-action-btn tb-report" id="reportExportBtn" onclick="exportVehicleReports()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          <span id="reportExportLabel">보고서 생성</span>
         </button>
       </div>
       <div class="detail-count" id="detailCount"></div>
@@ -1262,9 +1268,15 @@ async function loadData(opts){
       _dataLoadedOnce=true;
       ensureCarColors();
       try{
-        const now=new Date();
-        const thisMonthDist=recordsForYM(now.getFullYear(), now.getMonth()+1).reduce((s,r)=>s+(r.dist||0),0);
-        localStorage.setItem('portal_summary_vehicle', JSON.stringify({thisMonthDist, updatedAt:Date.now()}));
+        const dates=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort();
+        const latestYM=dates.length?dates[dates.length-1].slice(0,7):null;
+        if(latestYM){
+          const [ly,lm]=latestYM.split('-').map(Number);
+          const monthDist=recordsForYM(ly,lm).reduce((s,r)=>s+(r.dist||0),0);
+          const carCount=getUniqueCarNos().length||1;
+          const avgDistPerCar=monthDist/carCount;
+          localStorage.setItem('portal_summary_vehicle', JSON.stringify({avgDistPerCar, ym:latestYM, updatedAt:Date.now()}));
+        }
       }catch(e){}
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
@@ -1820,6 +1832,172 @@ function exportVehicleExcel(){
     sheetName:'차량운행일지', title:'차량운행일지', fnamePrefix:'차량운행일지',
     columns:EXCEL_COLUMNS_VEHICLE, rows, orientation:'landscape'
   });
+}
+
+// ── 보고서 생성 (차량번호별 개별 파일, data/템플릿/차량 폴더의 기존 "운행일지_차량번호_생성시각.xlsx"
+//    양식(A1:I7 제목/차량정보/전월누계·당월누계·당월운행거리 요약 + A8:I 일자별 표) 재현 ──
+const REPORT_TITLE_FONT={name:'HY헤드라인M',size:28};
+const REPORT_BODY_FONT={name:'맑은 고딕',size:12};
+function daysInMonthOf(year,month){ return new Date(year,month,0).getDate(); }
+// 전월누계(월초 기준 운행누계) — 대상월 이전 마지막 기록값 우선, 없으면 대상월 첫 기록에서 역산
+function getCarStartCum(carNo,year,month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const before=ALL_RECORDS.filter(r=>r.carNo===carNo && r.date < ymStr+'-01').sort((a,b)=>a.date.localeCompare(b.date));
+  if(before.length) return before[before.length-1].cumDist||0;
+  const monthRecs=ALL_RECORDS.filter(r=>r.carNo===carNo && r.date.startsWith(ymStr)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(monthRecs.length) return (monthRecs[0].cumDist||0)-(monthRecs[0].dist||0);
+  return 0;
+}
+function buildVehicleReportData(carNo,year,month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const monthRecs=ALL_RECORDS.filter(r=>r.carNo===carNo && r.date.startsWith(ymStr)).sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  const prevCum=getCarStartCum(carNo,year,month);
+  const days=daysInMonthOf(year,month);
+  const byDate={};
+  monthRecs.forEach(r=>{ (byDate[r.date]=byDate[r.date]||[]).push(r); });
+  let running=prevCum;
+  const rows=[];
+  for(let d=1; d<=days; d++){
+    const dateStr=`${ymStr}-${String(d).padStart(2,'0')}`;
+    const recs=byDate[dateStr];
+    const dateObj=new Date(Date.UTC(year,month-1,d));
+    if(recs && recs.length){
+      recs.forEach(r=>{
+        running+=(r.dist||0);
+        rows.push({dateObj, driver:r.driver||'', purpose:r.purpose||'', from:r.from||'', via:r.via||'', to:r.to||'', dist:r.dist||0, cum:running, note:r.note||''});
+      });
+    } else {
+      rows.push({dateObj, driver:'', purpose:'', from:'', via:'', to:'', dist:0, cum:running, note:''});
+    }
+  }
+  const carType=getCarLatestType(carNo) || (monthRecs.find(r=>r.carType)||{}).carType || '-';
+  return { rows, prevCum, endCum:running, monthDist:running-prevCum, carType };
+}
+function buildOneVehicleReport(carNo,year,month){
+  const data=buildVehicleReportData(carNo,year,month);
+  return loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const yy=String(year).slice(2);
+    const ws=wb.addWorksheet(`${yy}년${month}월`,{
+      views:[{showGridLines:false}],
+      pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,margins:EXCEL_PAGE_PRESETS.portrait},
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+    });
+    const headerLabels=['일자','운전자','용무','출발지','경유지','도착지','운행(km)','운행누계(km)','비고'];
+    const rowKeys=[null,'driver','purpose','from','via','to','dist','cum','note'];
+    ws.columns=headerLabels.map((h,i)=>{
+      const key=rowKeys[i];
+      const vals=key?data.rows.map(r=>String(r[key]??'')):[];
+      return { width: excelAutoWidth([h].concat(vals), 9, 22) };
+    });
+
+    ws.mergeCells('A2:F2');
+    const titleCell=ws.getCell('A2');
+    titleCell.value='운     행     일     지';
+    titleCell.font=REPORT_TITLE_FONT;
+    titleCell.alignment={vertical:'middle',horizontal:'center'};
+    ws.getRow(2).height=40;
+
+    ws.mergeCells('A4:B4');
+    const dateCell=ws.getCell('A4');
+    dateCell.value=new Date(Date.UTC(year,month-1,daysInMonthOf(year,month)));
+    dateCell.numFmt='yyyy"년" mm"월" dd"일" aaa"요일"';
+    dateCell.font=REPORT_BODY_FONT;
+    dateCell.alignment={vertical:'middle',horizontal:'center'};
+    ws.getRow(4).height=24;
+
+    function setCell(coord,value,opts){
+      const cell=ws.getCell(coord);
+      cell.value=value;
+      cell.font=REPORT_BODY_FONT;
+      cell.border=EXCEL_CELL_BORDER;
+      cell.alignment=Object.assign({vertical:'middle',horizontal:'center'},opts||{});
+      return cell;
+    }
+    ['A5:A6','B5:C5','D5:E5','F5:G5','H5:I5','A6:A7','B6:C7','D6:E6','D7:E7','F6:G6','F7:G7','H6:I6','H7:I7'].forEach(r=>ws.mergeCells(r));
+    setCell('A5','차량번호');
+    setCell('B5','차량 구분');
+    setCell('D5','전월누계');
+    setCell('F5',data.prevCum,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H5','');
+    setCell('A6',carNo);
+    setCell('B6',data.carType);
+    setCell('D6','당월누계');
+    setCell('F6',data.endCum,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H6','');
+    setCell('D7','당월운행거리');
+    setCell('F7',data.monthDist,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H7','');
+    for(let r=5;r<=7;r++) ws.getRow(r).height=26;
+
+    const headerRow=ws.getRow(8);
+    headerRow.height=26;
+    headerLabels.forEach((h,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=h; cell.font=REPORT_BODY_FONT;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    });
+
+    data.rows.forEach((r,i)=>{
+      const row=ws.getRow(9+i);
+      row.height=22;
+      const cells=[r.dateObj,r.driver,r.purpose,r.from,r.via,r.to,r.dist,r.cum,r.note];
+      cells.forEach((val,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=REPORT_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.alignment={vertical:'middle',horizontal:ci===2||ci===8?'left':'center',wrapText:ci===2||ci===8};
+        cell.value=val;
+        if(ci===0){ cell.numFmt='d (aaa)'; }
+        else if(ci===6||ci===7){ cell.numFmt='#,##0'; }
+      });
+      row.commit();
+    });
+
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const p2=n=>String(n).padStart(2,'0');
+    const fname=`운행일지_${carNo}_${now.getFullYear()}${p2(now.getMonth()+1)}${p2(now.getDate())}${p2(now.getHours())}${p2(now.getMinutes())}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportVehicleReports(){
+  const btn=document.getElementById('reportExportBtn');
+  const lbl=document.getElementById('reportExportLabel');
+  let year,month;
+  if(_detailYearFilter!=='ALL' && _detailMonthFilter!=='ALL'){
+    year=parseInt(_detailYearFilter,10); month=parseInt(_detailMonthFilter,10);
+  } else {
+    const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+    if(!latest){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const cars=_detailCarFilter ? [_detailCarFilter] : getUniqueCarNos();
+  if(!cars.length){ alert('보고서를 생성할 차량이 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=cars.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const carNo=cars[idx++];
+    lbl.textContent=`생성 중... (${idx}/${cars.length})`;
+    buildOneVehicleReport(carNo,year,month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${carNo} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
 }
 
 // ── 내장 데이터 (차량운행DB 샘플 데이터 — 2026-05 ~ 2026-06, 실제 연동 전 시연용) ──
