@@ -213,7 +213,9 @@ tbody tr:last-child td{border-bottom:none}
 .detail-modal-box{max-width:560px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
-.detail-modal-close{width:28px;height:28px;border-radius:var(--r6);border:none;background:var(--bg);color:var(--txt2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
 .detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
 .detail-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
 .detail-row:last-child{border-bottom:none}
@@ -400,7 +402,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="contactEditModalTitle">업체연락처 수정</span></h3>
-        <button class="detail-modal-close" onclick="closeContactEditModal()" aria-label="닫기">✕</button>
+        <button class="detail-modal-close" onclick="closeContactEditModal()" aria-label="닫기">닫기</button>
       </div>
       <div class="modal-field">
         <label class="modal-label">관리</label>
@@ -459,7 +461,7 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="addModalTitleText">신규 하자 등록</span></h3>
-        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">✕</button>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
       </div>
 
       <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
@@ -648,9 +650,10 @@ tbody tr:last-child td{border-bottom:none}
     <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3 id="detailTitle">하자 상세</h3>
-        <div style="display:flex;gap:16px;align-items:center">
+        <div style="display:flex;gap:14px;align-items:center">
           <div id="detailActions" style="display:flex;gap:10px;align-items:center"></div>
-          <button class="detail-modal-close" onclick="closeDetail()" aria-label="닫기">✕</button>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetail()" aria-label="닫기">닫기</button>
         </div>
       </div>
       <div id="detailBody"></div>
