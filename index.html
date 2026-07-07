@@ -578,7 +578,7 @@ body{
       <span>하자보수현황</span>
     </div>
     <div class="sb-item" id="sbn-vehicle" onclick="go('vehicle')">
-      <span>차량운행일지(수정중)</span>
+      <span>차량운행일지</span>
     </div>
     <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
       <span>연장근무현황</span>
@@ -702,7 +702,7 @@ body{
           </div>
           <div class="app-card" onclick="go('vehicle')">
             <div>
-              <div class="ac-name">차량운행일지(수정중)</div>
+              <div class="ac-name">차량운행일지</div>
               <div class="ac-kpi" id="kpi-vehicle">—</div>
               <div class="ac-desc">차량 운행 이력 기록 및 조회.</div>
             </div>
@@ -787,9 +787,9 @@ body{
       <div class="iframe-wrap">
         <div class="iframe-overlay" id="ov-vehicle">
           <div class="spin-ring"></div>
-          <div class="overlay-txt">차량운행일지(수정중) 앱 로딩 중...</div>
+          <div class="overlay-txt">차량운행일지 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-vehicle" class="app-iframe" title="차량운행일지(수정중)"></iframe>
+        <iframe id="ifr-vehicle" class="app-iframe" title="차량운행일지"></iframe>
       </div>
     </div>
 
@@ -895,14 +895,14 @@ const PORTAL_BOOT_TS = Date.now();
 // ── 앱 정의 ──────────────────────────────────────────────
 const APPS = {
   defect:   { name:'하자보수현황', file:'defect-management.html' },
-  vehicle:  { name:'차량운행일지(수정중)', file:'vehicle-log.html' },
+  vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무현황', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
   defect:   { mName:'하자보수현황' },
-  vehicle:  { mName:'차량운행일지(수정중)' },
+  vehicle:  { mName:'차량운행일지' },
   overtime: { mName:'연장근무현황' },
   solar:    { mName:'태양광발전량' }
 };
