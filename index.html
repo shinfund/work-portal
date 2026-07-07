@@ -281,6 +281,7 @@ body{
   font-size:12px;font-weight:600;color:var(--nav-pill-text);
 }
 .topbar-info-sep{color:var(--nav-pill-sep);font-weight:300;}
+.topbar-auth-exp.warn{color:var(--amber);}
 .topbar-weather{display:flex;align-items:center;gap:4px;}
 .topbar-weather-icon{font-size:15px;line-height:1;}
 .weather-loading{color:var(--nav-pill-text);font-size:12px;opacity:.75;}
@@ -655,6 +656,8 @@ body{
 
     <div class="tb-spacer"></div>
     <div class="topbar-info">
+      <span id="topbar-auth-exp" class="topbar-auth-exp" style="display:none"></span>
+      <span class="topbar-info-sep" id="topbar-auth-exp-sep" style="display:none">|</span>
       <span id="topbar-date">--</span>
       <span class="topbar-info-sep">|</span>
       <span class="topbar-weather" id="topbar-weather">
@@ -1135,6 +1138,22 @@ function updateLoginStatusHint(){
   if (!h) return;
   h.textContent = isAuthed() ? '로그인 상태 (만료: ' + new Date(AUTH_EXPIRES).toLocaleString('ko-KR') + ')' : '로그인이 필요합니다';
 }
+// 상단 우측 날짜 앞에 공용 비밀번호(로그인) 만료 일시 표시 — 24시간 이내로 남으면 강조색
+function updateTopbarAuthExpiry(){
+  const el = document.getElementById('topbar-auth-exp');
+  const sep = document.getElementById('topbar-auth-exp-sep');
+  if (!el || !sep) return;
+  if (!isAuthed()) { el.style.display = 'none'; sep.style.display = 'none'; return; }
+  const d = new Date(AUTH_EXPIRES);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  el.textContent = `인증만료 ${mm}/${dd} ${hh}:${mi}`;
+  el.classList.toggle('warn', (AUTH_EXPIRES - Date.now()) < 24 * 60 * 60 * 1000);
+  el.style.display = '';
+  sep.style.display = '';
+}
 function doLogin(){
   const pEl = document.getElementById('c-pw');
   const pw = pEl.value.trim();
@@ -1151,6 +1170,7 @@ function doLogin(){
       } catch(e) {}
       closeCfg();
       showToast('로그인되었습니다.');
+      updateTopbarAuthExpiry();
       reloadLoadedApps();
     })
     .catch(() => showToast('로그인 요청 실패 — 네트워크를 확인하세요.'));
@@ -1159,6 +1179,7 @@ function doLogout(){
   AUTH_TOKEN = ''; AUTH_EXPIRES = 0;
   try { localStorage.removeItem('wp_authToken'); localStorage.removeItem('wp_authExpires'); } catch(e) {}
   updateLoginStatusHint();
+  updateTopbarAuthExpiry();
   showToast('로그아웃되었습니다.');
   reloadLoadedApps();
 }
@@ -1168,6 +1189,7 @@ window.addEventListener('storage', e => {
     AUTH_TOKEN = e.newValue || '';
     AUTH_EXPIRES = parseInt(localStorage.getItem('wp_authExpires') || '0', 10) || 0;
     updateLoginStatusHint();
+    updateTopbarAuthExpiry();
     renderHomeKpi();
     reloadLoadedApps();
   }
@@ -1293,6 +1315,7 @@ function tick() {
     const days = ['일','월','화','수','목','금','토'];
     td.textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
   }
+  updateTopbarAuthExpiry();
 }
 tick();
 setInterval(tick, 10000);
