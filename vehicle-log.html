@@ -1997,8 +1997,8 @@ const REPORT_BODY_FONT={name:'맑은 고딕',size:12};
 // 박스 안에 원본 비율을 유지한 채 축소해 가운데 배치한다(twoCell 늘려채우기 대신 고정 크기 배치).
 const EXCEL_EMU_PER_PX=9525;
 // "원본"의 기준 = 셀을 가득 채운 크기(=1.0). 그 대비 이 비율만큼 축소해 표시(원본 종횡비 유지).
-// 2026-07-07 여러 차례 조정 끝에 셀 꽉참 대비 1/2로 최종 확정.
-const REPORT_SIG_SCALE=1/2;
+// 2026-07-07 여러 차례 조정 끝에 셀 꽉참 대비 2/3로 최종 확정.
+const REPORT_SIG_SCALE=2/3;
 function excelColWidthToPx(charWidth){ return Math.round(charWidth*7+5); } // Calibri 11 기준 근사치
 function excelRowHeightToPx(points){ return Math.round(points*4/3); } // 1pt = 4/3px(96dpi)
 function dataUrlToImageInput(dataUrl){
