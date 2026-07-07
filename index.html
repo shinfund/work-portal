@@ -1317,7 +1317,7 @@ function renderHomeKpi() {
   const vEl = document.getElementById('kpi-vehicle');
   if (vEl) {
     const s = readPortalSummary('vehicle');
-    if (s && s.ym) { const m = parseInt(s.ym.slice(5, 7), 10); vEl.textContent = `${m}월 대당 ${fmtWonHome(s.avgDistPerCar)}km`; vEl.className = 'ac-kpi'; }
+    if (s) { vEl.textContent = `이달 ${fmtWonHome(s.thisMonthDist)}km`; vEl.className = 'ac-kpi'; }
     else { vEl.textContent = emptyKpiLabel(); vEl.className = 'ac-kpi empty'; }
   }
   const oEl = document.getElementById('kpi-overtime');

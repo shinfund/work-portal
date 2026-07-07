@@ -1268,15 +1268,9 @@ async function loadData(opts){
       _dataLoadedOnce=true;
       ensureCarColors();
       try{
-        const dates=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort();
-        const latestYM=dates.length?dates[dates.length-1].slice(0,7):null;
-        if(latestYM){
-          const [ly,lm]=latestYM.split('-').map(Number);
-          const monthDist=recordsForYM(ly,lm).reduce((s,r)=>s+(r.dist||0),0);
-          const carCount=getUniqueCarNos().length||1;
-          const avgDistPerCar=monthDist/carCount;
-          localStorage.setItem('portal_summary_vehicle', JSON.stringify({avgDistPerCar, ym:latestYM, updatedAt:Date.now()}));
-        }
+        const now=new Date();
+        const thisMonthDist=recordsForYM(now.getFullYear(), now.getMonth()+1).reduce((s,r)=>s+(r.dist||0),0);
+        localStorage.setItem('portal_summary_vehicle', JSON.stringify({thisMonthDist, updatedAt:Date.now()}));
       }catch(e){}
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
