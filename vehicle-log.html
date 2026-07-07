@@ -1873,13 +1873,13 @@ const EXCEL_COLUMNS_VEHICLE=[
   {key:'차량번호',header:'차량번호'},
   {key:'차량구분',header:'차량구분'},
   {key:'운전자',header:'운전자'},
-  {key:'용무',header:'용무',width:18,wrap:true,align:'left'},
+  {key:'용무',header:'용무',width:18,wrap:true},
   {key:'출발지',header:'출발지'},
   {key:'경유지',header:'경유지'},
   {key:'도착지',header:'도착지'},
-  {key:'운행',header:'운행(km)',numFmt:'#,##0.##'},
-  {key:'운행누계',header:'운행누계(km)',numFmt:'#,##0.##'},
-  {key:'비고',header:'비고',width:16,wrap:true,align:'left'}
+  {key:'운행',header:'운행(km)',numFmt:'#,##0'},
+  {key:'운행누계',header:'운행누계(km)',numFmt:'#,##0'},
+  {key:'비고',header:'비고',width:16,wrap:true}
 ];
 function excelCharWeight(ch){
   const code=ch.codePointAt(0);
@@ -1990,6 +1990,18 @@ function exportVehicleExcel(){
 //    양식(A1:I7 제목/차량정보/전월누계·당월누계·당월운행거리 요약 + A8:I 일자별 표) 재현 ──
 const REPORT_TITLE_FONT={name:'HY헤드라인M',size:28};
 const REPORT_BODY_FONT={name:'맑은 고딕',size:12};
+// 하자보수현황 앱의 사진 셀 삽입 방식과 동일한 여백 기준(EXCEL_PHOTO_INSET_EMU=3px, editAs:'twoCell')을
+// 재사용 — 셀에 여백 없이 꽉 채우면 서명이 테두리에 붙어 답답해 보이므로 사방 3px 여백을 둔다.
+const EXCEL_EMU_PER_PX=9525;
+const REPORT_IMG_INSET_EMU=3*EXCEL_EMU_PER_PX;
+// col0/rowStart0은 0-based(예: H열=7, 3행=행 인덱스 2), rowSpan은 이미지가 차지하는 행 수
+function reportImageAnchor(col0,rowStart0,rowSpan){
+  return {
+    tl:{nativeCol:col0, nativeColOff:REPORT_IMG_INSET_EMU, nativeRow:rowStart0, nativeRowOff:REPORT_IMG_INSET_EMU},
+    br:{nativeCol:col0+1, nativeColOff:-REPORT_IMG_INSET_EMU, nativeRow:rowStart0+rowSpan, nativeRowOff:-REPORT_IMG_INSET_EMU},
+    editAs:'twoCell'
+  };
+}
 function daysInMonthOf(year,month){ return new Date(year,month,0).getDate(); }
 // 전월누계(월초 기준 운행누계) — 대상월 이전 마지막 기록값 우선, 없으면 대상월 첫 기록에서 역산
 function getCarStartCum(carNo,year,month){
@@ -2049,12 +2061,10 @@ function buildOneVehicleReport(carNo,year,month){
       const w=excelAutoWidth([h].concat(vals), 9, 22);
       if(i===0) return Math.max(w, minColA);
       if(i===1) return Math.max(w, 13);
+      if(i===7||i===8) return Math.max(w, 12); // 운행누계·비고(H,I) — 결재란 서명 이미지가 들어갈 폭 확보
       return w;
     });
-    // J~O(결재란 포함) 폭도 최초 ws.columns 배열에 함께 포함시킨다 — 이후 ws.getColumn(n).width로
-    // 개별 지정하면 마지막 열(O)의 폭이 저장되지 않는 ExcelJS 직렬화 현상이 있었음(2026-07-07 확인).
-    const fullWidths=colWidths.concat([3,3,3,6,13,13]); // J,K,L,M,N,O
-    ws.columns=fullWidths.map(w=>({width:w}));
+    ws.columns=colWidths.map(w=>({width:w}));
 
     ws.mergeCells('A2:F2');
     const titleCell=ws.getCell('A2');
@@ -2070,6 +2080,35 @@ function buildOneVehicleReport(carNo,year,month){
     dateCell.font=REPORT_BODY_FONT;
     dateCell.alignment={vertical:'middle',horizontal:'center'};
     ws.getRow(4).height=24;
+
+    // 결재란 (제목 옆 G1:I3 — 담당=이 차량번호 전용 서명, 소장=전 차량 공통 서명, 설정에 등록된
+    // 이미지가 있으면 자동 삽입). 행1은 라벨용으로 높이를 조금 키우고, 행3은 서명 이미지 공간
+    // 확보를 위해 늘린다(행2는 제목행이라 이미 40으로 커서 그대로 활용).
+    ws.getRow(1).height=20;
+    ws.getRow(3).height=26;
+    ws.mergeCells('G1:G3');
+    ws.mergeCells('H2:H3');
+    ws.mergeCells('I2:I3');
+    function setApprovalCell(coord,value){
+      const cell=ws.getCell(coord);
+      cell.value=value;
+      cell.font=REPORT_BODY_FONT;
+      cell.border=EXCEL_CELL_BORDER;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+    }
+    setApprovalCell('G1','결   재');
+    setApprovalCell('H1','담당');
+    setApprovalCell('I1','소장');
+    ['G1','G2','G3','H1','H2','H3','I1','I2','I3'].forEach(c=>{ ws.getCell(c).border=EXCEL_CELL_BORDER; });
+    function dataUrlToImageInput(dataUrl){
+      const m=/^data:image\/(png|jpe?g);base64,(.+)$/.exec(dataUrl||'');
+      if(!m) return null;
+      return { base64:dataUrl, extension: m[1]==='jpg'?'jpeg':m[1] };
+    }
+    const sigDamdang=dataUrlToImageInput(getSignatureDataUrl('담당_'+carNo));
+    const sigSojang=dataUrlToImageInput(getSignatureDataUrl('소장'));
+    if(sigDamdang) ws.addImage(wb.addImage(sigDamdang),reportImageAnchor(7,1,2)); // H열(0-based 7), 2~3행
+    if(sigSojang) ws.addImage(wb.addImage(sigSojang),reportImageAnchor(8,1,2)); // I열(0-based 8), 2~3행
 
     function setCell(coord,value,opts){
       const cell=ws.getCell(coord);
@@ -2094,24 +2133,6 @@ function buildOneVehicleReport(carNo,year,month){
     setCell('F7',data.monthDist,{horizontal:'right'}).numFmt='#,##0 "km"';
     setCell('H7','');
     for(let r=5;r<=7;r++) ws.getRow(r).height=26;
-
-    // 결재란 (담당=이 차량번호 전용 서명, 소장=전 차량 공통 서명 — 설정에 등록된 이미지가 있으면 자동 삽입, 폭은 위 fullWidths에서 이미 지정)
-    ws.mergeCells('M9:M11');
-    ws.mergeCells('N10:N11');
-    ws.mergeCells('O10:O11');
-    setCell('M9','결   재');
-    setCell('N9','담당');
-    setCell('O9','소장');
-    ['M9','M10','M11','N9','N10','N11','O9','O10','O11'].forEach(c=>{ ws.getCell(c).border=EXCEL_CELL_BORDER; });
-    function dataUrlToImageInput(dataUrl){
-      const m=/^data:image\/(png|jpe?g);base64,(.+)$/.exec(dataUrl||'');
-      if(!m) return null;
-      return { base64:dataUrl, extension: m[1]==='jpg'?'jpeg':m[1] };
-    }
-    const sigDamdang=dataUrlToImageInput(getSignatureDataUrl('담당_'+carNo));
-    const sigSojang=dataUrlToImageInput(getSignatureDataUrl('소장'));
-    if(sigDamdang) ws.addImage(wb.addImage(sigDamdang),'N10:N11');
-    if(sigSojang) ws.addImage(wb.addImage(sigSojang),'O10:O11');
 
     const headerRow=ws.getRow(8);
     headerRow.height=26;
