@@ -127,7 +127,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 table{width:100%;border-collapse:collapse}
 thead tr{background:var(--bg);border-bottom:2px solid var(--border)}
 th{padding:7px 10px;font-size:12px;font-weight:700;color:var(--txt);text-align:left;white-space:nowrap}
-td{padding:7px 10px;font-size:13px;color:var(--txt2);border-bottom:1px solid var(--border2);vertical-align:middle}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle}
 tbody tr{cursor:pointer;transition:background .1s}
 tbody tr:hover{background:var(--sky50)}
 tbody tr:last-child td{border-bottom:none}
@@ -2963,7 +2963,7 @@ function openContactDetail(idx){
   if(footer) footer.innerHTML = '';
 
   var tel = r.전화번호||'';
-  var telHtml = tel ? '<a href="tel:'+esc(tel)+'" style="color:var(--sky600);font-weight:700;text-decoration:none">'+esc(tel)+'</a>' : '-';
+  var telHtml = tel ? '<a href="tel:'+esc(tel)+'" style="color:var(--txt);text-decoration:none">'+esc(tel)+'</a>' : '-';
   var gBadge = r.관리구분==='안전관리자'
     ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">안전관리자</span>'
     : r.관리구분==='점검팀'
@@ -3256,7 +3256,7 @@ function renderContactTable(){
       : esc(r.관리구분);
     var tel = r.전화번호||'-';
     var telHtml = tel!=='-'
-      ? '<a href="tel:'+esc(tel)+'" style="color:var(--sky600);text-decoration:none;font-weight:600">'+esc(tel)+'</a>'
+      ? '<a href="tel:'+esc(tel)+'" style="color:var(--txt);text-decoration:none">'+esc(tel)+'</a>'
       : '-';
     return '<tr onclick="openContactDetail('+r._idx+')" style="cursor:pointer">'
       +'<td class="td-nowrap">'+gBadge+'</td>'
@@ -3264,7 +3264,7 @@ function renderContactTable(){
       +'<td class="td-nowrap">'+esc(r.업체명||'-')+'</td>'
       +'<td class="td-nowrap">'+esc(r.담당자||'-')+'</td>'
       +'<td class="td-nowrap">'+telHtml+'</td>'
-      +'<td style="font-size:13px;color:var(--txt2);line-height:1.5">'+esc(r.관련업무||'-')+'</td>'
+      +'<td style="font-size:13px;line-height:1.5">'+esc(r.관련업무||'-')+'</td>'
       +'<td class="td-nowrap">'+esc(r.비고||'-')+'</td>'
       +'</tr>';
   }).join('');

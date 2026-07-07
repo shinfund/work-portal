@@ -947,7 +947,7 @@ function buildDetailRow(r, showEmployee){
     <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
     <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtH(r.hours)}h</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
-    <td style="font-size:13px;color:var(--txt2);white-space:nowrap">${esc(r.note||'')}</td>
+    <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
 // 하위 호환 유지용 래퍼 (직원별 탭 — 직원명 컬럼 없음)
@@ -1099,7 +1099,7 @@ function renderEmployee(recs){
           <tbody>
             ${empRecs.map(r=>buildEmpDetailRow(r)).join('')}
             <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
-              <td colspan="2" style="font-weight:700;color:var(--txt2)">합계</td>
+              <td colspan="2" style="font-weight:700">합계</td>
               <td class="r" style="font-weight:700;color:var(--sky600)">${fmtH(empRecs.reduce((s,r)=>s+r.hours,0))}h</td>
               <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(empRecs.reduce((s,r)=>s+getPayAmt(r),0))}</td>
               <td></td>
