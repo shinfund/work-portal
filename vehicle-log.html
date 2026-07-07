@@ -287,14 +287,14 @@ tr:hover td{background:var(--sky50)}
 
       <div class="modal-field">
         <label class="modal-label">날짜 <span class="modal-required">*</span></label>
-        <input id="addDate" class="modal-input" type="date"/>
+        <input id="addDate" class="modal-input" type="date" onchange="recomputeCumDist()"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">차량번호 <span class="modal-required">*</span></label>
         <select id="addCarNo" class="modal-select" onchange="onAddCarNoChange()">
           <option value="">선택</option>
         </select>
-        <input id="addCarNoCustom" class="modal-input" type="text" placeholder="차량번호 직접 입력" style="display:none;margin-top:6px"/>
+        <input id="addCarNoCustom" class="modal-input" type="text" placeholder="차량번호 직접 입력" style="display:none;margin-top:6px" oninput="recomputeCumDist()"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">차량구분</label>
@@ -313,7 +313,10 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="modal-field">
         <label class="modal-label">용무 <span class="modal-required">*</span></label>
-        <input id="addPurpose" class="modal-input" type="text" placeholder="예) 남정5터널 점검 지원"/>
+        <select id="addPurpose" class="modal-select" onchange="onSelectChange(this,'addPurposeCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addPurposeCustom" class="modal-input" type="text" placeholder="예) 남정5터널 점검 지원" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">출발지</label>
@@ -338,12 +341,12 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="modal-field">
         <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
-        <input id="addDist" class="modal-input" type="number" step="0.1" placeholder="예) 32.5"/>
+        <input id="addDist" class="modal-input" type="number" step="0.1" placeholder="예) 32.5" oninput="recomputeCumDist()"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">운행누계(km) <span class="modal-required">*</span></label>
-        <input id="addCumDist" class="modal-input" type="number" step="0.1" placeholder="예) 45230"/>
-        <div class="modal-hint">계기판에 표시된 누적 주행거리를 직접 입력하는 값입니다.</div>
+        <input id="addCumDist" class="modal-input" type="number" step="0.1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <div class="modal-hint" id="addCumDistHint">차량번호와 날짜를 먼저 선택하세요.</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -723,10 +726,40 @@ function getUniqueDrivers(){ return [...new Set(ALL_RECORDS.map(r=>r.driver).fil
 function getUniqueFrom(){ return [...new Set(ALL_RECORDS.map(r=>r.from).filter(Boolean))].sort(); }
 function getUniqueVia(){ return [...new Set(ALL_RECORDS.map(r=>r.via).filter(Boolean))].sort(); }
 function getUniqueTo(){ return [...new Set(ALL_RECORDS.map(r=>r.to).filter(Boolean))].sort(); }
+function getUniquePurposes(){ return [...new Set(ALL_RECORDS.map(r=>r.purpose).filter(Boolean))].sort(); }
 function getCarLatestType(carNo){
   if(!carNo) return null;
   const rec=[...ALL_RECORDS].reverse().find(r=>r.carNo===carNo && r.carType);
   return rec ? rec.carType : null;
+}
+// 전일 운행누계 — 신규등록/수정 폼에서 운행누계를 "전일 운행누계 + 당일 운행"으로 자동 계산하기 위한 기준값
+// (수정 모드에서 자기 자신의 기록은 날짜 비교상 자연히 제외됨 — r.date는 자기 자신과 같아서 < 비교에 걸리지 않음)
+function getCarPrevCum(carNo,dateStr){
+  if(!carNo||!dateStr) return null;
+  const before=ALL_RECORDS.filter(r=>r.carNo===carNo && r.date < dateStr).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!before.length) return null;
+  const last=before[before.length-1];
+  return { date:last.date, cum:last.cumDist||0 };
+}
+function recomputeCumDist(){
+  const carNo=getSelectValue('addCarNo','addCarNoCustom');
+  const date=document.getElementById('addDate').value;
+  const dist=parseFloat(document.getElementById('addDist').value)||0;
+  const cumEl=document.getElementById('addCumDist');
+  const hintEl=document.getElementById('addCumDistHint');
+  if(!carNo||!date){
+    cumEl.value='';
+    if(hintEl) hintEl.textContent='차량번호와 날짜를 먼저 선택하세요.';
+    return;
+  }
+  const prev=getCarPrevCum(carNo,date);
+  const prevCum=prev?prev.cum:0;
+  cumEl.value=prevCum+dist;
+  if(hintEl){
+    hintEl.textContent=prev
+      ? `= 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) + 운행 ${fmtKm(dist)}km (자동 계산)`
+      : `= 전일 기록 없음(0km 기준) + 운행 ${fmtKm(dist)}km (자동 계산)`;
+  }
 }
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
@@ -757,6 +790,7 @@ function onAddCarNoChange(){
     typeSel.value=t;
     onSelectChange(typeSel,'addCarTypeCustom');
   }
+  recomputeCumDist();
 }
 
 function openAddModal(){
@@ -765,13 +799,15 @@ function openAddModal(){
   document.getElementById('addSubmitLabel').textContent='등록';
   const today=new Date();
   document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  ['addPurpose','addDist','addCumDist','addNote','addCarNoCustom','addCarTypeCustom','addDriverCustom','addFromCustom','addViaCustom','addToCustom'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['addDist','addNote','addCarNoCustom','addCarTypeCustom','addDriverCustom','addPurposeCustom','addFromCustom','addViaCustom','addToCustom'].forEach(id=>{ document.getElementById(id).value=''; });
   buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), '');
   buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), '');
   buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), '');
+  buildGenericSelectOpts(document.getElementById('addPurpose'), document.getElementById('addPurposeCustom'), getUniquePurposes(), '');
   buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), '');
   buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), '');
   buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), '');
+  recomputeCumDist();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -789,16 +825,16 @@ function openEditModal(pageId){
   document.getElementById('addModalTitleText').textContent='운행 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value = r.date||'';
-  document.getElementById('addPurpose').value = r.purpose||'';
   document.getElementById('addDist').value = r.dist||'';
-  document.getElementById('addCumDist').value = r.cumDist||'';
   document.getElementById('addNote').value = r.note||'';
   buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), r.carNo||'');
   buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), r.carType||'');
   buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), r.driver||'');
+  buildGenericSelectOpts(document.getElementById('addPurpose'), document.getElementById('addPurposeCustom'), getUniquePurposes(), r.purpose||'');
   buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), r.from||'');
   buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), r.via||'');
   buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), r.to||'');
+  recomputeCumDist();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -806,15 +842,15 @@ function submitAddForm(){
   const date = document.getElementById('addDate').value.trim();
   const carNo = getSelectValue('addCarNo','addCarNoCustom');
   const driver = getSelectValue('addDriver','addDriverCustom');
-  const purpose = document.getElementById('addPurpose').value.trim();
+  const purpose = getSelectValue('addPurpose','addPurposeCustom');
   const dist = document.getElementById('addDist').value.trim();
   const cumDist = document.getElementById('addCumDist').value.trim();
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!carNo){ alert('차량번호를 선택해주세요.'); return; }
   if(!driver){ alert('운전자를 선택해주세요.'); return; }
-  if(!purpose){ alert('용무를 입력해주세요.'); return; }
+  if(!purpose){ alert('용무를 선택해주세요.'); return; }
   if(dist===''){ alert('운행(km)을 입력해주세요.'); return; }
-  if(cumDist===''){ alert('운행누계(km)를 입력해주세요.'); return; }
+  if(cumDist===''){ alert('운행누계(km) 계산에 필요한 차량번호·날짜·운행(km)을 먼저 입력해주세요.'); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
   const carType=getSelectValue('addCarType','addCarTypeCustom');
@@ -1908,7 +1944,7 @@ function buildOneVehicleReport(carNo,year,month){
       cell.alignment=Object.assign({vertical:'middle',horizontal:'center'},opts||{});
       return cell;
     }
-    ['A5:A6','B5:C5','D5:E5','F5:G5','H5:I5','A6:A7','B6:C7','D6:E6','D7:E7','F6:G6','F7:G7','H6:I6','H7:I7'].forEach(r=>ws.mergeCells(r));
+    ['B5:C5','D5:E5','F5:G5','H5:I5','A6:A7','B6:C7','D6:E6','D7:E7','F6:G6','F7:G7','H6:I6','H7:I7'].forEach(r=>ws.mergeCells(r));
     setCell('A5','차량번호');
     setCell('B5','차량 구분');
     setCell('D5','전월누계');
@@ -1952,9 +1988,7 @@ function buildOneVehicleReport(carNo,year,month){
   }).then(buf=>{
     const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const now=new Date();
-    const p2=n=>String(n).padStart(2,'0');
-    const fname=`운행일지_${carNo}_${now.getFullYear()}${p2(now.getMonth()+1)}${p2(now.getDate())}${p2(now.getHours())}${p2(now.getMinutes())}.xlsx`;
+    const fname=`${year}년 ${month}월 운행일지_${carNo}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
