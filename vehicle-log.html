@@ -305,6 +305,20 @@ tr:hover td{background:var(--sky50)}
       <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
 
       <div class="modal-field">
+        <label class="modal-label">입력 방식</label>
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:13px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="addInputMode" value="cum" checked onchange="onInputModeChange()"/>
+            운행누계 입력 <span style="color:var(--txt3)">(운행 = 당일누계 − 전일누계)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="addInputMode" value="dist" onchange="onInputModeChange()"/>
+            운행 입력 <span style="color:var(--txt3)">(당일누계 = 전일누계 + 운행)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-field">
         <label class="modal-label">날짜 <span class="modal-required">*</span></label>
         <input id="addDate" class="modal-input" type="date" onchange="recomputeDist()"/>
       </div>
@@ -364,7 +378,7 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="modal-field">
         <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
-        <input id="addDist" class="modal-input" type="number" step="0.1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <input id="addDist" class="modal-input" type="number" step="0.1" readonly oninput="recomputeDist()" style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
         <div class="modal-hint" id="addDistHint">차량번호와 날짜를 먼저 선택하세요.</div>
       </div>
       <div class="modal-field">
@@ -866,35 +880,76 @@ function getCarPrevCum(carNo,dateStr){
   const last=before[before.length-1];
   return { date:last.date, cum:last.cumDist||0 };
 }
-// 운전자가 계기판에서 읽은 "운행누계"만 입력하면, 운행(km)은 전일 운행누계와의 차이로 자동 계산된다.
+// 입력 방식: 'cum'=운행누계 입력→운행 자동계산(운행=당일누계−전일누계), 'dist'=운행 입력→운행누계 자동계산(당일누계=전일누계+운행)
+function getInputMode(){
+  const r=document.querySelector('input[name="addInputMode"]:checked');
+  return r?r.value:'cum';
+}
+function onInputModeChange(){
+  const mode=getInputMode();
+  const cumEl=document.getElementById('addCumDist');
+  const distEl=document.getElementById('addDist');
+  const ro='var(--card2,rgba(127,127,127,.08))';
+  if(mode==='cum'){
+    cumEl.readOnly=false; cumEl.style.background=''; cumEl.style.cursor='';
+    distEl.readOnly=true; distEl.style.background=ro; distEl.style.cursor='not-allowed';
+  } else {
+    distEl.readOnly=false; distEl.style.background=''; distEl.style.cursor='';
+    cumEl.readOnly=true; cumEl.style.background=ro; cumEl.style.cursor='not-allowed';
+  }
+  recomputeDist();
+}
+// 운전자가 계기판에서 읽은 "운행누계"를 입력하면 운행(km)이, 반대로 "운행"을 입력하면 운행누계가 전일 운행누계 기준으로 자동 계산된다.
 function recomputeDist(){
+  const mode=getInputMode();
   const carNo=getSelectValue('addCarNo','addCarNoCustom');
   const date=document.getElementById('addDate').value;
-  const cumVal=document.getElementById('addCumDist').value;
-  const cum=parseFloat(cumVal);
+  const cumEl=document.getElementById('addCumDist');
   const distEl=document.getElementById('addDist');
   const hintEl=document.getElementById('addDistHint');
   if(!carNo||!date){
-    distEl.value='';
+    if(mode==='cum') distEl.value=''; else cumEl.value='';
     if(hintEl) hintEl.textContent='차량번호와 날짜를 먼저 선택하세요.';
     return;
   }
   const prev=getCarPrevCum(carNo,date);
   const prevCum=prev?prev.cum:0;
-  if(cumVal===''||isNaN(cum)){
-    distEl.value='';
+  if(mode==='cum'){
+    const cumVal=cumEl.value;
+    const cum=parseFloat(cumVal);
+    if(cumVal===''||isNaN(cum)){
+      distEl.value='';
+      if(hintEl){
+        hintEl.textContent=prev
+          ? `전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) — 운행누계를 입력하면 운행(km)이 자동 계산됩니다.`
+          : '전일 기록 없음(0km 기준) — 운행누계를 입력하면 운행(km)이 자동 계산됩니다.';
+      }
+      return;
+    }
+    distEl.value=cum-prevCum;
     if(hintEl){
       hintEl.textContent=prev
-        ? `전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) — 운행누계를 입력하면 운행(km)이 자동 계산됩니다.`
-        : '전일 기록 없음(0km 기준) — 운행누계를 입력하면 운행(km)이 자동 계산됩니다.';
+        ? `= 당일 운행누계 ${fmtKm(cum)}km − 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) (자동 계산)`
+        : `= 당일 운행누계 ${fmtKm(cum)}km − 전일 기록 없음(0km 기준) (자동 계산)`;
     }
-    return;
-  }
-  distEl.value=cum-prevCum;
-  if(hintEl){
-    hintEl.textContent=prev
-      ? `= 당일 운행누계 ${fmtKm(cum)}km − 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) (자동 계산)`
-      : `= 당일 운행누계 ${fmtKm(cum)}km − 전일 기록 없음(0km 기준) (자동 계산)`;
+  } else {
+    const distVal=distEl.value;
+    const dist=parseFloat(distVal);
+    if(distVal===''||isNaN(dist)){
+      cumEl.value='';
+      if(hintEl){
+        hintEl.textContent=prev
+          ? `전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) — 운행(km)을 입력하면 당일 운행누계가 자동 계산됩니다.`
+          : '전일 기록 없음(0km 기준) — 운행(km)을 입력하면 당일 운행누계가 자동 계산됩니다.';
+      }
+      return;
+    }
+    cumEl.value=prevCum+dist;
+    if(hintEl){
+      hintEl.textContent=prev
+        ? `= 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) + 운행 ${fmtKm(dist)}km (자동 계산)`
+        : `= 전일 기록 없음(0km 기준) + 운행 ${fmtKm(dist)}km (자동 계산)`;
+    }
   }
 }
 function onSelectChange(selectEl, customInputId){
@@ -935,7 +990,9 @@ function openAddModal(){
   document.getElementById('addSubmitLabel').textContent='등록';
   const today=new Date();
   document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  ['addCumDist','addNote','addCarNoCustom','addCarTypeCustom','addDriverCustom','addPurposeCustom','addFromCustom','addViaCustom','addToCustom'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['addCumDist','addDist','addNote','addCarNoCustom','addCarTypeCustom','addDriverCustom','addPurposeCustom','addFromCustom','addViaCustom','addToCustom'].forEach(id=>{ document.getElementById(id).value=''; });
+  const cumModeRadio=document.querySelector('input[name="addInputMode"][value="cum"]');
+  if(cumModeRadio) cumModeRadio.checked=true;
   buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), '');
   buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), '');
   buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), '');
@@ -943,7 +1000,7 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), '');
   buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), '');
   buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), '');
-  recomputeDist();
+  onInputModeChange();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -963,6 +1020,8 @@ function openEditModal(pageId){
   document.getElementById('addDate').value = r.date||'';
   document.getElementById('addCumDist').value = r.cumDist||'';
   document.getElementById('addNote').value = r.note||'';
+  const cumModeRadioEdit=document.querySelector('input[name="addInputMode"][value="cum"]');
+  if(cumModeRadioEdit) cumModeRadioEdit.checked=true;
   buildGenericSelectOpts(document.getElementById('addCarNo'), document.getElementById('addCarNoCustom'), getUniqueCarNos(), r.carNo||'');
   buildGenericSelectOpts(document.getElementById('addCarType'), document.getElementById('addCarTypeCustom'), getUniqueCarTypes(), r.carType||'');
   buildGenericSelectOpts(document.getElementById('addDriver'), document.getElementById('addDriverCustom'), getUniqueDrivers(), r.driver||'');
@@ -970,7 +1029,7 @@ function openEditModal(pageId){
   buildGenericSelectOpts(document.getElementById('addFrom'), document.getElementById('addFromCustom'), getUniqueFrom(), r.from||'');
   buildGenericSelectOpts(document.getElementById('addVia'), document.getElementById('addViaCustom'), getUniqueVia(), r.via||'');
   buildGenericSelectOpts(document.getElementById('addTo'), document.getElementById('addToCustom'), getUniqueTo(), r.to||'');
-  recomputeDist();
+  onInputModeChange();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
