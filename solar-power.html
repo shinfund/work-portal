@@ -323,8 +323,6 @@ tr:hover td{background:var(--sky50)}
         <label class="modal-label">전일누적량(kWh) <span class="modal-required">*</span></label>
         <select id="addPrevCumGen" class="modal-select" onchange="onPrevCumSelectChange()">
           <option value="">선택</option>
-          <option value="__custom__">직접입력</option>
-          <option value="__latest__" id="addPrevCumLatestOpt" disabled>최근 누적발전량</option>
         </select>
         <input id="addPrevCumGenCustom" class="modal-input" type="number" step="0.1" placeholder="예) 184,919" style="display:none;margin-top:6px" oninput="recomputeGenAndFee()"/>
       </div>
@@ -695,17 +693,24 @@ var EDIT_PAGE_ID = null;
 function getUniqueTunnels(){ return [...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort(); }
 function getUniqueCapacities(){ return [...new Set(ALL_RECORDS.map(r=>r.capacity).filter(Boolean))].sort((a,b)=>a-b); }
 function getUniqueUnitPrices(){ return [...new Set(ALL_RECORDS.map(r=>r.unitPrice).filter(Boolean))].sort((a,b)=>a-b); }
+// 터널 미선택 시엔 전체 목록(선택 폭 넓게), 터널 선택 후엔 해당 터널의 기록에서만 값을 뽑는다.
+function getTunnelCapacities(tunnel){
+  if(!tunnel) return getUniqueCapacities();
+  return [...new Set(ALL_RECORDS.filter(r=>r.tunnel===tunnel).map(r=>r.capacity).filter(Boolean))].sort((a,b)=>a-b);
+}
 function getTunnelCapacity(tunnel){
   if(!tunnel) return null;
   const rec=[...ALL_RECORDS].reverse().find(r=>r.tunnel===tunnel && r.capacity);
   return rec ? rec.capacity : null;
 }
-function getTunnelLatestCumGen(tunnel){
-  if(!tunnel) return null;
-  const recs=ALL_RECORDS.filter(r=>r.tunnel===tunnel && r.cumGen!=null).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!recs.length) return null;
-  const last=recs[recs.length-1];
-  return { date:last.date, cumGen:last.cumGen };
+// 해당 터널의 "가장 최근 날짜"에 해당하는 기록만 반환. 청하터널(주)/(부)처럼 한 터널명 아래
+// 용량이 다른 계량기가 2개 이상 있으면 같은 날짜에 레코드가 2건 이상 나올 수 있어 모두 포함한다.
+function getTunnelLatestDateRecords(tunnel){
+  if(!tunnel) return [];
+  const recs=ALL_RECORDS.filter(r=>r.tunnel===tunnel && r.cumGen!=null);
+  if(!recs.length) return [];
+  const maxDate=recs.reduce((m,r)=>r.date>m?r.date:m, recs[0].date);
+  return recs.filter(r=>r.date===maxDate);
 }
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
@@ -733,8 +738,9 @@ function getPrevCumGenValue(){
   const sel=document.getElementById('addPrevCumGen');
   if(!sel) return '';
   if(sel.value==='__custom__') return ((document.getElementById('addPrevCumGenCustom')||{}).value||'').trim();
-  if(sel.value==='__latest__') return sel.options[sel.selectedIndex].dataset.val||'';
-  return '';
+  if(sel.value==='') return '';
+  const opt=sel.options[sel.selectedIndex];
+  return (opt && opt.dataset.val) || '';
 }
 function recomputeGenAndFee(){
   const cumGen=parseFloat(document.getElementById('addCumGen').value);
@@ -760,29 +766,33 @@ function onUnitPriceSelectChange(){
   onSelectChange(document.getElementById('addUnitPrice'),'addUnitPriceCustom');
   recomputeGenAndFee();
 }
-function refreshPrevCumLatestOpt(tunnel){
-  const opt=document.getElementById('addPrevCumLatestOpt');
-  const latest=getTunnelLatestCumGen(tunnel);
-  if(latest){
-    opt.textContent=`최근 누적발전량 (${fmtDate(latest.date)}) ${fmtWon(latest.cumGen)}`;
-    opt.dataset.val=latest.cumGen;
-    opt.disabled=false;
+// 전일누적량 선택지를 해당 터널의 "가장 최근 날짜" 기록으로만 채운다(청하터널(주)/(부)처럼
+// 용량이 다른 계량기가 2개 있으면 같은 날짜에 2건이 나올 수 있어 용량으로 구분 표기한다).
+// currentCustomValue를 넘기면 직접입력 값으로 고정해서 연다(수정 모드에서 기존 확정값 표시용).
+function refreshPrevCumOptions(tunnel, currentCustomValue){
+  const sel=document.getElementById('addPrevCumGen');
+  const ci=document.getElementById('addPrevCumGenCustom');
+  const latestRecs=getTunnelLatestDateRecords(tunnel);
+  sel.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
+    + latestRecs.map((r,i)=>{
+        const capLabel=r.capacity?` ${fmtKw(r.capacity)}kW`:'';
+        const label=`최근 누적발전량 (${fmtDate(r.date)})${capLabel} ${fmtWon(r.cumGen)}`;
+        return `<option value="__hist_${i}__" data-val="${r.cumGen}">${esc(label)}</option>`;
+      }).join('');
+  if(currentCustomValue){
+    sel.value='__custom__'; ci.value=currentCustomValue; ci.style.display='';
   } else {
-    opt.textContent='최근 누적발전량 (해당 터널 데이터 없음)';
-    opt.dataset.val='';
-    opt.disabled=true;
+    sel.value=''; ci.value=''; ci.style.display='none';
   }
 }
 function onAddTunnelChange(){
   onSelectChange(document.getElementById('addTunnel'),'addTunnelCustom');
   const tunnel=getSelectValue('addTunnel','addTunnelCustom');
   const capSel=document.getElementById('addCapacity');
+  const capCustom=document.getElementById('addCapacityCustom');
   const cap=getTunnelCapacity(tunnel);
-  if(cap!=null && [...capSel.options].some(o=>o.value===String(cap))){
-    capSel.value=String(cap);
-    onSelectChange(capSel,'addCapacityCustom');
-  }
-  refreshPrevCumLatestOpt(tunnel);
+  buildGenericSelectOpts(capSel, capCustom, getTunnelCapacities(tunnel).map(String), cap!=null?String(cap):'');
+  refreshPrevCumOptions(tunnel);
   recomputeGenAndFee();
 }
 
@@ -794,12 +804,9 @@ function openAddModal(){
   document.getElementById('addDate').value = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   ['addGen','addCumGen','addFee','addNote','addTunnelCustom','addCapacityCustom','addUnitPriceCustom'].forEach(id=>{ document.getElementById(id).value=''; });
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), '');
-  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getUniqueCapacities().map(String), '');
+  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getTunnelCapacities('').map(String), '');
   buildGenericSelectOpts(document.getElementById('addUnitPrice'), document.getElementById('addUnitPriceCustom'), getUniqueUnitPrices().map(String), '');
-  document.getElementById('addPrevCumGen').value='';
-  document.getElementById('addPrevCumGenCustom').style.display='none';
-  document.getElementById('addPrevCumGenCustom').value='';
-  refreshPrevCumLatestOpt('');
+  refreshPrevCumOptions('');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -820,12 +827,10 @@ function openEditModal(pageId){
   document.getElementById('addCumGen').value = r.cumGen||'';
   document.getElementById('addNote').value = r.note||'';
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), r.tunnel||'');
-  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getUniqueCapacities().map(String), r.capacity?String(r.capacity):'');
+  buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getTunnelCapacities(r.tunnel||'').map(String), r.capacity?String(r.capacity):'');
   buildGenericSelectOpts(document.getElementById('addUnitPrice'), document.getElementById('addUnitPriceCustom'), getUniqueUnitPrices().map(String), r.unitPrice?String(r.unitPrice):'');
-  refreshPrevCumLatestOpt(r.tunnel||'');
-  // 기존 레코드의 전일누적량은 실제 값으로 확정돼 있으므로 직접입력 값으로 표시(최근값 드롭다운은 필요시 전환용으로만 남겨둠)
-  const prevSel=document.getElementById('addPrevCumGen'), prevCi=document.getElementById('addPrevCumGenCustom');
-  prevSel.value='__custom__'; prevCi.value=r.prevCumGen||''; prevCi.style.display='';
+  // 기존 레코드의 전일누적량은 실제 값으로 확정돼 있으므로 직접입력 값으로 표시(과거 기록 드롭다운은 필요시 전환용으로만 남겨둠)
+  refreshPrevCumOptions(r.tunnel||'', r.prevCumGen||'');
   recomputeGenAndFee();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
