@@ -1183,11 +1183,22 @@ function renderDDMonth(){
     return `<div class="dd-opt${m===curMonth?' sel':''}" onclick="pickMonth(${m})">${lbl}</div>`;
   }).join('');
 }
+// 기본 로드는 최근 DEFAULT_LOAD_MONTHS개월(서버측 날짜 필터)뿐이라, 그 범위보다 이전 연/월을
+// 선택하면 Notion엔 데이터가 있어도 화면엔 "없음"으로 보인다 — 이때만 전체 이력을 보충한다.
+// y: 연도(숫자|'ALL'), m: 월(1~12|0='전체')
+function needsFullHistory(y,m){
+  if(_fullHistoryLoaded) return false;
+  if(y==='ALL'||m===0||m==='ALL') return true;
+  const cutoff=new Date(); cutoff.setDate(1); cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
+  const cutoffYm=cutoff.getFullYear()*100+(cutoff.getMonth()+1);
+  const ym=parseInt(y,10)*100+parseInt(m,10);
+  return ym<cutoffYm;
+}
 function pickYear(y){
   curYear=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(y==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
@@ -1195,7 +1206,8 @@ function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(_dataLoadedOnce){ renderAll(); }
+  if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
+  else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
 function updateMonthLabel(){
@@ -1295,7 +1307,7 @@ function buildDetailYearDd(){
       _detailYearFilter=opt.dataset.val;
       _detailUserPicked=true;
       closeDetailYearDd();
-      if(_detailYearFilter==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       else renderDetail();
     });
   }
@@ -1316,7 +1328,8 @@ function buildDetailMonthDd(){
       _detailMonthFilter=opt.dataset.val;
       _detailUserPicked=true;
       closeDetailMonthDd();
-      renderDetail();
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      else renderDetail();
     });
   }
 }
