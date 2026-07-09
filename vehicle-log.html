@@ -2038,7 +2038,9 @@ function buildExcelReport(opts){
           if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
         } else {
           cell.value = r[col.key];
-          if(col.numFmt && typeof cell.value==='number') cell.numFmt=col.numFmt;
+          // 정수값에 소수 자릿수 서식을 그대로 적용하면 일부 뷰어(Google Sheets 등)에서
+          // "1." 처럼 불필요한 소수점이 붙어 보이는 문제가 있어, 정수면 소수 부분 서식을 제거한다.
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
         }
       });
       row.commit();

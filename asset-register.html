@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>비품대장(수정)</title>
+<title>비품대장(수정중)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
 <style>
@@ -295,7 +295,7 @@ tr:hover td{background:var(--sky50)}
         <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">구분 <span class="modal-required">*</span></label>
+        <label class="modal-label">품목분류 <span class="modal-required">*</span></label>
         <select id="addCategory" class="modal-select" onchange="onSelectChange(this,'addCategoryCustom')">
           <option value="">선택</option>
           <option value="__custom__">직접입력</option>
@@ -308,7 +308,7 @@ tr:hover td{background:var(--sky50)}
           <option value="사무용품">사무용품</option>
           <option value="측정기">측정기</option>
         </select>
-        <input id="addCategoryCustom" class="modal-input" type="text" placeholder="구분 직접 입력" style="display:none;margin-top:6px"/>
+        <input id="addCategoryCustom" class="modal-input" type="text" placeholder="품목분류 직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">규격</label>
@@ -390,7 +390,7 @@ tr:hover td{background:var(--sky50)}
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">비품대장(수정)</div>
+    <div class="logo-title">비품대장(수정중)</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -411,7 +411,7 @@ tr:hover td{background:var(--sky50)}
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">비품내역</button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')">터널별</button>
-  <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')">구분별</button>
+  <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')">품목분류별</button>
 </div>
 </div>
 
@@ -428,6 +428,12 @@ tr:hover td{background:var(--sky50)}
           </button>
           <div class="dd-menu" id="yearDdMenu"></div>
         </div>
+        <div class="dd-wrap" id="monthDdWrap">
+          <button class="dd-btn" id="monthDdBtn" onclick="toggleMonthDd()" aria-haspopup="listbox" aria-label="월 선택">
+            <span id="monthDdLabel">전체 월</span>
+          </button>
+          <div class="dd-menu" id="monthDdMenu"></div>
+        </div>
         <div class="dd-wrap" id="tunnelDdWrap">
           <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널명 선택">
             <span id="tunnelDdLabel">터널명 전체</span>
@@ -435,8 +441,8 @@ tr:hover td{background:var(--sky50)}
           <div class="dd-menu" id="tunnelDdMenu"></div>
         </div>
         <div class="dd-wrap" id="categoryDdWrap">
-          <button class="dd-btn" id="categoryDdBtn" onclick="toggleCategoryDd()" aria-haspopup="listbox" aria-label="구분 선택">
-            <span id="categoryDdLabel">구분 전체</span>
+          <button class="dd-btn" id="categoryDdBtn" onclick="toggleCategoryDd()" aria-haspopup="listbox" aria-label="품목분류 선택">
+            <span id="categoryDdLabel">품목분류 전체</span>
           </button>
           <div class="dd-menu" id="categoryDdMenu"></div>
         </div>
@@ -461,7 +467,7 @@ tr:hover td{background:var(--sky50)}
         <table>
           <thead><tr>
             <th style="white-space:nowrap">터널명</th>
-            <th style="white-space:nowrap">구분</th>
+            <th style="white-space:nowrap">품목분류</th>
             <th style="white-space:nowrap">품명</th>
             <th style="white-space:nowrap">규격</th>
             <th class="r" style="white-space:nowrap">수량</th>
@@ -496,14 +502,14 @@ tr:hover td{background:var(--sky50)}
     </div>
   </div>
 
-  <!-- ▸ 구분별 -->
+  <!-- ▸ 품목분류별 -->
   <div id="panel-category" class="panel" role="tabpanel" aria-labelledby="nav-category">
     <div class="sc">
-      <div class="sc-hd">구분별 현황 <span class="badge" id="categoryBadge">0종</span></div>
+      <div class="sc-hd">품목분류별 현황 <span class="badge" id="categoryBadge">0종</span></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th>순위</th><th>구분</th>
+            <th>순위</th><th>품목분류</th>
             <th class="r">품목수</th>
             <th class="r">총수량</th>
             <th class="r">총금액(원)</th>
@@ -806,7 +812,7 @@ function submitAddForm(){
   var date = document.getElementById('addDate').value.trim();
   if(!name){ alert('품명을 입력해주세요.'); document.getElementById('addName').focus(); return; }
   if(!tunnel){ alert('터널명을 선택해주세요.'); return; }
-  if(!category){ alert('구분을 선택해주세요.'); return; }
+  if(!category){ alert('품목분류를 선택해주세요.'); return; }
   if(!date){ alert('구매일을 입력해주세요.'); document.getElementById('addDate').focus(); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
@@ -885,7 +891,7 @@ function openDetailModal(id){
   var rows = [
     ['품명', esc(r['품명']||'-')],
     ['터널명', esc(r['터널명']||'-')],
-    ['구분', esc(r['구분']||'-')],
+    ['품목분류', esc(r['구분']||'-')],
     ['규격', esc(r['규격']||'-')],
     ['수량', (r['수량']!=null && r['수량']!=='') ? fmtWon(r['수량']) : '-'],
     ['단가(원)', (r['단가']!=null && r['단가']!=='') ? fmtWon(r['단가']) : '-'],
@@ -939,18 +945,28 @@ function closeDd(menuId, btnId){
   var b=document.getElementById(btnId); if(b) b.classList.remove('active');
 }
 function closeAllDd(){
-  ['yearDdMenu','tunnelDdMenu','categoryDdMenu','statusDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
-  ['yearDdBtn','tunnelDdBtn','categoryDdBtn','statusDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+  ['yearDdMenu','monthDdMenu','tunnelDdMenu','categoryDdMenu','statusDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['yearDdBtn','monthDdBtn','tunnelDdBtn','categoryDdBtn','statusDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
 document.addEventListener('click', function(e){
-  ['yearDdWrap','tunnelDdWrap','categoryDdWrap','statusDdWrap'].forEach(function(id){
+  ['yearDdWrap','monthDdWrap','tunnelDdWrap','categoryDdWrap','statusDdWrap'].forEach(function(id){
     var w=document.getElementById(id);
     if(w && !w.contains(e.target)) closeDd(id.replace('Wrap','Menu'), id.replace('Wrap','Btn'));
   });
 });
 
-/* ── 연도 필터(목록방식, 기본값=데이터가 있는 최신 연도) ── */
-var FILTER_YEAR='';
+/* ── 연도·월 필터(목록방식, 기본값=데이터가 있는 최신 연/월 — "전체"는 선택 가능한
+   옵션으로만 유지. "전체"로 두면 145건 전체가 한 번에 렌더링돼 가독성이 떨어지므로
+   3-9 표준(list_tab_toolbar_standard)대로 최신 연/월을 기본값으로 한다) ── */
+var FILTER_YEAR='', FILTER_MONTH='';
+var _userPickedDate=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
+function applyDefaultDateFilter(){
+  if(_userPickedDate || !ALL_DATA.length) return;
+  var latest = getUniqueValues('구매일').sort().pop();
+  if(!latest) return;
+  FILTER_YEAR = latest.slice(0,4);
+  FILTER_MONTH = latest.slice(5,7);
+}
 function toggleYearDd(){ toggleDd('yearDdMenu','yearDdBtn'); }
 function buildYearDd(){
   var menu=document.getElementById('yearDdMenu');
@@ -965,12 +981,29 @@ function buildYearDd(){
     menu._bound=true;
     menu.addEventListener('click', function(e){
       var opt=e.target.closest('.dd-opt'); if(!opt) return;
-      FILTER_YEAR=opt.dataset.val; closeDd('yearDdMenu','yearDdBtn'); renderList();
+      FILTER_YEAR=opt.dataset.val; _userPickedDate=true; closeDd('yearDdMenu','yearDdBtn'); renderList();
+    });
+  }
+}
+function toggleMonthDd(){ toggleDd('monthDdMenu','monthDdBtn'); }
+function buildMonthDd(){
+  var menu=document.getElementById('monthDdMenu');
+  if(!menu) return;
+  var MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  var opts=[{val:'',label:'전체 월'}].concat(MONTHS.map(function(lbl,i){ return {val:String(i+1).padStart(2,'0'),label:lbl}; }));
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(FILTER_MONTH===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('monthDdLabel').textContent = FILTER_MONTH ? parseInt(FILTER_MONTH,10)+'월' : '전체 월';
+  document.getElementById('monthDdBtn').classList.toggle('active', !!FILTER_MONTH);
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      FILTER_MONTH=opt.dataset.val; _userPickedDate=true; closeDd('monthDdMenu','monthDdBtn'); renderList();
     });
   }
 }
 
-/* ── 터널/구분/구매상태 필터(기본값=전체) ── */
+/* ── 터널/품목분류/구매상태 필터(기본값=전체) ── */
 var FILTER_TUNNEL='', FILTER_CATEGORY='', FILTER_STATUS='';
 function toggleTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
 function toggleCategoryDd(){ toggleDd('categoryDdMenu','categoryDdBtn'); }
@@ -991,7 +1024,7 @@ function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, 
   }
 }
 function buildTunnelDd(){ buildGenericFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,getUniqueValues('터널명'),'터널명 전체', function(v){ FILTER_TUNNEL=v; }); }
-function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,getUniqueValues('구분'),'구분 전체', function(v){ FILTER_CATEGORY=v; }); }
+function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,getUniqueValues('구분'),'품목분류 전체', function(v){ FILTER_CATEGORY=v; }); }
 function buildStatusDd(){ buildGenericFilterDd('statusDdMenu','statusDdBtn','statusDdLabel',FILTER_STATUS,getUniqueValues('구매상태'),'구매상태 전체', function(v){ FILTER_STATUS=v; }); }
 
 /* ── 색상 뱃지(터널/구매상태) ── */
@@ -1025,12 +1058,12 @@ function fetchNotion(body){
   });
 }
 
-/* ── Notion 실제 속성명 매핑(비품DB: 품명/터널명/구분/규격/수량/단가/금액/구매일/사진/구매상태/비고) ── */
+/* ── Notion 실제 속성명 매핑(비품DB: 품명/터널명/품목분류(구:구분)/규격/수량/단가/금액/구매일/사진/구매상태/비고) ── */
 var NOTION_PROP_MAP = {};
 var NOTION_PROP_TYPE = {};
 function classifyPropKey(k){
   var lk=k.toLowerCase().replace(/\s/g,'');
-  if(lk.indexOf('품명')>=0||lk.indexOf('제품명')>=0||lk.indexOf('품목')>=0) return '품명';
+  if(lk.indexOf('품명')>=0||lk.indexOf('제품명')>=0) return '품명';
   if(lk.indexOf('터널')>=0) return '터널명';
   if(lk.indexOf('구분')>=0||lk.indexOf('분류')>=0) return '구분';
   if(lk.indexOf('규격')>=0) return '규격';
@@ -1165,6 +1198,7 @@ function loadData(){
 function filtered(){
   return ALL_DATA.filter(function(r){
     if(FILTER_YEAR && (r['구매일']||'').slice(0,4)!==FILTER_YEAR) return false;
+    if(FILTER_MONTH && (r['구매일']||'').slice(5,7)!==FILTER_MONTH) return false;
     if(FILTER_TUNNEL && r['터널명']!==FILTER_TUNNEL) return false;
     if(FILTER_CATEGORY && r['구분']!==FILTER_CATEGORY) return false;
     if(FILTER_STATUS && r['구매상태']!==FILTER_STATUS) return false;
@@ -1180,7 +1214,8 @@ function filtered(){
 
 /* ── renderAll ── */
 function renderAll(){
-  buildYearDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
+  applyDefaultDateFilter();
+  buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
   renderList();
   renderTunnelPanel();
   renderCategoryPanel();
@@ -1188,7 +1223,7 @@ function renderAll(){
 
 /* ── 비품내역 목록 (요청 정렬 표준: 터널명 내림차순 → 구매일 내림차순) ── */
 function renderList(){
-  buildYearDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
+  buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
   var rows = filtered().slice().sort(function(a,b){
     var at=a['터널명']||'', bt=b['터널명']||'';
     if(at!==bt) return at<bt?1:-1;
@@ -1220,7 +1255,7 @@ function emptyState(desc, icon){
   return '<div class="empty"><div class="empty-icon">'+icon+'</div><div class="empty-title">데이터 없음</div><div class="empty-desc">'+desc+'</div></div>';
 }
 
-/* ── 터널별/구분별 집계 ── */
+/* ── 터널별/품목분류별 집계 ── */
 function calcGroupMap(rows, key){
   var m={};
   rows.forEach(function(r){
@@ -1264,7 +1299,7 @@ function renderCategoryPanel(){
           + '<td class="r">'+fmtWon(d.qty)+'</td>'
           + '<td class="r">'+fmtWon(d.amount)+'</td></tr>';
       }).join('')
-    : '<tr><td colspan="5">'+emptyState('구분별 데이터가 없습니다.')+'</td></tr>';
+    : '<tr><td colspan="5">'+emptyState('품목분류별 데이터가 없습니다.')+'</td></tr>';
 }
 
 /* ── 엑셀 생성 (하자보수현황 앱의 buildExcelReport 패턴 재사용 — 사진 컬럼 포함 세로모드) ──
@@ -1303,7 +1338,7 @@ var EXCEL_PAGE_PRESETS={
 };
 var EXCEL_COLUMNS_EQUIP=[
   { key:'터널명', header:'터널명' },
-  { key:'구분', header:'구분' },
+  { key:'구분', header:'품목분류' },
   { key:'품명', header:'품명', width:26, wrap:true, align:'left' },
   { key:'규격', header:'규격', width:22, wrap:true, align:'left' },
   { key:'수량', header:'수량', numFmt:'#,##0.##' },
@@ -1446,7 +1481,9 @@ function buildExcelReport(opts){
           if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
         } else {
           cell.value = (r[col.key]===''||r[col.key]==null) ? '' : r[col.key];
-          if(col.numFmt && typeof cell.value==='number') cell.numFmt=col.numFmt;
+          // 정수값에 소수 자릿수 서식을 그대로 적용하면 일부 뷰어(Google Sheets 등)에서
+          // "1." 처럼 불필요한 소수점이 붙어 보이는 문제가 있어, 정수면 소수 부분 서식을 제거한다.
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
         }
       });
       row.commit();
