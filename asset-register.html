@@ -170,6 +170,18 @@ tr:hover td{background:var(--sky50)}
 .photo-upload-status.err{color:var(--coral);font-weight:700}
 .photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);display:none;margin-top:10px;cursor:zoom-in}
 .photo-thumb.show{display:block}
+.photo-section{padding:10px 0;border-bottom:1px solid var(--border2)}
+.photo-section:last-child{border-bottom:none}
+.photo-label{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -816,7 +828,7 @@ function submitAddForm(){
   if(!name){ alert('품명을 입력해주세요.'); document.getElementById('addName').focus(); return; }
   if(!tunnel){ alert('터널명을 선택해주세요.'); return; }
   if(!category){ alert('품목분류를 선택해주세요.'); return; }
-  if(!date){ alert('구매일을 입력해주세요.'); document.getElementById('addDate').focus(); return; }
+  if(!EDIT_PAGE_ID && !date){ alert('구매일을 입력해주세요.'); document.getElementById('addDate').focus(); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
   var photoStatusText = (document.getElementById('photoStatus')||{}).textContent||'';
@@ -845,8 +857,8 @@ function submitAddForm(){
 
   setProp('터널명', { select:{ name:tunnel } });
   setProp('구분', { select:{ name:category } });
-  setProp('구매일', { date:{ start:date } });
   // 공란이면 해당 값을 지우도록 명시적으로 null/빈값 전송(수정 시 기존 값 삭제 가능하도록)
+  setProp('구매일', date ? { date:{ start:date } } : { date:null });
   setProp('규격', spec ? { rich_text:[{ text:{ content:spec } }] } : { rich_text:[] });
   setProp('수량', qty!=='' ? { number:parseFloat(qty)||0 } : { number:null });
   setProp('단가', price!=='' ? { number:parseFloat(price)||0 } : { number:null });
@@ -890,7 +902,7 @@ function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]
 function openDetailModal(id){
   var r = ALL_DATA.find(function(x){ return x.id===id; });
   if(!r) return;
-  document.getElementById('detailModalTitle').textContent = (r['품명']||'—')+' · '+(r['터널명']||'');
+  document.getElementById('detailModalTitle').textContent = (r['터널명']||'—')+' · '+(r['구분']||'');
   var rows = [
     ['품명', esc(r['품명']||'-')],
     ['터널명', esc(r['터널명']||'-')],
@@ -901,12 +913,24 @@ function openDetailModal(id){
     ['금액(원)', (r['금액']!=null && r['금액']!=='') ? fmtWon(r['금액']) : '-'],
     ['구매일', esc(fmtDate(r['구매일'])||'-')],
     ['구매상태', esc(r['구매상태']||'-')],
-    ['사진', r['사진'] ? '<a href="'+esc(r['사진'])+'" target="_blank" rel="noopener">사진 보기</a>' : '-'],
     ['비고', esc(r['비고']||'-')]
   ];
-  document.getElementById('detailModalBody').innerHTML = '<div class="detail-info-wrap">'
+  var infoHtml = '<div class="detail-info-wrap">'
     + rows.map(function(rv){ return '<div class="detail-info-row"><div class="detail-info-key">'+rv[0]+'</div><div class="detail-info-val">'+rv[1]+'</div></div>'; }).join('')
     + '</div>';
+  var photoUrl = r['사진']||'';
+  var photoInner = photoUrl && /^https?:\/\//i.test(photoUrl.trim())
+    ? '<div class="photo-wrap"><a href="'+esc(photoUrl)+'" target="_blank" rel="noopener">'
+      +'<img class="photo-img loading" src="'+esc(photoUrl)+'" alt="비품사진"'
+      +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+      +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+      +'></a>'
+      +'<div class="photo-spinner"></div>'
+      +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(photoUrl)+'" target="_blank">링크로 직접 열기 →</a></div>'
+      +'</div>'
+    : '<div style="padding:18px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
+  var photoHtml = '<div class="photo-section"><div class="photo-label">사진</div>'+photoInner+'</div>';
+  document.getElementById('detailModalBody').innerHTML = infoHtml + photoHtml;
   document.getElementById('detailModalActions').innerHTML =
     '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
     +'<button class="detail-act-btn detail-del-btn" onclick="deleteRecord(\''+id+'\')">삭제</button>';
