@@ -868,12 +868,13 @@ function submitAddForm(){
   setProp('터널명', tunnel);
   setProp('일자', date);
   setProp('발전량', gen);
-  if(capacity!=='')   setProp('용량', capacity);
-  if(cumGen!=='')     setProp('누적발전량', cumGen);
-  if(prevCumGen!=='') setProp('전일누적발전량', prevCumGen);
-  if(fee!=='')        setProp('전기요금', fee);
-  if(unitPrice!=='')  setProp('전력량요금', unitPrice);
-  if(note)            setProp('비고', note);
+  setProp('누적발전량', cumGen);
+  setProp('전일누적발전량', prevCumGen);
+  // 공란이면 해당 값을 지우도록 명시적으로 전송 (수정 시 기존 값 삭제 가능하도록)
+  setProp('용량', capacity);
+  setProp('전기요금', fee);
+  setProp('전력량요금', unitPrice);
+  setProp('비고', note);
 
   const isEdit = !!EDIT_PAGE_ID;
   const reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
@@ -979,11 +980,22 @@ function renderDDMonth(){
     return `<div class="dd-opt${m===curMonth?' sel':''}" onclick="pickMonth(${m})">${lbl}</div>`;
   }).join('');
 }
+// 기본 로드는 최근 DEFAULT_LOAD_MONTHS개월(서버측 날짜 필터)뿐이라, 그 범위보다 이전 연/월을
+// 선택하면 Notion엔 데이터가 있어도 화면엔 "없음"으로 보인다 — 이때만 전체 이력을 보충한다.
+// y: 연도(숫자|'ALL'), m: 월(1~12|0='전체')
+function needsFullHistory(y,m){
+  if(_fullHistoryLoaded) return false;
+  if(y==='ALL'||m===0||m==='ALL') return true;
+  const cutoff=new Date(); cutoff.setDate(1); cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
+  const cutoffYm=cutoff.getFullYear()*100+(cutoff.getMonth()+1);
+  const ym=parseInt(y,10)*100+parseInt(m,10);
+  return ym<cutoffYm;
+}
 function pickYear(y){
   curYear=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(y==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
@@ -991,7 +1003,8 @@ function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(_dataLoadedOnce){ renderAll(); }
+  if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
+  else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
 function updateMonthLabel(){
@@ -1068,7 +1081,7 @@ function buildDetailYearDd(){
       _detailYearFilter=opt.dataset.val;
       _detailUserPicked=true;
       closeDetailYearDd();
-      if(_detailYearFilter==='ALL' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       else renderDetail();
     });
   }
@@ -1089,7 +1102,8 @@ function buildDetailMonthDd(){
       _detailMonthFilter=opt.dataset.val;
       _detailUserPicked=true;
       closeDetailMonthDd();
-      renderDetail();
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      else renderDetail();
     });
   }
 }
@@ -1174,11 +1188,12 @@ function buildPropValue(role, rawValue){
   const key = NOTION_PROP_MAP[role];
   if(!key) return null;
   const type = NOTION_PROP_TYPE[role] || DEFAULT_PROP_TYPE[role];
-  if(type==='title') return { title: [{ text: { content: String(rawValue) } }] };
-  if(type==='rich_text') return { rich_text: [{ text: { content: String(rawValue) } }] };
-  if(type==='select') return { select: { name: String(rawValue) } };
-  if(type==='date') return { date: { start: String(rawValue) } };
-  if(type==='number') return { number: parseFloat(rawValue)||0 };
+  const empty = (rawValue===undefined || rawValue===null || String(rawValue).trim()==='');
+  if(type==='title') return empty ? { title: [] } : { title: [{ text: { content: String(rawValue) } }] };
+  if(type==='rich_text') return empty ? { rich_text: [] } : { rich_text: [{ text: { content: String(rawValue) } }] };
+  if(type==='select') return empty ? { select: null } : { select: { name: String(rawValue) } };
+  if(type==='date') return empty ? { date: null } : { date: { start: String(rawValue) } };
+  if(type==='number') return empty ? { number: null } : { number: parseFloat(rawValue)||0 };
   return null; // formula 등 읽기 전용/미지원 타입
 }
 

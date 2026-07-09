@@ -2561,7 +2561,7 @@ function submitAddForm(confirmed){
   var loc     = getSelectValue('addLoc','addLocCustom');
   var content = document.getElementById('addContent').value.trim();
 
-  if(!date)    { alert('날짜를 입력해주세요.'); document.getElementById('addDate').focus(); return; }
+  if(!EDIT_PAGE_ID && !date) { alert('날짜를 입력해주세요.'); document.getElementById('addDate').focus(); return; }
   if(!type)    { alert('공종을 선택해주세요.'); document.getElementById('addType').focus(); return; }
   if(!tunnel)  { alert('터널명을 선택해주세요.'); document.getElementById('addTunnel').focus(); return; }
   if(!loc)     { alert('위치를 입력해주세요.'); document.getElementById('addLoc').focus(); return; }
@@ -2610,20 +2610,21 @@ function submitAddForm(confirmed){
   var contentKey = nk('하자내용') || '하자내용';
   properties[contentKey] = { title: [{ text: { content: content } }] };
 
-  setProp('날짜',    { date: { start: date } });
+  setProp('날짜',    date ? { date: { start: date } } : { date: null });
   setProp('공종',    { multi_select: [{ name: type }] });
   setProp('터널명',  { select: { name: tunnel } });
   setProp('위치',    { rich_text: [{ text: { content: loc } }] });
   setProp('조치여부',{ select: { name: status } });
 
-  if(actDate)    setProp('조치일',    { date: { start: actDate } });
-  if(company)    setProp('업체명',    { rich_text: [{ text: { content: company } }] });
-  if(contact)    setProp('업체담당자',{ rich_text: [{ text: { content: contact } }] });
-  if(phone)      setProp('전화번호',  { phone_number: phone });
-  if(remark)     setProp('비고',      { rich_text: [{ text: { content: remark } }] });
-  if(manager)    setProp('업무담당',  { select: { name: manager } });
-  if(photo1)     setProp('하자사진_URL', { files: [{ name: '하자사진', type: 'external', external: { url: photo1 } }] });
-  if(photo2)     setProp('조치사진_URL', { files: [{ name: '조치사진', type: 'external', external: { url: photo2 } }] });
+  // 공란이면 해당 값을 지우도록 명시적으로 null/빈값 전송 (수정 시 기존 값 삭제 가능하도록)
+  setProp('조치일',    actDate ? { date: { start: actDate } } : { date: null });
+  setProp('업체명',    company ? { rich_text: [{ text: { content: company } }] } : { rich_text: [] });
+  setProp('업체담당자',contact ? { rich_text: [{ text: { content: contact } }] } : { rich_text: [] });
+  setProp('전화번호',  phone   ? { phone_number: phone } : { phone_number: null });
+  setProp('비고',      remark  ? { rich_text: [{ text: { content: remark } }] } : { rich_text: [] });
+  setProp('업무담당',  manager ? { select: { name: manager } } : { select: null });
+  setProp('하자사진_URL', photo1 ? { files: [{ name: '하자사진', type: 'external', external: { url: photo1 } }] } : { files: [] });
+  setProp('조치사진_URL', photo2 ? { files: [{ name: '조치사진', type: 'external', external: { url: photo2 } }] } : { files: [] });
 
   var isEdit = !!EDIT_PAGE_ID;
   var reqUrl = isEdit

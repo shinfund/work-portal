@@ -1072,11 +1072,12 @@ function submitAddForm(){
   setProp('용무', purpose);
   setProp('운행거리', dist);
   setProp('운행누계', cumDist);
-  if(carType) setProp('차량구분', carType);
-  if(from)    setProp('출발지', from);
-  if(via)     setProp('경유지', via);
-  if(to)      setProp('도착지', to);
-  if(note)    setProp('비고', note);
+  // 공란이면 해당 값을 지우도록 명시적으로 전송 (수정 시 기존 값 삭제 가능하도록)
+  setProp('차량구분', carType);
+  setProp('출발지', from);
+  setProp('경유지', via);
+  setProp('도착지', to);
+  setProp('비고', note);
 
   const isEdit = !!EDIT_PAGE_ID;
   const reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
@@ -1409,11 +1410,12 @@ function buildPropValue(role, rawValue){
   const key = NOTION_PROP_MAP[role];
   if(!key) return null;
   const type = NOTION_PROP_TYPE[role] || DEFAULT_PROP_TYPE[role];
-  if(type==='title') return { title: [{ text: { content: String(rawValue) } }] };
-  if(type==='rich_text') return { rich_text: [{ text: { content: String(rawValue) } }] };
-  if(type==='select') return { select: { name: String(rawValue) } };
-  if(type==='date') return { date: { start: String(rawValue) } };
-  if(type==='number') return { number: parseFloat(rawValue)||0 };
+  const empty = (rawValue===undefined || rawValue===null || String(rawValue).trim()==='');
+  if(type==='title') return empty ? { title: [] } : { title: [{ text: { content: String(rawValue) } }] };
+  if(type==='rich_text') return empty ? { rich_text: [] } : { rich_text: [{ text: { content: String(rawValue) } }] };
+  if(type==='select') return empty ? { select: null } : { select: { name: String(rawValue) } };
+  if(type==='date') return empty ? { date: null } : { date: { start: String(rawValue) } };
+  if(type==='number') return empty ? { number: null } : { number: parseFloat(rawValue)||0 };
   return null; // formula 등 읽기 전용/미지원 타입
 }
 
