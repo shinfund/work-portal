@@ -609,13 +609,22 @@ function renderDDMonth(){
     return `<div class="dd-opt${m===curMonth?' sel':''}${has&&m!==curMonth?' has':''}" onclick="pickMonth(${m})">${lbl}</div>`;
   }).join('');
 }
+// 기본 로드는 최근 DEFAULT_LOAD_MONTHS개월(서버측 날짜 필터)뿐이라, 그 범위보다 이전 연/월을
+// 선택하면 Notion엔 데이터가 있어도 화면엔 "없음"으로 보인다 — 이때만 전체 이력을 보충한다.
+// y: 연도(숫자|'ALL'), m: 월(1~12|0='전체')
+function needsFullHistory(y,m){
+  if(_fullHistoryLoaded) return false;
+  if(y==='ALL'||m===0||m==='ALL') return true;
+  const cutoff=new Date(); cutoff.setDate(1); cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
+  const cutoffYm=cutoff.getFullYear()*100+(cutoff.getMonth()+1);
+  const ym=parseInt(y,10)*100+parseInt(m,10);
+  return ym<cutoffYm;
+}
 function pickYear(y){
   curYear=y; ddYearBase=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  // 기본 로딩(최근 2개월) 범위 밖의 연도를 고르면 전체 이력을 보충해서 불러온다
-  const hasDataForYear=ALL_RECORDS.some(r=>r.date&&r.date.startsWith(String(y)));
-  if(!hasDataForYear && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
@@ -623,7 +632,8 @@ function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(_dataLoadedOnce){ renderAll(); }
+  if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
+  else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
 function updateMonthLabel(){
