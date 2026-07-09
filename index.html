@@ -584,11 +584,11 @@ body{
     <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
       <span>연장근무현황</span>
     </div>
+    <div class="sb-item" id="sbn-equip" onclick="go('equip')">
+      <span>비품대장(수정)</span>
+    </div>
 
     <div class="sb-sec">추가 예정</div>
-    <div class="sb-item sb-disabled">
-      <span>비품관리대장</span><span class="sb-badge">준비중</span>
-    </div>
     <div class="sb-item sb-disabled">
       <span>일일점검일지</span><span class="sb-badge">준비중</span>
     </div>
@@ -719,12 +719,13 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card disabled">
+          <div class="app-card" onclick="go('equip')">
             <div>
-              <div class="ac-name">비품관리대장</div>
+              <div class="ac-name">비품대장(수정)</div>
+              <div class="ac-kpi" id="kpi-equip">—</div>
               <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
             </div>
-            <div class="ac-soon">준비중</div>
+            <div class="ac-arrow">앱 열기 →</div>
           </div>
         </div>
 
@@ -734,7 +735,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광 4개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광·비품대장 5개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -766,7 +767,7 @@ body{
             <div class="notice-dot"></div>
             <div>
               <div>새 업무 앱 추가 시 사이드바 메뉴와 이 화면에 자동으로 반영됩니다.</div>
-              <div class="notice-sub">추가 예정: 비품관리대장 · 일일점검일지 외</div>
+              <div class="notice-sub">추가 예정: 일일점검일지 외</div>
             </div>
           </div>
         </div>
@@ -818,6 +819,17 @@ body{
       </div>
     </div>
 
+    <!-- ▸ 비품대장(수정) iframe -->
+    <div class="panel" id="panel-equip">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-equip">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">비품대장(수정) 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-equip" class="app-iframe" title="비품대장(수정)"></iframe>
+      </div>
+    </div>
+
   </div>
 
   <!-- 모바일 하단 탭 (열린 앱 탭을 데스크톱과 동일하게 동기화, 가운데 영역만 스크롤) -->
@@ -859,7 +871,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광 4개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장 5개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -900,14 +912,16 @@ const APPS = {
   defect:   { name:'하자보수현황', file:'defect-management.html' },
   vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무현황', file:'overtime-work.html' },
-  solar:    { name:'태양광발전량', file:'solar-power.html' }
+  solar:    { name:'태양광발전량', file:'solar-power.html' },
+  equip:    { name:'비품대장(수정)', file:'asset-register.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
   defect:   { mName:'하자보수현황' },
   vehicle:  { mName:'차량운행일지' },
   overtime: { mName:'연장근무현황' },
-  solar:    { mName:'태양광발전량' }
+  solar:    { mName:'태양광발전량' },
+  equip:    { mName:'비품대장(수정)' }
 };
 
 let _cur = 'home';
@@ -1122,7 +1136,7 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 로그인 (하자보수·차량운행·연장근무·태양광 4개 앱 공용 토큰) ──────
+// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장 5개 앱 공용 토큰) ──────
 const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 let AUTH_TOKEN = '';
 let AUTH_EXPIRES = 0;
@@ -1354,6 +1368,12 @@ function renderHomeKpi() {
     const s = readPortalSummary('solar');
     if (s) { sEl.textContent = `이달 ${fmtWonHome(s.thisMonthGen)}kWh`; sEl.className = 'ac-kpi'; }
     else { sEl.textContent = emptyKpiLabel(); sEl.className = 'ac-kpi empty'; }
+  }
+  const eEl = document.getElementById('kpi-equip');
+  if (eEl) {
+    const s = readPortalSummary('equip');
+    if (s) { eEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; eEl.className = 'ac-kpi'; }
+    else { eEl.textContent = emptyKpiLabel(); eEl.className = 'ac-kpi empty'; }
   }
 }
 renderHomeKpi();
