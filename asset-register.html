@@ -1341,15 +1341,15 @@ var EXCEL_PAGE_PRESETS={
 var EXCEL_COLUMNS_EQUIP=[
   { key:'터널명', header:'터널명' },
   { key:'구분', header:'품목분류' },
-  { key:'품명', header:'품명', width:26, wrap:true, align:'left' },
-  { key:'규격', header:'규격', width:22, wrap:true, align:'left' },
+  { key:'품명', header:'품명', width:26, wrap:true },
+  { key:'규격', header:'규격', width:22, wrap:true },
   { key:'수량', header:'수량', numFmt:'#,##0.##' },
   { key:'단가', header:'단가(원)', numFmt:'#,##0' },
   { key:'금액', header:'금액(원)', numFmt:'#,##0' },
   { key:'구매일', header:'구매일', dateCol:true },
   { key:'사진', header:'사진', photo:true, width:18 },
   { key:'구매상태', header:'구매상태' },
-  { key:'비고', header:'비고', width:16, wrap:true, align:'left' }
+  { key:'비고', header:'비고', width:16, wrap:true }
 ];
 function excelCharWeight(ch){
   var code=ch.codePointAt(0);
