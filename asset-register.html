@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>비품대장(수정중)</title>
+<title>비품대장</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M5 21V13C5 7.5 8.5 4 12 4C15.5 4 19 7.5 19 13V21Z' fill='url(%23g)'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
@@ -68,6 +68,7 @@ html[data-theme="dark"] .tunnel-c5{background:rgba(29,158,117,.18);color:#7BE0BE
 html[data-theme="dark"] .pstat-new{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
 html[data-theme="dark"] .pstat-used{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
 html[data-theme="dark"] .pstat-rental{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+html[data-theme="dark"] .pstat-other{background:rgba(255,255,255,.12);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.22)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
@@ -126,7 +127,6 @@ th.r,td.r{text-align:right}
 td{padding:7px 10px;font-size:13px;color:var(--txt2);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
-.sum-row td{font-weight:700;background:var(--sky50)}
 
 /* ── RANK ── */
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
@@ -155,6 +155,7 @@ tr:hover td{background:var(--sky50)}
 .pstat-new{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 .pstat-used{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 .pstat-rental{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+.pstat-other{background:var(--gray50);color:var(--gray600);border:1px solid var(--gray100)}
 
 /* ── 사진 ── */
 .col-photo{width:56px;min-width:52px;text-align:center}
@@ -216,7 +217,6 @@ tr:hover td{background:var(--sky50)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 
 .theme-opts{display:flex;gap:12px}
@@ -392,7 +392,7 @@ tr:hover td{background:var(--sky50)}
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">비품대장(수정중)</div>
+    <div class="logo-title">비품대장</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -712,6 +712,7 @@ function recomputeAmount(){
   var amtEl = document.getElementById('addAmount');
   if(!isNaN(qty) && !isNaN(price)) amtEl.value = qty*price;
   else if(!isNaN(qty)) amtEl.value = 0;
+  else amtEl.value = '';
 }
 
 /* ── 사진 업로드 (하자보수현황 앱 uploadPhoto 패턴 재사용 — 단일 사진 필드) ── */
@@ -964,7 +965,7 @@ var FILTER_YEAR='', FILTER_MONTH='';
 var _userPickedDate=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
 function applyDefaultDateFilter(){
   if(_userPickedDate || !ALL_DATA.length) return;
-  var latest = getUniqueValues('구매일').sort().pop();
+  var latest = getUniqueValues('구매일').pop();
   if(!latest) return;
   FILTER_YEAR = latest.slice(0,4);
   FILTER_MONTH = latest.slice(5,7);
@@ -1042,7 +1043,7 @@ function statusBadgeClass(s){
   if(s==='신품') return 'pstat-new';
   if(s==='중고') return 'pstat-used';
   if(s==='렌탈') return 'pstat-rental';
-  return 'pstat-new';
+  return 'pstat-other';
 }
 
 /* ── Notion fetch 헬퍼 ── */

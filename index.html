@@ -583,7 +583,7 @@ body{
       <span>차량운행일지</span>
     </div>
     <div class="sb-item" id="sbn-equip" onclick="go('equip')">
-      <span>비품대장(수정중)</span>
+      <span>비품대장</span>
     </div>
     <div class="sb-item" id="sbn-overtime" onclick="go('overtime')">
       <span>연장근무</span>
@@ -712,19 +712,19 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
+          <div class="app-card" onclick="go('equip')">
+            <div>
+              <div class="ac-name">비품대장</div>
+              <div class="ac-kpi" id="kpi-equip">—</div>
+              <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
           <div class="app-card" onclick="go('overtime')">
             <div>
               <div class="ac-name">연장근무</div>
               <div class="ac-kpi" id="kpi-overtime">—</div>
               <div class="ac-desc">당직·비상대기·비상출동 지급액 월별 현황.</div>
-            </div>
-            <div class="ac-arrow">앱 열기 →</div>
-          </div>
-          <div class="app-card" onclick="go('equip')">
-            <div>
-              <div class="ac-name">비품대장(수정중)</div>
-              <div class="ac-kpi" id="kpi-equip">—</div>
-              <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
@@ -820,14 +820,14 @@ body{
       </div>
     </div>
 
-    <!-- ▸ 비품대장(수정중) iframe -->
+    <!-- ▸ 비품대장 iframe -->
     <div class="panel" id="panel-equip">
       <div class="iframe-wrap">
         <div class="iframe-overlay" id="ov-equip">
           <div class="spin-ring"></div>
-          <div class="overlay-txt">비품대장(수정중) 앱 로딩 중...</div>
+          <div class="overlay-txt">비품대장 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-equip" class="app-iframe" title="비품대장(수정중)"></iframe>
+        <iframe id="ifr-equip" class="app-iframe" title="비품대장"></iframe>
       </div>
     </div>
 
@@ -914,7 +914,7 @@ const APPS = {
   vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' },
-  equip:    { name:'비품대장(수정중)', file:'asset-register.html' }
+  equip:    { name:'비품대장', file:'asset-register.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
@@ -922,7 +922,7 @@ const PAGES = {
   vehicle:  { mName:'차량운행일지' },
   overtime: { mName:'연장근무' },
   solar:    { mName:'태양광발전량' },
-  equip:    { mName:'비품대장(수정중)' }
+  equip:    { mName:'비품대장' }
 };
 
 let _cur = 'home';
