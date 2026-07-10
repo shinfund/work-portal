@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>연장근무현황</title>
+<title>연장근무</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M7.1 18.5V12.9C7.1 9 9.6 6.6 12 6.6C14.4 6.6 16.9 9 16.9 12.9V18.5Z' fill='%23fff'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
@@ -185,6 +185,8 @@ tr:hover td{background:var(--sky50)}
 /* ── 첨부파일(한글/엑셀 등) ── */
 .col-file{width:70px;min-width:64px;text-align:center}
 @media(max-width:640px){.col-file{display:none}}
+/* 예금주·입금은행·계좌번호는 관리자 모드가 아니면 화면/엑셀 어디서도 노출하지 않는다(2026-07-10) */
+#overtimeTable.bank-hidden .col-bank{display:none}
 .file-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--sky600);text-decoration:none;padding:3px 8px;border-radius:20px;background:var(--sky50);border:1px solid var(--sky100);white-space:nowrap}
 .file-link:hover{background:var(--sky100)}
 .file-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
@@ -403,7 +405,7 @@ tr:hover td{background:var(--sky50)}
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">연장근무현황</div>
+    <div class="logo-title">연장근무</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -422,7 +424,7 @@ tr:hover td{background:var(--sky50)}
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">근무내역</button>
   <button class="top-tab" id="nav-employee" role="tab" aria-selected="false" aria-controls="panel-employee" onclick="switchPanel('employee')">직원별</button>
   <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
   <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
@@ -569,12 +571,12 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap">
-        <table>
+        <table id="overtimeTable">
           <thead><tr>
             <th style="white-space:nowrap">날짜</th><th style="white-space:nowrap">직원명</th><th style="white-space:nowrap">소속</th>
             <th style="white-space:nowrap">근무명</th><th style="white-space:nowrap">상태</th><th style="white-space:nowrap">시간</th>
             <th class="r" style="white-space:nowrap">계(Hr)</th><th class="r" style="white-space:nowrap">지급액</th>
-            <th style="white-space:nowrap">예금주</th><th style="white-space:nowrap">입금은행</th><th style="white-space:nowrap">계좌번호</th>
+            <th class="col-bank" style="white-space:nowrap">예금주</th><th class="col-bank" style="white-space:nowrap">입금은행</th><th class="col-bank" style="white-space:nowrap">계좌번호</th>
             <th class="col-file">첨부파일</th><th style="white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
@@ -657,6 +659,8 @@ function updateMasterStatusHint(){
 function applyMasterUI(){
   const addBtn=document.getElementById('addBtn');
   if(addBtn) addBtn.style.display = isMaster() ? '' : 'none';
+  // 예금주·입금은행·계좌번호(.col-bank)는 관리자 모드가 아니면 화면 테이블에서도 숨긴다
+  document.getElementById('overtimeTable')?.classList.toggle('bank-hidden', !isMaster());
 }
 
 // ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
@@ -1038,6 +1042,11 @@ function switchPanel(name){
     btn.classList.toggle('active',p===name);
     btn.setAttribute('aria-selected',p===name?'true':'false');
   });
+  // 연장근무내역 탭은 자체 연/월 드롭다운(_detailYearFilter/_detailMonthFilter)을 쓰므로
+  // 요약/직원별/월별추이가 공유하는 상단 월선택 박스는 이 탭에서만 숨긴다(태양광발전량
+  // 발전내역 탭의 relocateMonthSel과 동일한 패턴, 2026-07-10).
+  const monthSel=document.getElementById('monthSel');
+  if(monthSel) monthSel.style.display = name==='detail' ? 'none' : '';
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
   // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충
   if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
@@ -1338,9 +1347,9 @@ function buildOvertimeDetailRow(r){
     <td style="white-space:nowrap">${esc(r.timeRange||'-')}</td>
     <td class="r" style="white-space:nowrap">${r.hours?fmtH(r.hours)+'h':'-'}</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
-    <td style="white-space:nowrap">${esc(r.bankName||'-')}</td>
-    <td style="white-space:nowrap">${esc(r.bankBank||'-')}</td>
-    <td style="white-space:nowrap">${esc(r.bankAccount||'-')}</td>
+    <td class="col-bank" style="white-space:nowrap">${esc(r.bankName||'-')}</td>
+    <td class="col-bank" style="white-space:nowrap">${esc(r.bankBank||'-')}</td>
+    <td class="col-bank" style="white-space:nowrap">${esc(r.bankAccount||'-')}</td>
     <td class="col-file">${makeFileLink(r.fileUrl, r.fileName)}</td>
     <td style="font-size:13px">${esc(r.note||'')}</td>
   </tr>`;
@@ -1768,9 +1777,12 @@ function openDetailModal(id){
     ['시간', esc(r.timeRange||'-')],
     ['계(Hr)', r.hours?fmtH(r.hours)+'h':'-'],
     ['지급액', fmtWon(getPayAmt(r))+'원'],
-    ['예금주', esc(r.bankName||'-')],
-    ['입금은행', esc(r.bankBank||'-')],
-    ['계좌번호', esc(r.bankAccount||'-')],
+    // 예금주·입금은행·계좌번호는 관리자 모드일 때만 상세모달에 노출
+    ...(isMaster() ? [
+      ['예금주', esc(r.bankName||'-')],
+      ['입금은행', esc(r.bankBank||'-')],
+      ['계좌번호', esc(r.bankAccount||'-')]
+    ] : []),
     ['첨부파일', r.fileUrl ? `<a class="file-link" href="${esc(r.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(r.fileName||'열기')}</a>` : '-'],
     ['비고', esc(r.note||'-')]
   ];
@@ -1950,16 +1962,24 @@ function buildExcelReport(opts){
   }).finally(()=>{ btn.disabled=false; });
 }
 function exportOvertimeExcel(){
-  const rows=getDetailFilteredRecords().slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0).map(r=>({
-    '날짜':r.date, '직원명':r.employee||'', '소속':r.org||'', '근무명':r.type||'', '상태':r.status||'',
-    '시간':r.timeRange||'', '계(Hr)':r.hours||0, '지급액':getPayAmt(r),
-    '예금주':r.bankName||'', '입금은행':r.bankBank||'', '계좌번호':r.bankAccount||'',
-    '비고':r.note||''
-  }));
+  const master=isMaster();
+  const rows=getDetailFilteredRecords().slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0).map(r=>{
+    const row={
+      '날짜':r.date, '직원명':r.employee||'', '소속':r.org||'', '근무명':r.type||'', '상태':r.status||'',
+      '시간':r.timeRange||'', '계(Hr)':r.hours||0, '지급액':getPayAmt(r),
+      '비고':r.note||''
+    };
+    // 예금주·입금은행·계좌번호는 관리자 모드일 때만 엑셀에 포함(비관리자는 이 3개 필드 자체를
+    // 안 만들어 buildExcelReport에도 안 넘어가게 함 — 컬럼 정의도 아래서 필터링)
+    if(master){ row['예금주']=r.bankName||''; row['입금은행']=r.bankBank||''; row['계좌번호']=r.bankAccount||''; }
+    return row;
+  });
+  const BANK_KEYS=['예금주','입금은행','계좌번호'];
+  const columns=master ? EXCEL_COLUMNS_OVERTIME : EXCEL_COLUMNS_OVERTIME.filter(c=>!BANK_KEYS.includes(c.key));
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'상세내역', title:'연장근무현황', fnamePrefix:'연장근무현황',
-    columns:EXCEL_COLUMNS_OVERTIME, rows:rows, orientation:'landscape'
+    sheetName:'근무내역', title:'연장근무현황', fnamePrefix:'연장근무현황',
+    columns:columns, rows:rows, orientation:'landscape'
   });
 }
 
@@ -2081,6 +2101,7 @@ updateMonthLabel();
 renderAll();
 initDraggableModals();
 applyMasterUI();
+(()=>{ const monthSel=document.getElementById('monthSel'); if(monthSel) monthSel.style.display = _activePanel==='detail' ? 'none' : ''; })();
 
 // 로그인 상태면 페이지 로드 시 자동 새로고침, 아니면 로그인 모달 표시
 (()=>{
