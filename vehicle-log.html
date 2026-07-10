@@ -172,8 +172,6 @@ tr:hover td{background:var(--sky50)}
 .veh-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 .veh-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
 .veh-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
-.cartype-check{background:var(--sky50);color:var(--sky800);border:1px solid var(--sky100)}
-.cartype-work{background:var(--teal50);color:var(--teal600);border:1px solid var(--teal100)}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -1610,7 +1608,6 @@ function ensureCarColors(){
 function carIdx(t){ return _carColorMap[t]??0; }
 function carColorHex(t){ return VEH_COLORS[carIdx(t)]; }
 function carSlug(t){ return 'veh-c'+carIdx(t); }
-function carTypeSlug(t){ return t==='점검용'?'cartype-check':t==='업무용'?'cartype-work':'cartype-check'; }
 
 // ── 공통: 3셀 요약 카드 빌더 ─────────────────────────
 function buildCompareCard(cells){
@@ -1630,7 +1627,7 @@ function buildDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
     <td style="white-space:nowrap"><span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carNo||'—')}</span></td>
-    <td style="white-space:nowrap">${r.carType?`<span class="type-badge ${carTypeSlug(r.carType)}">${esc(r.carType)}</span>`:'-'}</td>
+    <td style="white-space:nowrap">${r.carType?`<span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carType)}</span>`:'-'}</td>
     <td style="white-space:nowrap">${esc(r.driver||'-')}</td>
     <td style="font-size:13px">${esc(r.purpose||'-')}</td>
     <td style="white-space:nowrap">${esc(r.from||'-')}</td>
