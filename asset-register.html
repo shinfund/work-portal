@@ -1296,7 +1296,11 @@ function calcGroupMap(rows, key){
   return m;
 }
 function renderTunnelPanel(){
-  var rows=filtered();
+  // 터널별 현황은 재고 누적 총계이므로 비품내역 탭의 날짜 필터(기본값=최신월)에
+  // 영향받지 않고 항상 ALL_DATA(전체 이력) 기준으로 집계한다 (2026-07-10 수정 —
+  // FILTER_YEAR/MONTH가 최신월로 기본 설정되면서 이전 달에 구매한 비품이 터널별/
+  // 품목분류별 집계에서 통째로 빠지는 버그가 실사용 중 발견됨)
+  var rows=ALL_DATA;
   var map=calcGroupMap(rows,'터널명');
   var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return b[1].amount-a[1].amount; });
   document.getElementById('tunnelBadge').textContent=arr.length+'개소';
@@ -1313,7 +1317,8 @@ function renderTunnelPanel(){
     : '<tr><td colspan="5">'+emptyState('터널별 데이터가 없습니다.')+'</td></tr>';
 }
 function renderCategoryPanel(){
-  var rows=filtered();
+  // renderTunnelPanel과 동일한 이유로 ALL_DATA 기준 집계 (2026-07-10 수정)
+  var rows=ALL_DATA;
   var map=calcGroupMap(rows,'구분');
   var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return b[1].amount-a[1].amount; });
   document.getElementById('categoryBadge').textContent=arr.length+'종';

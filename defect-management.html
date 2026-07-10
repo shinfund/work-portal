@@ -392,10 +392,14 @@ tbody tr:last-child td{border-bottom:none}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
 
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
 </style>
 </head>
 <body>
 <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+<div id="toast"></div>
 
 <!-- 업체연락처 수정/신규추가 모달 -->
 <div id="contactEditModal">
@@ -2431,6 +2435,14 @@ function closeConfirmModal(){
   document.getElementById('confirmModal').classList.remove('open');
 }
 
+function toast(msg){
+  var t=document.getElementById('toast');
+  if(!t) return;
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); },2600);
+}
+
 function deleteItem(idx){
   var r = ALL_DATA.find(function(d){ return d._idx===idx; });
   if(!r || !r._pageId) return;
@@ -2448,6 +2460,7 @@ function deleteItem(idx){
   .then(function(){
     closeDetail();
     loadData();
+    toast('삭제되었습니다.');
   })
   .catch(function(e){
     if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
@@ -2456,6 +2469,7 @@ function deleteItem(idx){
     if((e.message||'').indexOf('archived')>-1){
       closeDetail();
       loadData();
+      toast('이미 삭제된 항목입니다.');
       return;
     }
     alert('삭제 실패: '+e.message);
@@ -2649,6 +2663,7 @@ function submitAddForm(confirmed){
     btn.disabled = false;
     lbl.textContent = isEdit ? '수정' : '등록';
     closeAddModal();
+    toast(isEdit ? '수정되었습니다.' : '등록되었습니다.');
     // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (터널명·관리·업체명·담당자·전화번호) 미존재 (관련업무 제외)
     if(!isEdit && company && CFG.contactDbId){
       // 하자보수DB 터널명은 "남정5" 같은 축약형, 업체연락처DB는 "남정5터널" 같은 전체형 사용 → 저장 전 통일
@@ -3101,6 +3116,7 @@ function submitContactForm(confirmed){
       closeContactEditModal();
       AFTER_RELOAD_CB = function(){ openContactDetail(newIdx); };
       renderContactPanel();
+      toast('등록되었습니다.');
       return;
     }
     // map이 아직 비어있으면 DB에서 레코드 1건 probe 후 빌드
@@ -3147,6 +3163,7 @@ function submitContactForm(confirmed){
         };
       }
       CONTACT_LOADED=false; loadContactData();
+      toast('등록되었습니다.');
     })
     .catch(function(e){
       resetBtn('등록');
@@ -3181,6 +3198,7 @@ function submitContactForm(confirmed){
       resetBtn('저장');
       closeContactEditModal();
       CONTACT_LOADED=false; loadContactData();
+      toast('수정되었습니다.');
     })
     .catch(function(e){
       resetBtn('저장');
@@ -3222,6 +3240,7 @@ function deleteContactItem(idx){
     closeDetail();
     CONTACT_LOADED=false;
     loadContactData();
+    toast('삭제되었습니다.');
   })
   .catch(function(e){
     if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
@@ -3229,6 +3248,7 @@ function deleteContactItem(idx){
       closeDetail();
       CONTACT_LOADED=false;
       loadContactData();
+      toast('이미 삭제된 항목입니다.');
       return;
     }
     alert('삭제 실패: '+e.message);
