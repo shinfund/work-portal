@@ -601,9 +601,9 @@ loadAuthFromStorage();
 function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
 
 // ── 관리자 모드 (신규등록·수정·삭제는 관리자만 — 2026-07-10 도입) ──
-// 비밀번호는 SHA-256 해시로만 코드에 남는다. 기본값은 임시 비밀번호 "changeme-master" —
-// 실제 사용할 관리자 비밀번호로 바꾸려면 원하는 문자열의 SHA-256 해시를 계산해 아래 상수만 교체하면 된다.
-const MASTER_PASSWORD_HASH='6437b0d2a4c8a98454a2c9743ef56e8a4a1166793e12b28090a06260269b49d6';
+// 비밀번호는 SHA-256 해시로만 코드에 남는다(평문은 코드 어디에도 없음).
+// 비밀번호를 바꾸려면 원하는 문자열의 SHA-256 해시를 계산해 아래 상수만 교체하면 된다.
+const MASTER_PASSWORD_HASH='981f1cf8823cf90d8618203b33393cf9aa520977989e118e5b985823081dbd2a';
 const MASTER_TTL_MS=7*24*3600*1000; // 7일
 async function sha256HexLocal(text){
   const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
