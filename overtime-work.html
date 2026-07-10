@@ -162,7 +162,12 @@ tr:hover td{background:var(--sky50)}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
-#empDdMenu .dd-opt,#typeDdMenu .dd-opt{text-align:left}
+#empDdMenu .dd-opt,#typeDdMenu .dd-opt,#detailYearDdMenu .dd-opt,#detailMonthDdMenu .dd-opt{text-align:left}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
 
 /* ── 근무형태 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 6px 2px 0}
@@ -177,13 +182,58 @@ tr:hover td{background:var(--sky50)}
 .empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
 .empty-desc{font-size:13px}
 
+/* ── 첨부파일(한글/엑셀 등) ── */
+.col-file{width:70px;min-width:64px;text-align:center}
+@media(max-width:640px){.col-file{display:none}}
+.file-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--sky600);text-decoration:none;padding:3px 8px;border-radius:20px;background:var(--sky50);border:1px solid var(--sky100);white-space:nowrap}
+.file-link:hover{background:var(--sky100)}
+.file-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
+.file-upload-box:hover{border-color:var(--sky100)}
+.file-upload-row{display:flex;align-items:center;gap:10px}
+.file-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
+.file-upload-file-btn:hover{background:var(--sky100)}
+.file-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-upload-status.ok{color:var(--teal600);font-weight:700}
+.file-upload-status.err{color:var(--coral);font-weight:700}
+
 /* ── MODAL ── */
 #cfgModal{display:none}
 #cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800,var(--coral))}
+.detail-del-btn:hover{background:var(--coral100)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
@@ -236,9 +286,113 @@ tr:hover td{background:var(--sky50)}
         </div>
       </div>
       <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+
+      <div class="modal-field" style="margin-top:18px;padding-top:16px;border-top:1.5px solid var(--border)">
+        <label class="modal-label">관리자 모드</label>
+        <div class="modal-hint" id="masterStatusHint" style="margin-top:0"></div>
+        <div style="display:flex;gap:8px;margin-top:8px" id="masterUnlockRow">
+          <input id="masterPw" class="modal-input" type="password" placeholder="관리자 비밀번호" style="flex:1" onkeydown="if(event.key==='Enter')unlockMaster()"/>
+          <button class="modal-cancel" style="min-height:40px;white-space:nowrap" onclick="unlockMaster()">잠금해제</button>
+        </div>
+        <button class="modal-cancel" id="masterLockBtn" style="display:none;margin-top:8px" onclick="lockMaster()">관리자 모드 끄기</button>
+        <div class="modal-hint">신규등록·수정·삭제는 관리자 모드에서만 가능합니다.</div>
+      </div>
+
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 연장근무 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+
+      <div class="modal-field">
+        <label class="modal-label">날짜 <span class="modal-required">*</span></label>
+        <input id="addDate" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">성명 <span class="modal-required">*</span></label>
+        <select id="addEmployee" class="modal-select">
+          <option value="">선택</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">근무명 <span class="modal-required">*</span></label>
+        <select id="addType" class="modal-select">
+          <option value="">선택</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">소속</label>
+        <select id="addOrg" class="modal-select">
+          <option value="">선택</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">상태</label>
+        <select id="addStatus" class="modal-select">
+          <option value="">선택</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">시간</label>
+        <input id="addTimeRange" class="modal-input" type="text" placeholder="예) 09:00~18:00"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">계(Hr)</label>
+        <input id="addHours" class="modal-input" type="number" step="0.5" placeholder="예) 24"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">지급액(원)</label>
+        <input id="addPay" class="modal-input" type="number" step="1" placeholder="예) 30000"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">첨부파일 <span style="font-weight:400;color:var(--txt3)">(한글·엑셀 등)</span></label>
+        <div class="file-upload-box">
+          <div class="file-upload-row">
+            <button type="button" class="file-upload-file-btn" onclick="document.getElementById('addFileInput').click()">파일 선택</button>
+            <span class="file-upload-status" id="fileStatus">파일을 선택하세요</span>
+          </div>
+        </div>
+        <input type="file" id="addFileInput" accept=".hwp,.hwpx,.xls,.xlsx,.doc,.docx,.pdf,image/*" style="display:none" onchange="uploadOvertimeFile(this)">
+        <input type="hidden" id="addFile">
+        <input type="hidden" id="addFileName">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitOvertimeForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">연장근무 상세</h3>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">닫기</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
     </div>
   </div>
 </div>
@@ -268,9 +422,9 @@ tr:hover td{background:var(--sky50)}
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-summary" role="tab" aria-selected="true" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
   <button class="top-tab" id="nav-employee" role="tab" aria-selected="false" aria-controls="panel-employee" onclick="switchPanel('employee')">직원별</button>
-  <button class="top-tab" id="nav-detail" role="tab" aria-selected="false" aria-controls="panel-detail" onclick="switchPanel('detail')">상세내역</button>
+  <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
   <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
 </div>
 </div>
@@ -308,7 +462,7 @@ tr:hover td{background:var(--sky50)}
   </div>
 
   <!-- ▸ 요약 -->
-  <div id="panel-summary" class="panel active" role="tabpanel" aria-labelledby="nav-summary">
+  <div id="panel-summary" class="panel" role="tabpanel" aria-labelledby="nav-summary">
 
     <!-- 지급금액 요약 (최상단 컴팩트) -->
     <div id="sumCompare"></div>
@@ -376,12 +530,21 @@ tr:hover td{background:var(--sky50)}
   </div>
 
   <!-- ▸ 상세내역 -->
-  <div id="panel-detail" class="panel" role="tabpanel" aria-labelledby="nav-detail">
-    <div class="sc">
-      <div class="sc-hd">
-        상세 내역
-      </div>
+  <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
+    <div class="sc detail-sc">
       <div class="filter-row">
+        <div class="dd-wrap" id="detailYearDdWrap">
+          <button class="dd-btn" id="detailYearDdBtn" onclick="toggleDetailYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
+            <span id="detailYearDdLabel">전체 연도</span>
+          </button>
+          <div class="dd-menu" id="detailYearDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="detailMonthDdWrap">
+          <button class="dd-btn" id="detailMonthDdBtn" onclick="toggleDetailMonthDd()" aria-haspopup="listbox" aria-label="월 선택">
+            <span id="detailMonthDdLabel">전체 월</span>
+          </button>
+          <div class="dd-menu" id="detailMonthDdMenu"></div>
+        </div>
         <div class="dd-wrap" id="empDdWrap">
           <button class="dd-btn" id="empDdBtn" onclick="toggleEmpDd()" aria-haspopup="listbox" aria-label="직원 선택">
             <span id="empDdLabel">전체 직원</span>
@@ -395,13 +558,24 @@ tr:hover td{background:var(--sky50)}
           <div class="dd-menu" id="typeDdMenu"></div>
         </div>
         <input class="search-box" id="detailSearchBox" placeholder="🔍 직원명, 비고 검색..." oninput="renderDetail()"/>
+        <button class="tb-action-btn tb-add" id="addBtn" onclick="openAddModal()" style="display:none">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          신규등록
+        </button>
+        <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportOvertimeExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
-            <th style="white-space:nowrap;width:1%">날짜</th><th style="white-space:nowrap;width:1%">직원명</th><th style="white-space:nowrap;width:1%">근무형태</th>
-            <th class="r" style="white-space:nowrap;width:1%">시간</th><th class="r" style="white-space:nowrap;width:1%">지급액</th><th style="width:1%;white-space:nowrap">비고</th>
+            <th style="white-space:nowrap">날짜</th><th style="white-space:nowrap">직원명</th><th style="white-space:nowrap">소속</th>
+            <th style="white-space:nowrap">근무명</th><th style="white-space:nowrap">상태</th><th style="white-space:nowrap">시간</th>
+            <th class="r" style="white-space:nowrap">계(Hr)</th><th class="r" style="white-space:nowrap">지급액</th>
+            <th style="white-space:nowrap">예금주</th><th style="white-space:nowrap">입금은행</th><th style="white-space:nowrap">계좌번호</th>
+            <th class="col-file">첨부파일</th><th style="white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
         </table>
@@ -425,6 +599,65 @@ function loadAuthFromStorage(){
 }
 loadAuthFromStorage();
 function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+
+// ── 관리자 모드 (신규등록·수정·삭제는 관리자만 — 2026-07-10 도입) ──
+// 비밀번호는 SHA-256 해시로만 코드에 남는다. 기본값은 임시 비밀번호 "changeme-master" —
+// 실제 사용할 관리자 비밀번호로 바꾸려면 원하는 문자열의 SHA-256 해시를 계산해 아래 상수만 교체하면 된다.
+const MASTER_PASSWORD_HASH='6437b0d2a4c8a98454a2c9743ef56e8a4a1166793e12b28090a06260269b49d6';
+const MASTER_TTL_MS=7*24*3600*1000; // 7일
+async function sha256HexLocal(text){
+  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isMaster(){
+  try{
+    const exp=parseInt(localStorage.getItem('ot_masterExpires')||'0',10)||0;
+    return localStorage.getItem('ot_masterUnlocked')==='1' && Date.now()<exp;
+  }catch(e){ return false; }
+}
+async function unlockMaster(){
+  const pwEl=document.getElementById('masterPw');
+  const pw=(pwEl&&pwEl.value)||'';
+  if(!pw) return;
+  const h=await sha256HexLocal(pw);
+  if(h===MASTER_PASSWORD_HASH){
+    try{
+      localStorage.setItem('ot_masterUnlocked','1');
+      localStorage.setItem('ot_masterExpires', String(Date.now()+MASTER_TTL_MS));
+    }catch(e){}
+    if(pwEl) pwEl.value='';
+    updateMasterStatusHint();
+    applyMasterUI();
+    toast('관리자 모드가 활성화되었습니다.');
+  } else {
+    toast('비밀번호가 올바르지 않습니다.');
+  }
+}
+function lockMaster(){
+  try{ localStorage.removeItem('ot_masterUnlocked'); localStorage.removeItem('ot_masterExpires'); }catch(e){}
+  updateMasterStatusHint();
+  applyMasterUI();
+  toast('관리자 모드가 해제되었습니다.');
+}
+function updateMasterStatusHint(){
+  const h=document.getElementById('masterStatusHint');
+  const row=document.getElementById('masterUnlockRow');
+  const lockBtn=document.getElementById('masterLockBtn');
+  if(!h) return;
+  if(isMaster()){
+    h.textContent='✓ 관리자 모드 활성화됨 (7일간 유지)';
+    if(row) row.style.display='none';
+    if(lockBtn) lockBtn.style.display='';
+  } else {
+    h.textContent='신규등록·수정·삭제를 사용하려면 관리자 비밀번호를 입력하세요.';
+    if(row) row.style.display='flex';
+    if(lockBtn) lockBtn.style.display='none';
+  }
+}
+function applyMasterUI(){
+  const addBtn=document.getElementById('addBtn');
+  if(addBtn) addBtn.style.display = isMaster() ? '' : 'none';
+}
 
 // ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
 (()=>{
@@ -504,7 +737,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
-    const handle=box.querySelector('.modal-title');
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
 }
@@ -518,6 +751,7 @@ function updateLoginStatusHint(){
 function openCfgModal(){
   updateLoginStatusHint();
   syncThemeOptUI();
+  updateMasterStatusHint();
   const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
 }
 // 이 앱 자체에는 로그인 UI가 없음 — 포털 사이드바 하단 설정에서 로그인하면
@@ -651,6 +885,10 @@ document.addEventListener('click',e=>{
   if(ew&&!ew.contains(e.target)) closeEmpDd();
   const tw=document.getElementById('typeDdWrap');
   if(tw&&!tw.contains(e.target)) closeTypeDd();
+  const dyw=document.getElementById('detailYearDdWrap');
+  if(dyw&&!dyw.contains(e.target)) closeDd('detailYearDdMenu','detailYearDdBtn');
+  const dmw=document.getElementById('detailMonthDdWrap');
+  if(dmw&&!dmw.contains(e.target)) closeDd('detailMonthDdMenu','detailMonthDdBtn');
 });
 
 // ── 상세내역 탭 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용, 기본값=전체) ──
@@ -668,6 +906,25 @@ function toggleEmpDd(){ toggleDd('empDdMenu','empDdBtn'); }
 function closeEmpDd(){ closeDd('empDdMenu','empDdBtn'); }
 function toggleTypeDd(){ toggleDd('typeDdMenu','typeDdBtn'); }
 function closeTypeDd(){ closeDd('typeDdMenu','typeDdBtn'); }
+
+// ── 연장근무DB 실제 스키마 기준 고정 옵션(2026-07-10) — 드롭다운은 현재 로딩된 데이터에만
+// 있는 값이 아니라 노션 select 속성에 정의된 전체 목록을 항상 보여줘야 하므로 하드코딩 후
+// 관측된 값과 합집합으로 병합한다(unionValues) ──
+const EMPLOYEES=['공우식','김동록','신종섭','김태선','금동연','손대현'];
+const WORK_TYPES=['비상대기','비상출동','비상근무','당직근무'];
+const ORGS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널','점검팀'];
+const STATUSES=['예정','진행중','완료','반려'];
+// ⚠️ 예금주/입금은행/계좌번호는 절대 코드에 하드코딩하지 않는다 — 이 파일은 GitHub Pages로
+// 공개 배포되어 로그인 없이 raw.githubusercontent.com/GitHub Pages에서 누구나 열람 가능하다.
+// 실제 값은 로그인된 사용자만 호출 가능한 Notion API 응답(계좌번호·입금은행은 rollup 속성으로
+// 이미 조회 결과에 포함됨)에서 그때그때 읽어온다. parseNotionPage()의 getRollupText() 참고.
+function unionValues(canonical, observedKey){
+  const seen={}, out=[];
+  canonical.forEach(v=>{ if(!seen[v]){ seen[v]=1; out.push(v); } });
+  ALL_RECORDS.forEach(r=>{ const v=r[observedKey]; if(v && !seen[v]){ seen[v]=1; out.push(v); } });
+  return out;
+}
+
 let _empFilter='';
 let _typeFilter='';
 function buildEmpDd(emps){
@@ -705,9 +962,73 @@ function buildTypeDd(types){
   }
 }
 
+// ── 상세내역 탭 전용 연/월 필터(목록방식, 기본값="전체" — 비품대장·태양광발전량 앱과 동일
+// 패턴, 요약/직원별/월별추이 탭이 쓰는 상단 공유 #monthSel(그리드+이전/다음)과는 완전히
+// 별개의 독립 상태) ──
+let _detailYearFilter='ALL';
+let _detailMonthFilter='ALL';
+function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
+function buildDetailYearDd(){
+  const menu=document.getElementById('detailYearDdMenu');
+  if(!menu) return;
+  let years=ALL_RECORDS.map(r=>(r.date||'').slice(0,4)).filter(Boolean);
+  years=[...new Set(years)].sort().reverse();
+  const opts=[{val:'ALL',label:'전체 연도'}].concat(years.map(y=>({val:y,label:y+'년'})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailYearFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailYearDdLabel').textContent=_detailYearFilter==='ALL'?'전체 연도':_detailYearFilter+'년';
+  document.getElementById('detailYearDdBtn').classList.toggle('active', _detailYearFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailYearFilter=opt.dataset.val;
+      closeDd('detailYearDdMenu','detailYearDdBtn');
+      if(needsFullHistory(_detailYearFilter==='ALL'?0:parseInt(_detailYearFilter,10), _detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      renderDetail();
+    });
+  }
+}
+function toggleDetailMonthDd(){ toggleDd('detailMonthDdMenu','detailMonthDdBtn'); }
+function buildDetailMonthDd(){
+  const menu=document.getElementById('detailMonthDdMenu');
+  if(!menu) return;
+  const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const opts=[{val:'ALL',label:'전체 월'}].concat(MONTHS.map((lbl,i)=>({val:String(i+1).padStart(2,'0'),label:lbl})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailMonthFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('detailMonthDdLabel').textContent=_detailMonthFilter==='ALL'?'전체 월':parseInt(_detailMonthFilter,10)+'월';
+  document.getElementById('detailMonthDdBtn').classList.toggle('active', _detailMonthFilter!=='ALL');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _detailMonthFilter=opt.dataset.val;
+      closeDd('detailMonthDdMenu','detailMonthDdBtn');
+      if(needsFullHistory(_detailYearFilter==='ALL'?0:parseInt(_detailYearFilter,10), _detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      renderDetail();
+    });
+  }
+}
+function getDetailFilteredRecords(){
+  return ALL_RECORDS.filter(r=>{
+    if(_detailYearFilter!=='ALL' && !(r.date||'').startsWith(_detailYearFilter)) return false;
+    if(_detailMonthFilter!=='ALL' && (r.date||'').slice(5,7)!==_detailMonthFilter) return false;
+    if(_empFilter && r.employee!==_empFilter) return false;
+    if(_typeFilter && r.type!==_typeFilter) return false;
+    const q=(document.getElementById('detailSearchBox')||{}).value||'';
+    const qq=q.trim().toLowerCase();
+    if(qq){
+      const hay=((r.employee||'')+' '+(r.note||'')).toLowerCase();
+      if(hay.indexOf(qq)<0) return false;
+    }
+    return true;
+  });
+}
+
 // ── 하단 네비 ─────────────────────────────────────────
-const PANELS=['summary','employee','detail','trend'];
-let _activePanel='summary';
+const PANELS=['detail','employee','summary','trend'];
+let _activePanel='detail';
 function switchPanel(name){
   if(name===_activePanel) return;
   _activePanel=name;
@@ -760,24 +1081,62 @@ function parseNotionPage(page){
     if(p.type==='formula')return parseFloat(p.formula?.number||0)||0;
     return parseFloat(getText(p))||0;
   }
+  // 예금주 relation의 rollup(입금은행·계좌번호)은 API 응답에 이미 포함되어 있어, 코드에
+  // 하드코딩할 필요 없이 그대로 파싱한다(로그인된 사용자에게만 노출되는 응답이라 안전).
+  function getRollupText(p){
+    if(!p||p.type!=='rollup'||!p.rollup) return '';
+    const roll=p.rollup;
+    if(roll.type==='number') return roll.number!=null?String(roll.number):'';
+    if(roll.type==='array'){
+      const first=(roll.array||[])[0];
+      if(!first) return '';
+      if(first.type==='select') return first.select?.name||'';
+      if(first.type==='rich_text') return (first.rich_text||[]).map(t=>t.plain_text||'').join('');
+      if(first.type==='title') return (first.title||[]).map(t=>t.plain_text||'').join('');
+      if(first.type==='number') return first.number!=null?String(first.number):'';
+    }
+    return '';
+  }
   // 날짜 — date 타입 속성 자동 감지
   let date='';
   for(const[,v] of Object.entries(props)){
     if(v.type==='date'&&v.date?.start){date=v.date.start.slice(0,10);break;}
   }
   if(!date)return null;
-  // 각 필드 추출 — 키워드 자동 매핑
-  let employee='',type='',hours=0,pay=0,note='';
+  // 각 필드 추출 — 연장근무DB 실제 스키마 기준 정확한 속성명 매칭(2026-07-10 확정).
+  // 이전에는 "시간"(텍스트, 예 "09:00~18:00")을 lk.includes('시간') 키워드로 걸러 getNum()에
+  // 넣던 버그가 있었음 — parseFloat("09:00~18:00")이 콜론 앞 "09"만 읽어 9라는 엉뚱한 값이
+  // "시간" 컬럼에 "9h"로 표시되고 있었음. 실제 시간 합계는 별도 숫자 필드 "계(Hr)"이므로 분리.
+  let employee='',type='',org='',status='',timeRange='',hoursNum=0,pay=0,note='',fileUrl='',fileName='',bankName='',bankAccount='',hasBank=false;
   for(const[k,v] of Object.entries(props)){
-    const lk=k.toLowerCase().replace(/\s/g,'');
-    if(!employee&&(v.type==='title'||lk.includes('성명')||lk.includes('직원')||lk==='name'))employee=getText(v);
-    if(!type&&(lk.includes('근무형태')||lk.includes('근무명')||lk==='type'))type=getText(v);
-    if(!hours&&(lk.includes('시간')||lk==='hours'))hours=getNum(v);
-    if(!pay&&(lk.includes('지급액')||lk.includes('지급')||lk==='pay'))pay=getNum(v);
-    if(!note&&(lk.includes('비고')||lk==='note'))note=getText(v);
+    if(k==='성명'){ employee=getText(v); continue; }
+    if(k==='근무명'){ type=getText(v); continue; }
+    if(k==='소속'){ org=getText(v); continue; }
+    if(k==='상태'){ status=getText(v); continue; }
+    if(k==='시간'){ timeRange=getText(v); continue; }
+    if(k==='계(Hr)'){ hoursNum=getNum(v); continue; }
+    if(k==='지급액'){ pay=getNum(v); continue; }
+    if(k==='비고'){ note=getText(v); continue; }
+    if(k==='입금은행'){ bankName=getRollupText(v); if(bankName) hasBank=true; continue; }
+    if(k==='계좌번호'){ bankAccount=getRollupText(v); if(bankAccount) hasBank=true; continue; }
+    if(k==='예금주' && v.type==='relation' && (v.relation||[]).length) hasBank=true;
+    if(v.type==='files'){
+      const f=(v.files||[])[0];
+      if(f){ fileUrl=f.external?.url||f.file?.url||''; fileName=f.name||''; }
+      continue;
+    }
+  }
+  // 정확한 속성명이 하나도 안 맞을 경우(스키마 변경 대비) 키워드 폴백
+  if(!employee){
+    for(const[k,v] of Object.entries(props)){
+      const lk=k.toLowerCase().replace(/\s/g,'');
+      if(lk.includes('성명')||lk.includes('직원')){ employee=getText(v); break; }
+    }
   }
   if(!employee){const tp=Object.values(props).find(p=>p.type==='title');if(tp)employee=getText(tp);}
-  return{id:page.id,date,employee:employee.trim(),type:type.trim(),hours,pay,note:note.trim()};
+  return{id:page.id,date,employee:employee.trim(),type:type.trim(),org:org.trim(),status:status.trim(),timeRange:timeRange.trim(),hours:hoursNum,pay,note:note.trim(),fileUrl,fileName,
+    // 예금주는 relation 연결 여부만 확인하고 이름은 성명과 동일하게 표시(이 DB는 예금주=근무자 1:1)
+    bankName:(hasBank&&employee)?employee.trim():'', bankAccount:bankAccount.trim(), bankBank:bankName.trim()};
 }
 
 // ── 데이터 로드 ──────────────────────────────────────
@@ -964,6 +1323,29 @@ function buildDetailRow(r, showEmployee){
 // 하위 호환 유지용 래퍼 (직원별 탭 — 직원명 컬럼 없음)
 function buildEmpDetailRow(r){ return buildDetailRow(r, false); }
 
+// ── 상세내역 탭 전용 행 렌더 (노션 연장근무DB 전체 컬럼 노출, 행 클릭 → 상세모달) ──
+function makeFileLink(url, name){
+  if(!url || !/^https?:\/\//i.test(url.trim())) return '<span style="color:var(--txt3)">-</span>';
+  return `<a class="file-link" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 열기</a>`;
+}
+function buildOvertimeDetailRow(r){
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
+    <td style="white-space:nowrap">${fmtDate(r.date)}</td>
+    <td style="white-space:nowrap">${esc(r.employee||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.org||'-')}</td>
+    <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
+    <td style="white-space:nowrap">${esc(r.status||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.timeRange||'-')}</td>
+    <td class="r" style="white-space:nowrap">${r.hours?fmtH(r.hours)+'h':'-'}</td>
+    <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
+    <td style="white-space:nowrap">${esc(r.bankName||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.bankBank||'-')}</td>
+    <td style="white-space:nowrap">${esc(r.bankAccount||'-')}</td>
+    <td class="col-file">${makeFileLink(r.fileUrl, r.fileName)}</td>
+    <td style="font-size:13px">${esc(r.note||'')}</td>
+  </tr>`;
+}
+
 // ── renderAll ─────────────────────────────────────────
 function renderAll(){
   updateMonthLabel();
@@ -971,7 +1353,7 @@ function renderAll(){
   renderSummary(recs);
   renderEmployee(recs);
   renderTrend();
-  renderDetail(recs);
+  renderDetail();
 }
 
 // ── 요약 ──────────────────────────────────────────────
@@ -1200,30 +1582,215 @@ function renderTrend(){
 }
 
 // ── 상세내역 ──────────────────────────────────────────
-function renderDetail(recs){
-  recs=recs||filteredRecords();
+// 상세내역 탭은 요약/직원별/월별추이가 공유하는 상단 월 선택 박스(#monthSel)와 무관하게
+// 자체 연/월 드롭다운(_detailYearFilter/_detailMonthFilter)을 갖는다(비품대장·태양광발전량
+// 발전내역 탭과 동일 패턴, 2026-07-10 도입).
+function renderDetail(){
+  buildDetailYearDd();
+  buildDetailMonthDd();
+  buildEmpDd(unionValues(EMPLOYEES,'employee'));
+  buildTypeDd(unionValues(WORK_TYPES,'type'));
 
-  // 드롭다운 옵션은 현재 년/월 기준(recs)으로 구성
-  const emps=[...new Set(recs.map(r=>r.employee).filter(Boolean))].sort();
-  const types=[...new Set(recs.map(r=>r.type).filter(Boolean))].sort();
-  if(_empFilter && !emps.includes(_empFilter)) _empFilter='';
-  if(_typeFilter && !types.includes(_typeFilter)) _typeFilter='';
-  buildEmpDd(emps);
-  buildTypeDd(types);
-
-  const q=(document.getElementById('detailSearchBox')?.value||'').trim().toLowerCase();
-
-  let filtered=recs;
-  if(_empFilter) filtered=filtered.filter(r=>r.employee===_empFilter);
-  if(_typeFilter) filtered=filtered.filter(r=>r.type===_typeFilter);
-  if(q) filtered=filtered.filter(r=>(r.employee+' '+(r.type||'')+' '+(r.note||'')).toLowerCase().includes(q));
+  const filtered=getDetailFilteredRecords().slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0);
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
   document.getElementById('detailTableBody').innerHTML=filtered.length
-    ?filtered.map(r=>buildDetailRow(r,true)).join('')
-    :`<tr><td colspan="6">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+    ?filtered.map(r=>buildOvertimeDetailRow(r)).join('')
+    :`<tr><td colspan="13">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+  applyMasterUI();
 }
 
+
+function fmt(n){ return n<10 ? '0'+n : String(n); }
+
+// ── 신규등록/수정 모달 (관리자 모드에서만 접근 가능 — openAddModal/openEditModal 호출부에서
+// isMaster() 가드, 상세모달의 수정/삭제 버튼도 openDetailModal에서 isMaster()일 때만 렌더) ──
+let EDIT_PAGE_ID=null;
+function fillSelect(id, values, current){
+  const sel=document.getElementById(id);
+  if(!sel) return;
+  sel.innerHTML='<option value="">선택</option>'+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  sel.value=current||'';
+}
+function openAddModal(){
+  if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  EDIT_PAGE_ID=null;
+  document.getElementById('addModalTitleText').textContent='신규 연장근무 등록';
+  document.getElementById('addSubmitLabel').textContent='등록';
+  ['addTimeRange','addHours','addPay','addNote','addFile','addFileName'].forEach(id=>{ document.getElementById(id).value=''; });
+  const today=new Date();
+  document.getElementById('addDate').value=today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
+  fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), '');
+  fillSelect('addType', unionValues(WORK_TYPES,'type'), '');
+  fillSelect('addOrg', unionValues(ORGS,'org'), '');
+  fillSelect('addStatus', unionValues(STATUSES,'status'), '');
+  document.getElementById('fileStatus').textContent='파일을 선택하세요';
+  document.getElementById('fileStatus').className='file-upload-status';
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeAddModal(e){
+  if(e && e.target!==e.currentTarget) return;
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+}
+function openEditModal(pageId){
+  if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
+  const r=ALL_RECORDS.find(x=>x.id===pageId);
+  if(!r) return;
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  EDIT_PAGE_ID=pageId;
+  document.getElementById('addModalTitleText').textContent='연장근무 수정';
+  document.getElementById('addSubmitLabel').textContent='수정';
+  document.getElementById('addDate').value=r.date||'';
+  document.getElementById('addTimeRange').value=r.timeRange||'';
+  document.getElementById('addHours').value=r.hours||'';
+  document.getElementById('addPay').value=r.pay||'';
+  document.getElementById('addNote').value=r.note||'';
+  document.getElementById('addFile').value=r.fileUrl||'';
+  document.getElementById('addFileName').value=r.fileName||'';
+  fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), r.employee||'');
+  fillSelect('addType', unionValues(WORK_TYPES,'type'), r.type||'');
+  fillSelect('addOrg', unionValues(ORGS,'org'), r.org||'');
+  fillSelect('addStatus', unionValues(STATUSES,'status'), r.status||'');
+  const s=document.getElementById('fileStatus');
+  if(r.fileUrl){ s.textContent='기존 첨부파일 있음'+(r.fileName?' ('+r.fileName+')':''); s.className='file-upload-status ok'; }
+  else { s.textContent='파일을 선택하세요'; s.className='file-upload-status'; }
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function uploadOvertimeFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const statusEl=document.getElementById('fileStatus');
+  const urlEl=document.getElementById('addFile');
+  const nameEl=document.getElementById('addFileName');
+  if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='file-upload-status err'; return; }
+  statusEl.textContent='업로드 중...';
+  statusEl.className='file-upload-status';
+  const formData=new FormData();
+  formData.append('file', file);
+  formData.append('app', 'overtime-work');
+  fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(data=>{
+      urlEl.value=data.url;
+      nameEl.value=file.name;
+      statusEl.textContent='✓ 업로드 완료 ('+file.name+')';
+      statusEl.className='file-upload-status ok';
+    })
+    .catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
+}
+function submitOvertimeForm(){
+  const date=document.getElementById('addDate').value.trim();
+  const employee=document.getElementById('addEmployee').value;
+  const type=document.getElementById('addType').value;
+  if(!date){ alert('날짜를 입력해주세요.'); return; }
+  if(!employee){ alert('성명을 선택해주세요.'); return; }
+  if(!type){ alert('근무명을 선택해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+  const fileStatusText=(document.getElementById('fileStatus')||{}).textContent||'';
+  if(fileStatusText==='업로드 중...'){ alert('첨부파일 업로드가 완료될 때까지 기다려주세요.'); return; }
+
+  const org=document.getElementById('addOrg').value;
+  const status=document.getElementById('addStatus').value;
+  const timeRange=document.getElementById('addTimeRange').value.trim();
+  const hours=document.getElementById('addHours').value.trim();
+  const pay=document.getElementById('addPay').value.trim();
+  const note=document.getElementById('addNote').value.trim();
+  const fileUrl=document.getElementById('addFile').value.trim();
+  const fileName=document.getElementById('addFileName').value.trim();
+
+  const btn=document.getElementById('addSubmitBtn'), lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  const isEdit=!!EDIT_PAGE_ID;
+  lbl.textContent=isEdit?'수정 중...':'등록 중...';
+
+  const properties={};
+  // 내용(title) — 노션 기존 데이터 패턴과 동일하게 "성명 근무명"으로 자동 생성
+  properties['내용']={ title:[{ text:{ content:(employee+' '+type).trim() } }] };
+  properties['날짜']=date?{ date:{ start:date } }:{ date:null };
+  properties['성명']={ select:{ name:employee } };
+  properties['근무명']={ select:{ name:type } };
+  properties['소속']=org?{ select:{ name:org } }:{ select:null };
+  properties['상태']=status?{ select:{ name:status } }:{ select:null };
+  properties['시간']=timeRange?{ rich_text:[{ text:{ content:timeRange } }] }:{ rich_text:[] };
+  properties['계(Hr)']=hours!==''?{ number:parseFloat(hours)||0 }:{ number:null };
+  properties['지급액']=pay!==''?{ number:parseFloat(pay)||0 }:{ number:null };
+  properties['비고']=note?{ rich_text:[{ text:{ content:note } }] }:{ rich_text:[] };
+  properties['첨부파일']=fileUrl?{ files:[{ name:fileName||'첨부파일', type:'external', external:{ url:fileUrl } }] }:{ files:[] };
+  // 예금주(relation)는 이 앱에서 쓰지 않는다 — 노션 은행계좌번호DB와의 연결은 기존처럼
+  // 노션에서 직접 관리(신규 등록 시 관리자가 노션에서 한 번 연결해두면 이후 조회부터 반영됨).
+
+  const reqUrl=isEdit?(CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID):(CFG.workerUrl+'/v1/pages');
+  const reqBody=isEdit?JSON.stringify({ properties }):JSON.stringify({ parent:{ database_id:CFG.dbId }, properties });
+
+  fetch(reqUrl, { method:isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      closeAddModal();
+      loadData({full:_fullHistoryLoaded});
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message+'\n\nWorker가 해당 라우트를 지원하는지 확인하세요.');
+      console.error(e);
+    });
+}
+function deleteOvertimeRecord(pageId){
+  if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!confirm('이 연장근무 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ closeDetailModal(); loadData({full:_fullHistoryLoaded}); toast('삭제되었습니다.'); })
+    .catch(e=>{
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadData({full:_fullHistoryLoaded}); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+
+// ── 상세 모달 ──
+function openDetailModal(id){
+  const r=ALL_RECORDS.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent=(r.employee||'—')+' · '+(r.type||'');
+  const rows=[
+    ['날짜', esc(fmtDate(r.date)||'-')],
+    ['성명', esc(r.employee||'-')],
+    ['소속', esc(r.org||'-')],
+    ['근무명', esc(r.type||'-')],
+    ['상태', esc(r.status||'-')],
+    ['시간', esc(r.timeRange||'-')],
+    ['계(Hr)', r.hours?fmtH(r.hours)+'h':'-'],
+    ['지급액', fmtWon(getPayAmt(r))+'원'],
+    ['예금주', esc(r.bankName||'-')],
+    ['입금은행', esc(r.bankBank||'-')],
+    ['계좌번호', esc(r.bankAccount||'-')],
+    ['첨부파일', r.fileUrl ? `<a class="file-link" href="${esc(r.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(r.fileName||'열기')}</a>` : '-'],
+    ['비고', esc(r.note||'-')]
+  ];
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'
+    + rows.map(rv=>`<div class="detail-info-row"><div class="detail-info-key">${rv[0]}</div><div class="detail-info-val">${rv[1]}</div></div>`).join('')
+    + '</div>';
+  document.getElementById('detailModalActions').innerHTML = isMaster()
+    ? `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
+      +`<button class="detail-act-btn detail-del-btn" onclick="deleteOvertimeRecord('${id}')">삭제</button>`
+    : '';
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+function closeDetailModal(e){
+  if(e && e.target!==e.currentTarget) return;
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('detailModal');
+}
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDetailModal(); });
 
 // CSS class명에 사용할 슬러그 변환 — 안전 문자(영문·숫자·한글·하이픈)만 허용
 function typeSlug(t){
@@ -1234,6 +1801,166 @@ function emptyState(desc, icon='📋'){
   return `<div class="empty"><div class="empty-icon">${icon}</div>
     <div class="empty-title">데이터 없음</div>
     <div class="empty-desc">${desc}</div></div>`;
+}
+
+/* ── 엑셀 생성 (비품대장·하자보수현황 앱의 buildExcelReport 공용 패턴 재사용) ──
+   ~/.claude/skills/xlsx-report-export/SKILL.md 참고. 사용자 요청에 따라 가로모드(landscape) 고정. */
+var EXCEL_LIB_LOADING=null;
+function loadExcelLib(){
+  if(window.ExcelJS && window.JSZip) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING=Promise.all([
+    window.ExcelJS?Promise.resolve():loadScript('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js','sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'),
+    window.JSZip?Promise.resolve():loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG')
+  ]).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+var EXCEL_COMPANY_NAME='수자원기술(주)';
+var EXCEL_TITLE_FONT={ name:'HY헤드라인M', size:28 };
+var EXCEL_BODY_FONT={ name:'맑은 고딕', size:13 };
+var EXCEL_HEADER_FILL={ type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE9F8'} };
+var EXCEL_ROW_HEIGHTS={ title:60, header:30, data:30, dataWithPhoto:85 };
+var EXCEL_CELL_BORDER={ top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+function excelCm2in(cm){ return cm/2.54; }
+var EXCEL_PAGE_PRESETS={
+  landscape:{ top:excelCm2in(1), bottom:excelCm2in(0.5), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) },
+  portrait:{ top:excelCm2in(2), bottom:excelCm2in(0.5), left:excelCm2in(1), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) }
+};
+var EXCEL_COLUMNS_OVERTIME=[
+  { key:'날짜', header:'날짜', dateCol:true },
+  { key:'직원명', header:'직원명' },
+  { key:'소속', header:'소속' },
+  { key:'근무명', header:'근무명' },
+  { key:'상태', header:'상태' },
+  { key:'시간', header:'시간' },
+  { key:'계(Hr)', header:'계(Hr)', numFmt:'#,##0.#' },
+  { key:'지급액', header:'지급액(원)', numFmt:'#,##0' },
+  { key:'예금주', header:'예금주' },
+  { key:'입금은행', header:'입금은행' },
+  { key:'계좌번호', header:'계좌번호' },
+  { key:'비고', header:'비고', width:18, wrap:true }
+];
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min=8, max=40, padding=5){
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelEstimateWrappedLines(text, colWidthChars){
+  const w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  let maxLines=1;
+  columns.forEach((col,i)=>{ if(!col.wrap) return; const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]); if(lines>maxLines) maxLines=lines; });
+  const lineHeightPt=fontSize*1.4;
+  return Math.max(baseHeight, maxLines*lineHeightPt+6);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+function buildExcelReport(opts){
+  const btn=document.getElementById(opts.btnId);
+  const lbl=document.getElementById(opts.lblId);
+  const rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  const columns=opts.columns;
+  const orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+
+  loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(opts.sheetName, {
+      views:[{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
+      pageSetup:{ paperSize:9, orientation:orientation, fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, verticalCentered:false, margins:EXCEL_PAGE_PRESETS[orientation], printTitlesRow:'2:2' },
+      headerFooter:{ oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T', oddFooter:'&C&"맑은 고딕"&9&P / &N' }
+    });
+    const colWidths=columns.map(col=>{
+      if(col.width) return col.width;
+      return excelAutoWidth([col.header].concat(rows.map(r=>r[col.key])));
+    });
+    ws.columns=colWidths.map(w=>({width:w}));
+
+    const titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    const titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={ vertical:'middle' };
+
+    const headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach((col,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={ vertical:'middle', horizontal:'center' };
+      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    });
+
+    rows.forEach((r,i)=>{
+      const rn=3+i;
+      const row=ws.getRow(rn);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      columns.forEach((col,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.alignment = col.align==='left' ? { vertical:'middle', horizontal:'left', wrapText: !!col.wrap } : { vertical:'middle', horizontal:'center', wrapText: !!col.wrap };
+        if(col.dateCol && r[col.key]){
+          const d=excelParseDate(r[col.key]);
+          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+        } else {
+          cell.value = (r[col.key]===''||r[col.key]==null) ? '' : r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
+        }
+      });
+      row.commit();
+    });
+
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    return new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }).then(blob=>{
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes())+'.xlsx';
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(e=>{
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(()=>{ btn.disabled=false; });
+}
+function exportOvertimeExcel(){
+  const rows=getDetailFilteredRecords().slice().sort((a,b)=> a.date<b.date?1:a.date>b.date?-1:0).map(r=>({
+    '날짜':r.date, '직원명':r.employee||'', '소속':r.org||'', '근무명':r.type||'', '상태':r.status||'',
+    '시간':r.timeRange||'', '계(Hr)':r.hours||0, '지급액':getPayAmt(r),
+    '예금주':r.bankName||'', '입금은행':r.bankBank||'', '계좌번호':r.bankAccount||'',
+    '비고':r.note||''
+  }));
+  buildExcelReport({
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'상세내역', title:'연장근무현황', fnamePrefix:'연장근무현황',
+    columns:EXCEL_COLUMNS_OVERTIME, rows:rows, orientation:'landscape'
+  });
 }
 
 // ── 내장 데이터 (연장근무 DB 샘플 데이터 — 2025-11 ~ 2026-05) ──
@@ -1353,6 +2080,7 @@ ALL_RECORDS = DEMO_DATA;
 updateMonthLabel();
 renderAll();
 initDraggableModals();
+applyMasterUI();
 
 // 로그인 상태면 페이지 로드 시 자동 새로고침, 아니면 로그인 모달 표시
 (()=>{

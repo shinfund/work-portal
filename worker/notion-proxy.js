@@ -165,7 +165,7 @@ export default {
         const file = formData.get("file");
         if (!file) return corsJson({ error: "file 필드 없음" }, 400);
 
-        const UPLOAD_APPS = ["defect-management", "asset-register"];
+        const UPLOAD_APPS = ["defect-management", "asset-register", "overtime-work"];
         const DEFAULT_UPLOAD_APP = "defect-management";
         const appId = formData.get("app");
         const folder = UPLOAD_APPS.includes(appId) ? appId : DEFAULT_UPLOAD_APP;
