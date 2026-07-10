@@ -1435,7 +1435,7 @@ function makeFileLink(r){
   const files=r.files||[];
   if(!files.length) return '<span style="color:var(--txt3)">-</span>';
   if(files.length===1){
-    return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}',0)">📎 열기</a>`;
+    return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}',0)">📎 1개</a>`;
   }
   return `<span class="file-link" style="cursor:pointer" onclick="event.stopPropagation();openDetailModal('${r.id}')">📎 ${files.length}개</span>`;
 }
