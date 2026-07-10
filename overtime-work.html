@@ -196,6 +196,10 @@ tr:hover td{background:var(--sky50)}
 .file-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
 .file-upload-box:hover{border-color:var(--sky100)}
 .file-upload-row{display:flex;align-items:center;gap:10px}
+.file-list-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
+.file-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--teal600)}
+.file-list-del{background:var(--coral50);border:1.5px solid var(--coral100);color:var(--coral);border-radius:var(--r6);padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.file-list-del:hover{background:var(--coral100)}
 .file-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .file-upload-file-btn:hover{background:var(--sky100)}
 .file-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -382,17 +386,15 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <input id="addPayCustom" class="modal-input" type="number" step="1" placeholder="예) 30000" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">첨부파일 <span style="font-weight:400;color:var(--txt3)">(한글·엑셀 등)</span></label>
+        <label class="modal-label">첨부파일 <span style="font-weight:400;color:var(--txt3)">(한글·엑셀 등, 여러 개 첨부 가능)</span></label>
         <div class="file-upload-box">
           <div class="file-upload-row">
-            <button type="button" class="file-upload-file-btn" onclick="document.getElementById('addFileInput').click()">파일 선택</button>
-            <span class="file-upload-status" id="fileStatus">파일을 선택하세요</span>
-            <button type="button" class="file-upload-file-btn" id="fileDeleteBtn" style="display:none;background:var(--coral50);border-color:var(--coral100);color:var(--coral)" onclick="removeOvertimeFile()">삭제</button>
+            <button type="button" class="file-upload-file-btn" onclick="document.getElementById('addFileInput').click()">파일 추가</button>
+            <span class="file-upload-status" id="fileStatus">첨부파일 없음</span>
           </div>
+          <div id="fileList"></div>
         </div>
         <input type="file" id="addFileInput" accept=".hwp,.hwpx,.xls,.xlsx,.doc,.docx,.pdf,image/*" style="display:none" onchange="uploadOvertimeFile(this)">
-        <input type="hidden" id="addFile">
-        <input type="hidden" id="addFileName">
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -1209,7 +1211,7 @@ function parseNotionPage(page){
   // 이전에는 "시간"(텍스트, 예 "09:00~18:00")을 lk.includes('시간') 키워드로 걸러 getNum()에
   // 넣던 버그가 있었음 — parseFloat("09:00~18:00")이 콜론 앞 "09"만 읽어 9라는 엉뚱한 값이
   // "시간" 컬럼에 "9h"로 표시되고 있었음. 실제 시간 합계는 별도 숫자 필드 "계(Hr)"이므로 분리.
-  let employee='',type='',org='',status='',timeRange='',hoursNum=0,pay=0,note='',fileUrl='',fileName='',bankName='',bankAccount='',hasBank=false;
+  let employee='',type='',org='',status='',timeRange='',hoursNum=0,pay=0,note='',files=[],bankName='',bankAccount='',hasBank=false;
   for(const[k,v] of Object.entries(props)){
     if(k==='성명'){ employee=getText(v); continue; }
     if(k==='근무명'){ type=getText(v); continue; }
@@ -1223,8 +1225,9 @@ function parseNotionPage(page){
     if(k==='계좌번호'){ bankAccount=getRollupText(v); if(bankAccount) hasBank=true; continue; }
     if(k==='예금주' && v.type==='relation' && (v.relation||[]).length) hasBank=true;
     if(v.type==='files'){
-      const f=(v.files||[])[0];
-      if(f){ fileUrl=f.external?.url||f.file?.url||''; fileName=f.name||''; }
+      // 첨부파일은 여러 개일 수 있음 — 배열 전체를 읽는다(2026-07-10, 이전엔 첫 번째만 읽어서
+      // 두 번째 파일을 올리면 첫 번째가 사라진 것처럼 보이는 버그가 있었음)
+      files=(v.files||[]).map(f=>({ url:f.external?.url||f.file?.url||'', name:f.name||'' })).filter(f=>f.url);
       continue;
     }
   }
@@ -1236,7 +1239,7 @@ function parseNotionPage(page){
     }
   }
   if(!employee){const tp=Object.values(props).find(p=>p.type==='title');if(tp)employee=getText(tp);}
-  return{id:page.id,date,employee:employee.trim(),type:type.trim(),org:org.trim(),status:status.trim(),timeRange:timeRange.trim(),hours:hoursNum,pay,note:note.trim(),fileUrl,fileName,
+  return{id:page.id,date,employee:employee.trim(),type:type.trim(),org:org.trim(),status:status.trim(),timeRange:timeRange.trim(),hours:hoursNum,pay,note:note.trim(),files,
     // 예금주는 relation 연결 여부만 확인하고 이름은 성명과 동일하게 표시(이 DB는 예금주=근무자 1:1)
     bankName:(hasBank&&employee)?employee.trim():'', bankAccount:bankAccount.trim(), bankBank:bankName.trim()};
 }
@@ -1426,26 +1429,35 @@ function buildDetailRow(r, showEmployee){
 function buildEmpDetailRow(r){ return buildDetailRow(r, false); }
 
 // ── 상세내역 탭 전용 행 렌더 (노션 연장근무DB 전체 컬럼 노출, 행 클릭 → 상세모달) ──
+// 첨부파일은 여러 개일 수 있어(2026-07-10) 1개면 바로 다운로드 링크, 2개 이상이면 상세모달로
+// 유도하는 배지로 표시한다(좁은 목록 컬럼에 여러 링크를 다 넣기 어려움).
 function makeFileLink(r){
-  if(!r.fileUrl || !/^https?:\/\//i.test(r.fileUrl.trim())) return '<span style="color:var(--txt3)">-</span>';
-  return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}')">📎 열기</a>`;
+  const files=r.files||[];
+  if(!files.length) return '<span style="color:var(--txt3)">-</span>';
+  if(files.length===1){
+    return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}',0)">📎 열기</a>`;
+  }
+  return `<span class="file-link" style="cursor:pointer" onclick="event.stopPropagation();openDetailModal('${r.id}')">📎 ${files.length}개</span>`;
 }
 // R2 파일은 이 사이트와 다른 origin이라 <a download> 속성이 브라우저에서 무시됨(크로스오리진
 // 다운로드는 서버의 Content-Disposition 헤더 없이는 파일명 지정 불가) — blob으로 직접 받아
-// 로컬 object URL로 다운로드해야 원하는 파일명("yyyy년 mm월 근무명일지_다운로드시각")을 강제할 수 있다.
-async function downloadOvertimeFile(id){
+// 로컬 object URL로 다운로드해야 원하는 파일명("yyyy년 mm월 근무명일지[_순번]_다운로드시각")을
+// 강제할 수 있다. idx는 r.files 배열 안에서 몇 번째 파일인지(여러 개 첨부 시 파일명 구분용).
+async function downloadOvertimeFile(id, idx){
   const r=ALL_RECORDS.find(x=>x.id===id);
-  if(!r || !r.fileUrl) return;
+  const f=r && r.files && r.files[idx];
+  if(!f || !f.url) return;
   try{
-    const res=await fetch(r.fileUrl);
+    const res=await fetch(f.url);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const blob=await res.blob();
-    const extMatch=/\.([a-zA-Z0-9]+)(?:\?.*)?$/.exec(r.fileName||r.fileUrl||'');
+    const extMatch=/\.([a-zA-Z0-9]+)(?:\?.*)?$/.exec(f.name||f.url||'');
     const ext=extMatch?extMatch[1]:'';
     const [y,m]=(r.date||'').split('-');
     const now=new Date();
     const ts=now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes());
-    const fname=`${y}년 ${parseInt(m,10)}월 ${r.type||'근무'}일지_${ts}`+(ext?('.'+ext):'');
+    const suffix=r.files.length>1?('_'+(idx+1)):'';
+    const fname=`${y}년 ${parseInt(m,10)}월 ${r.type||'근무'}일지${suffix}_${ts}`+(ext?('.'+ext):'');
     const blobUrl=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=blobUrl; a.download=fname;
@@ -1454,7 +1466,7 @@ async function downloadOvertimeFile(id){
   }catch(e){
     console.error(e);
     toast('파일 다운로드 실패 — 새 탭에서 원본을 엽니다.');
-    window.open(r.fileUrl, '_blank');
+    window.open(f.url, '_blank');
   }
 }
 function buildOvertimeDetailRow(r){
@@ -1770,13 +1782,30 @@ function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
   if(strValues.indexOf(String(currentValue))>=0){ selectEl.value=String(currentValue); }
   else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
 }
+// ── 첨부파일 다중 관리(2026-07-10) — 업로드한 파일을 폼 안에서 배열로 들고 있다가
+// 제출 시 한 번에 노션 첨부파일(files) 속성에 반영한다 ──
+let _formFiles=[]; // [{url, name}]
+function renderFileList(){
+  const wrap=document.getElementById('fileList');
+  if(!wrap) return;
+  wrap.innerHTML=_formFiles.map((f,i)=>
+    `<div class="file-list-row"><span class="file-list-name">📎 ${esc(f.name||f.url)}</span>`
+    +`<button type="button" class="file-list-del" onclick="removeOvertimeFile(${i})">삭제</button></div>`
+  ).join('');
+}
+function updateFileStatusText(){
+  const s=document.getElementById('fileStatus');
+  if(!s) return;
+  s.textContent=_formFiles.length?`총 ${_formFiles.length}개 첨부됨`:'첨부파일 없음';
+  s.className='file-upload-status'+(_formFiles.length?' ok':'');
+}
 function openAddModal(){
   if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
   if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   EDIT_PAGE_ID=null;
   document.getElementById('addModalTitleText').textContent='신규 연장근무 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
-  ['addNote','addFile','addFileName'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('addNote').value='';
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
   document.getElementById('bankInfoField').style.display='';
@@ -1788,9 +1817,9 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), '');
   buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), '');
   buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), '');
-  document.getElementById('fileStatus').textContent='파일을 선택하세요';
-  document.getElementById('fileStatus').className='file-upload-status';
-  document.getElementById('fileDeleteBtn').style.display='none';
+  _formFiles=[];
+  renderFileList();
+  updateFileStatusText();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -1810,8 +1839,6 @@ function openEditModal(pageId){
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value=r.date||'';
   document.getElementById('addNote').value=r.note||'';
-  document.getElementById('addFile').value=r.fileUrl||'';
-  document.getElementById('addFileName').value=r.fileName||'';
   document.getElementById('bankInfoField').style.display='';
   fetchBankInfo(r.employee||'');
   fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), r.employee||'');
@@ -1821,9 +1848,9 @@ function openEditModal(pageId){
   buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), r.timeRange||'');
   buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), r.hours||'');
   buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), r.pay||'');
-  const s=document.getElementById('fileStatus');
-  if(r.fileUrl){ s.textContent='기존 첨부파일 있음'+(r.fileName?' ('+r.fileName+')':''); s.className='file-upload-status ok'; document.getElementById('fileDeleteBtn').style.display=''; }
-  else { s.textContent='파일을 선택하세요'; s.className='file-upload-status'; document.getElementById('fileDeleteBtn').style.display='none'; }
+  _formFiles=(r.files||[]).map(f=>({url:f.url, name:f.name}));
+  renderFileList();
+  updateFileStatusText();
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -1831,8 +1858,6 @@ function uploadOvertimeFile(input){
   const file=input.files[0];
   if(!file) return;
   const statusEl=document.getElementById('fileStatus');
-  const urlEl=document.getElementById('addFile');
-  const nameEl=document.getElementById('addFileName');
   if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='file-upload-status err'; return; }
   statusEl.textContent='업로드 중...';
   statusEl.className='file-upload-status';
@@ -1842,21 +1867,17 @@ function uploadOvertimeFile(input){
   fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
     .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
     .then(data=>{
-      urlEl.value=data.url;
-      nameEl.value=file.name;
-      statusEl.textContent='✓ 업로드 완료 ('+file.name+')';
-      statusEl.className='file-upload-status ok';
-      document.getElementById('fileDeleteBtn').style.display='';
+      _formFiles.push({ url:data.url, name:file.name });
+      renderFileList();
+      updateFileStatusText();
+      input.value=''; // 같은 파일을 다시 선택해도 change 이벤트가 또 뜨도록 초기화
     })
     .catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
 }
-function removeOvertimeFile(){
-  document.getElementById('addFile').value='';
-  document.getElementById('addFileName').value='';
-  document.getElementById('addFileInput').value='';
-  document.getElementById('fileStatus').textContent='파일을 선택하세요';
-  document.getElementById('fileStatus').className='file-upload-status';
-  document.getElementById('fileDeleteBtn').style.display='none';
+function removeOvertimeFile(idx){
+  _formFiles.splice(idx,1);
+  renderFileList();
+  updateFileStatusText();
 }
 async function submitOvertimeForm(){
   const date=document.getElementById('addDate').value.trim();
@@ -1879,8 +1900,6 @@ async function submitOvertimeForm(){
   const hours=getSelectValue('addHours','addHoursCustom');
   const pay=getSelectValue('addPay','addPayCustom');
   const note=document.getElementById('addNote').value.trim();
-  const fileUrl=document.getElementById('addFile').value.trim();
-  const fileName=document.getElementById('addFileName').value.trim();
 
   const btn=document.getElementById('addSubmitBtn'), lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
@@ -1899,7 +1918,7 @@ async function submitOvertimeForm(){
   properties['계(Hr)']=hours!==''?{ number:parseFloat(hours)||0 }:{ number:null };
   properties['지급액']=pay!==''?{ number:parseFloat(pay)||0 }:{ number:null };
   properties['비고']=note?{ rich_text:[{ text:{ content:note } }] }:{ rich_text:[] };
-  properties['첨부파일']=fileUrl?{ files:[{ name:fileName||'첨부파일', type:'external', external:{ url:fileUrl } }] }:{ files:[] };
+  properties['첨부파일']={ files:_formFiles.map(f=>({ name:f.name||'첨부파일', type:'external', external:{ url:f.url } })) };
   // 예금주(relation) — 성명 선택 시 fetchBankInfo()가 은행계좌번호DB를 실시간 조회해 찾아둔
   // pageId를 그대로 연결(코드에 계좌정보를 하드코딩하지 않음, §feedback_pii_no_hardcode 원칙)
   if(_bankPageIdForSubmit){ properties['예금주']={ relation:[{ id:_bankPageIdForSubmit }] }; }
@@ -1954,7 +1973,7 @@ function openDetailModal(id){
       ['예금주', esc(r.bankName||'-')],
       ['입금은행', esc(r.bankBank||'-')],
       ['계좌번호', esc(r.bankAccount||'-')],
-      ['첨부파일', r.fileUrl ? `<a class="file-link" href="javascript:void(0)" onclick="downloadOvertimeFile('${r.id}')">📎 ${esc(r.fileName||'열기')}</a>` : '-']
+      ['첨부파일', (r.files&&r.files.length) ? r.files.map((f,i)=>`<a class="file-link" href="javascript:void(0)" onclick="downloadOvertimeFile('${r.id}',${i})" style="display:block;margin-bottom:4px">📎 ${esc(f.name||'열기')}</a>`).join('') : '-']
     ] : []),
     ['비고', esc(r.note||'-')]
   ];
