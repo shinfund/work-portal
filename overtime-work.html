@@ -231,6 +231,9 @@ tr:hover td{background:var(--sky50)}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
+/* 다크모드에서 네이티브 date input의 달력 아이콘이 검은색으로 고정 렌더링돼 배경과 거의
+   구분이 안 되는 문제 — 아이콘 색을 반전시켜 밝게 보이도록 보정(2026-07-10) */
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
@@ -347,15 +350,24 @@ tr:hover td{background:var(--sky50)}
       </div>
       <div class="modal-field">
         <label class="modal-label">시간</label>
-        <input id="addTimeRange" class="modal-input" type="text" placeholder="예) 09:00~18:00"/>
+        <select id="addTimeRange" class="modal-select" onchange="onSelectChange(this,'addTimeRangeCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addTimeRangeCustom" class="modal-input" type="text" placeholder="예) 09:00~18:00" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">계(Hr)</label>
-        <input id="addHours" class="modal-input" type="number" step="0.5" placeholder="예) 24"/>
+        <select id="addHours" class="modal-select" onchange="onSelectChange(this,'addHoursCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addHoursCustom" class="modal-input" type="number" step="0.5" placeholder="예) 24" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">지급액(원)</label>
-        <input id="addPay" class="modal-input" type="number" step="1" placeholder="예) 30000"/>
+        <select id="addPay" class="modal-select" onchange="onSelectChange(this,'addPayCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addPayCustom" class="modal-input" type="number" step="1" placeholder="예) 30000" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">첨부파일 <span style="font-weight:400;color:var(--txt3)">(한글·엑셀 등)</span></label>
@@ -694,7 +706,7 @@ function fmtDate(d){
 function getPayAmt(r){ return r.pay||0; }
 function fmtWon(n){ return Number(n).toLocaleString('ko-KR'); }
 function fmtH(h){ const n=parseFloat(h)||0; return n%1===0?String(n):n.toFixed(1).replace(/\.0$/,''); }
-function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
 function makeModalDraggable(box, handle){
@@ -966,11 +978,19 @@ function buildTypeDd(types){
   }
 }
 
-// ── 상세내역 탭 전용 연/월 필터(목록방식, 기본값="전체" — 비품대장·태양광발전량 앱과 동일
-// 패턴, 요약/직원별/월별추이 탭이 쓰는 상단 공유 #monthSel(그리드+이전/다음)과는 완전히
-// 별개의 독립 상태) ──
+// ── 근무내역 탭 전용 연/월 필터(목록방식, 기본값=데이터가 있는 최신 연/월 — 비품대장 앱과
+// 동일한 3-9 표준. "전체"는 선택 가능한 옵션으로만 유지. 요약/직원별/월별추이 탭이 쓰는
+// 상단 공유 #monthSel(그리드+이전/다음)과는 완전히 별개의 독립 상태) ──
 let _detailYearFilter='ALL';
 let _detailMonthFilter='ALL';
+let _userPickedDetailDate=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
+function applyDetailDefaultDateFilter(){
+  if(_userPickedDetailDate || !ALL_RECORDS.length) return;
+  const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
+  if(!latest) return;
+  _detailYearFilter=latest.slice(0,4);
+  _detailMonthFilter=latest.slice(5,7);
+}
 function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
 function buildDetailYearDd(){
   const menu=document.getElementById('detailYearDdMenu');
@@ -987,6 +1007,7 @@ function buildDetailYearDd(){
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
       _detailYearFilter=opt.dataset.val;
+      _userPickedDetailDate=true;
       closeDd('detailYearDdMenu','detailYearDdBtn');
       if(needsFullHistory(_detailYearFilter==='ALL'?0:parseInt(_detailYearFilter,10), _detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       renderDetail();
@@ -1008,6 +1029,7 @@ function buildDetailMonthDd(){
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
       _detailMonthFilter=opt.dataset.val;
+      _userPickedDetailDate=true;
       closeDd('detailMonthDdMenu','detailMonthDdBtn');
       if(needsFullHistory(_detailYearFilter==='ALL'?0:parseInt(_detailYearFilter,10), _detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       renderDetail();
@@ -1595,6 +1617,7 @@ function renderTrend(){
 // 자체 연/월 드롭다운(_detailYearFilter/_detailMonthFilter)을 갖는다(비품대장·태양광발전량
 // 발전내역 탭과 동일 패턴, 2026-07-10 도입).
 function renderDetail(){
+  applyDetailDefaultDateFilter();
   buildDetailYearDd();
   buildDetailMonthDd();
   buildEmpDd(unionValues(EMPLOYEES,'employee'));
@@ -1621,19 +1644,50 @@ function fillSelect(id, values, current){
   sel.innerHTML='<option value="">선택</option>'+values.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
   sel.value=current||'';
 }
+// ── "목록 + 직접입력" 패턴 (태양광발전량 앱 용량/단가 필드와 동일 — 반복되는 값이 몇 종류
+// 안 되는 필드에 재사용) ──
+function getUniqueValues(key){
+  const seen={}, out=[];
+  ALL_RECORDS.forEach(r=>{ const v=r[key]; if(v!=null && v!=='' && !seen[v]){ seen[v]=1; out.push(v); } });
+  return out.sort();
+}
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  const sel=document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
+  selectEl.innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+    + values.filter(v=>v!=null && v!=='').map(v=>{ const sv=esc(String(v)); return `<option value="${sv}">${sv}</option>`; }).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(currentValue===undefined || currentValue===null || currentValue==='') return;
+  const strValues=values.map(String);
+  if(strValues.indexOf(String(currentValue))>=0){ selectEl.value=String(currentValue); }
+  else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
+}
 function openAddModal(){
   if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
   if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   EDIT_PAGE_ID=null;
   document.getElementById('addModalTitleText').textContent='신규 연장근무 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
-  ['addTimeRange','addHours','addPay','addNote','addFile','addFileName'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['addNote','addFile','addFileName'].forEach(id=>{ document.getElementById(id).value=''; });
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
   fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), '');
   fillSelect('addType', unionValues(WORK_TYPES,'type'), '');
   fillSelect('addOrg', unionValues(ORGS,'org'), '');
   fillSelect('addStatus', unionValues(STATUSES,'status'), '');
+  buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), '');
+  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), '');
+  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), '');
   document.getElementById('fileStatus').textContent='파일을 선택하세요';
   document.getElementById('fileStatus').className='file-upload-status';
   document.getElementById('addModal').classList.add('modal-open');
@@ -1654,9 +1708,6 @@ function openEditModal(pageId){
   document.getElementById('addModalTitleText').textContent='연장근무 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value=r.date||'';
-  document.getElementById('addTimeRange').value=r.timeRange||'';
-  document.getElementById('addHours').value=r.hours||'';
-  document.getElementById('addPay').value=r.pay||'';
   document.getElementById('addNote').value=r.note||'';
   document.getElementById('addFile').value=r.fileUrl||'';
   document.getElementById('addFileName').value=r.fileName||'';
@@ -1664,6 +1715,9 @@ function openEditModal(pageId){
   fillSelect('addType', unionValues(WORK_TYPES,'type'), r.type||'');
   fillSelect('addOrg', unionValues(ORGS,'org'), r.org||'');
   fillSelect('addStatus', unionValues(STATUSES,'status'), r.status||'');
+  buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), r.timeRange||'');
+  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), r.hours||'');
+  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), r.pay||'');
   const s=document.getElementById('fileStatus');
   if(r.fileUrl){ s.textContent='기존 첨부파일 있음'+(r.fileName?' ('+r.fileName+')':''); s.className='file-upload-status ok'; }
   else { s.textContent='파일을 선택하세요'; s.className='file-upload-status'; }
@@ -1705,9 +1759,9 @@ function submitOvertimeForm(){
 
   const org=document.getElementById('addOrg').value;
   const status=document.getElementById('addStatus').value;
-  const timeRange=document.getElementById('addTimeRange').value.trim();
-  const hours=document.getElementById('addHours').value.trim();
-  const pay=document.getElementById('addPay').value.trim();
+  const timeRange=getSelectValue('addTimeRange','addTimeRangeCustom');
+  const hours=getSelectValue('addHours','addHoursCustom');
+  const pay=getSelectValue('addPay','addPayCustom');
   const note=document.getElementById('addNote').value.trim();
   const fileUrl=document.getElementById('addFile').value.trim();
   const fileName=document.getElementById('addFileName').value.trim();
