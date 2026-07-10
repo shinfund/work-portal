@@ -2329,6 +2329,7 @@ function uploadPhoto(input, key){
 
   var formData = new FormData();
   formData.append('file', file);
+  formData.append('app', 'defect-management');
 
   fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
     .then(function(r){

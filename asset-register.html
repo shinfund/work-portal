@@ -749,6 +749,7 @@ function uploadPhoto(input){
 
   var formData = new FormData();
   formData.append('file', file);
+  formData.append('app', 'asset-register');
 
   fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
     .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
