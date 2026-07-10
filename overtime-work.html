@@ -68,6 +68,10 @@ html[data-theme="dark"] .type-당직근무{background:rgba(55,138,221,.22);color
 html[data-theme="dark"] .type-비상대기{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
 html[data-theme="dark"] .type-비상출동{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
 html[data-theme="dark"] .type-비상근무{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+/* 다크 모드 전용 — 선택된 dd-btn/dd-opt은 --sky800(다크에서 밝은 파스텔블루로 재정의됨)
+   대신 하자보수현황 앱과 동일하게 항상 고정된 짙은 네이비를 쓴다(2026-07-10, 색상 통일) */
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
@@ -186,7 +190,7 @@ tr:hover td{background:var(--sky50)}
 .col-file{width:70px;min-width:64px;text-align:center}
 @media(max-width:640px){.col-file{display:none}}
 /* 예금주·입금은행·계좌번호는 관리자 모드가 아니면 화면/엑셀 어디서도 노출하지 않는다(2026-07-10) */
-#overtimeTable.bank-hidden .col-bank{display:none}
+#overtimeTable.bank-hidden .col-bank,#overtimeTable.bank-hidden .col-file{display:none}
 .file-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--sky600);text-decoration:none;padding:3px 8px;border-radius:20px;background:var(--sky50);border:1px solid var(--sky100);white-space:nowrap}
 .file-link:hover{background:var(--sky100)}
 .file-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
@@ -326,9 +330,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">성명 <span class="modal-required">*</span></label>
-        <select id="addEmployee" class="modal-select">
+        <select id="addEmployee" class="modal-select" onchange="onEmployeeChangeForBank()">
           <option value="">선택</option>
         </select>
+      </div>
+      <div class="modal-field" id="bankInfoField" style="display:none">
+        <label class="modal-label">예금주 계좌정보 <span style="font-weight:400;color:var(--txt3)">(성명 선택 시 자동 연결)</span></label>
+        <div class="detail-info-wrap" style="margin-bottom:0">
+          <div class="detail-info-row"><div class="detail-info-key">예금주</div><div class="detail-info-val" id="bankInfoName">-</div></div>
+          <div class="detail-info-row"><div class="detail-info-key">입금은행</div><div class="detail-info-val" id="bankInfoBank">-</div></div>
+          <div class="detail-info-row"><div class="detail-info-key">계좌번호</div><div class="detail-info-val" id="bankInfoAccount">-</div></div>
+        </div>
       </div>
       <div class="modal-field">
         <label class="modal-label">근무명 <span class="modal-required">*</span></label>
@@ -375,6 +387,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <div class="file-upload-row">
             <button type="button" class="file-upload-file-btn" onclick="document.getElementById('addFileInput').click()">파일 선택</button>
             <span class="file-upload-status" id="fileStatus">파일을 선택하세요</span>
+            <button type="button" class="file-upload-file-btn" id="fileDeleteBtn" style="display:none;background:var(--coral50);border-color:var(--coral100);color:var(--coral)" onclick="removeOvertimeFile()">삭제</button>
           </div>
         </div>
         <input type="file" id="addFileInput" accept=".hwp,.hwpx,.xls,.xlsx,.doc,.docx,.pdf,image/*" style="display:none" onchange="uploadOvertimeFile(this)">
@@ -671,7 +684,8 @@ function updateMasterStatusHint(){
 function applyMasterUI(){
   const addBtn=document.getElementById('addBtn');
   if(addBtn) addBtn.style.display = isMaster() ? '' : 'none';
-  // 예금주·입금은행·계좌번호(.col-bank)는 관리자 모드가 아니면 화면 테이블에서도 숨긴다
+  // 예금주·입금은행·계좌번호(.col-bank)와 첨부파일(.col-file)은 관리자 모드가 아니면 화면
+  // 테이블에서도 숨긴다 — 첨부파일(한글/엑셀)에 계좌번호 등이 그대로 적혀있는 경우가 있음
   document.getElementById('overtimeTable')?.classList.toggle('bank-hidden', !isMaster());
 }
 
@@ -934,6 +948,63 @@ const STATUSES=['예정','진행중','완료','반려'];
 // 공개 배포되어 로그인 없이 raw.githubusercontent.com/GitHub Pages에서 누구나 열람 가능하다.
 // 실제 값은 로그인된 사용자만 호출 가능한 Notion API 응답(계좌번호·입금은행은 rollup 속성으로
 // 이미 조회 결과에 포함됨)에서 그때그때 읽어온다. parseNotionPage()의 getRollupText() 참고.
+// DB ID 자체는 개인정보가 아니므로(work-portal 다른 앱들처럼) 하드코딩해도 안전 — 실제
+// 계좌번호는 로그인된 관리자가 폼을 열 때 라이브 조회로만 가져오고 코드에 남기지 않는다.
+const BANK_DB_ID='2e659c8c-9c0a-806d-a8fe-c5edc5891467'; // 은행계좌번호DB
+let _bankPageIdForSubmit=null; // 신규등록/수정 저장 시 예금주 relation 연결에 사용
+let _bankPageIdForEmployee=null; // 위 pageId가 어느 성명에 대해 조회된 것인지(경쟁 상태 방지용)
+// 화면 표시 없이 pageId만 조회하는 순수 버전 — submitOvertimeForm에서 제출 직전 항상 이걸로
+// 새로 조회해 "성명은 바꿨는데 이전 직원 계좌가 연결되는" 경쟁 상태를 막는다.
+async function findBankPageId(employeeName){
+  if(!employeeName) return null;
+  try{
+    const res=await fetch(CFG.workerUrl+'/v1/databases/'+BANK_DB_ID+'/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filter:{ property:'예금주', title:{ equals: employeeName } }, page_size:1 })
+    });
+    if(!res.ok) return null;
+    const data=await res.json();
+    return (data.results && data.results[0]) ? data.results[0].id : null;
+  }catch(e){ return null; }
+}
+async function fetchBankInfo(employeeName){
+  const nameEl=document.getElementById('bankInfoName');
+  const bankEl=document.getElementById('bankInfoBank');
+  const accountEl=document.getElementById('bankInfoAccount');
+  _bankPageIdForSubmit=null;
+  _bankPageIdForEmployee=employeeName||null;
+  if(!employeeName){
+    if(nameEl){ nameEl.textContent='-'; bankEl.textContent='-'; accountEl.textContent='-'; }
+    return;
+  }
+  if(nameEl){ nameEl.textContent='조회 중...'; bankEl.textContent='-'; accountEl.textContent='-'; }
+  try{
+    const res=await fetch(CFG.workerUrl+'/v1/databases/'+BANK_DB_ID+'/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filter:{ property:'예금주', title:{ equals: employeeName } }, page_size:1 })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const page=(data.results||[])[0];
+    if(!page){
+      if(nameEl){ nameEl.textContent='연결된 계좌 없음'; bankEl.textContent='-'; accountEl.textContent='-'; }
+      return;
+    }
+    _bankPageIdForSubmit=page.id;
+    const props=page.properties||{};
+    const bank=props['입금은행']?.select?.name||'-';
+    const account=(props['계좌번호']?.rich_text||[]).map(t=>t.plain_text||'').join('')||'-';
+    if(nameEl){ nameEl.textContent=employeeName; bankEl.textContent=bank; accountEl.textContent=account; }
+  }catch(e){
+    if(nameEl){ nameEl.textContent='조회 실패'; bankEl.textContent='-'; accountEl.textContent='-'; }
+    console.error(e);
+  }
+}
+async function onEmployeeChangeForBank(){
+  if(!isMaster()) return;
+  const emp=document.getElementById('addEmployee').value;
+  await fetchBankInfo(emp);
+}
 function unionValues(canonical, observedKey){
   const seen={}, out=[];
   canonical.forEach(v=>{ if(!seen[v]){ seen[v]=1; out.push(v); } });
@@ -1355,9 +1426,36 @@ function buildDetailRow(r, showEmployee){
 function buildEmpDetailRow(r){ return buildDetailRow(r, false); }
 
 // ── 상세내역 탭 전용 행 렌더 (노션 연장근무DB 전체 컬럼 노출, 행 클릭 → 상세모달) ──
-function makeFileLink(url, name){
-  if(!url || !/^https?:\/\//i.test(url.trim())) return '<span style="color:var(--txt3)">-</span>';
-  return `<a class="file-link" href="${esc(url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">📎 열기</a>`;
+function makeFileLink(r){
+  if(!r.fileUrl || !/^https?:\/\//i.test(r.fileUrl.trim())) return '<span style="color:var(--txt3)">-</span>';
+  return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}')">📎 열기</a>`;
+}
+// R2 파일은 이 사이트와 다른 origin이라 <a download> 속성이 브라우저에서 무시됨(크로스오리진
+// 다운로드는 서버의 Content-Disposition 헤더 없이는 파일명 지정 불가) — blob으로 직접 받아
+// 로컬 object URL로 다운로드해야 원하는 파일명("yyyy년 mm월 근무명일지_다운로드시각")을 강제할 수 있다.
+async function downloadOvertimeFile(id){
+  const r=ALL_RECORDS.find(x=>x.id===id);
+  if(!r || !r.fileUrl) return;
+  try{
+    const res=await fetch(r.fileUrl);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob=await res.blob();
+    const extMatch=/\.([a-zA-Z0-9]+)(?:\?.*)?$/.exec(r.fileName||r.fileUrl||'');
+    const ext=extMatch?extMatch[1]:'';
+    const [y,m]=(r.date||'').split('-');
+    const now=new Date();
+    const ts=now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes());
+    const fname=`${y}년 ${parseInt(m,10)}월 ${r.type||'근무'}일지_${ts}`+(ext?('.'+ext):'');
+    const blobUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=blobUrl; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(blobUrl), 4000);
+  }catch(e){
+    console.error(e);
+    toast('파일 다운로드 실패 — 새 탭에서 원본을 엽니다.');
+    window.open(r.fileUrl, '_blank');
+  }
 }
 function buildOvertimeDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
@@ -1372,7 +1470,7 @@ function buildOvertimeDetailRow(r){
     <td class="col-bank" style="white-space:nowrap">${esc(r.bankName||'-')}</td>
     <td class="col-bank" style="white-space:nowrap">${esc(r.bankBank||'-')}</td>
     <td class="col-bank" style="white-space:nowrap">${esc(r.bankAccount||'-')}</td>
-    <td class="col-file">${makeFileLink(r.fileUrl, r.fileName)}</td>
+    <td class="col-file">${makeFileLink(r)}</td>
     <td style="font-size:13px">${esc(r.note||'')}</td>
   </tr>`;
 }
@@ -1681,6 +1779,8 @@ function openAddModal(){
   ['addNote','addFile','addFileName'].forEach(id=>{ document.getElementById(id).value=''; });
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
+  document.getElementById('bankInfoField').style.display='';
+  fetchBankInfo('');
   fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), '');
   fillSelect('addType', unionValues(WORK_TYPES,'type'), '');
   fillSelect('addOrg', unionValues(ORGS,'org'), '');
@@ -1690,6 +1790,7 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), '');
   document.getElementById('fileStatus').textContent='파일을 선택하세요';
   document.getElementById('fileStatus').className='file-upload-status';
+  document.getElementById('fileDeleteBtn').style.display='none';
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -1711,6 +1812,8 @@ function openEditModal(pageId){
   document.getElementById('addNote').value=r.note||'';
   document.getElementById('addFile').value=r.fileUrl||'';
   document.getElementById('addFileName').value=r.fileName||'';
+  document.getElementById('bankInfoField').style.display='';
+  fetchBankInfo(r.employee||'');
   fillSelect('addEmployee', unionValues(EMPLOYEES,'employee'), r.employee||'');
   fillSelect('addType', unionValues(WORK_TYPES,'type'), r.type||'');
   fillSelect('addOrg', unionValues(ORGS,'org'), r.org||'');
@@ -1719,8 +1822,8 @@ function openEditModal(pageId){
   buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), r.hours||'');
   buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), r.pay||'');
   const s=document.getElementById('fileStatus');
-  if(r.fileUrl){ s.textContent='기존 첨부파일 있음'+(r.fileName?' ('+r.fileName+')':''); s.className='file-upload-status ok'; }
-  else { s.textContent='파일을 선택하세요'; s.className='file-upload-status'; }
+  if(r.fileUrl){ s.textContent='기존 첨부파일 있음'+(r.fileName?' ('+r.fileName+')':''); s.className='file-upload-status ok'; document.getElementById('fileDeleteBtn').style.display=''; }
+  else { s.textContent='파일을 선택하세요'; s.className='file-upload-status'; document.getElementById('fileDeleteBtn').style.display='none'; }
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
@@ -1743,10 +1846,19 @@ function uploadOvertimeFile(input){
       nameEl.value=file.name;
       statusEl.textContent='✓ 업로드 완료 ('+file.name+')';
       statusEl.className='file-upload-status ok';
+      document.getElementById('fileDeleteBtn').style.display='';
     })
     .catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
 }
-function submitOvertimeForm(){
+function removeOvertimeFile(){
+  document.getElementById('addFile').value='';
+  document.getElementById('addFileName').value='';
+  document.getElementById('addFileInput').value='';
+  document.getElementById('fileStatus').textContent='파일을 선택하세요';
+  document.getElementById('fileStatus').className='file-upload-status';
+  document.getElementById('fileDeleteBtn').style.display='none';
+}
+async function submitOvertimeForm(){
   const date=document.getElementById('addDate').value.trim();
   const employee=document.getElementById('addEmployee').value;
   const type=document.getElementById('addType').value;
@@ -1756,6 +1868,10 @@ function submitOvertimeForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
   const fileStatusText=(document.getElementById('fileStatus')||{}).textContent||'';
   if(fileStatusText==='업로드 중...'){ alert('첨부파일 업로드가 완료될 때까지 기다려주세요.'); return; }
+  // 화면에 이미 캐시된 pageId가 있어도 "성명을 바꾸자마자 바로 저장" 같은 경쟁 상태를 막기
+  // 위해 제출 직전 항상 다시 조회한다(fetchBankInfo의 백그라운드 조회가 아직 안 끝났거나
+  // 이전 성명 기준일 수 있음).
+  const bankPageId = await findBankPageId(employee);
 
   const org=document.getElementById('addOrg').value;
   const status=document.getElementById('addStatus').value;
@@ -1784,8 +1900,9 @@ function submitOvertimeForm(){
   properties['지급액']=pay!==''?{ number:parseFloat(pay)||0 }:{ number:null };
   properties['비고']=note?{ rich_text:[{ text:{ content:note } }] }:{ rich_text:[] };
   properties['첨부파일']=fileUrl?{ files:[{ name:fileName||'첨부파일', type:'external', external:{ url:fileUrl } }] }:{ files:[] };
-  // 예금주(relation)는 이 앱에서 쓰지 않는다 — 노션 은행계좌번호DB와의 연결은 기존처럼
-  // 노션에서 직접 관리(신규 등록 시 관리자가 노션에서 한 번 연결해두면 이후 조회부터 반영됨).
+  // 예금주(relation) — 성명 선택 시 fetchBankInfo()가 은행계좌번호DB를 실시간 조회해 찾아둔
+  // pageId를 그대로 연결(코드에 계좌정보를 하드코딩하지 않음, §feedback_pii_no_hardcode 원칙)
+  if(_bankPageIdForSubmit){ properties['예금주']={ relation:[{ id:_bankPageIdForSubmit }] }; }
 
   const reqUrl=isEdit?(CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID):(CFG.workerUrl+'/v1/pages');
   const reqBody=isEdit?JSON.stringify({ properties }):JSON.stringify({ parent:{ database_id:CFG.dbId }, properties });
@@ -1831,13 +1948,14 @@ function openDetailModal(id){
     ['시간', esc(r.timeRange||'-')],
     ['계(Hr)', r.hours?fmtH(r.hours)+'h':'-'],
     ['지급액', fmtWon(getPayAmt(r))+'원'],
-    // 예금주·입금은행·계좌번호는 관리자 모드일 때만 상세모달에 노출
+    // 예금주·입금은행·계좌번호·첨부파일은 관리자 모드일 때만 상세모달에 노출(첨부파일 안에
+    // 계좌번호 등이 기재된 문서가 섞여있을 수 있어 함께 게이트)
     ...(isMaster() ? [
       ['예금주', esc(r.bankName||'-')],
       ['입금은행', esc(r.bankBank||'-')],
-      ['계좌번호', esc(r.bankAccount||'-')]
+      ['계좌번호', esc(r.bankAccount||'-')],
+      ['첨부파일', r.fileUrl ? `<a class="file-link" href="javascript:void(0)" onclick="downloadOvertimeFile('${r.id}')">📎 ${esc(r.fileName||'열기')}</a>` : '-']
     ] : []),
-    ['첨부파일', r.fileUrl ? `<a class="file-link" href="${esc(r.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(r.fileName||'열기')}</a>` : '-'],
     ['비고', esc(r.note||'-')]
   ];
   document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'
