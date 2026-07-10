@@ -180,6 +180,16 @@ tr:hover td{background:var(--sky50)}
 .type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
 .type-비상근무{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 
+/* ── 상태 뱃지 ── */
+.status-예정{background:#FAEEDA;color:#633806;border:1px solid #E8C875}
+.status-진행중{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+.status-완료{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
+.status-반려{background:#FAECE7;color:#712B13;border:1px solid #F5C4B3}
+html[data-theme="dark"] .status-예정{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .status-진행중{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+html[data-theme="dark"] .status-완료{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .status-반려{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
 .empty-icon{font-size:34px;margin-bottom:10px}
@@ -1475,7 +1485,7 @@ function buildOvertimeDetailRow(r){
     <td style="white-space:nowrap">${esc(r.employee||'-')}</td>
     <td style="white-space:nowrap">${esc(r.org||'-')}</td>
     <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
-    <td style="white-space:nowrap">${esc(r.status||'-')}</td>
+    <td style="white-space:nowrap">${r.status?`<span class="type-badge status-${typeSlug(r.status)}">${esc(r.status)}</span>`:'-'}</td>
     <td style="white-space:nowrap">${esc(r.timeRange||'-')}</td>
     <td class="r" style="white-space:nowrap">${r.hours?fmtH(r.hours)+'h':'-'}</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
