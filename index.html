@@ -14,11 +14,11 @@
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
-  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
-  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
+  --bg:#F0F5FC;--card:#FFFFFF;--border:#7B9DC0;--border2:#A3C0DE;
+  --txt:#0D1520;--txt2:#1E3148;--txt3:#33475C;
   --r8:8px;--r12:12px;--r16:16px;--r20:20px;
   --shadow:0 2px 12px rgba(55,138,221,.09);
-  --sidebar-w:200px;
+  --sidebar-w:160px;
   --mobile-nav-h:58px;
   --header-h:40px;
 
@@ -34,8 +34,6 @@
   --nav-item-text:rgba(255,255,255,.9);
   --nav-item-hover-bg:rgba(255,255,255,.1);
   --nav-item-on-bg:rgba(255,255,255,.18);
-  --nav-badge-bg:rgba(255,255,255,.15);
-  --nav-badge-text:rgba(255,255,255,.9);
   --nav-footer-border:rgba(255,255,255,.16);
   --nav-footer-text:rgba(255,255,255,.85);
   --nav-footer-hover-bg:rgba(255,255,255,.12);
@@ -63,18 +61,16 @@ html[data-theme="light"]{
   --nav-item-text:#1E3148;
   --nav-item-hover-bg:#EAF3FC;
   --nav-item-on-bg:#E6F1FB;
-  --nav-badge-bg:#DCE9F7;
-  --nav-badge-text:#185FA5;
   --nav-footer-border:#DCE9F7;
   --nav-footer-text:#1E3148;
   --nav-footer-hover-bg:#E6F1FB;
-  --nav-tab-text:#3D5269;
+  --nav-tab-text:#33475C;
   --nav-tab-hover-bg:#EAF3FC;
   --nav-tab-x-text:#355E82;
   --nav-tab-x-hover-bg:#DCE9F7;
-  --nav-icon-btn-text:#3D5269;
+  --nav-icon-btn-text:#33475C;
   --nav-icon-btn-hover-bg:#E6F1FB;
-  --nav-add-text:#3D5269;
+  --nav-add-text:#33475C;
   --nav-pill-bg:#E6F1FB;
   --nav-pill-text:#185FA5;
   --nav-pill-sep:#B5D4F4;
@@ -169,16 +165,14 @@ body{
   -webkit-tap-highlight-color:transparent;
   position:relative;
 }
+.sb-item>span:first-child{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
 .sb-item:hover{background:var(--nav-item-hover-bg);color:var(--nav-text);}
 .sb-item.on{background:var(--nav-item-on-bg);color:var(--nav-text);font-weight:600;}
 .sb-item.on::before{
   content:'';position:absolute;left:-6px;top:22%;bottom:22%;
   width:3px;background:var(--sky);border-radius:0 3px 3px 0;
-}
-.sb-badge{
-  margin-left:auto;font-size:9.5px;font-weight:700;
-  padding:2px 7px;border-radius:10px;
-  background:var(--nav-badge-bg);color:var(--nav-badge-text);
 }
 .sb-disabled{opacity:.72;cursor:not-allowed !important;}
 .sb-disabled:hover{background:transparent !important;color:var(--nav-item-text) !important;}
@@ -588,22 +582,22 @@ body{
 
     <div class="sb-sec">추가 예정</div>
     <div class="sb-item sb-disabled">
-      <span>시설물현황</span><span class="sb-badge">준비중</span>
+      <span>시설물현황</span>
     </div>
     <div class="sb-item sb-disabled">
-      <span>일일점검일지</span><span class="sb-badge">준비중</span>
+      <span>일일점검일지</span>
     </div>
     <div class="sb-item sb-disabled">
-      <span>월간점검계획</span><span class="sb-badge">준비중</span>
+      <span>월간점검계획</span>
     </div>
     <div class="sb-item sb-disabled">
-      <span>월간점검결과</span><span class="sb-badge">준비중</span>
+      <span>월간점검결과</span>
     </div>
     <div class="sb-item sb-disabled">
-      <span>분기점검결과</span><span class="sb-badge">준비중</span>
+      <span>분기점검결과</span>
     </div>
     <div class="sb-item sb-disabled">
-      <span>연간점검결과</span><span class="sb-badge">준비중</span>
+      <span>연간점검결과</span>
     </div>
 
     <div class="sb-footer-btn" onclick="openCfg()">
