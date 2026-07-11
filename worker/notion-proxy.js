@@ -14,7 +14,7 @@ const DB_IDS = {
   "이슈분석": "2e2fceec-ae43-492d-95d4-edfadb5f8581",
 };
 
-const TOKEN_TTL_SECONDS = 3 * 24 * 3600; // 3일 (기존 7일에서 단축 — 토큰 탈취 시 노출 시간 축소)
+const TOKEN_TTL_SECONDS = 7 * 24 * 3600; // 7일 (사용자 요청으로 원복 — 토큰 폐기는 TOKEN_VERSION으로 대응)
 
 const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const ALLOWED_IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
@@ -26,10 +26,12 @@ const LOGIN_WINDOW_SECONDS = 15 * 60;
 const SIGNATURE_ROLE_RE = /^[\w가-힣-]{1,50}$/;
 
 // 이 Worker를 호출하는 정적 클라이언트 앱들의 배포 origin만 허용.
+// 실제 서비스 도메인은 work-portal-4z9.pages.dev (Cloudflare Pages) — 프리뷰 배포용 서브도메인도 함께 허용.
 // 로컬 개발 서버(localhost/127.0.0.1, 임의 포트)는 항상 허용.
 function isAllowedOrigin(origin) {
   if (!origin) return false;
   if (origin === "https://shinfund.github.io") return true;
+  if (/^https:\/\/([a-z0-9-]+\.)?work-portal-4z9\.pages\.dev$/.test(origin)) return true;
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   return false;
 }
