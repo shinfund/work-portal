@@ -93,7 +93,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 /* ── MONTH SELECTOR ── */
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:20px;padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
 .dd-btn.active::after{color:#fff}
@@ -122,7 +122,7 @@ html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 .detail-sc{background:transparent;border:none;box-shadow:none}
 .detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
 .sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 
 /* ── PANEL ── */
 .panel{display:none}.panel.active{display:block}
@@ -165,7 +165,7 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-report:hover{background:#443a94}
 
 /* ── 뱃지 ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:20px;white-space:nowrap;margin:2px 0}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
 .veh-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
 .veh-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 .veh-c2{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
