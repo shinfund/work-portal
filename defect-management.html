@@ -73,10 +73,8 @@ html[data-theme="dark"]{
 }
 /* sky800/sky600/teal600을 '텍스트'용으로 다크에서 밝혔기 때문에, 같은 변수를
    '흰 글씨가 올라가는 솔리드 배경'으로 쓰는 소수 지점은 원래의 진한 색으로 고정 복원 */
-html[data-theme="dark"] .f-chip.on{background:#0C447C;border-color:#0C447C}
 html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
 html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
-html[data-theme="dark"] .f-chip.c-teal.on{background:#0F6E56;border-color:#0F6E56}
 /* coral/amber는 베이스 색을 그대로 유지(솔리드 버튼과 공용)하되, 틴트 배지 위 텍스트만
    다크에서 대비가 떨어져 별도로 밝은 톤으로 교체 */
 html[data-theme="dark"] .badge-prog, html[data-theme="dark"] .status-prog{color:#F0916A}
@@ -112,12 +110,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 
 /* ── FILTER BAR ── */
 .filter-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center}
-.filter-group{display:flex;gap:6px;flex-wrap:wrap}
-.f-chip{padding:4px 9px;border-radius:20px;font-size:11.5px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--txt2);transition:all .12s;white-space:nowrap;font-family:inherit}
-.f-chip.on{background:var(--sky800);color:#fff;border-color:var(--sky800)}
-.f-chip.c-teal.on{background:var(--teal600);border-color:var(--teal600)}
-.f-chip.c-coral.on{background:var(--coral);border-color:var(--coral)}
-.f-chip.c-amber.on{background:var(--amber);border-color:var(--amber)}
 .search-box{flex:1;min-width:160px;padding:5px 9px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky100);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
 .filter-count{font-size:12.5px;color:var(--txt2);font-weight:600;white-space:nowrap;padding:3px 0}
@@ -301,9 +293,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   /* [개선4] 필터 - 검색박스 모바일에서 독립 줄 배치 */
   .filter-row{flex-wrap:wrap;gap:6px}
-  .filter-row .filter-group{flex-wrap:wrap}
   .filter-row .search-box{width:100%;order:9;min-width:unset;margin-top:2px}
-  .f-chip{font-size:11px;padding:8px 10px;min-height:40px}
   .search-box{font-size:12px}
 
   /* 드롭다운 - 모바일 높이 제한 */
@@ -932,24 +922,25 @@ var ALL_DATA = [];
 var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', year:'ALL', month:'ALL' };
 var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
 var CURRENT_TAB = 1;
+var AFTER_DEFECT_RELOAD_CB = null; // 하자내역 목록 새로고침 후 자동 상세 오픈 콜백
 
 // ── 열 정의 (노션 하자보수DB 컬럼명과 동일하게 표기) ──
 var COL_DEFS = [
-  { key:'조치여부',   label:'조치여부', width:'col-status',  fixed:true  },
-  { key:'날짜',       label:'날짜',     width:'col-date',    fixed:false },
-  { key:'업무담당',   label:'관리',     width:'col-manager', fixed:false },
-  { key:'터널명',     label:'터널명',   width:'col-tunnel',  fixed:false },
-  { key:'공종',       label:'공종',     width:'col-type',    fixed:false },
-  { key:'위치',       label:'위치',     width:'col-loc',     fixed:false },
-  { key:'하자내용',   label:'하자내용', width:'col-expand',  fixed:true  },
-  { key:'하자사진_URL', label:'하자사진', width:'col-photo', fixed:false },
-  { key:'조치일',     label:'조치일',   width:'col-date2',   fixed:false },
+  { key:'조치여부',   label:'조치여부', width:'col-status'  },
+  { key:'날짜',       label:'날짜',     width:'col-date'    },
+  { key:'업무담당',   label:'관리',     width:'col-manager' },
+  { key:'터널명',     label:'터널명',   width:'col-tunnel'  },
+  { key:'공종',       label:'공종',     width:'col-type'    },
+  { key:'위치',       label:'위치',     width:'col-loc'     },
+  { key:'하자내용',   label:'하자내용', width:'col-expand'  },
+  { key:'하자사진_URL', label:'하자사진', width:'col-photo' },
+  { key:'조치일',     label:'조치일',   width:'col-date2'   },
 
-  { key:'조치사진_URL', label:'조치사진', width:'col-photo', fixed:false },
-  { key:'업체명',     label:'업체명',   width:'col-company', fixed:false },
-  { key:'업체담당자', label:'담당자',   width:'col-contact', fixed:false },
-  { key:'전화번호',   label:'전화번호', width:'col-contact', fixed:false },
-  { key:'비고',       label:'비고',     width:'col-remark',  fixed:false }
+  { key:'조치사진_URL', label:'조치사진', width:'col-photo' },
+  { key:'업체명',     label:'업체명',   width:'col-company' },
+  { key:'업체담당자', label:'담당자',   width:'col-contact' },
+  { key:'전화번호',   label:'전화번호', width:'col-contact' },
+  { key:'비고',       label:'비고',     width:'col-remark'  }
 ];
 
 // probe로 감지된 실제 노션 속성명 매핑 { 내부key: 실제Notion속성명 }
@@ -957,8 +948,8 @@ var NOTION_PROP_MAP = {};
 
 // 열 정의 조회 헬퍼
 function getColDef(key){ return COL_DEFS.find(function(c){return c.key===key;})||null; }
-// 표시 열 순서
-function getVisibleCols(){
+// 열 키 목록
+function getColKeys(){
   return COL_DEFS.map(function(c){return c.key;});
 }
 
@@ -1291,7 +1282,7 @@ function loadData(){
             renderAll();
             rebuildListHeader();
             setSync(false);
-            if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
+            if(AFTER_DEFECT_RELOAD_CB){ var cb=AFTER_DEFECT_RELOAD_CB; AFTER_DEFECT_RELOAD_CB=null; setTimeout(cb,120); }
             var now=new Date();
             var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
             if(truncated) upTxt += ' ⚠ 데이터가 '+MAX_PAGES*100+'건을 초과하여 일부만 표시됩니다';
@@ -1382,7 +1373,7 @@ function buildNotionPropMap(props){
       var tempKey = '_extra_'+nk;
       var alreadyInDefs = COL_DEFS.some(function(c){ return c.key===tempKey; });
       if(!alreadyInDefs){
-        COL_DEFS.push({key:tempKey,label:nk,width:'col-remark',fixed:false});
+        COL_DEFS.push({key:tempKey,label:nk,width:'col-remark'});
         NOTION_PROP_MAP[tempKey]=nk;
       }
     }
@@ -1392,10 +1383,14 @@ function buildNotionPropMap(props){
 function fmt(n){ return n<10?'0'+n:String(n); }
 
 /* ── COMMON HELPER ── */
-function getUniqueValues(key){
+function getUniqueValuesFrom(arr, key){
+  arr = arr || ALL_DATA;
   var seen={}, result=[];
-  ALL_DATA.forEach(function(r){ var v=r[key]; if(v&&!seen[v]){seen[v]=1;result.push(v);} });
+  arr.forEach(function(r){ var v=r[key]; if(v&&!seen[v]){seen[v]=1;result.push(v);} });
   return result.sort();
+}
+function getUniqueValues(key){
+  return getUniqueValuesFrom(ALL_DATA, key);
 }
 
 /* ── BUILD MANAGER DROPDOWN ── */
@@ -1623,11 +1618,6 @@ function closeUnprocStatusDd() { closeDd('unprocStatusDdMenu','unprocStatusDdBtn
 })();
 
 /* ── FILTER ── */
-function setFilter(key, val){
-  FILTER[key] = val;
-  renderList();
-}
-
 function filtered(){
   var q = (document.getElementById('searchBox').value||'').trim().toLowerCase();
   return ALL_DATA.filter(function(r){
@@ -1832,7 +1822,7 @@ function makePhotoThumb(url){
 
 /* ── LIST HEADER 동적 생성 ── */
 function rebuildListHeader(){
-  var visKeys = getVisibleCols();
+  var visKeys = getColKeys();
   var thead = document.getElementById('listHead');
   if(!thead) return;
   thead.innerHTML = visKeys.map(function(key){
@@ -1867,7 +1857,7 @@ function renderList(){
     return at < bt ? 1 : at > bt ? -1 : 0;
   }).map(function(o){ return o.r; });
 
-  var visKeys = getVisibleCols();
+  var visKeys = getColKeys();
   var tbody = document.getElementById('listBody');
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="'+visKeys.length+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
@@ -2408,7 +2398,7 @@ function openEditModal(idx){
   document.getElementById('addActionDate').value    = r['조치일']||'';
   var companies = ALL_DATA.length ? getUniqueValues('업체명') : [];
   buildGenericSelectOpts(document.getElementById('addCompany'), document.getElementById('addCompanyCustom'), companies, r['업체명']||'');
-  var contacts = (function(){ if(CONTACT_DATA.length){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; } return getUniqueValues('업체담당자'); })();
+  var contacts = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '담당자') : getUniqueValues('업체담당자');
   buildGenericSelectOpts(document.getElementById('addContact'), document.getElementById('addContactCustom'), contacts, r['업체담당자']||'');
   document.getElementById('addPhone').value       = r['전화번호']||'';
   document.getElementById('addRemark').value      = r['비고']||'';
@@ -2538,7 +2528,7 @@ function openAddModal(){
   document.getElementById('photo1Thumb').classList.remove('show');
   document.getElementById('photo2Thumb').classList.remove('show');
   document.getElementById('addManager').value = '';
-  ['addTypeCustom','addLocCustom','addStatusCustom','addCompanyCustom','addContactCustom','addManagerCustom'].forEach(function(id){
+  ['addTypeCustom','addTunnelCustom','addLocCustom','addStatusCustom','addCompanyCustom','addContactCustom','addManagerCustom'].forEach(function(id){
     var el=document.getElementById(id); if(el){el.value='';el.style.display='none';}
   });
   // 위치, 업체명, 업체담당자 드롭다운 동적 채우기
@@ -2546,7 +2536,7 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addLoc'), document.getElementById('addLocCustom'), locs, '');
   var companies = ALL_DATA.length ? getUniqueValues('업체명') : [];
   buildGenericSelectOpts(document.getElementById('addCompany'), document.getElementById('addCompanyCustom'), companies, '');
-  var contacts = (function(){ if(CONTACT_DATA.length){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; } return getUniqueValues('업체담당자'); })();
+  var contacts = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '담당자') : getUniqueValues('업체담당자');
   buildGenericSelectOpts(document.getElementById('addContact'), document.getElementById('addContactCustom'), contacts, '');
 
   // 터널 목록: 현재 데이터에서 동적 생성 (없으면 고정 목록)
@@ -2756,7 +2746,7 @@ var CONTACT_DATA = [];
 var CONTACT_LOADED = false;
 var CONTACT_FILTER = { group:'ALL', tunnel:'ALL' };
 var CONTACT_PROP_MAP = {}; // 실제 Notion 속성명 매핑 (빌드 후 사용)
-var AFTER_RELOAD_CB = null; // 신규 등록 후 자동 상세 오픈 콜백
+var AFTER_CONTACT_RELOAD_CB = null; // 업체연락처 신규 등록 후 자동 상세 오픈 콜백
 
 function buildContactPropMap(page){
   if(!page || !page.properties) return;
@@ -2995,7 +2985,7 @@ function renderContactPanel(){
   buildContactTunnelDd();
   buildContactManagerDd();
   renderContactTable();
-  if(AFTER_RELOAD_CB){ var cb=AFTER_RELOAD_CB; AFTER_RELOAD_CB=null; setTimeout(cb,120); }
+  if(AFTER_CONTACT_RELOAD_CB){ var cb=AFTER_CONTACT_RELOAD_CB; AFTER_CONTACT_RELOAD_CB=null; setTimeout(cb,120); }
 }
 
 /* ── 업체연락처 상세 (detailModal 재사용) ── */
@@ -3055,15 +3045,13 @@ function openContactEditModal(idx){
   var lbl = document.getElementById('ceSubmitLabel');
   if(lbl) lbl.textContent = '저장';
 
-  var ceTunnels = CONTACT_DATA.length
-    ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.터널명&&!s[c.터널명]){s[c.터널명]=1;a.push(c.터널명);} }); a.sort(); return a; })()
-    : [];
+  var ceTunnels = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '터널명') : [];
   buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, r.터널명||'');
 
   document.getElementById('ceGrp').value    = r.관리구분||'안전관리자';
-  var ceCompanies = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.업체명&&!s[c.업체명]){s[c.업체명]=1;a.push(c.업체명);} }); a.sort(); return a; })() : [];
+  var ceCompanies = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '업체명') : [];
   buildGenericSelectOpts(document.getElementById('ceCo'), document.getElementById('ceCoCustom'), ceCompanies, r.업체명||'');
-  var cePersons = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; })() : [];
+  var cePersons = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '담당자') : [];
   buildGenericSelectOpts(document.getElementById('cePerson'), document.getElementById('cePersonCustom'), cePersons, r.담당자||'');
   document.getElementById('ceTel').value    = r.전화번호||'';
   document.getElementById('ceWork').value   = r.관련업무||'';
@@ -3081,9 +3069,7 @@ function openContactAddModal(){
   var lbl = document.getElementById('ceSubmitLabel');
   if(lbl) lbl.textContent = '등록';
 
-  var ceTunnels = CONTACT_DATA.length
-    ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.터널명&&!s[c.터널명]){s[c.터널명]=1;a.push(c.터널명);} }); a.sort(); return a; })()
-    : [];
+  var ceTunnels = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '터널명') : [];
   buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, '');
 
   document.getElementById('ceGrp').value    = '안전관리자';
@@ -3093,9 +3079,9 @@ function openContactAddModal(){
     el.value = '';
     if(el.style !== undefined) el.style.display = 'none';
   });
-  var ceCompanies = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.업체명&&!s[c.업체명]){s[c.업체명]=1;a.push(c.업체명);} }); a.sort(); return a; })() : [];
+  var ceCompanies = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '업체명') : [];
   buildGenericSelectOpts(document.getElementById('ceCo'), document.getElementById('ceCoCustom'), ceCompanies, '');
-  var cePersons = CONTACT_DATA.length ? (function(){ var s={},a=[]; CONTACT_DATA.forEach(function(c){ if(c.담당자&&!s[c.담당자]){s[c.담당자]=1;a.push(c.담당자);} }); a.sort(); return a; })() : [];
+  var cePersons = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '담당자') : [];
   buildGenericSelectOpts(document.getElementById('cePerson'), document.getElementById('cePersonCustom'), cePersons, '');
 
   document.getElementById('contactEditModal').classList.add('modal-open');
@@ -3148,7 +3134,7 @@ function submitContactForm(confirmed){
         담당자:person, 전화번호:tel, 관련업무:work, 비고:rem });
       resetBtn('등록');
       closeContactEditModal();
-      AFTER_RELOAD_CB = function(){ openContactDetail(newIdx); };
+      AFTER_CONTACT_RELOAD_CB = function(){ openContactDetail(newIdx); };
       renderContactPanel();
       toast('등록되었습니다.');
       return;
@@ -3191,7 +3177,7 @@ function submitContactForm(confirmed){
       closeContactEditModal();
       if(saved && saved.id){
         var newId = saved.id;
-        AFTER_RELOAD_CB = function(){
+        AFTER_CONTACT_RELOAD_CB = function(){
           var r = CONTACT_DATA.find(function(d){ return d._pageId===newId; });
           if(r) openContactDetail(r._idx);
         };

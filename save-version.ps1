@@ -13,7 +13,7 @@ $archDir = Join-Path $root "archive"
 if (-not (Test-Path $archDir)) { New-Item -ItemType Directory -Path $archDir | Out-Null }
 
 $ts    = Get-Date -Format "yyyyMMddHHmm"
-$files = @("index.html", "defect-management.html", "overtime-work.html")
+$files = @("index.html", "defect-management.html", "overtime-work.html", "asset-register.html", "solar-power.html", "vehicle-log.html")
 
 Write-Host "`n[work-portal] 버전 저장 - $ts`n" -ForegroundColor Cyan
 

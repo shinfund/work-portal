@@ -229,7 +229,6 @@ tr:hover td{background:var(--sky50)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 
 .theme-opts{display:flex;gap:12px;}
@@ -331,7 +330,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">발전량(kWh)</label>
-        <input id="addGen" class="modal-input" type="number" step="0.1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <input id="addGen" class="modal-input" type="number" step="0.1" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint">= 누적량 − 전일누적량 (자동 계산)</div>
       </div>
       <div class="modal-field">
@@ -343,7 +342,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">요금(원)</label>
-        <input id="addFee" class="modal-input" type="number" step="1" readonly style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
+        <input id="addFee" class="modal-input" type="number" step="1" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint">= 발전량 × 단가 (자동 계산, 노션 수식 컬럼과 동일)</div>
       </div>
       <div class="modal-field">
@@ -415,7 +414,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div id="monthSelDefaultSlot">
     <div class="month-sel" id="monthSel">
       <div class="dd-wrap" id="ddYearWrap">
-        <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')">
+        <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')" aria-haspopup="listbox" aria-label="연도 선택">
           <span id="ddYearLabel">2026년</span>
         </div>
         <div class="dd-menu" id="ddYearMenu">
@@ -424,7 +423,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <span class="dd-sep">·</span>
       <div class="dd-wrap" id="ddMonthWrap">
-        <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')">
+        <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')" aria-haspopup="listbox" aria-label="월 선택">
           <span id="ddMonthLabel">4월</span>
         </div>
         <div class="dd-menu" id="ddMonthMenu">
@@ -822,7 +821,8 @@ function closeAddModal(e){
 function openEditModal(pageId){
   const r = ALL_RECORDS.find(x=>x.id===pageId);
   if(!r) return;
-  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isRealPageId(pageId)){ alert('데모 데이터는 수정/삭제할 수 없습니다.'); return; }
   EDIT_PAGE_ID = pageId;
   document.getElementById('addModalTitleText').textContent='발전량 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
@@ -898,7 +898,8 @@ function submitAddForm(){
     });
 }
 function deleteRecord(pageId){
-  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isRealPageId(pageId)){ alert('데모 데이터는 수정/삭제할 수 없습니다.'); return; }
   if(!confirm('이 발전량 기록을 삭제(휴지통 이동)할까요?')) return;
   fetch(CFG.workerUrl+'/v1/pages/'+pageId, {
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
@@ -951,21 +952,18 @@ const _now=new Date();
 let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
 
 function toggleDD(type){
-  const yMenu=document.getElementById('ddYearMenu');
-  const mMenu=document.getElementById('ddMonthMenu');
-  if(type==='year'){
-    const isOpen=yMenu.classList.contains('open');
-    closeAllDD();
-    if(!isOpen){ renderDDYear(); yMenu.classList.add('open'); }
-  } else {
-    const isOpen=mMenu.classList.contains('open');
-    closeAllDD();
-    if(!isOpen){ renderDDMonth(); mMenu.classList.add('open'); }
+  const menuId = type==='year' ? 'ddYearMenu' : 'ddMonthMenu';
+  const btnId = type==='year' ? 'ddYearBtn' : 'ddMonthBtn';
+  const isOpen=document.getElementById(menuId).classList.contains('open');
+  closeAllDD();
+  if(!isOpen){
+    if(type==='year'){ renderDDYear(); } else { renderDDMonth(); }
+    toggleDd(menuId, btnId);
   }
 }
 function closeAllDD(){
-  document.getElementById('ddYearMenu').classList.remove('open');
-  document.getElementById('ddMonthMenu').classList.remove('open');
+  closeDd('ddYearMenu','ddYearBtn');
+  closeDd('ddMonthMenu','ddMonthBtn');
 }
 function renderDDYear(){
   const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
@@ -1286,10 +1284,14 @@ async function loadData(opts){
     const data=await fetchNotion(body);
     let pages=data.results||[];
     let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-    while(cursor&&hasMore&&++pageCount<20){
+    while(cursor&&hasMore&&++pageCount<200){
       const d2=await fetchNotion({...body,start_cursor:cursor});
       pages=[...pages,...(d2.results||[])];
       cursor=d2.next_cursor;hasMore=d2.has_more;
+    }
+    if(hasMore){
+      console.warn('[solar-power] 페이지네이션 상한(200페이지)에 도달하여 일부 데이터가 누락되었을 수 있습니다.');
+      toast('데이터가 많아 일부가 누락되었을 수 있습니다.');
     }
     const parsed=pages.map(parseNotionPage).filter(Boolean);
     if(parsed.length>0){

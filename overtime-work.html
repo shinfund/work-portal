@@ -299,11 +299,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
       </div>
       <div class="theme-opts">
-        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+        <div class="theme-opt" id="theme-opt-dark" role="button" tabindex="0" onclick="setAppTheme('dark')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('dark');}">
           <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
           <div class="theme-opt-label">다크</div>
         </div>
-        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+        <div class="theme-opt" id="theme-opt-light" role="button" tabindex="0" onclick="setAppTheme('light')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('light');}">
           <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
           <div class="theme-opt-label">라이트</div>
         </div>
@@ -480,9 +480,9 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="dd-menu" id="ddYearMenu">
         <div class="dd-year-row">
-          <button class="dd-year-nav" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
+          <button class="dd-year-nav" aria-label="이전 연도" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
           <span class="dd-year-val" id="ddYearCenter">2026</span>
-          <button class="dd-year-nav" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
+          <button class="dd-year-nav" aria-label="다음 연도" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
         </div>
         <div id="ddYearOpts"></div>
       </div>
@@ -997,6 +997,7 @@ async function fetchBankInfo(employeeName){
     });
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data=await res.json();
+    if(_bankPageIdForEmployee!==employeeName) return; // 응답 도착 시점에 다른 직원으로 바뀌었으면 무시(경쟁 상태 방지)
     const page=(data.results||[])[0];
     if(!page){
       if(nameEl){ nameEl.textContent='연결된 계좌 없음'; bankEl.textContent='-'; accountEl.textContent='-'; }
@@ -1008,6 +1009,7 @@ async function fetchBankInfo(employeeName){
     const account=(props['계좌번호']?.rich_text||[]).map(t=>t.plain_text||'').join('')||'-';
     if(nameEl){ nameEl.textContent=employeeName; bankEl.textContent=bank; accountEl.textContent=account; }
   }catch(e){
+    if(_bankPageIdForEmployee!==employeeName) return; // 이전 직원 조회의 오류로 현재 선택을 덮어쓰지 않음
     if(nameEl){ nameEl.textContent='조회 실패'; bankEl.textContent='-'; accountEl.textContent='-'; }
     console.error(e);
   }
@@ -1026,39 +1028,31 @@ function unionValues(canonical, observedKey){
 
 let _empFilter='';
 let _typeFilter='';
-function buildEmpDd(emps){
-  const menu=document.getElementById('empDdMenu');
+// 공통: 필터 드롭다운(직원별/근무형태별) 렌더+바인딩 — 두 드롭다운이 필터 변수명만
+// 다르고 나머지 로직이 동일해서 하나로 통합
+function buildFilterDd(menuId, labelId, getFilter, setFilter, closeFn, items, allLabel){
+  const menu=document.getElementById(menuId);
   if(!menu) return;
-  const opts=[{val:'',label:'전체 직원'}].concat(emps.map(e=>({val:e,label:e})));
-  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_empFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
-  document.getElementById('empDdLabel').textContent=_empFilter||'전체 직원';
+  const opts=[{val:'',label:allLabel}].concat(items.map(v=>({val:v,label:v})));
+  const cur=getFilter();
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${cur===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById(labelId).textContent=cur||allLabel;
   if(!menu._bound){
     menu._bound=true;
     menu.addEventListener('click',e=>{
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
-      _empFilter=opt.dataset.val;
-      closeEmpDd();
+      setFilter(opt.dataset.val);
+      closeFn();
       renderDetail();
     });
   }
 }
+function buildEmpDd(emps){
+  buildFilterDd('empDdMenu','empDdLabel',()=>_empFilter,v=>{_empFilter=v;},closeEmpDd,emps,'전체 직원');
+}
 function buildTypeDd(types){
-  const menu=document.getElementById('typeDdMenu');
-  if(!menu) return;
-  const opts=[{val:'',label:'전체 근무형태'}].concat(types.map(t=>({val:t,label:t})));
-  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_typeFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
-  document.getElementById('typeDdLabel').textContent=_typeFilter||'전체 근무형태';
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click',e=>{
-      const opt=e.target.closest('.dd-opt');
-      if(!opt) return;
-      _typeFilter=opt.dataset.val;
-      closeTypeDd();
-      renderDetail();
-    });
-  }
+  buildFilterDd('typeDdMenu','typeDdLabel',()=>_typeFilter,v=>{_typeFilter=v;},closeTypeDd,types,'전체 근무형태');
 }
 
 // ── 근무내역 탭 전용 연/월 필터(목록방식, 기본값=데이터가 있는 최신 연/월 — 비품대장 앱과
@@ -1293,10 +1287,14 @@ async function loadData(opts){
     const data=await fetchNotion(body);
     let pages=data.results||[];
     let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-    while(cursor&&hasMore&&++pageCount<20){
+    while(cursor&&hasMore&&++pageCount<200){
       const d2=await fetchNotion({...body,start_cursor:cursor});
       pages=[...pages,...(d2.results||[])];
       cursor=d2.next_cursor;hasMore=d2.has_more;
+    }
+    if(cursor&&hasMore){
+      console.warn('loadData: 페이지네이션 상한(200페이지, 약 20000건) 도달 — 일부 데이터가 누락되었을 수 있습니다.');
+      toast('데이터가 많아 일부가 누락되었을 수 있습니다. 관리자에게 문의하세요.');
     }
     const parsed=pages.map(parseNotionPage).filter(Boolean);
     if(parsed.length>0){
@@ -1423,20 +1421,16 @@ function buildStackBars(arr, typeList, valueKey, totalKey, labelFn){
   </div>`;
 }
 
-// ── 공통: 상세 행 HTML 빌더 ─────────────────────────
-// showEmployee=true이면 직원명 컬럼 포함 (상세내역 탭)
-function buildDetailRow(r, showEmployee){
+// ── 공통: 상세 행 HTML 빌더 (직원별 탭 — 직원명 컬럼 없음) ─────────────────────────
+function buildEmpDetailRow(r){
   return `<tr>
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
-    ${showEmployee?`<td style="white-space:nowrap">${esc(r.employee)}</td>`:''}
     <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
     <td class="r" style="white-space:nowrap;color:var(--sky600)">${fmtH(r.hours)}h</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
     <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
-// 하위 호환 유지용 래퍼 (직원별 탭 — 직원명 컬럼 없음)
-function buildEmpDetailRow(r){ return buildDetailRow(r, false); }
 
 // ── 상세내역 탭 전용 행 렌더 (노션 연장근무DB 전체 컬럼 노출, 행 클릭 → 상세모달) ──
 // 첨부파일은 여러 개일 수 있어(2026-07-10) 1개면 바로 다운로드 링크, 2개 이상이면 상세모달로
@@ -1766,10 +1760,10 @@ function fillSelect(id, values, current){
 }
 // ── "목록 + 직접입력" 패턴 (태양광발전량 앱 용량/단가 필드와 동일 — 반복되는 값이 몇 종류
 // 안 되는 필드에 재사용) ──
-function getUniqueValues(key){
+function getUniqueValues(key, cmp){
   const seen={}, out=[];
   ALL_RECORDS.forEach(r=>{ const v=r[key]; if(v!=null && v!=='' && !seen[v]){ seen[v]=1; out.push(v); } });
-  return out.sort();
+  return out.sort(cmp);
 }
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
@@ -1825,8 +1819,8 @@ function openAddModal(){
   fillSelect('addOrg', unionValues(ORGS,'org'), '');
   fillSelect('addStatus', unionValues(STATUSES,'status'), '');
   buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), '');
-  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), '');
-  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), '');
+  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours',(a,b)=>Number(a)-Number(b)), '');
+  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay',(a,b)=>Number(a)-Number(b)), '');
   _formFiles=[];
   renderFileList();
   updateFileStatusText();
@@ -1856,8 +1850,8 @@ function openEditModal(pageId){
   fillSelect('addOrg', unionValues(ORGS,'org'), r.org||'');
   fillSelect('addStatus', unionValues(STATUSES,'status'), r.status||'');
   buildGenericSelectOpts(document.getElementById('addTimeRange'), document.getElementById('addTimeRangeCustom'), getUniqueValues('timeRange'), r.timeRange||'');
-  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours'), r.hours||'');
-  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay'), r.pay||'');
+  buildGenericSelectOpts(document.getElementById('addHours'), document.getElementById('addHoursCustom'), getUniqueValues('hours',(a,b)=>Number(a)-Number(b)), r.hours||'');
+  buildGenericSelectOpts(document.getElementById('addPay'), document.getElementById('addPayCustom'), getUniqueValues('pay',(a,b)=>Number(a)-Number(b)), r.pay||'');
   _formFiles=(r.files||[]).map(f=>({url:f.url, name:f.name}));
   renderFileList();
   updateFileStatusText();

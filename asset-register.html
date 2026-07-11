@@ -468,7 +468,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           </button>
           <div class="dd-menu" id="statusDdMenu"></div>
         </div>
-        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." oninput="renderList()"/>
+        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." aria-label="비품 검색" oninput="renderList()"/>
         <button class="tb-action-btn tb-add" onclick="openAddModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
@@ -577,6 +577,7 @@ function toast(msg){ var t=document.getElementById('toast'); if(!t)return; t.tex
 function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+function fmtWonOrDash(v){ return (v==null||v==='') ? '-' : fmtWon(v); }
 function fmt(n){ return n<10 ? '0'+n : String(n); }
 
 /* ── 모달 드래그 이동 ── */
@@ -911,9 +912,9 @@ function openDetailModal(id){
     ['터널명', esc(r['터널명']||'-')],
     ['품목분류', esc(r['구분']||'-')],
     ['규격', esc(r['규격']||'-')],
-    ['수량', (r['수량']!=null && r['수량']!=='') ? fmtWon(r['수량']) : '-'],
-    ['단가(원)', (r['단가']!=null && r['단가']!=='') ? fmtWon(r['단가']) : '-'],
-    ['금액(원)', (r['금액']!=null && r['금액']!=='') ? fmtWon(r['금액']) : '-'],
+    ['수량', fmtWonOrDash(r['수량'])],
+    ['단가(원)', fmtWonOrDash(r['단가'])],
+    ['금액(원)', fmtWonOrDash(r['금액'])],
     ['구매일', esc(fmtDate(r['구매일'])||'-')],
     ['구매상태', esc(r['구매상태']||'-')],
     ['비고', esc(r['비고']||'-')]
@@ -999,38 +1000,14 @@ function applyDefaultDateFilter(){
 }
 function toggleYearDd(){ toggleDd('yearDdMenu','yearDdBtn'); }
 function buildYearDd(){
-  var menu=document.getElementById('yearDdMenu');
-  if(!menu) return;
   var years=[].concat(getUniqueValues('구매일').map(function(d){ return (d||'').slice(0,4); })).filter(Boolean);
   years=[].concat(years.filter(function(y,i){ return years.indexOf(y)===i; })).sort().reverse();
-  var opts=[{val:'',label:'전체 연도'}].concat(years.map(function(y){ return {val:y,label:y+'년'}; }));
-  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(FILTER_YEAR===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
-  document.getElementById('yearDdLabel').textContent = FILTER_YEAR ? FILTER_YEAR+'년' : '전체 연도';
-  document.getElementById('yearDdBtn').classList.toggle('active', !!FILTER_YEAR);
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click', function(e){
-      var opt=e.target.closest('.dd-opt'); if(!opt) return;
-      FILTER_YEAR=opt.dataset.val; _userPickedDate=true; closeDd('yearDdMenu','yearDdBtn'); renderList();
-    });
-  }
+  buildGenericFilterDd('yearDdMenu','yearDdBtn','yearDdLabel',FILTER_YEAR,years,'전체 연도', function(v){ FILTER_YEAR=v; _userPickedDate=true; }, function(y){ return y+'년'; });
 }
 function toggleMonthDd(){ toggleDd('monthDdMenu','monthDdBtn'); }
 function buildMonthDd(){
-  var menu=document.getElementById('monthDdMenu');
-  if(!menu) return;
-  var MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  var opts=[{val:'',label:'전체 월'}].concat(MONTHS.map(function(lbl,i){ return {val:String(i+1).padStart(2,'0'),label:lbl}; }));
-  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(FILTER_MONTH===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
-  document.getElementById('monthDdLabel').textContent = FILTER_MONTH ? parseInt(FILTER_MONTH,10)+'월' : '전체 월';
-  document.getElementById('monthDdBtn').classList.toggle('active', !!FILTER_MONTH);
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click', function(e){
-      var opt=e.target.closest('.dd-opt'); if(!opt) return;
-      FILTER_MONTH=opt.dataset.val; _userPickedDate=true; closeDd('monthDdMenu','monthDdBtn'); renderList();
-    });
-  }
+  var monthVals=[]; for(var i=1;i<=12;i++) monthVals.push(String(i).padStart(2,'0'));
+  buildGenericFilterDd('monthDdMenu','monthDdBtn','monthDdLabel',FILTER_MONTH,monthVals,'전체 월', function(v){ FILTER_MONTH=v; _userPickedDate=true; }, function(v){ return parseInt(v,10)+'월'; });
 }
 
 /* ── 터널/품목분류/구매상태 필터(기본값=전체) ── */
@@ -1038,12 +1015,13 @@ var FILTER_TUNNEL='', FILTER_CATEGORY='', FILTER_STATUS='';
 function toggleTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
 function toggleCategoryDd(){ toggleDd('categoryDdMenu','categoryDdBtn'); }
 function toggleStatusDd(){ toggleDd('statusDdMenu','statusDdBtn'); }
-function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter){
+function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, labelFmt){
   var menu=document.getElementById(menuId);
   if(!menu) return;
-  var opts=[{val:'',label:defLabel}].concat(values.map(function(v){ return {val:v,label:v}; }));
+  var fmt = labelFmt || function(v){ return v; };
+  var opts=[{val:'',label:defLabel}].concat(values.map(function(v){ return {val:v,label:fmt(v)}; }));
   menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
-  document.getElementById(labelId).textContent = curVal || defLabel;
+  document.getElementById(labelId).textContent = curVal ? fmt(curVal) : defLabel;
   document.getElementById(btnId).classList.toggle('active', !!curVal);
   if(!menu._bound){
     menu._bound=true;
@@ -1060,20 +1038,17 @@ function buildStatusDd(){ buildGenericFilterDd('statusDdMenu','statusDdBtn','sta
 /* ── 색상 뱃지(터널/구매상태) ── */
 var TUNNEL_CLASSES=['tunnel-c0','tunnel-c1','tunnel-c2','tunnel-c3','tunnel-c4','tunnel-c5'];
 var _tunnelColorMap={};
-function ensureTunnelColors(){
-  var all=getUniqueValues('터널명');
-  _tunnelColorMap={};
-  all.forEach(function(t,i){ _tunnelColorMap[t]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
-}
-function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'tunnel-c0'; }
-// 품목분류 뱃지(2026-07-10) — 터널명과 같은 6색 팔레트를 재사용, 실제 등장하는 분류를
-// 알파벳/가나다 순으로 정렬해 순환 배정(8종 > 6색이라 2종은 색이 겹칠 수 있음, 허용 범위)
 var _categoryColorMap={};
-function ensureCategoryColors(){
-  var all=getUniqueValues('구분');
-  _categoryColorMap={};
-  all.forEach(function(c,i){ _categoryColorMap[c]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
+// 색상 뱃지 맵 공통 생성기(2026-07-10) — 값을 등장 순으로 6색 팔레트에 순환 배정
+// (8종처럼 팔레트보다 값이 많으면 일부 색이 겹칠 수 있음, 허용 범위)
+function ensureColorMap(key, map){
+  var all=getUniqueValues(key);
+  Object.keys(map).forEach(function(k){ delete map[k]; });
+  all.forEach(function(v,i){ map[v]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
 }
+function ensureTunnelColors(){ ensureColorMap('터널명', _tunnelColorMap); }
+function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'tunnel-c0'; }
+function ensureCategoryColors(){ ensureColorMap('구분', _categoryColorMap); }
 function categoryBadgeClass(c){ return _categoryColorMap[c]||'tunnel-c0'; }
 function statusBadgeClass(s){
   if(s==='신품') return 'pstat-new';
@@ -1099,7 +1074,6 @@ function fetchNotion(body){
 
 /* ── Notion 실제 속성명 매핑(비품DB: 품명/터널명/품목분류(구:구분)/규격/수량/단가/금액/구매일/사진/구매상태/비고) ── */
 var NOTION_PROP_MAP = {};
-var NOTION_PROP_TYPE = {};
 function classifyPropKey(k){
   var lk=k.toLowerCase().replace(/\s/g,'');
   if(lk.indexOf('품명')>=0||lk.indexOf('제품명')>=0) return '품명';
@@ -1116,13 +1090,13 @@ function classifyPropKey(k){
   return null;
 }
 function buildNotionPropMap(props){
-  NOTION_PROP_MAP={}; NOTION_PROP_TYPE={};
+  NOTION_PROP_MAP={};
   Object.keys(props).forEach(function(k){
     var cls=classifyPropKey(k);
-    if(cls && !NOTION_PROP_MAP[cls]){ NOTION_PROP_MAP[cls]=k; NOTION_PROP_TYPE[cls]=props[k].type; }
+    if(cls && !NOTION_PROP_MAP[cls]){ NOTION_PROP_MAP[cls]=k; }
   });
   if(!NOTION_PROP_MAP['품명']){
-    Object.keys(props).forEach(function(k){ if(!NOTION_PROP_MAP['품명'] && props[k].type==='title'){ NOTION_PROP_MAP['품명']=k; NOTION_PROP_TYPE['품명']=props[k].type; } });
+    Object.keys(props).forEach(function(k){ if(!NOTION_PROP_MAP['품명'] && props[k].type==='title'){ NOTION_PROP_MAP['품명']=k; } });
   }
 }
 
@@ -1176,6 +1150,7 @@ function loadData(){
   var btn=document.getElementById('syncBtn'), lu=document.getElementById('lastUpdate');
   var syncIcon=document.getElementById('syncIcon'), syncLabel=document.getElementById('syncLabel');
   if(btn) btn.disabled=true;
+  if(btn) btn.setAttribute('aria-busy','true');
   if(syncIcon) syncIcon.classList.add('spinning');
   if(syncLabel) syncLabel.textContent='불러오는 중...';
   if(lu) lu.textContent='';
@@ -1228,6 +1203,7 @@ function loadData(){
     console.error(e);
   }).finally(function(){
     if(btn) btn.disabled=false;
+    if(btn) btn.setAttribute('aria-busy','false');
     if(syncIcon) syncIcon.classList.remove('spinning');
     if(syncLabel) syncLabel.textContent='새로고침';
   });
@@ -1254,7 +1230,6 @@ function filtered(){
 /* ── renderAll ── */
 function renderAll(){
   applyDefaultDateFilter();
-  buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
   renderList();
   renderTunnelPanel();
   renderCategoryPanel();
@@ -1280,9 +1255,9 @@ function buildDetailRow(r){
     + '<td style="white-space:nowrap">'+(r['구분']?('<span class="type-badge '+categoryBadgeClass(r['구분'])+'">'+esc(r['구분'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'
     + '<td>'+esc(r['품명']||'-')+'</td>'
     + '<td>'+esc(r['규격']||'-')+'</td>'
-    + '<td class="r" style="white-space:nowrap">'+((r['수량']!=null&&r['수량']!=='')?fmtWon(r['수량']):'-')+'</td>'
-    + '<td class="r" style="white-space:nowrap">'+((r['단가']!=null&&r['단가']!=='')?fmtWon(r['단가']):'-')+'</td>'
-    + '<td class="r" style="white-space:nowrap">'+((r['금액']!=null&&r['금액']!=='')?fmtWon(r['금액']):'-')+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['수량'])+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['단가'])+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['금액'])+'</td>'
     + '<td style="white-space:nowrap">'+esc(fmtDate(r['구매일'])||'-')+'</td>'
     + '<td class="col-photo">'+makePhotoThumb(r['사진']||'')+'</td>'
     + '<td style="white-space:nowrap">'+(r['구매상태']?('<span class="type-badge '+statusBadgeClass(r['구매상태'])+'">'+esc(r['구매상태'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'

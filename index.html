@@ -372,15 +372,12 @@ body{
   transform:translateY(-2px);
   box-shadow:0 8px 22px rgba(55,138,221,.13);
 }
-.app-card.disabled{opacity:.42;cursor:not-allowed;border-style:dashed;}
-.app-card.disabled:hover{transform:none;box-shadow:var(--shadow);border-color:var(--border);}
 .ac-name{font-size:14px;font-weight:700;color:var(--txt);}
 .ac-kpi{font-size:13px;font-weight:700;color:var(--sky600);}
 .ac-kpi.warn{color:var(--coral);}
 .ac-kpi.empty{font-size:12px;font-weight:500;color:var(--txt3);}
 .ac-desc{font-size:12px;color:var(--txt2);line-height:1.55;}
 .ac-arrow{font-size:12px;color:var(--sky600);font-weight:700;margin-top:auto;}
-.ac-soon{font-size:12px;color:var(--txt3);font-weight:600;margin-top:auto;}
 
 .sec-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 
@@ -757,7 +754,7 @@ body{
             <div class="notice-dot"></div>
             <div>
               <div>로그인 상태는 이 기기의 브라우저에만 저장됩니다. 기기가 바뀌면 다시 로그인해야 합니다.</div>
-              <div class="notice-sub">좌측 메뉴 하단 설정 버튼에서 로그인 · 만료(7일) 시 재로그인</div>
+              <div class="notice-sub">좌측 메뉴 하단 설정 버튼에서 로그인 · 만료(3일) 시 재로그인</div>
             </div>
           </div>
           <div class="notice-item">
@@ -955,7 +952,7 @@ function go(id, opts) {
   if (id === _cur) return;
 
   if (!openTabs.includes(id)) {
-    if (newTab || _cur === 'home' || id === 'home') {
+    if (newTab || _cur === 'home') {
       // "+"로 명시적으로 추가하거나, 홈에서 처음 앱을 열 때는 새 탭으로 추가
       openTabs.push(id);
     } else {
@@ -973,7 +970,7 @@ function go(id, opts) {
   _cur = id;
 
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
-  document.getElementById('panel-' + id).classList.add('on');
+  document.getElementById('panel-' + id)?.classList.add('on');
 
   ['home', ...Object.keys(APPS)].forEach(k => {
     document.getElementById('sbn-' + k)?.classList.toggle('on', k === id);
@@ -986,7 +983,7 @@ function go(id, opts) {
   if (id !== 'home' && !_loaded[id]) {
     // 캐시버스터: 브라우저가 iframe 리소스를 새로고침해도 재검증하지 않는 경우가 있어
     // 세션마다 새 쿼리스트링으로 항상 최신 파일을 받아오도록 강제
-    document.getElementById('ifr-' + id).src = APPS[id].file + '?v=' + PORTAL_BOOT_TS;
+    document.getElementById('ifr-' + id)?.setAttribute('src', APPS[id].file + '?v=' + PORTAL_BOOT_TS);
   }
 
   if (record) {
@@ -1064,9 +1061,9 @@ function renderTabs() {
       const m = tabMeta(id);
       const on = id === _cur ? ' on' : '';
       const closeBtn = m.closable
-        ? `<span class="tb-x tip" data-tip="탭 닫기" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
+        ? `<span class="tb-x tip" data-tip="탭 닫기" role="button" tabindex="0" aria-label="탭 닫기" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
         : '';
-      return `<div class="tb-tab${on}" onclick="go('${id}')" title="${m.label}">`
+      return `<div class="tb-tab${on}" role="button" tabindex="0" aria-label="${m.label}" onclick="go('${id}')" title="${m.label}">`
         + `<span class="tb-label">${m.label}</span>`
         + closeBtn
         + `</div>`;
@@ -1083,9 +1080,9 @@ function renderMobileNav() {
   scroll.innerHTML = openTabs.filter(id => id !== 'home').map(id => {
     const a = APPS[id];
     const on = id === _cur ? ' on' : '';
-    return `<div class="mn-item${on}" onclick="go('${id}')">`
+    return `<div class="mn-item${on}" role="button" tabindex="0" aria-label="${a.name}" onclick="go('${id}')">`
       + `<span>${a.name}</span>`
-      + `<span class="mn-x" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
+      + `<span class="mn-x" role="button" tabindex="0" aria-label="닫기" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
       + `</div>`;
   }).join('');
 }
@@ -1158,6 +1155,7 @@ function updateLoginStatusHint(){
 }
 // 상단 우측 날짜 앞에 공용 비밀번호(로그인) 만료 일시 표시 — 24시간 이내로 남으면 강조색
 function updateTopbarAuthExpiry(){
+  document.getElementById('guide-card')?.style.setProperty('display', isAuthed() ? 'none' : '');
   const el = document.getElementById('topbar-auth-exp');
   const sep = document.getElementById('topbar-auth-exp-sep');
   if (!el || !sep) return;
@@ -1201,7 +1199,7 @@ function doLogout(){
   showToast('로그아웃되었습니다.');
   reloadLoadedApps();
 }
-// 다른 탭에서 로그인/로그아웃해도 이 탭의 로그인 상태·홈 KPI를 즉시 동기화
+// 다른 탭에서 로그인/로그아웃·화면모드 변경·앱 KPI 갱신이 발생해도 이 탭에 즉시 동기화 (auth/theme/portal_summary 공용 리스너)
 window.addEventListener('storage', e => {
   if (e.key === 'wp_authToken') {
     AUTH_TOKEN = e.newValue || '';
@@ -1210,6 +1208,11 @@ window.addEventListener('storage', e => {
     updateTopbarAuthExpiry();
     renderHomeKpi();
     reloadLoadedApps();
+  } else if (e.key === 'theme' && e.newValue) {
+    document.documentElement.setAttribute('data-theme', e.newValue);
+    syncThemeOptUI();
+  } else if (e.key && e.key.startsWith('portal_summary_')) {
+    renderHomeKpi();
   }
 });
 function reloadLoadedApps(){
@@ -1306,15 +1309,8 @@ function setNavTheme(theme) {
   localStorage.setItem('theme', theme);
   syncThemeOptUI();
 }
-// 개별 앱(같은 origin의 iframe)의 설정창에서 화면모드를 바꿔도 실시간 동기화
-window.addEventListener('storage', e => {
-  if (e.key === 'theme' && e.newValue) {
-    document.documentElement.setAttribute('data-theme', e.newValue);
-    syncThemeOptUI();
-  }
-});
-
 // ── 시계 / 날짜 ──────────────────────────────────────────
+const DAYS = ['일','월','화','수','목','금','토'];
 function tick() {
   const now = new Date();
   const h = String(now.getHours()).padStart(2,'0');
@@ -1324,14 +1320,12 @@ function tick() {
 
   const de = document.getElementById('home-date');
   if (de) {
-    const days = ['일','월','화','수','목','금','토'];
-    de.textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+    de.textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
   }
   // topbar 날짜
   const td = document.getElementById('topbar-date');
   if (td) {
-    const days = ['일','월','화','수','목','금','토'];
-    td.textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${days[now.getDay()]})`;
+    td.textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
   }
   updateTopbarAuthExpiry();
 }
@@ -1381,9 +1375,6 @@ function renderHomeKpi() {
   }
 }
 renderHomeKpi();
-window.addEventListener('storage', e => {
-  if (e.key && e.key.startsWith('portal_summary_')) renderHomeKpi();
-});
 
 // 설정은 돼 있지만 요약 캐시가 없거나 오래된(10분+) 앱은, 앱 탭을 열지 않아도 홈 진입 시
 // 숨김 iframe으로 잠깐 백그라운드 로딩시켜 자동으로 최신 숫자를 채운다.
