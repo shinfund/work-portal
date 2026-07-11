@@ -795,7 +795,9 @@ function resizeImageFile(file,maxDim){
   });
 }
 function onSignatureFileChange(role){
-  const input=document.getElementById('sigFile_'+role);
+  processSignatureFile(role, document.getElementById('sigFile_'+role));
+}
+function processSignatureFile(role, input){
   const file=input && input.files && input.files[0];
   if(!file) return;
   resizeImageFile(file,300).then(dataUrl=>{
@@ -806,7 +808,7 @@ function onSignatureFileChange(role){
   }).catch(()=>{ alert('이미지를 불러오지 못했습니다.'); }).finally(()=>{ input.value=''; });
 }
 function onSignatureFileChangeEl(input){
-  onSignatureFileChange(input.dataset.role);
+  processSignatureFile(input.dataset.role, input);
 }
 function clearSignature(role){
   if(!confirm('등록된 서명을 삭제할까요?')) return;
@@ -2369,24 +2371,24 @@ function exportVehicleReports(){
 
 // ── 내장 데이터 (차량운행DB 샘플 데이터 — 2026-05 ~ 2026-06, 실제 연동 전 시연용) ──
 const DEMO_DATA = [
-  {id:'v01',date:'2026-05-02',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'남정5터널 점검 지원',from:'청하관리동',via:'남정5터널',to:'청하관리동',dist:52,cumDist:45120,note:''},
-  {id:'v02',date:'2026-05-04',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'흥해터널 정기점검',from:'청하터널',via:'흥해터널',to:'청하터널',dist:38,cumDist:31860,note:''},
-  {id:'v03',date:'2026-05-06',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'청송지사 서류 전달',from:'청하관리동',via:'청송지사',to:'청하관리동',dist:64,cumDist:45184,note:''},
-  {id:'v04',date:'2026-05-08',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구3터널 순회점검',from:'청하터널',via:'강구3터널',to:'청하터널',dist:71,cumDist:31931,note:''},
-  {id:'v05',date:'2026-05-11',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'포항시내 자재 구매',from:'청하관리동',via:'포항시내',to:'청하관리동',dist:46,cumDist:45230,note:''},
-  {id:'v06',date:'2026-05-14',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'남정1터널 점검',from:'청하터널',via:'남정1',to:'청하터널',dist:58,cumDist:31989,note:''},
-  {id:'v07',date:'2026-05-18',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'북포항IC 외부 미팅',from:'청하관리동',via:'북포항IC',to:'청하관리동',dist:40,cumDist:45270,note:''},
-  {id:'v08',date:'2026-05-21',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'남정터널 점검',from:'청하터널',via:'남정터널',to:'청하터널',dist:49,cumDist:32038,note:''},
-  {id:'v09',date:'2026-05-25',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'영일만IC 방향 출장',from:'청하관리동',via:'영일만IC',to:'청하관리동',dist:66,cumDist:45336,note:'우천'},
-  {id:'v10',date:'2026-05-28',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구터널 점검',from:'청하터널',via:'강구터널',to:'청하터널',dist:63,cumDist:32101,note:''},
-  {id:'v11',date:'2026-06-01',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'청하부변 점검 지원',from:'청하관리동',via:'청하부변',to:'청하관리동',dist:28,cumDist:45364,note:''},
-  {id:'v12',date:'2026-06-04',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'청하터널(부) 점검',from:'청하터널',via:'청하터널(부)',to:'청하터널',dist:22,cumDist:32123,note:''},
-  {id:'v13',date:'2026-06-08',carNo:'396거2246',carType:'업무용',driver:'공우식',purpose:'흥해터널 자재 운반',from:'청하관리동',via:'흥해터널',to:'청하관리동',dist:55,cumDist:45419,note:''},
-  {id:'v14',date:'2026-06-11',carNo:'875너3224',carType:'점검용',driver:'금동연',purpose:'남정5터널 점검',from:'청하터널',via:'남정5터널',to:'청하터널',dist:59,cumDist:32182,note:''},
-  {id:'v15',date:'2026-06-15',carNo:'396거2246',carType:'업무용',driver:'김동록',purpose:'포항시내 회의 참석',from:'청하관리동',via:'포항시내',to:'청하관리동',dist:44,cumDist:45463,note:''},
-  {id:'v16',date:'2026-06-19',carNo:'875너3224',carType:'점검용',driver:'손대현',purpose:'강구3터널 점검',from:'청하터널',via:'강구3터널',to:'청하터널',dist:70,cumDist:32252,note:''},
-  {id:'v17',date:'2026-06-23',carNo:'396거2246',carType:'업무용',driver:'신종섭',purpose:'청송지사 협의',from:'청하관리동',via:'청송지사',to:'청하관리동',dist:62,cumDist:45525,note:''},
-  {id:'v18',date:'2026-06-27',carNo:'875너3224',carType:'점검용',driver:'김태선',purpose:'강구터널 순회점검',from:'청하터널',via:'강구터널',to:'청하터널',dist:65,cumDist:32317,note:''}
+  {id:'v01',date:'2026-05-02',carNo:'12가3456',carType:'업무용',driver:'기사A',purpose:'터널A 점검 지원',from:'관리동A',via:'터널A',to:'관리동A',dist:52,cumDist:45120,note:''},
+  {id:'v02',date:'2026-05-04',carNo:'34나7890',carType:'점검용',driver:'기사B',purpose:'터널B 정기점검',from:'터널G',via:'터널B',to:'터널G',dist:38,cumDist:31860,note:''},
+  {id:'v03',date:'2026-05-06',carNo:'12가3456',carType:'업무용',driver:'기사C',purpose:'지사A 서류 전달',from:'관리동A',via:'지사A',to:'관리동A',dist:64,cumDist:45184,note:''},
+  {id:'v04',date:'2026-05-08',carNo:'34나7890',carType:'점검용',driver:'기사D',purpose:'터널C 순회점검',from:'터널G',via:'터널C',to:'터널G',dist:71,cumDist:31931,note:''},
+  {id:'v05',date:'2026-05-11',carNo:'12가3456',carType:'업무용',driver:'기사E',purpose:'시내A 자재 구매',from:'관리동A',via:'시내A',to:'관리동A',dist:46,cumDist:45230,note:''},
+  {id:'v06',date:'2026-05-14',carNo:'34나7890',carType:'점검용',driver:'기사F',purpose:'터널D 점검',from:'터널G',via:'터널D',to:'터널G',dist:58,cumDist:31989,note:''},
+  {id:'v07',date:'2026-05-18',carNo:'12가3456',carType:'업무용',driver:'기사A',purpose:'IC-A 외부 미팅',from:'관리동A',via:'IC-A',to:'관리동A',dist:40,cumDist:45270,note:''},
+  {id:'v08',date:'2026-05-21',carNo:'34나7890',carType:'점검용',driver:'기사B',purpose:'터널F 점검',from:'터널G',via:'터널F',to:'터널G',dist:49,cumDist:32038,note:''},
+  {id:'v09',date:'2026-05-25',carNo:'12가3456',carType:'업무용',driver:'기사C',purpose:'IC-B 방향 출장',from:'관리동A',via:'IC-B',to:'관리동A',dist:66,cumDist:45336,note:'우천'},
+  {id:'v10',date:'2026-05-28',carNo:'34나7890',carType:'점검용',driver:'기사D',purpose:'터널E 점검',from:'터널G',via:'터널E',to:'터널G',dist:63,cumDist:32101,note:''},
+  {id:'v11',date:'2026-06-01',carNo:'12가3456',carType:'업무용',driver:'기사E',purpose:'지점A 점검 지원',from:'관리동A',via:'지점A',to:'관리동A',dist:28,cumDist:45364,note:''},
+  {id:'v12',date:'2026-06-04',carNo:'34나7890',carType:'점검용',driver:'기사F',purpose:'터널G(부) 점검',from:'터널G',via:'터널G(부)',to:'터널G',dist:22,cumDist:32123,note:''},
+  {id:'v13',date:'2026-06-08',carNo:'12가3456',carType:'업무용',driver:'기사A',purpose:'터널B 자재 운반',from:'관리동A',via:'터널B',to:'관리동A',dist:55,cumDist:45419,note:''},
+  {id:'v14',date:'2026-06-11',carNo:'34나7890',carType:'점검용',driver:'기사B',purpose:'터널A 점검',from:'터널G',via:'터널A',to:'터널G',dist:59,cumDist:32182,note:''},
+  {id:'v15',date:'2026-06-15',carNo:'12가3456',carType:'업무용',driver:'기사C',purpose:'시내A 회의 참석',from:'관리동A',via:'시내A',to:'관리동A',dist:44,cumDist:45463,note:''},
+  {id:'v16',date:'2026-06-19',carNo:'34나7890',carType:'점검용',driver:'기사D',purpose:'터널C 점검',from:'터널G',via:'터널C',to:'터널G',dist:70,cumDist:32252,note:''},
+  {id:'v17',date:'2026-06-23',carNo:'12가3456',carType:'업무용',driver:'기사E',purpose:'지사A 협의',from:'관리동A',via:'지사A',to:'관리동A',dist:62,cumDist:45525,note:''},
+  {id:'v18',date:'2026-06-27',carNo:'34나7890',carType:'점검용',driver:'기사F',purpose:'터널E 순회점검',from:'터널G',via:'터널E',to:'터널G',dist:65,cumDist:32317,note:''}
 ];
 
 // 초기화
