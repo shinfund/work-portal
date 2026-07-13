@@ -580,6 +580,10 @@ body{
       <span>연장근무</span>
     </div>
 
+    <div class="sb-item" id="sbn-monthly" onclick="go('monthly')">
+      <span>월간점검결과(작업중)</span>
+    </div>
+
     <div class="sb-sec">추가 예정</div>
     <div class="sb-item sb-disabled">
       <span>시설물현황</span>
@@ -589,9 +593,6 @@ body{
     </div>
     <div class="sb-item sb-disabled">
       <span>월간점검계획</span>
-    </div>
-    <div class="sb-item sb-disabled">
-      <span>월간점검결과</span>
     </div>
     <div class="sb-item sb-disabled">
       <span>분기점검결과</span>
@@ -730,7 +731,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광·비품대장 5개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과 6개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -825,6 +826,17 @@ body{
       </div>
     </div>
 
+    <!-- ▸ 월간점검결과(작업중) iframe -->
+    <div class="panel" id="panel-monthly">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-monthly">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">월간점검결과 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-monthly" class="app-iframe" title="월간점검결과(작업중)"></iframe>
+      </div>
+    </div>
+
   </div>
 
   <!-- 모바일 하단 탭 (열린 앱 탭을 데스크톱과 동일하게 동기화, 가운데 영역만 스크롤) -->
@@ -866,7 +878,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장 5개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과 6개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -908,7 +920,8 @@ const APPS = {
   vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' },
-  equip:    { name:'비품대장', file:'asset-register.html' }
+  equip:    { name:'비품대장', file:'asset-register.html' },
+  monthly:  { name:'월간점검결과(작업중)', file:'monthly-inspection.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
@@ -916,7 +929,8 @@ const PAGES = {
   vehicle:  { mName:'차량운행일지' },
   overtime: { mName:'연장근무' },
   solar:    { mName:'태양광발전량' },
-  equip:    { mName:'비품대장' }
+  equip:    { mName:'비품대장' },
+  monthly:  { mName:'월간점검결과(작업중)' }
 };
 
 let _cur = 'home';
@@ -1131,7 +1145,7 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장 5개 앱 공용 토큰) ──────
+// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과 6개 앱 공용 토큰) ──────
 const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 let AUTH_TOKEN = '';
 let AUTH_EXPIRES = 0;

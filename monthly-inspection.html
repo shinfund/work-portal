@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>월간점검결과</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M6 8h12M6 12h12M6 16h8' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* work-portal 공통 색상 팔레트(하자보수현황·태양광발전량 앱과 수치 동일) */
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --bg:#F5F8FF;--card:#FFFFFF;--border:#7B9DC0;--border2:#A3C0DE;
+  --txt:#1A2535;--txt2:#3D4F68;--txt3:#33475C;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#0C447C;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#185FA5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#191919;--card:#242424;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#8FCBFF;
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER ── */
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
+.header-btns{display:flex;gap:6px}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV (7개 탭 — 좁은 화면에서는 가로 스크롤) ── */
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab.active{color:var(--sky600)}
+.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
+/* ── MAIN ── */
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+
+/* ── DD (목록방식 드롭다운, 3-9 표준) ── */
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu.open{display:block}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
+
+/* ── SECTION CARD ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.detail-sc{background:transparent;border:none;box-shadow:none}
+.detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
+.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+
+/* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
+
+/* ── 뱃지(터널명 등) ── */
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
+.tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+/* ── MODAL ── */
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
+.add-modal-box{max-width:600px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:128px;width:128px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px;word-break:break-all}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+/* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
+.form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
+.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.form-group-grid .modal-field{margin-bottom:0}
+.form-group-grid .modal-label{font-size:11.5px}
+
+.theme-opts{display:flex;gap:12px;}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
+.theme-opt.on{border-color:var(--sky);}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
+.theme-swatch-light{background:#F8FAFC;}
+.theme-swatch-dark{background:#191919;}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
+  .form-group-grid{grid-template-columns:1fr}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+
+<!-- MODAL: 설정(로그인 안내+테마) -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        설정
+      </div>
+      <div class="modal-field">
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
+      </div>
+      <div class="theme-opts">
+        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
+        </div>
+        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 신규등록/수정 (필드는 탭별로 동적 생성) -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+      <div id="addModalFields"></div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 상세조회(수정/삭제) -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">상세</h3>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">닫기</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-title">월간점검결과(작업중)</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadTabData(_activePanel)">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-monthly" role="tab" aria-selected="true" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
+  <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
+  <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
+  <button class="top-tab" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')">발전기점검</button>
+  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
+  <button class="top-tab" id="nav-power" role="tab" aria-selected="false" aria-controls="panel-power" onclick="switchPanel('power')">전력사용량</button>
+  <button class="top-tab" id="nav-task" role="tab" aria-selected="false" aria-controls="panel-task" onclick="switchPanel('task')">업무처리</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ▸ 월간점검 -->
+  <div class="panel active" id="panel-monthly">
+    <div class="filter-row">
+      <input class="search-box" id="search-monthly" placeholder="🔍 설비명·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('monthly')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('monthly')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_monthly" onclick="exportTabExcel('monthly')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_monthly">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-monthly"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>점검표</th><th>비고</th>
+        </tr></thead>
+        <tbody id="tbody-monthly"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ▸ 전기설비기록 -->
+  <div class="panel" id="panel-elec">
+    <div class="filter-row">
+      <input class="search-box" id="search-elec" placeholder="🔍 설비명·점검담당자·종합의견 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('elec')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_elec" onclick="exportTabExcel('elec')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_elec">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. ACB 상세 수치(27개)는 행 클릭 시 상세창과 엑셀에서 전체 확인 가능합니다.</div>
+    <div class="detail-count" id="count-elec"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>설비명</th><th>점검일자</th><th>점검종별</th><th>점검담당자</th><th>점검확인자</th>
+          <th class="r">유효전력량(kWh)</th><th class="r">최대전력(kW)</th><th class="r">역률(%)</th><th>종합의견</th>
+        </tr></thead>
+        <tbody id="tbody-elec"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ▸ 변압기온도 (준비중) -->
+  <div class="panel" id="panel-transformer">
+    <div class="sc" style="text-align:center;padding:40px 16px">
+      <div style="font-size:34px;margin-bottom:10px">🚧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
+      <div style="font-size:13px;color:var(--txt3)">변압기온도DB 탭은 다음 작업에서 구현됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ▸ 발전기점검 (준비중) -->
+  <div class="panel" id="panel-generator">
+    <div class="sc" style="text-align:center;padding:40px 16px">
+      <div style="font-size:34px;margin-bottom:10px">🚧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
+      <div style="font-size:13px;color:var(--txt3)">발전기점검DB 탭은 다음 작업에서 구현됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ▸ 점검사진 (준비중) -->
+  <div class="panel" id="panel-photo">
+    <div class="sc" style="text-align:center;padding:40px 16px">
+      <div style="font-size:34px;margin-bottom:10px">🚧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
+      <div style="font-size:13px;color:var(--txt3)">점검사진DB 탭(사진 업로드+R2 연동)은 다음 작업에서 구현됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ▸ 전력사용량 (준비중) -->
+  <div class="panel" id="panel-power">
+    <div class="sc" style="text-align:center;padding:40px 16px">
+      <div style="font-size:34px;margin-bottom:10px">🚧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
+      <div style="font-size:13px;color:var(--txt3)">전력사용량DB 탭은 다음 작업에서 구현됩니다.</div>
+    </div>
+  </div>
+
+  <!-- ▸ 업무처리 (준비중) -->
+  <div class="panel" id="panel-task">
+    <div class="sc" style="text-align:center;padding:40px 16px">
+      <div style="font-size:34px;margin-bottom:10px">🚧</div>
+      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
+      <div style="font-size:13px;color:var(--txt3)">업무처리DB 탭은 다음 작업에서 구현됩니다.</div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ── Worker/DB 연동 정보 (고정값 — 접근 제어는 로그인 토큰으로) ──
+const WORKER_URL='https://notion-proxy.shinfund.workers.dev';
+const DB_IDS={
+  monthly:     'a011d12d-ea9e-4cbc-84bf-a8c30621dd69', // 월간점검DB
+  elec:        '8c447abd-4a95-4b07-ba6c-1bdf7c53872f', // 전기설비기록DB
+  transformer: '998fab1e-2d5c-4cae-a6aa-55a131931546', // 변압기온도DB
+  generator:   'c778d924-49a9-4c44-b444-681ebeb166e1', // 발전기점검DB
+  photo:       '60f5cbbf-54e4-465e-8901-af41ba515dd0', // 점검사진DB
+  power:       '10bfd710-9afb-4b06-b6c2-7943da777956', // 전력사용량DB
+  task:        '125ebd28-64c9-4a9a-b265-e0ab6ed4f21f'  // 업무처리DB
+};
+let CFG={workerUrl:WORKER_URL,authToken:'',authExpires:0};
+(()=>{
+  try{
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+  }catch(e){}
+})();
+function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+
+// ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
+(()=>{
+  const _fetch=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    init=init||{};
+    const urlStr=typeof input==='string'?input:(input&&input.url)||'';
+    if(urlStr.indexOf(WORKER_URL)===0){
+      const headers=new Headers(init.headers||{});
+      if(CFG.authToken) headers.set('Authorization','Bearer '+CFG.authToken);
+      init=Object.assign({},init,{headers});
+    }
+    return _fetch(input,init).then(res=>{
+      if(res.status===401&&urlStr.indexOf(WORKER_URL)===0){
+        CFG.authToken='';CFG.authExpires=0;
+        try{localStorage.removeItem('wp_authToken');localStorage.removeItem('wp_authExpires');}catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
+
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
+function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── 모달 드래그 이동 ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+
+// ── 설정 모달 ──
+function updateLoginStatusHint(){
+  const h=document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent=isAuthed()?'로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')':'로그인이 필요합니다';
+}
+function openCfgModal(){
+  updateLoginStatusHint();
+  syncThemeOptUI();
+  const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+}
+function openLoginModal(){
+  const lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  resetModalDragPos('cfgModal');
+}
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
+window.addEventListener('storage',e=>{
+  if(e.key==='wp_authToken'){
+    CFG.authToken=e.newValue||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()) loadTabData(_activePanel);
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-13 notion-fetch로 실스키마 확인 후 하드코딩,
+//    classifyPropKey 키워드 추론 불필요 — 실제 속성명을 그대로 사용) ──
+// ══════════════════════════════════════════════════════
+function acbFields(){
+  const types=['조명용','일반용','동력용'];
+  const measures=['전압','전류','누설전류'];
+  const phases=['R-S','S-T','T-R'];
+  const out=[];
+  types.forEach(t=>{
+    out.push({group:t+' ACB', header:true});
+    measures.forEach(m=>{
+      phases.forEach(p=>{
+        out.push({key:t+' ACB '+m+' '+p, label:m+' '+p, type:'number', group:t+' ACB'});
+      });
+    });
+  });
+  return out;
+}
+
+const TAB_DEFS=[
+  {
+    id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'점검내용', dateKey:'점검일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널'], required:true},
+      {key:'점검일자', type:'date', required:true},
+      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시']},
+      {key:'설비명', type:'select', options:['각종차단기','UPS','고압설비','기타','발전기','VCB판넬','인입설비','변압기','예비발전설비','변압기점검','케이블상태','접속부','저압설비','진상콘덴서']},
+      {key:'점검내용', type:'title', required:true},
+      {key:'점검결과', type:'select', options:['양호','-','불량','점검요']},
+      {key:'점검표', type:'select', options:['월간점검표1','월간점검표2','월간점검표3']},
+      {key:'비고', type:'text'}
+    ],
+    listCols:['터널명','점검일자','구분','설비명','점검내용','점검결과','점검표','비고']
+  },
+  {
+    id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'설비명', dateKey:'점검일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'설비명', type:'title', required:true},
+      {key:'점검일자', type:'date', required:true},
+      {key:'점검종별', type:'select', options:['월간']},
+      {key:'점검횟수', type:'text'},
+      {key:'점검담당자', type:'text'},
+      {key:'점검확인자', type:'text'},
+      {key:'수전전압/용량', type:'text'},
+      {key:'발전전압/용량', type:'text'},
+      {key:'태양광용량', type:'text'},
+      {key:'유효전력량(kWh)', type:'number'},
+      {key:'무효전력량(kVar)', type:'text'},
+      {key:'최대전력(kW)', type:'number'},
+      {key:'역률(%)', type:'number'},
+      {key:'종합의견', type:'text'}
+    ].concat(acbFields()),
+    listCols:['터널명','설비명','점검일자','점검종별','점검담당자','점검확인자','유효전력량(kWh)','최대전력(kW)','역률(%)','종합의견']
+  },
+  { id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, fields:null },
+  { id:'generator',   label:'발전기점검', dbId:DB_IDS.generator,   fields:null },
+  { id:'photo',       label:'점검사진',   dbId:DB_IDS.photo,       fields:null },
+  { id:'power',       label:'전력사용량', dbId:DB_IDS.power,       fields:null },
+  { id:'task',        label:'업무처리',   dbId:DB_IDS.task,        fields:null }
+];
+function getTabDef(id){ return TAB_DEFS.find(t=>t.id===id); }
+function dataFields(tabDef){ return tabDef.fields.filter(f=>f.key); } // header:true 그룹 라벨 항목 제외
+
+const TAB_STATE={};
+TAB_DEFS.forEach(t=>{ TAB_STATE[t.id]={records:[], loaded:false, loading:false}; });
+
+// ── Notion 값 추출 헬퍼 ──
+function getText(p){
+  if(!p) return '';
+  if(p.type==='title') return (p.title||[]).map(t=>t.plain_text||'').join('')||'';
+  if(p.type==='rich_text') return (p.rich_text||[]).map(t=>t.plain_text||'').join('')||'';
+  if(p.type==='select') return p.select?.name||'';
+  if(p.type==='number') return String(p.number??'');
+  return '';
+}
+function getNum(p){
+  if(!p) return 0;
+  if(p.type==='number') return Number(p.number)||0;
+  return parseFloat(getText(p))||0;
+}
+function getDateStr(p){
+  if(!p) return '';
+  if(p.type==='date') return p.date?.start ? p.date.start.slice(0,10) : '';
+  return getText(p).trim().slice(0,10);
+}
+function buildPropValue(type, rawValue){
+  const empty=(rawValue===undefined||rawValue===null||String(rawValue).trim()==='');
+  if(type==='title') return empty?{title:[]}:{title:[{text:{content:String(rawValue)}}]};
+  if(type==='text') return empty?{rich_text:[]}:{rich_text:[{text:{content:String(rawValue)}}]};
+  if(type==='select') return empty?{select:null}:{select:{name:String(rawValue)}};
+  if(type==='date') return empty?{date:null}:{date:{start:String(rawValue)}};
+  if(type==='number') return empty?{number:null}:{number:parseFloat(rawValue)||0};
+  return null;
+}
+function parseRecord(tabDef, page){
+  const props=page.properties||{};
+  const rec={id:page.id};
+  dataFields(tabDef).forEach(f=>{
+    const p=props[f.key];
+    if(f.type==='number') rec[f.key]=getNum(p);
+    else if(f.type==='date') rec[f.key]=getDateStr(p);
+    else rec[f.key]=getText(p).trim();
+  });
+  return rec;
+}
+
+// ── Notion 조회(페이지네이션 포함) ──
+function fetchNotion(dbId, body){
+  return fetch(CFG.workerUrl+'/v1/databases/'+dbId+'/query',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
+}
+async function fetchAllPages(dbId, body){
+  let pages=[], cursor=null, guard=0;
+  do{
+    const reqBody=cursor ? Object.assign({},body,{start_cursor:cursor}) : body;
+    const data=await fetchNotion(dbId, reqBody);
+    pages=pages.concat(data.results||[]);
+    cursor = data.has_more ? data.next_cursor : null;
+    guard++;
+  } while(cursor && guard<50);
+  return pages;
+}
+
+// ── 탭 데이터 로드 ──
+async function loadTabData(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields) return; // 준비중 탭
+  if(!isAuthed()){ openLoginModal(); return; }
+  const st=TAB_STATE[tabId];
+  if(st.loading) return;
+  st.loading=true;
+  setSyncing(true);
+  try{
+    const body={page_size:100};
+    if(tabDef.dateKey) body.sorts=[{property:tabDef.dateKey, direction:'descending'}];
+    const pages=await fetchAllPages(tabDef.dbId, body);
+    st.records=pages.map(p=>parseRecord(tabDef,p));
+    st.loaded=true;
+    renderTabTable(tabId);
+    updateLastUpdate();
+  }catch(e){
+    toast('데이터 로드 실패: '+e.message);
+    console.error(e);
+  }finally{
+    st.loading=false;
+    setSyncing(false);
+  }
+}
+function setSyncing(on){
+  const btn=document.getElementById('syncBtn');
+  const icon=document.getElementById('syncIcon');
+  const lbl=document.getElementById('syncLabel');
+  if(btn) btn.disabled=on;
+  if(icon) icon.classList.toggle('spinning',on);
+  if(lbl) lbl.textContent=on?'불러오는 중...':'새로고침';
+}
+function updateLastUpdate(){
+  const lu=document.getElementById('lastUpdate');
+  if(!lu) return;
+  const now=new Date();
+  const p2=n=>String(n).padStart(2,'0');
+  lu.textContent='마지막 업데이트: '+p2(now.getMonth()+1)+'.'+p2(now.getDate())+'. '+(now.getHours()<12?'오전':'오후')+' '+p2(now.getHours()%12||12)+':'+p2(now.getMinutes());
+}
+
+// ── 목록 렌더 ──
+function renderTabTable(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields) return;
+  const st=TAB_STATE[tabId];
+  const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
+  const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
+  let recs=st.records;
+  if(q){
+    recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
+  }
+  const countEl=document.getElementById('count-'+tabId);
+  if(countEl) countEl.textContent=`총 ${recs.length}건`;
+  const tbody=document.getElementById('tbody-'+tabId);
+  if(!tbody) return;
+  if(!recs.length){
+    tbody.innerHTML=`<tr><td colspan="${tabDef.listCols.length}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
+}
+function buildRow(tabDef, r){
+  const cells=tabDef.listCols.map(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    if(!f) return '<td>-</td>';
+    if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
+    if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
+    if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
+    return `<td>${esc(r[key]||'-')}</td>`;
+  }).join('');
+  return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
+}
+function tunnelSlug(t){
+  if(!t) return 'tunnel-c0';
+  return (String(t).includes('(부)')) ? 'tunnel-c1' : 'tunnel-c0';
+}
+function emptyState(desc, icon){
+  icon=icon||'📋';
+  return `<div class="empty"><div class="empty-icon">${icon}</div>
+    <div class="empty-title">데이터 없음</div>
+    <div class="empty-desc">${esc(desc)}</div></div>`;
+}
+
+// ── 상세 모달 ──
+function openDetailModal(tabId, recordId){
+  const tabDef=getTabDef(tabId);
+  const r=TAB_STATE[tabId].records.find(x=>x.id===recordId);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent=tabDef.label+' 상세';
+  const rows=dataFields(tabDef).map(f=>{
+    let val;
+    if(f.type==='date') val=esc(fmtDate(r[f.key]));
+    else if(f.type==='number') val=fmtWon(r[f.key]);
+    else val=esc(r[f.key]||'-');
+    return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
+  }).join('');
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>';
+  document.getElementById('detailModalActions').innerHTML=
+    `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openAddModal('${tabId}','${recordId}')">수정</button>`+
+    `<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${tabId}','${recordId}')">삭제</button>`;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function closeDetailModal(e){
+  if(e&&e.target!==e.currentTarget) return;
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('detailModal');
+}
+
+// ── 신규등록/수정 모달 (필드 동적 생성) ──
+var EDIT_TAB=null, EDIT_PAGE_ID=null;
+function buildFieldHtml(f, idx, curVal){
+  const id='ff_'+idx;
+  const req=f.required?'<span class="modal-required">*</span>':'';
+  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  if(f.type==='select'){
+    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
+    const isCustom = curVal && !(f.options||[]).includes(curVal);
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')">
+        <option value="">선택</option>
+        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+        ${opts}
+      </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+    </div>`;
+  }
+  if(f.type==='date'){
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"/></div>`;
+  }
+  if(f.type==='number'){
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="number" step="0.01" value="${curVal!=null&&curVal!==''?esc(curVal):''}"/></div>`;
+  }
+  return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" value="${esc(curVal||'')}"/></div>`;
+}
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getFieldValue(f, idx){
+  const id='ff_'+idx;
+  if(f.type==='select'){
+    const sel=document.getElementById(id);
+    if(!sel) return '';
+    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
+    return sel.value;
+  }
+  return (document.getElementById(id)?.value||'').trim();
+}
+function openAddModal(tabId, recordId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
+  if(!isAuthed()){ toast('로그인이 필요합니다.'); openCfgModal(); return; }
+  EDIT_TAB=tabId; EDIT_PAGE_ID=recordId||null;
+  const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
+  document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
+  document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
+  // 필드 배열 순서대로 렌더링 — {header:true} 마커를 만나면 이전 그룹 grid div를 닫고 새로 연다
+  // (전기설비기록 탭의 조명용/일반용/동력용 ACB 3그룹처럼 그룹 필드가 연속으로 나오는 스키마 전용,
+  //  그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다)
+  let html='';
+  let groupOpen=false;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header){
+      if(groupOpen) html+='</div>';
+      html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
+      groupOpen=true;
+      return;
+    }
+    html+=buildFieldHtml(f, idx, r?r[f.key]:'');
+  });
+  if(groupOpen) html+='</div>';
+  document.getElementById('addModalFields').innerHTML=html;
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function closeAddModal(e){
+  if(e&&e.target!==e.currentTarget) return;
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+  EDIT_TAB=null; EDIT_PAGE_ID=null;
+}
+function submitAddForm(){
+  const tabDef=getTabDef(EDIT_TAB);
+  if(!tabDef) return;
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    if(f.required && !v && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const properties={};
+  tabDef.fields.forEach(f=>{
+    if(f.header) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) properties[f.key]=val;
+  });
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  const isEdit=!!EDIT_PAGE_ID;
+  btn.disabled=true; lbl.textContent=isEdit?'수정 중...':'등록 중...';
+
+  const reqUrl=isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
+  const reqBody=isEdit ? JSON.stringify({properties}) : JSON.stringify({parent:{database_id:tabDef.dbId},properties});
+
+  fetch(reqUrl,{ method:isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      closeAddModal();
+      loadTabData(EDIT_TAB||tabDef.id);
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message);
+      console.error(e);
+    });
+}
+function deleteRecord(tabId, pageId){
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!confirm('이 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId,{
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ closeDetailModal(); loadTabData(tabId); toast('삭제되었습니다.'); })
+    .catch(e=>{
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadTabData(tabId); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+
+// ── 엑셀 생성 (work-portal 공통 라이브러리 패턴 재사용) ──
+var EXCEL_LIB_LOADING=null;
+function loadExcelLib(){
+  if(window.ExcelJS) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING=loadScript(
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+  ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+const EXCEL_COMPANY_NAME='수자원기술(주)';
+const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
+const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
+const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
+const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+function excelCm2in(cm){ return cm/2.54; }
+const EXCEL_PAGE_PRESETS={
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(0.5),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(2),bottom:excelCm2in(0.5),left:excelCm2in(1),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+};
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min, max, padding){
+  min=min||8; max=max||40; padding=padding||5;
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+function buildExcelReport(opts){
+  const btn=document.getElementById(opts.btnId);
+  const lbl=document.getElementById(opts.lblId);
+  const rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  const columns=opts.columns;
+  const orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+  loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(opts.sheetName,{
+      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
+      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+    });
+    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    ws.columns=colWidths.map(w=>({width:w}));
+    const titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    const titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
+    const headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach((col,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    });
+    rows.forEach((r,i)=>{
+      const rn=3+i;
+      const row=ws.getRow(rn);
+      row.height=EXCEL_ROW_HEIGHTS.data;
+      columns.forEach((col,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
+        if(col.dateCol && r[col.key]){
+          const d=excelParseDate(r[col.key]);
+          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+        } else {
+          cell.value=r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
+        }
+      });
+      row.commit();
+    });
+    lbl.textContent='파일 저장 중...';
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const p2=n=>String(n).padStart(2,'0');
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes())+'.xlsx';
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(e=>{
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(()=>{ btn.disabled=false; });
+}
+function exportTabExcel(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
+  const fields=dataFields(tabDef);
+  const rows=TAB_STATE[tabId].records.map(r=>{
+    const row={};
+    fields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
+    return row;
+  });
+  const columns=fields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
+  buildExcelReport({
+    btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
+    sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
+    columns, rows, orientation:'landscape'
+  });
+}
+
+// ── 하단 탭 전환 ──
+const PANEL_IDS=TAB_DEFS.map(t=>t.id);
+let _activePanel=PANEL_IDS[0];
+function switchPanel(id){
+  if(id===_activePanel) return;
+  _activePanel=id;
+  PANEL_IDS.forEach(p=>{
+    document.getElementById('panel-'+p)?.classList.toggle('active', p===id);
+    const btn=document.getElementById('nav-'+p);
+    if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
+  });
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  const tabDef=getTabDef(id);
+  if(tabDef && tabDef.fields && !TAB_STATE[id].loaded && isAuthed()) loadTabData(id);
+}
+
+// ── 초기화 ──
+if(isAuthed()){ loadTabData('monthly'); }
+else { openLoginModal(); }
+</script>
+</div>
+</body>
+</html>
