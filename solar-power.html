@@ -520,21 +520,19 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
     <div id="trendTotalCard"></div>
     <div class="sc">
-      <div class="sc-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span id="trendChartTitle">최근 12개월 발전량 추이</span>
-        <div class="dd-wrap" id="trendYearDdWrap">
-          <button class="dd-btn" id="trendYearDdBtn" onclick="toggleTrendYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
-            <span id="trendYearDdLabel">최근 12개월</span>
-          </button>
-          <div class="dd-menu" id="trendYearDdMenu"></div>
-        </div>
-      </div>
+      <div class="sc-hd">최근 12개월 발전량 추이</div>
       <div class="trend-wrap">
         <div class="trend-chart" id="trendChart"></div>
       </div>
     </div>
     <div class="sc">
-      <div class="sc-hd">월별 요약 <span class="badge" id="trendTableBadge">최근 12개월</span></div>
+      <div class="sc-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span>월별 요약 <span class="badge">최근 12개월</span></span>
+        <button class="tb-action-btn tb-excel" id="trendExcelBtn" onclick="exportTrendExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="trendExcelLabel">엑셀 생성</span>
+        </button>
+      </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
@@ -935,7 +933,7 @@ function openDetailModal(id){
     ['발전량(kWh)', fmtWon(getGenAmt(r))],
     ['누적량(kWh)', fmtWon(r.cumGen)],
     ['전일누적량(kWh)', fmtWon(r.prevCumGen)],
-    ['요금(원)', fmtWon(getFeeAmt(r))],
+    ['요금(원)', fmtWon(Math.floor(getFeeAmt(r)))],
     ['단가(원)', r.unitPrice?fmtWon(r.unitPrice):'-'],
     ['비고', esc(r.note||'-')]
   ];
@@ -1032,8 +1030,6 @@ document.addEventListener('click',e=>{
   if(yw&&!yw.contains(e.target)) closeDetailYearDd();
   const mw=document.getElementById('detailMonthDdWrap');
   if(mw&&!mw.contains(e.target)) closeDetailMonthDd();
-  const tyw=document.getElementById('trendYearDdWrap');
-  if(tyw&&!tyw.contains(e.target)) closeTrendYearDd();
 });
 
 // ── 발전내역 탭 터널 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ──
@@ -1120,32 +1116,6 @@ function buildDetailMonthDd(){
   }
 }
 
-// ── 월별추이 탭 연도 필터 드롭다운 (기본값 "최근 12개월" — 공유 curYear/curMonth 기준 롤링,
-//    특정 연도 선택 시 그 해 1~12월 고정 표시로 전환) ──
-let _trendYearFilter='ROLL12';
-function toggleTrendYearDd(){ toggleDd('trendYearDdMenu','trendYearDdBtn'); }
-function closeTrendYearDd(){ closeDd('trendYearDdMenu','trendYearDdBtn'); }
-function buildTrendYearDd(){
-  const menu=document.getElementById('trendYearDdMenu');
-  if(!menu) return;
-  const years=[...new Set(ALL_RECORDS.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
-  const opts=[{val:'ROLL12',label:'최근 12개월'}].concat(years.map(y=>({val:y,label:y+'년'})));
-  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_trendYearFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
-  document.getElementById('trendYearDdLabel').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월' : _trendYearFilter+'년';
-  document.getElementById('trendYearDdBtn').classList.toggle('active', _trendYearFilter!=='ROLL12');
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click',e=>{
-      const opt=e.target.closest('.dd-opt');
-      if(!opt) return;
-      _trendYearFilter=opt.dataset.val;
-      closeTrendYearDd();
-      if(!_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
-      else renderTrend();
-    });
-  }
-}
-
 // ── 하단 네비 ─────────────────────────────────────────
 const PANELS=['detail','tunnel','trend','summary'];
 let _activePanel='detail';
@@ -1175,6 +1145,7 @@ function switchPanel(name){
 let ALL_RECORDS=[];
 let _isLoading=false;
 let _userPickedMonth=false;
+let _trendData=[]; // 월별추이 "월별 요약" 화면 데이터 — exportTrendExcel()이 동일 데이터로 내보내기 위해 보관
 
 // ── Notion fetch 헬퍼 ────────────────────────────────
 async function fetchNotion(body){
@@ -1445,7 +1416,7 @@ function buildDetailRow(r){
     <td class="r" style="white-space:nowrap">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap">${fmtWon(r.cumGen)}</td>
     <td class="r" style="white-space:nowrap">${fmtWon(r.prevCumGen)}</td>
-    <td class="r" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td class="r" style="white-space:nowrap">${fmtWon(Math.floor(getFeeAmt(r)))}</td>
     <td class="r" style="white-space:nowrap">${r.unitPrice?fmtWon(r.unitPrice):'-'}</td>
     <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
@@ -1455,7 +1426,7 @@ function buildTunnelDetailRow(r){
     <td style="white-space:nowrap;width:1%;min-width:52px">${fmtDate(r.date)}</td>
     <td class="r" style="white-space:nowrap">${fmtWon(getGenAmt(r))}</td>
     <td class="r" style="white-space:nowrap">${fmtWon(r.cumGen)}</td>
-    <td class="r" style="white-space:nowrap">${fmtWon(getFeeAmt(r))}</td>
+    <td class="r" style="white-space:nowrap">${fmtWon(Math.floor(getFeeAmt(r)))}</td>
     <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
@@ -1484,7 +1455,7 @@ function renderSummary(recs){
     const allTunnels=new Set(recs.map(r=>r.tunnel).filter(Boolean)).size;
     document.getElementById('sumCompare').innerHTML=buildCompareCard([
       {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtWon(allGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
-      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(allFee),sub:'전체 합산'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(Math.floor(allFee)),sub:'전체 합산'},
       {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'전체 합산'}
     ]);
   } else if(curMonth===0){
@@ -1494,7 +1465,7 @@ function renderSummary(recs){
     const yearTunnels=new Set(allRecs2.map(r=>r.tunnel).filter(Boolean)).size;
     document.getElementById('sumCompare').innerHTML=buildCompareCard([
       {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtWon(yearGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
-      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(yearFee),sub:'연간 합산'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(Math.floor(yearFee)),sub:'연간 합산'},
       {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${yearTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'연간 합산'}
     ]);
   } else {
@@ -1530,7 +1501,7 @@ function renderTunnelBars(tunnelMap){
       <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:700">합계</div>
       <div style="flex:1"></div>
       <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:900">${fmtWon(totalGen)}kWh</div>
-      <div class="typebar-cnt" style="color:var(--sky600)">${fmtWon(totalFee)}원</div>
+      <div class="typebar-cnt" style="color:var(--sky600)">${fmtWon(Math.floor(totalFee))}원</div>
       <div class="typebar-pct" style="color:var(--sky600)">100%</div>
     </div>`+
   arr.map(([t,d])=>{
@@ -1540,7 +1511,7 @@ function renderTunnelBars(tunnelMap){
       <div class="typebar-name">${esc(t)}</div>
       <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${tunnelColorHex(t)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtWon(d.gen)+'kWh':''}</div></div>
       <div class="typebar-pay">${fmtWon(d.gen)}kWh</div>
-      <div class="typebar-cnt">${fmtWon(d.fee)}원</div>
+      <div class="typebar-cnt">${fmtWon(Math.floor(d.fee))}원</div>
       <div class="typebar-pct">${genPct}%</div>
     </div>`;
   }).join('');
@@ -1562,7 +1533,7 @@ function renderTunnel(recs){
         <td class="r">${fmtKw(d.capacity)}</td>
         <td class="r">${d.count}일</td>
         <td class="r">${fmtWon(d.gen)}</td>
-        <td class="r">${fmtWon(d.fee)}</td>
+        <td class="r">${fmtWon(Math.floor(d.fee))}</td>
       </tr>`).join('')
     :`<tr><td colspan="6">${emptyState('이번 달 터널 데이터가 없습니다.')}</td></tr>`;
 
@@ -1590,7 +1561,7 @@ function renderTunnel(recs){
               <td style="font-weight:700">합계</td>
               <td class="r" style="font-weight:700">${fmtWon(tRecs.reduce((s,r)=>s+getGenAmt(r),0))}</td>
               <td></td>
-              <td class="r" style="font-weight:700">${fmtWon(tRecs.reduce((s,r)=>s+getFeeAmt(r),0))}</td>
+              <td class="r" style="font-weight:700">${fmtWon(Math.floor(tRecs.reduce((s,r)=>s+getFeeAmt(r),0)))}</td>
               <td></td>
             </tr>
           </tbody>
@@ -1604,29 +1575,22 @@ function renderTunnel(recs){
 // 월별추이 "월별 요약" 테이블 고정 컬럼 순서(요청 기준) — 노션에 없는 터널이면 해당 컬럼은 0으로 표시
 const TREND_TUNNEL_COLS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널'];
 function renderTrend(){
-  buildTrendYearDd();
-  let months=[];
-  if(_trendYearFilter==='ROLL12'){
-    // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
-    const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
-    const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
-    for(let i=11;i>=0;i--){
-      let m=anchorMonth-i,y=anchorYear;
-      if(m<1){m+=12;y--;}
-      months.push({y,m});
-    }
-  } else {
-    const y=parseInt(_trendYearFilter,10);
-    for(let m=1;m<=12;m++) months.push({y,m});
+  const months=[];
+  // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
+  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
+  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
+  for(let i=11;i>=0;i--){
+    let m=anchorMonth-i,y=anchorYear;
+    if(m<1){m+=12;y--;}
+    months.push({y,m});
   }
-  document.getElementById('trendChartTitle').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월 발전량 추이' : `${_trendYearFilter}년 발전량 추이`;
-  document.getElementById('trendTableBadge').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월' : `${_trendYearFilter}년`;
   const data=months.map(({y,m})=>{
     const recs=recordsForYM(y,m);
     const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
     const tunnelMap=calcTunnelMap(recs);
     return {y,m,label:`${m}월`,totalGen,cnt:recs.length,tunnelMap};
   });
+  _trendData=data; // 엑셀 생성(exportTrendExcel)에서 화면과 동일한 데이터를 쓰기 위해 보관
   const maxGen=Math.max(...data.map(d=>d.totalGen),1);
 
   const allMonths=new Set(ALL_RECORDS.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
@@ -1879,6 +1843,27 @@ function exportSolarExcel(){
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'태양광발전량', title:'태양광발전량', fnamePrefix:'태양광발전량',
     columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'portrait'
+  });
+}
+const EXCEL_COLUMNS_TREND=[
+  {key:'월',header:'월'},
+  {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0'},
+  {key:'흥해터널',header:'흥해터널',numFmt:'#,##0'},
+  {key:'청하터널(주)',header:'청하터널(주)',numFmt:'#,##0'},
+  {key:'청하터널(부)',header:'청하터널(부)',numFmt:'#,##0'},
+  {key:'남정5터널',header:'남정5터널',numFmt:'#,##0'},
+  {key:'발전일수',header:'발전일수',numFmt:'#,##0'}
+];
+function exportTrendExcel(){
+  const rows=[..._trendData].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
+    const row={월:`${y}/${String(m).padStart(2,'0')}`, 발전량:Math.floor(totalGen), 발전일수:cnt};
+    TREND_TUNNEL_COLS.forEach(name=>{ row[name]=Math.floor(tunnelMap[name]?.gen||0); });
+    return row;
+  });
+  buildExcelReport({
+    btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
+    sheetName:'월별요약', title:'태양광발전량 월별요약', fnamePrefix:'태양광발전량_월별요약',
+    columns:EXCEL_COLUMNS_TREND, rows, orientation:'portrait'
   });
 }
 
