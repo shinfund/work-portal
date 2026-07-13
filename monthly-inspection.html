@@ -663,16 +663,93 @@ function acbFields(){
   return out;
 }
 
+// 월간점검 표준 체크리스트 카탈로그 — 노션 월간점검DB 실데이터에서 (구분,설비명,점검내용) 고유 조합
+// 68건을 그대로 추출(2026-07-13). 신규등록/수정 폼에서 구분+설비명 선택 시 점검내용 드롭다운을
+// 이 카탈로그로 좁혀서 보여준다(직접입력도 계속 허용).
+const MONTHLY_CHECKLIST=[
+  {구분:'기타',설비명:'발전기',점검내용:'각종 공구 관리상태 및 자재비치 상태'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'UPS 축전지 내부저항 및 전압측정(첨부양식 #2-1)_(분기)'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'부하평형 여부측정 (분기)'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'비상시 전원절체 동작여부'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'이상 소음 발생 여부'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'입,출력부 전압 전류 상태'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'전자접촉기, 휴즈 이상여부'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'축전지 단자 산화 및 접속상태'},
+  {구분:'비상전원설비',설비명:'UPS',점검내용:'축전지 전해액 및 충전상태'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'각종 오일 누유 여부'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'냉각수 및 유류보충 상태'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'배터리 내부저항 측정점검 (분기)'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'벨트상태 및 장력 (분기)'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'부대설비(급,배기시설) 상태 (분기)'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'엔진기기 조임상태'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'엔진오일 오염 및 유량상태'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'자동·수동스위치 및 전력회로 점검'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'작동 무부하시험'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'작동 부하시험(부하평형 여부 확인)_(분기)'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'전기결선상태 점검'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'전력 배선 및 접속부 상태 (분기)'},
+  {구분:'비상전원설비',설비명:'발전기',점검내용:'축전지 전해액 및 충전상태 (분기)'},
+  {구분:'저압설비',설비명:'각종차단기',점검내용:'ACB, ATS, CTTS 동작 상태 (분기)'},
+  {구분:'저압설비',설비명:'각종차단기',점검내용:'전자접촉기(M,G) 이상여부 (분기)'},
+  {구분:'저압설비',설비명:'각종차단기',점검내용:'접점부 단자 소손여부 (분기)'},
+  {구분:'저압설비',설비명:'각종차단기',점검내용:'정전시험 한전/발전 절체시험(실부하 운전)_(분기)'},
+  {구분:'저압설비',설비명:'기타',점검내용:'부하평형 여부 측정 (분기)'},
+  {구분:'저압설비',설비명:'기타',점검내용:'절연저항 측정 (연차)'},
+  {구분:'저압설비',설비명:'기타',점검내용:'접지저항 측정 (분기)'},
+  {구분:'저압설비',설비명:'접속부',점검내용:'각종 모선 및 케이블 접속 상태 (분기)'},
+  {구분:'저압설비',설비명:'접속부',점검내용:'각종 볼트 이완여부 (분기)'},
+  {구분:'저압설비',설비명:'진상콘덴서',점검내용:'절연유 누유 및 변형여부'},
+  {구분:'저압설비',설비명:'케이블상태',점검내용:'열화에 의한 피복 소손여부'},
+  {구분:'저압설비',설비명:'케이블상태',점검내용:'이상 소음 발생 여부'},
+  {구분:'저압설비',설비명:'케이블상태',점검내용:'트렌치내 케이블 상태 (분기)'},
+  {구분:'직무고시',설비명:'고압설비',점검내용:'절연내력 측정(연차)'},
+  {구분:'직무고시',설비명:'고압설비',점검내용:'절연저항 측정(연차)'},
+  {구분:'직무고시',설비명:'고압설비',점검내용:'접지저항 측정(연차)'},
+  {구분:'직무고시',설비명:'변압기점검',점검내용:'절연내역, 산가도 측정(연차, 필요시)'},
+  {구분:'직무고시',설비명:'변압기점검',점검내용:'절연저항 점검(연차)'},
+  {구분:'직무고시',설비명:'예비발전설비',점검내용:'발전기 무부하 또는 부하시험(분기)'},
+  {구분:'직무고시',설비명:'예비발전설비',점검내용:'절연 및 접지저항 측정(반기)'},
+  {구분:'직무고시',설비명:'예비발전설비',점검내용:'축전지 및 충전장치 점검(반기)'},
+  {구분:'직무고시',설비명:'저압설비',점검내용:'누설전류 측정(분기, 필요시)'},
+  {구분:'직무고시',설비명:'저압설비',점검내용:'절연저항 측정(연차)'},
+  {구분:'직무고시',설비명:'저압설비',점검내용:'접지저항 측정(반기)'},
+  {구분:'태양광발전설비',설비명:'발전기',점검내용:'구조물 외관상태 및 볼트 체결상태'},
+  {구분:'태양광발전설비',설비명:'발전기',점검내용:'인버터 외관상태 및 정상 작동상태'},
+  {구분:'태양광발전설비',설비명:'발전기',점검내용:'전선 및 접속부 이상 상태'},
+  {구분:'태양광발전설비',설비명:'발전기',점검내용:'패널 외관상태 및 발전량 확인'},
+  {구분:'특고압설비',설비명:'VCB판넬',점검내용:'MOF 절연유 누유 및 몰드 변형여부'},
+  {구분:'특고압설비',설비명:'VCB판넬',점검내용:'보호계전기 및 지시계기 계측 상태'},
+  {구분:'특고압설비',설비명:'VCB판넬',점검내용:'진공탱크 균열 및 외관상태'},
+  {구분:'특고압설비',설비명:'VCB판넬',점검내용:'차단기 작동 상태(분기)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'냉각팬 및 히터 동작상태 (분기)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'적외선 열화상 측정 (분기)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'전원품질분석 (연차)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'절연내역 측정 (연차)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'절연저항 측정 (연차)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'접지저항 측정 (연차)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'특고압반 기기별 열화 및 모선지지물 상태'},
+  {구분:'특고압설비',설비명:'변압기',점검내용:'몰드 외관 균열여부'},
+  {구분:'특고압설비',설비명:'변압기',점검내용:'유량계 및 온도계 상태'},
+  {구분:'특고압설비',설비명:'변압기',점검내용:'케이블헤드 외관상태'},
+  {구분:'특고압설비',설비명:'인입설비',점검내용:'LA외관 균열 여부'},
+  {구분:'특고압설비',설비명:'인입설비',점검내용:'LBS외관 및 PF 균열 여부'},
+  {구분:'특고압설비',설비명:'인입설비',점검내용:'특고 인입선로 및 단말처리상태'}
+];
+function getChecklistOptions(gubun, seolbi){
+  if(!gubun || !seolbi) return [];
+  return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
+}
+
 const TAB_DEFS=[
   {
     id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'점검내용', dateKey:'점검일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널'], required:true},
       {key:'점검일자', type:'date', required:true},
-      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시']},
-      {key:'설비명', type:'select', options:['각종차단기','UPS','고압설비','기타','발전기','VCB판넬','인입설비','변압기','예비발전설비','변압기점검','케이블상태','접속부','저압설비','진상콘덴서']},
-      {key:'점검내용', type:'title', required:true},
-      {key:'점검결과', type:'select', options:['양호','-','불량','점검요']},
+      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true},
+      {key:'설비명', type:'select', options:['각종차단기','UPS','고압설비','기타','발전기','VCB판넬','인입설비','변압기','예비발전설비','변압기점검','케이블상태','접속부','저압설비','진상콘덴서'], cascadeTrigger:true},
+      {key:'점검내용', type:'title', required:true, uiType:'cascade-select'},
+      {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호'},
       {key:'점검표', type:'select', options:['월간점검표1','월간점검표2','월간점검표3']},
       {key:'비고', type:'text'}
     ],
@@ -1089,10 +1166,20 @@ function closeDetailModal(e){
 // ── 신규등록/수정 모달 (필드 동적 생성) ──
 var EDIT_TAB=null, EDIT_PAGE_ID=null;
 var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
-function buildFieldHtml(f, idx, curVal){
+function buildFieldHtml(f, idx, curVal, tabId){
   const id='ff_'+idx;
   const req=f.required?'<span class="modal-required">*</span>':'';
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  if(f.uiType==='cascade-select'){
+    // 옵션은 refreshChecklistSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(구분·설비명 현재값 기준)
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')">
+        <option value="">먼저 구분·설비명을 선택하세요</option>
+      </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      <div class="modal-hint">구분·설비명 선택에 따라 표준 점검항목 목록이 좁혀집니다.</div>
+    </div>`;
+  }
   if(f.type==='file'){
     return `<div class="modal-field">${label}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -1106,8 +1193,9 @@ function buildFieldHtml(f, idx, curVal){
   if(f.type==='select'){
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
     const isCustom = curVal && !(f.options||[]).includes(curVal);
+    const cascadeCall = f.cascadeTrigger ? `;refreshChecklistSelect('${tabId}')` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')">
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}">
         <option value="">선택</option>
         <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
@@ -1129,12 +1217,36 @@ function onSelectChange(selectEl, customInputId){
   if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
   else { ci.style.display='none'; ci.value=''; }
 }
+// 월간점검 탭 전용: 구분/설비명 select의 onchange에서 호출되어 점검내용(cascade-select) 옵션을 재계산
+function refreshChecklistSelect(tabId, initialValue){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  const gubunIdx=tabDef.fields.findIndex(f=>f.key==='구분');
+  const seolbiIdx=tabDef.fields.findIndex(f=>f.key==='설비명');
+  const contentIdx=tabDef.fields.findIndex(f=>f.uiType==='cascade-select');
+  if(gubunIdx<0||seolbiIdx<0||contentIdx<0) return;
+  const sel=document.getElementById('ff_'+contentIdx);
+  if(!sel) return;
+  const ci=document.getElementById('ff_'+contentIdx+'c');
+  const gubun=getFieldValue(tabDef.fields[gubunIdx], gubunIdx);
+  const seolbi=getFieldValue(tabDef.fields[seolbiIdx], seolbiIdx);
+  const opts=getChecklistOptions(gubun, seolbi);
+  const curVal = initialValue!==undefined ? initialValue : (sel.value==='__custom__' ? (ci?ci.value:'') : sel.value);
+  const isCustom = !!curVal && !opts.includes(curVal);
+  sel.innerHTML = `<option value="">${opts.length?'선택':'먼저 구분·설비명을 선택하세요'}</option>`
+    + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
+    + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
+  if(!isCustom && opts.includes(curVal)) sel.value=curVal;
+  if(ci){
+    if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
+  }
+}
 function getFieldValue(f, idx){
   const id='ff_'+idx;
   if(f.type==='file'){
     return _photoFiles;
   }
-  if(f.type==='select'){
+  if(f.type==='select' || f.uiType==='cascade-select'){
     const sel=document.getElementById(id);
     if(!sel) return '';
     if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
@@ -1162,7 +1274,8 @@ function openAddModal(tabId, recordId){
       groupOpen=true;
       return;
     }
-    html+=buildFieldHtml(f, idx, r?r[f.key]:'');
+    const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
+    html+=buildFieldHtml(f, idx, curVal, tabId);
   });
   if(groupOpen) html+='</div>';
   document.getElementById('addModalFields').innerHTML=html;
@@ -1174,6 +1287,11 @@ function openAddModal(tabId, recordId){
   if(fileIdx>=0){
     _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
     renderPhotoFileList('ff_'+fileIdx);
+  }
+  // 점검내용(cascade-select) 초기 옵션 채우기 — 수정 모드면 기존 값을 유지하며 목록에 없으면 직접입력으로 표시
+  const contentIdx=tabDef.fields.findIndex(f=>f.uiType==='cascade-select');
+  if(contentIdx>=0){
+    refreshChecklistSelect(tabId, r ? (r[tabDef.fields[contentIdx].key]||'') : '');
   }
 }
 function closeAddModal(e){
