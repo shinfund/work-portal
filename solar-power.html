@@ -402,8 +402,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')">발전내역</button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')">터널별</button>
-  <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
   <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')">월별추이</button>
+  <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')">요약</button>
 </div>
 </div>
 
@@ -520,18 +520,27 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
     <div id="trendTotalCard"></div>
     <div class="sc">
-      <div class="sc-hd">최근 12개월 발전량 추이</div>
+      <div class="sc-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span id="trendChartTitle">최근 12개월 발전량 추이</span>
+        <div class="dd-wrap" id="trendYearDdWrap">
+          <button class="dd-btn" id="trendYearDdBtn" onclick="toggleTrendYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
+            <span id="trendYearDdLabel">최근 12개월</span>
+          </button>
+          <div class="dd-menu" id="trendYearDdMenu"></div>
+        </div>
+      </div>
       <div class="trend-wrap">
         <div class="trend-chart" id="trendChart"></div>
       </div>
     </div>
     <div class="sc">
-      <div class="sc-hd">월별 요약 <span class="badge">최근 12개월</span></div>
+      <div class="sc-hd">월별 요약 <span class="badge" id="trendTableBadge">최근 12개월</span></div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
             <th>월</th><th class="r">발전량(kWh)</th>
-            <th>터널별</th><th class="r">발전일수</th>
+            <th class="r">흥해터널</th><th class="r">청하터널(주)</th><th class="r">청하터널(부)</th><th class="r">남정5터널</th>
+            <th class="r">발전일수</th>
           </tr></thead>
           <tbody id="trendTableBody"></tbody>
         </table>
@@ -1023,6 +1032,8 @@ document.addEventListener('click',e=>{
   if(yw&&!yw.contains(e.target)) closeDetailYearDd();
   const mw=document.getElementById('detailMonthDdWrap');
   if(mw&&!mw.contains(e.target)) closeDetailMonthDd();
+  const tyw=document.getElementById('trendYearDdWrap');
+  if(tyw&&!tyw.contains(e.target)) closeTrendYearDd();
 });
 
 // ── 발전내역 탭 터널 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ──
@@ -1109,8 +1120,34 @@ function buildDetailMonthDd(){
   }
 }
 
+// ── 월별추이 탭 연도 필터 드롭다운 (기본값 "최근 12개월" — 공유 curYear/curMonth 기준 롤링,
+//    특정 연도 선택 시 그 해 1~12월 고정 표시로 전환) ──
+let _trendYearFilter='ROLL12';
+function toggleTrendYearDd(){ toggleDd('trendYearDdMenu','trendYearDdBtn'); }
+function closeTrendYearDd(){ closeDd('trendYearDdMenu','trendYearDdBtn'); }
+function buildTrendYearDd(){
+  const menu=document.getElementById('trendYearDdMenu');
+  if(!menu) return;
+  const years=[...new Set(ALL_RECORDS.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const opts=[{val:'ROLL12',label:'최근 12개월'}].concat(years.map(y=>({val:y,label:y+'년'})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${_trendYearFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  document.getElementById('trendYearDdLabel').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월' : _trendYearFilter+'년';
+  document.getElementById('trendYearDdBtn').classList.toggle('active', _trendYearFilter!=='ROLL12');
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      _trendYearFilter=opt.dataset.val;
+      closeTrendYearDd();
+      if(!_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+      else renderTrend();
+    });
+  }
+}
+
 // ── 하단 네비 ─────────────────────────────────────────
-const PANELS=['detail','tunnel','summary','trend'];
+const PANELS=['detail','tunnel','trend','summary'];
 let _activePanel='detail';
 // 공용 연/월 선택기(요약·터널별·월별추이가 공유)는 발전내역 탭에서는 숨김 — 발전내역은
 // 2026-07-05부터 독립된 자체 연/월 드롭다운(detailYearDd/detailMonthDd, 기본값 전체)을 사용
@@ -1564,16 +1601,26 @@ function renderTunnel(recs){
 }
 
 // ── 월별 추이 ─────────────────────────────────────────
+// 월별추이 "월별 요약" 테이블 고정 컬럼 순서(요청 기준) — 노션에 없는 터널이면 해당 컬럼은 0으로 표시
+const TREND_TUNNEL_COLS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널'];
 function renderTrend(){
-  const months=[];
-  // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
-  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
-  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
-  for(let i=11;i>=0;i--){
-    let m=anchorMonth-i,y=anchorYear;
-    if(m<1){m+=12;y--;}
-    months.push({y,m});
+  buildTrendYearDd();
+  let months=[];
+  if(_trendYearFilter==='ROLL12'){
+    // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
+    const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
+    const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
+    for(let i=11;i>=0;i--){
+      let m=anchorMonth-i,y=anchorYear;
+      if(m<1){m+=12;y--;}
+      months.push({y,m});
+    }
+  } else {
+    const y=parseInt(_trendYearFilter,10);
+    for(let m=1;m<=12;m++) months.push({y,m});
   }
+  document.getElementById('trendChartTitle').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월 발전량 추이' : `${_trendYearFilter}년 발전량 추이`;
+  document.getElementById('trendTableBadge').textContent = _trendYearFilter==='ROLL12' ? '최근 12개월' : `${_trendYearFilter}년`;
   const data=months.map(({y,m})=>{
     const recs=recordsForYM(y,m);
     const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
@@ -1594,7 +1641,7 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
@@ -1602,11 +1649,11 @@ function renderTrend(){
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 발전량</div>
-          <div style="font-size:15px;font-weight:800;color:var(--sky600)">${fmtWon(totalAllGen)}<span style="font-size:11px;font-weight:500">kWh</span></div>
+          <div style="font-size:15px;font-weight:800;color:var(--sky600)">${fmtWon(Math.floor(totalAllGen))}<span style="font-size:11px;font-weight:500">kWh</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 전기요금</div>
-          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${fmtWon(totalAllFee)}</div>
+          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${fmtWon(Math.floor(totalAllFee))}</div>
         </div>
       </div>
     </div>`;
@@ -1623,12 +1670,11 @@ function renderTrend(){
 
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
-    const arr=Object.entries(tunnelMap).sort((a,b)=>b[1].gen-a[1].gen);
-    const tunnelBadges=arr.length?`<div style="display:flex;flex-wrap:wrap;gap:4px">${arr.map(([t,d])=>`<span class="type-badge ${tunnelSlug(t)}">${esc(t)} ${fmtWon(d.gen)}kWh</span>`).join('')}</div>`:'';
+    const tunnelCells=TREND_TUNNEL_COLS.map(name=>`<td class="r">${fmtWon(Math.floor(tunnelMap[name]?.gen||0))}</td>`).join('');
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
       <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
-      <td class="r">${fmtWon(totalGen)}</td>
-      <td>${tunnelBadges||'—'}</td>
+      <td class="r">${fmtWon(Math.floor(totalGen))}</td>
+      ${tunnelCells}
       <td class="r">${cnt}건</td>
     </tr>`;
   }).join('');

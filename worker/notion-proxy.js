@@ -16,8 +16,18 @@ const DB_IDS = {
 
 const TOKEN_TTL_SECONDS = 7 * 24 * 3600; // 7일 (사용자 요청으로 원복 — 토큰 폐기는 TOKEN_VERSION으로 대응)
 
+// /signature 전용(결재 서명 이미지) — 서명은 여전히 이미지로만 제한
 const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
-const ALLOWED_IMAGE_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+// /upload는 인증된 사용자만 접근 가능(Bearer 토큰 필수)해 파일 형식 화이트리스트를 두지 않고 전 파일 허용.
+// file.type을 신뢰할 수 없는 확장자(hwp/hwpx 등)를 위해 확장자 기반 contentType 보정만 수행.
+const MIME_BY_EXT = {
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", svg: "image/svg+xml",
+  hwp: "application/x-hwp", hwpx: "application/haansofthwpx",
+  xls: "application/vnd.ms-excel", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  pdf: "application/pdf", txt: "text/plain", csv: "text/csv", zip: "application/zip",
+};
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
 
 const LOGIN_MAX_ATTEMPTS = 10;
@@ -257,7 +267,7 @@ export default {
       }
     }
 
-    // ✅ /upload — R2에 이미지 업로드 (앱별 폴더 분리, 확장자/MIME/용량 검증)
+    // ✅ /upload — R2에 파일 업로드 (앱별 폴더 분리, 용량 검증; 인증 필수라 파일 형식은 전체 허용)
     if (url.pathname === "/upload" && request.method === "POST") {
       try {
         const formData = await request.formData();
@@ -267,10 +277,6 @@ export default {
         if (file.size > MAX_UPLOAD_BYTES) {
           return corsJson({ error: "파일 용량 초과 (최대 8MB)" }, 413, CORS);
         }
-        const mime = (file.type || "").toLowerCase();
-        if (!ALLOWED_IMAGE_MIME.has(mime)) {
-          return corsJson({ error: "허용되지 않는 파일 형식 (이미지만 업로드 가능)" }, 415, CORS);
-        }
 
         const UPLOAD_APPS = ["defect-management", "asset-register", "overtime-work"];
         const DEFAULT_UPLOAD_APP = "defect-management";
@@ -278,14 +284,14 @@ export default {
         const folder = UPLOAD_APPS.includes(appId) ? appId : DEFAULT_UPLOAD_APP;
 
         const nameParts = (file.name || "").split(".");
-        const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "jpg";
-        if (!ALLOWED_IMAGE_EXT.has(ext)) {
-          return corsJson({ error: "허용되지 않는 확장자" }, 415, CORS);
-        }
-        const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";
+        const mime = (file.type || "").toLowerCase();
+        const contentType = mime || MIME_BY_EXT[ext] || "application/octet-stream";
+
+        const key = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext ? "." + ext : ""}`;
 
         await env.HAJA_BUCKET.put(key, file.stream(), {
-          httpMetadata: { contentType: mime },
+          httpMetadata: { contentType },
         });
 
         const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
