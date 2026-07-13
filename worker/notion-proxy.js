@@ -278,7 +278,7 @@ export default {
           return corsJson({ error: "파일 용량 초과 (최대 8MB)" }, 413, CORS);
         }
 
-        const UPLOAD_APPS = ["defect-management", "asset-register", "overtime-work"];
+        const UPLOAD_APPS = ["defect-management", "asset-register", "overtime-work", "monthly-inspection"];
         const DEFAULT_UPLOAD_APP = "defect-management";
         const appId = formData.get("app");
         const folder = UPLOAD_APPS.includes(appId) ? appId : DEFAULT_UPLOAD_APP;

@@ -286,7 +286,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">월간점검결과(작업중)</div>
+    <div class="logo-title">월간점검결과-안전관리(작업중)</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -367,48 +367,125 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     </div>
   </div>
 
-  <!-- ▸ 변압기온도 (준비중) -->
+  <!-- ▸ 변압기온도 -->
   <div class="panel" id="panel-transformer">
-    <div class="sc" style="text-align:center;padding:40px 16px">
-      <div style="font-size:34px;margin-bottom:10px">🚧</div>
-      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
-      <div style="font-size:13px;color:var(--txt3)">변압기온도DB 탭은 다음 작업에서 구현됩니다.</div>
+    <div class="filter-row">
+      <input class="search-box" id="search-transformer" placeholder="🔍 측정지점·용량 검색..." aria-label="검색" oninput="renderTabTable('transformer')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('transformer')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_transformer" onclick="exportTabExcel('transformer')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_transformer">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-transformer"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>측정일자</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th>
+        </tr></thead>
+        <tbody id="tbody-transformer"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ▸ 발전기점검 (준비중) -->
+  <!-- ▸ 발전기점검 -->
   <div class="panel" id="panel-generator">
-    <div class="sc" style="text-align:center;padding:40px 16px">
-      <div style="font-size:34px;margin-bottom:10px">🚧</div>
-      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
-      <div style="font-size:13px;color:var(--txt3)">발전기점검DB 탭은 다음 작업에서 구현됩니다.</div>
+    <div class="filter-row">
+      <input class="search-box" id="search-generator" placeholder="🔍 제목·점검자·특기사항 검색..." aria-label="검색" oninput="renderTabTable('generator')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('generator')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_generator" onclick="exportTabExcel('generator')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_generator">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. 유류 재고·주파수 등 전체 항목은 행 클릭 시 상세창과 엑셀에서 확인 가능합니다.</div>
+    <div class="detail-count" id="count-generator"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>제목</th><th>가동일자</th><th>점검자</th><th>가동시간</th>
+          <th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">전력(kW)</th><th>비고</th><th class="r">금일재고량(L)</th>
+        </tr></thead>
+        <tbody id="tbody-generator"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ▸ 점검사진 (준비중) -->
+  <!-- ▸ 점검사진 -->
   <div class="panel" id="panel-photo">
-    <div class="sc" style="text-align:center;padding:40px 16px">
-      <div style="font-size:34px;margin-bottom:10px">🚧</div>
-      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
-      <div style="font-size:13px;color:var(--txt3)">점검사진DB 탭(사진 업로드+R2 연동)은 다음 작업에서 구현됩니다.</div>
+    <div class="filter-row">
+      <input class="search-box" id="search-photo" placeholder="🔍 제목·사진설명 검색..." aria-label="검색" oninput="renderTabTable('photo')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('photo')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_photo" onclick="exportTabExcel('photo')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_photo">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-photo"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>일자</th><th>제목</th><th class="r">번호</th><th>사진설명</th><th>점검사진</th>
+        </tr></thead>
+        <tbody id="tbody-photo"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ▸ 전력사용량 (준비중) -->
+  <!-- ▸ 전력사용량 -->
   <div class="panel" id="panel-power">
-    <div class="sc" style="text-align:center;padding:40px 16px">
-      <div style="font-size:34px;margin-bottom:10px">🚧</div>
-      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
-      <div style="font-size:13px;color:var(--txt3)">전력사용량DB 탭은 다음 작업에서 구현됩니다.</div>
+    <div class="filter-row">
+      <input class="search-box" id="search-power" placeholder="🔍 제목·비고 검색..." aria-label="검색" oninput="renderTabTable('power')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('power')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_power" onclick="exportTabExcel('power')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_power">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-power"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>일자</th><th>제목</th><th class="r">MAIN(kWh)</th><th class="r">조명용(kWh)</th><th>비고</th>
+        </tr></thead>
+        <tbody id="tbody-power"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- ▸ 업무처리 (준비중) -->
+  <!-- ▸ 업무처리 -->
   <div class="panel" id="panel-task">
-    <div class="sc" style="text-align:center;padding:40px 16px">
-      <div style="font-size:34px;margin-bottom:10px">🚧</div>
-      <div style="font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px">준비 중입니다</div>
-      <div style="font-size:13px;color:var(--txt3)">업무처리DB 탭은 다음 작업에서 구현됩니다.</div>
+    <div class="filter-row">
+      <input class="search-box" id="search-task" placeholder="🔍 업무내용·조치사항·업체 검색..." aria-label="검색" oninput="renderTabTable('task')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('task')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_task" onclick="exportTabExcel('task')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_task">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-task"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>터널명</th><th>날짜</th><th>업무내용</th><th>조치사항</th><th>업체</th><th>비고</th>
+        </tr></thead>
+        <tbody id="tbody-task"></tbody>
+      </table>
     </div>
   </div>
 
@@ -615,11 +692,82 @@ const TAB_DEFS=[
     ].concat(acbFields()),
     listCols:['터널명','설비명','점검일자','점검종별','점검담당자','점검확인자','유효전력량(kWh)','최대전력(kW)','역률(%)','종합의견']
   },
-  { id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, fields:null },
-  { id:'generator',   label:'발전기점검', dbId:DB_IDS.generator,   fields:null },
-  { id:'photo',       label:'점검사진',   dbId:DB_IDS.photo,       fields:null },
-  { id:'power',       label:'전력사용량', dbId:DB_IDS.power,       fields:null },
-  { id:'task',        label:'업무처리',   dbId:DB_IDS.task,        fields:null }
+  {
+    id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'측정일자', type:'date', required:true},
+      {key:'점검자', type:'select', options:['김동록','신종섭']},
+      {key:'변압기종류', type:'select', options:['조명용','일반용','동력용']},
+      {key:'용량', type:'text'},
+      {key:'측정지점', type:'title', required:true},
+      {key:'지점번호', type:'number'},
+      {key:'온도(℃)', type:'number'},
+      {key:'비고', type:'select', options:['양호','불량','점검요']}
+    ],
+    listCols:['터널명','측정일자','점검자','변압기종류','용량','측정지점','지점번호','온도(℃)','비고']
+  },
+  {
+    id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'제목', type:'title', required:true},
+      {key:'가동일자', type:'date', required:true},
+      {key:'점검자', type:'text'},
+      {key:'가동시간', type:'text'},
+      {key:'가동시간(min)', type:'number'},
+      {key:'전압(V)', type:'number'},
+      {key:'전류(A)', type:'number'},
+      {key:'전력(kW)', type:'number'},
+      {key:'주파수(Hz)', type:'number'},
+      {key:'역률(%)', type:'number'},
+      {key:'비고', type:'select', options:['부하 시운전','무부하 시운전']},
+      {key:'구분', type:'text'},
+      {key:'종류', type:'text'},
+      {key:'전일재고량(L)', type:'number'},
+      {key:'입고량(L)', type:'number'},
+      {key:'사용량(L)', type:'number'},
+      {key:'금일재고량(L)', type:'number'},
+      {key:'특기사항', type:'text'}
+    ],
+    listCols:['터널명','제목','가동일자','점검자','가동시간','전압(V)','전류(A)','전력(kW)','비고','금일재고량(L)']
+  },
+  {
+    id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'일자', type:'date', required:true},
+      {key:'제목', type:'title', required:true},
+      {key:'번호', type:'number'},
+      {key:'사진설명', type:'text'},
+      {key:'점검사진', type:'file'}
+    ],
+    listCols:['터널명','일자','제목','번호','사진설명','점검사진']
+  },
+  {
+    id:'power', label:'전력사용량', dbId:DB_IDS.power, titleKey:'제목', dateKey:'일자',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'일자', type:'date', required:true},
+      {key:'제목', type:'title', required:true},
+      {key:'MAIN(kWh)', type:'number'},
+      {key:'조명용(kWh)', type:'number'},
+      {key:'비고', type:'text'}
+    ],
+    listCols:['터널명','일자','제목','MAIN(kWh)','조명용(kWh)','비고']
+  },
+  {
+    id:'task', label:'업무처리', dbId:DB_IDS.task, titleKey:'업무내용', dateKey:'날짜',
+    fields:[
+      {key:'터널명', type:'select', options:['청하터널'], required:true},
+      {key:'날짜', type:'date', required:true},
+      {key:'업무내용', type:'title', required:true},
+      {key:'조치사항', type:'text'},
+      {key:'업체', type:'text'},
+      {key:'비고', type:'text'}
+    ],
+    listCols:['터널명','날짜','업무내용','조치사항','업체','비고']
+  }
 ];
 function getTabDef(id){ return TAB_DEFS.find(t=>t.id===id); }
 function dataFields(tabDef){ return tabDef.fields.filter(f=>f.key); } // header:true 그룹 라벨 항목 제외
@@ -653,7 +801,12 @@ function buildPropValue(type, rawValue){
   if(type==='select') return empty?{select:null}:{select:{name:String(rawValue)}};
   if(type==='date') return empty?{date:null}:{date:{start:String(rawValue)}};
   if(type==='number') return empty?{number:null}:{number:parseFloat(rawValue)||0};
+  if(type==='file') return {files:(rawValue||[]).map(f=>({name:f.name||'사진',type:'external',external:{url:f.url}}))};
   return null;
+}
+function getFiles(p){
+  if(!p || p.type!=='files') return [];
+  return (p.files||[]).map(f=>({name:f.name||'', url:(f.external&&f.external.url)||(f.file&&f.file.url)||''})).filter(f=>f.url);
 }
 function parseRecord(tabDef, page){
   const props=page.properties||{};
@@ -662,6 +815,7 @@ function parseRecord(tabDef, page){
     const p=props[f.key];
     if(f.type==='number') rec[f.key]=getNum(p);
     else if(f.type==='date') rec[f.key]=getDateStr(p);
+    else if(f.type==='file') rec[f.key]=getFiles(p);
     else rec[f.key]=getText(p).trim();
   });
   return rec;
@@ -754,6 +908,7 @@ function buildRow(tabDef, r){
     if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
     if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
     if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
+    if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
     return `<td>${esc(r[key]||'-')}</td>`;
   }).join('');
   return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
@@ -761,6 +916,17 @@ function buildRow(tabDef, r){
 function tunnelSlug(t){
   if(!t) return 'tunnel-c0';
   return (String(t).includes('(부)')) ? 'tunnel-c1' : 'tunnel-c0';
+}
+function buildPhotoThumbs(files, maxShow){
+  if(!files || !files.length) return '<span style="color:var(--txt3)">-</span>';
+  const shown=files.slice(0,maxShow||4);
+  const html=shown.map(f=>
+    `<a href="${esc(f.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">`
+    +`<img src="${esc(f.url)}" alt="사진" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);margin:1px;display:inline-block;vertical-align:middle" onerror="this.style.display='none'">`
+    +`</a>`
+  ).join('');
+  const more = files.length>shown.length ? `<span style="font-size:11px;color:var(--txt3);margin-left:4px">+${files.length-shown.length}</span>` : '';
+  return html+more;
 }
 function emptyState(desc, icon){
   icon=icon||'📋';
@@ -779,6 +945,7 @@ function openDetailModal(tabId, recordId){
     let val;
     if(f.type==='date') val=esc(fmtDate(r[f.key]));
     else if(f.type==='number') val=fmtWon(r[f.key]);
+    else if(f.type==='file') val=buildPhotoThumbs(r[f.key], 20);
     else val=esc(r[f.key]||'-');
     return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
   }).join('');
@@ -799,10 +966,21 @@ function closeDetailModal(e){
 
 // ── 신규등록/수정 모달 (필드 동적 생성) ──
 var EDIT_TAB=null, EDIT_PAGE_ID=null;
+var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
 function buildFieldHtml(f, idx, curVal){
   const id='ff_'+idx;
   const req=f.required?'<span class="modal-required">*</span>':'';
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  if(f.type==='file'){
+    return `<div class="modal-field">${label}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('${id}_input').click()">사진 선택</button>
+        <span class="modal-hint" id="${id}_status" style="margin:0"></span>
+      </div>
+      <input type="file" id="${id}_input" accept="image/*" multiple style="display:none" onchange="uploadInspectionPhoto(this,'${id}')"/>
+      <div id="${id}_list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>`;
+  }
   if(f.type==='select'){
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
     const isCustom = curVal && !(f.options||[]).includes(curVal);
@@ -831,6 +1009,9 @@ function onSelectChange(selectEl, customInputId){
 }
 function getFieldValue(f, idx){
   const id='ff_'+idx;
+  if(f.type==='file'){
+    return _photoFiles;
+  }
   if(f.type==='select'){
     const sel=document.getElementById(id);
     if(!sel) return '';
@@ -866,6 +1047,12 @@ function openAddModal(tabId, recordId){
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
+  // 점검사진(type:'file') 필드 초기화 — 수정 모드면 기존 사진을 _photoFiles에 로드
+  const fileIdx=tabDef.fields.findIndex(f=>f.type==='file');
+  if(fileIdx>=0){
+    _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
+    renderPhotoFileList('ff_'+fileIdx);
+  }
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
@@ -873,6 +1060,59 @@ function closeAddModal(e){
   document.body.style.overflow='';
   resetModalDragPos('addModal');
   EDIT_TAB=null; EDIT_PAGE_ID=null;
+  _photoFiles=[];
+}
+// ── 점검사진 업로드 (overtime-work 앱 다중 첨부파일 패턴 재사용, R2 monthly-inspection 폴더) ──
+function uploadInspectionPhoto(input, fieldId){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  const statusEl=document.getElementById(fieldId+'_status');
+  if(!isAuthed()){
+    if(statusEl){ statusEl.textContent='⚠ 로그인 필요'; statusEl.style.color='var(--coral)'; }
+    return;
+  }
+  let remaining=files.length;
+  if(statusEl){ statusEl.textContent='업로드 중... (0/'+files.length+')'; statusEl.style.color=''; }
+  let done=0;
+  files.forEach(file=>{
+    const formData=new FormData();
+    formData.append('file', file);
+    formData.append('app', 'monthly-inspection');
+    fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(data=>{
+        _photoFiles.push({ url:data.url, name:file.name });
+      })
+      .catch(e=>{
+        toast('사진 업로드 실패: '+e.message);
+        console.error(e);
+      })
+      .finally(()=>{
+        done++;
+        if(statusEl) statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
+        if(done===files.length){
+          if(statusEl){ statusEl.textContent=_photoFiles.length?('총 '+_photoFiles.length+'장 첨부됨'):'첨부파일 없음'; statusEl.style.color=''; }
+          renderPhotoFileList(fieldId);
+        }
+      });
+  });
+  input.value='';
+}
+function renderPhotoFileList(fieldId){
+  const wrap=document.getElementById(fieldId+'_list');
+  const statusEl=document.getElementById(fieldId+'_status');
+  if(statusEl) statusEl.textContent=_photoFiles.length?('총 '+_photoFiles.length+'장 첨부됨'):'첨부파일 없음';
+  if(!wrap) return;
+  wrap.innerHTML=_photoFiles.map((f,i)=>
+    `<div style="position:relative">
+      <img src="${esc(f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
+    </div>`
+  ).join('');
+}
+function removePhotoFile(idx, fieldId){
+  _photoFiles.splice(idx,1);
+  renderPhotoFileList(fieldId);
 }
 function submitAddForm(){
   const tabDef=getTabDef(EDIT_TAB);
@@ -1051,7 +1291,11 @@ function exportTabExcel(tabId){
   const fields=dataFields(tabDef);
   const rows=TAB_STATE[tabId].records.map(r=>{
     const row={};
-    fields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
+    fields.forEach(f=>{
+      if(f.type==='number') row[f.key]=Number(r[f.key])||0;
+      else if(f.type==='file') row[f.key]=(r[f.key]||[]).map(x=>x.url).join(', ');
+      else row[f.key]=r[f.key]||'';
+    });
     return row;
   });
   const columns=fields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
