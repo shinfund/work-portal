@@ -748,7 +748,8 @@ const TAB_DEFS=[
       {key:'점검일자', type:'date', required:true},
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true},
       {key:'설비명', type:'select', options:['각종차단기','UPS','고압설비','기타','발전기','VCB판넬','인입설비','변압기','예비발전설비','변압기점검','케이블상태','접속부','저압설비','진상콘덴서'], cascadeTrigger:true},
-      {key:'점검내용', type:'title', required:true, uiType:'cascade-select'},
+      {key:'점검내용', type:'title', required:true, uiType:'cascade-select', dependsOn:['구분','설비명'],
+        optionsFn:dep=>getChecklistOptions(dep['구분'], dep['설비명']), emptyHint:'먼저 구분·설비명을 선택하세요'},
       {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호'},
       {key:'점검표', type:'select', options:['월간점검표1','월간점검표2','월간점검표3']},
       {key:'비고', type:'text'}
@@ -758,8 +759,9 @@ const TAB_DEFS=[
   {
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'설비명', dateKey:'점검일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
-      {key:'설비명', type:'title', required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'설비명', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>dep['터널명']?[dep['터널명']]:[], emptyHint:'먼저 터널명을 선택하세요'},
       {key:'점검일자', type:'date', required:true},
       {key:'점검종별', type:'select', options:['월간']},
       {key:'점검횟수', type:'text'},
@@ -782,9 +784,11 @@ const TAB_DEFS=[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
       {key:'측정일자', type:'date', required:true},
       {key:'점검자', type:'select', options:['김동록','신종섭']},
-      {key:'변압기종류', type:'select', options:['조명용','일반용','동력용']},
+      {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
       {key:'용량', type:'text'},
-      {key:'측정지점', type:'title', required:true},
+      {key:'측정지점', type:'title', required:true, uiType:'cascade-select', dependsOn:['변압기종류'],
+        optionsFn:dep=>dep['변압기종류'] ? Array.from({length:15},(_,i)=>dep['변압기종류']+' #'+(i+1)) : [],
+        emptyHint:'먼저 변압기종류를 선택하세요'},
       {key:'지점번호', type:'number'},
       {key:'온도(℃)', type:'number'},
       {key:'비고', type:'select', options:['양호','불량','점검요']}
@@ -794,8 +798,10 @@ const TAB_DEFS=[
   {
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
-      {key:'제목', type:'title', required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>({'청하터널(주)':['주변전실 발전기점검'],'청하터널(부)':['부변전실 발전기점검']}[dep['터널명']]||[]),
+        emptyHint:'먼저 터널명을 선택하세요'},
       {key:'가동일자', type:'date', required:true},
       {key:'점검자', type:'text'},
       {key:'가동시간', type:'text'},
@@ -806,8 +812,11 @@ const TAB_DEFS=[
       {key:'주파수(Hz)', type:'number'},
       {key:'역률(%)', type:'number'},
       {key:'비고', type:'select', options:['부하 시운전','무부하 시운전']},
-      {key:'구분', type:'text'},
-      {key:'종류', type:'text'},
+      {key:'구분', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>({'청하터널(주)':['탱크용량  2,000L'],'청하터널(부)':['탱크용량  990L']}[dep['터널명']]||[]),
+        emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'종류', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>dep['터널명']?['경유']:[], emptyHint:'먼저 터널명을 선택하세요'},
       {key:'전일재고량(L)', type:'number'},
       {key:'입고량(L)', type:'number'},
       {key:'사용량(L)', type:'number'},
@@ -819,9 +828,11 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
       {key:'일자', type:'date', required:true},
-      {key:'제목', type:'title', required:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>({'청하터널(주)':['주변전실'],'청하터널(부)':['변전실']}[dep['터널명']]||[]),
+        emptyHint:'먼저 터널명을 선택하세요'},
       {key:'번호', type:'number'},
       {key:'사진설명', type:'text'},
       {key:'점검사진', type:'file'}
@@ -831,9 +842,11 @@ const TAB_DEFS=[
   {
     id:'power', label:'전력사용량', dbId:DB_IDS.power, titleKey:'제목', dateKey:'일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
       {key:'일자', type:'date', required:true},
-      {key:'제목', type:'title', required:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>({'청하터널(주)':['주변전실'],'청하터널(부)':['부변전실']}[dep['터널명']]||[]),
+        emptyHint:'먼저 터널명을 선택하세요'},
       {key:'MAIN(kWh)', type:'number'},
       {key:'조명용(kWh)', type:'number'},
       {key:'비고', type:'text'}
@@ -1171,7 +1184,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
   const req=f.required?'<span class="modal-required">*</span>':'';
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
   if(f.uiType==='cascade-select'){
-    // 옵션은 refreshChecklistSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(구분·설비명 현재값 기준)
+    // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
     return `<div class="modal-field">${label}
       <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')">
         <option value="">먼저 구분·설비명을 선택하세요</option>
@@ -1193,7 +1206,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
   if(f.type==='select'){
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
     const isCustom = curVal && !(f.options||[]).includes(curVal);
-    const cascadeCall = f.cascadeTrigger ? `;refreshChecklistSelect('${tabId}')` : '';
+    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
     return `<div class="modal-field">${label}
       <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}">
         <option value="">선택</option>
@@ -1217,29 +1230,37 @@ function onSelectChange(selectEl, customInputId){
   if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
   else { ci.style.display='none'; ci.value=''; }
 }
-// 월간점검 탭 전용: 구분/설비명 select의 onchange에서 호출되어 점검내용(cascade-select) 옵션을 재계산
-function refreshChecklistSelect(tabId, initialValue){
+// 캐스케이딩 select 공용 엔진 — dependsOn 필드들의 현재값을 optionsFn에 넘겨 옵션을 재계산.
+// (월간점검 구분+설비명→점검내용, 변압기온도 변압기종류→측정지점, 전력사용량 터널명→제목 등 재사용)
+function refreshCascadeSelect(tabId, contentIdx, initialValue){
   const tabDef=getTabDef(tabId);
   if(!tabDef) return;
-  const gubunIdx=tabDef.fields.findIndex(f=>f.key==='구분');
-  const seolbiIdx=tabDef.fields.findIndex(f=>f.key==='설비명');
-  const contentIdx=tabDef.fields.findIndex(f=>f.uiType==='cascade-select');
-  if(gubunIdx<0||seolbiIdx<0||contentIdx<0) return;
+  const f=tabDef.fields[contentIdx];
+  if(!f || f.uiType!=='cascade-select') return;
   const sel=document.getElementById('ff_'+contentIdx);
   if(!sel) return;
   const ci=document.getElementById('ff_'+contentIdx+'c');
-  const gubun=getFieldValue(tabDef.fields[gubunIdx], gubunIdx);
-  const seolbi=getFieldValue(tabDef.fields[seolbiIdx], seolbiIdx);
-  const opts=getChecklistOptions(gubun, seolbi);
+  const depValues={};
+  (f.dependsOn||[]).forEach(depKey=>{
+    const depIdx=tabDef.fields.findIndex(x=>x.key===depKey);
+    depValues[depKey]=depIdx>=0 ? getFieldValue(tabDef.fields[depIdx], depIdx) : '';
+  });
+  const opts=f.optionsFn(depValues);
   const curVal = initialValue!==undefined ? initialValue : (sel.value==='__custom__' ? (ci?ci.value:'') : sel.value);
   const isCustom = !!curVal && !opts.includes(curVal);
-  sel.innerHTML = `<option value="">${opts.length?'선택':'먼저 구분·설비명을 선택하세요'}</option>`
+  sel.innerHTML = `<option value="">${opts.length?'선택':(f.emptyHint||'선택')}</option>`
     + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
     + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
   if(!isCustom && opts.includes(curVal)) sel.value=curVal;
   if(ci){
     if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
   }
+}
+// cascadeTrigger 필드의 onchange에서 호출 — 해당 탭의 캐스케이딩 select 전부를 재계산
+function refreshAllCascadeSelects(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  tabDef.fields.forEach((f,idx)=>{ if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx); });
 }
 function getFieldValue(f, idx){
   const id='ff_'+idx;
@@ -1288,11 +1309,10 @@ function openAddModal(tabId, recordId){
     _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
     renderPhotoFileList('ff_'+fileIdx);
   }
-  // 점검내용(cascade-select) 초기 옵션 채우기 — 수정 모드면 기존 값을 유지하며 목록에 없으면 직접입력으로 표시
-  const contentIdx=tabDef.fields.findIndex(f=>f.uiType==='cascade-select');
-  if(contentIdx>=0){
-    refreshChecklistSelect(tabId, r ? (r[tabDef.fields[contentIdx].key]||'') : '');
-  }
+  // 캐스케이딩 select 초기 옵션 채우기 — 수정 모드면 기존 값을 유지하며 목록에 없으면 직접입력으로 표시
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
+  });
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
