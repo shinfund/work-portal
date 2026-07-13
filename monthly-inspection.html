@@ -133,6 +133,28 @@ tr:hover td{background:var(--sky50)}
 .tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
 html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+/* 월간점검 탭 — 구분(6종) 뱃지 */
+.gubun-c0{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.gubun-c1{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.gubun-c2{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.gubun-c3{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
+.gubun-c4{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.gubun-c5{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+html[data-theme="dark"] .gubun-c0{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .gubun-c1{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .gubun-c2{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .gubun-c3{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+html[data-theme="dark"] .gubun-c4{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .gubun-c5{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+/* 월간점검 탭 — 점검결과(양호/불량/점검요/-) 뱃지 */
+.result-good{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.result-bad{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.result-warn{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.result-none{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
+html[data-theme="dark"] .result-good{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .result-bad{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .result-warn{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .result-none{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -750,12 +772,12 @@ const TAB_DEFS=[
     fields:[
       {key:'터널명', type:'select', options:['청하터널'], required:true},
       {key:'점검일자', type:'date', required:true},
-      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true},
+      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
         optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
       {key:'점검내용', type:'title', required:true, uiType:'cascade-select', dependsOn:['구분','설비명'],
         optionsFn:dep=>getChecklistOptions(dep['구분'], dep['설비명']), emptyHint:'먼저 구분·설비명을 선택하세요'},
-      {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호'},
+      {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호', badgeFn:resultSlug},
       {key:'비고', type:'text'}
     ],
     listCols:['터널명','점검일자','구분','설비명','점검내용','점검결과','비고']
@@ -1122,6 +1144,7 @@ function buildRow(tabDef, r){
     const f=dataFields(tabDef).find(x=>x.key===key);
     if(!f) return '<td>-</td>';
     if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
+    if(f.badgeFn) return `<td><span class="type-badge ${f.badgeFn(r[key])}">${esc(r[key]||'-')}</span></td>`;
     if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
     if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
     if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
@@ -1132,6 +1155,17 @@ function buildRow(tabDef, r){
 function tunnelSlug(t){
   if(!t) return 'tunnel-c0';
   return (String(t).includes('(부)')) ? 'tunnel-c1' : 'tunnel-c0';
+}
+// 월간점검 탭 — 구분/점검결과 뱃지 색상 매핑
+function gubunSlug(v){
+  const map={'특고압설비':'gubun-c0','저압설비':'gubun-c1','비상전원설비':'gubun-c2','기타':'gubun-c3','태양광발전설비':'gubun-c4','직무고시':'gubun-c5'};
+  return map[v] || 'gubun-c3';
+}
+function resultSlug(v){
+  if(v==='양호') return 'result-good';
+  if(v==='불량') return 'result-bad';
+  if(v==='점검요') return 'result-warn';
+  return 'result-none';
 }
 function buildPhotoThumbs(files, maxShow){
   if(!files || !files.length) return '<span style="color:var(--txt3)">-</span>';
