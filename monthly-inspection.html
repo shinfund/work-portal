@@ -861,6 +861,7 @@ async function loadTabData(tabId){
     const pages=await fetchAllPages(tabDef.dbId, body);
     st.records=pages.map(p=>parseRecord(tabDef,p));
     st.loaded=true;
+    applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
     updateLastUpdate();
   }catch(e){
@@ -909,7 +910,20 @@ document.addEventListener('click',e=>{
   });
 });
 const _tabFilters={};
-TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; });
+const _tabFilterUserPicked={};
+TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+// 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
+// (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
+function applyLatestFilterDefault(tabId){
+  if(_tabFilterUserPicked[tabId]) return;
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.dateKey) return;
+  const dates=TAB_STATE[tabId].records.map(r=>r[tabDef.dateKey]).filter(Boolean).sort();
+  if(!dates.length) return;
+  const latest=dates[dates.length-1];
+  _tabFilters[tabId].year=latest.slice(0,4);
+  _tabFilters[tabId].month=latest.slice(5,7);
+}
 function tabTunnelField(tabDef){ return dataFields(tabDef).find(f=>f.key==='터널명'); }
 function buildTabFilterDd(tabId){
   const tabDef=getTabDef(tabId);
@@ -947,7 +961,7 @@ function buildTabFilterDd(tabId){
       yearMenu._bound=true;
       yearMenu.addEventListener('click',e=>{
         const opt=e.target.closest('.dd-opt'); if(!opt) return;
-        f.year=opt.dataset.val; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
+        f.year=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
       });
     }
   }
@@ -962,7 +976,7 @@ function buildTabFilterDd(tabId){
       monthMenu._bound=true;
       monthMenu.addEventListener('click',e=>{
         const opt=e.target.closest('.dd-opt'); if(!opt) return;
-        f.month=opt.dataset.val; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
+        f.month=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
       });
     }
   }
