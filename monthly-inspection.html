@@ -335,7 +335,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>점검표</th><th>비고</th>
+          <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-monthly"></tbody>
       </table>
@@ -739,6 +739,10 @@ function getChecklistOptions(gubun, seolbi){
   if(!gubun || !seolbi) return [];
   return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
 }
+function getEquipmentOptions(gubun){
+  if(!gubun) return [];
+  return [...new Set(MONTHLY_CHECKLIST.filter(c=>c.구분===gubun).map(c=>c.설비명))];
+}
 
 const TAB_DEFS=[
   {
@@ -747,14 +751,14 @@ const TAB_DEFS=[
       {key:'터널명', type:'select', options:['청하터널'], required:true},
       {key:'점검일자', type:'date', required:true},
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true},
-      {key:'설비명', type:'select', options:['각종차단기','UPS','고압설비','기타','발전기','VCB판넬','인입설비','변압기','예비발전설비','변압기점검','케이블상태','접속부','저압설비','진상콘덴서'], cascadeTrigger:true},
+      {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
+        optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
       {key:'점검내용', type:'title', required:true, uiType:'cascade-select', dependsOn:['구분','설비명'],
         optionsFn:dep=>getChecklistOptions(dep['구분'], dep['설비명']), emptyHint:'먼저 구분·설비명을 선택하세요'},
       {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호'},
-      {key:'점검표', type:'select', options:['월간점검표1','월간점검표2','월간점검표3']},
       {key:'비고', type:'text'}
     ],
-    listCols:['터널명','점검일자','구분','설비명','점검내용','점검결과','점검표','비고']
+    listCols:['터널명','점검일자','구분','설비명','점검내용','점검결과','비고']
   },
   {
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'설비명', dateKey:'점검일자',
@@ -1185,12 +1189,13 @@ function buildFieldHtml(f, idx, curVal, tabId){
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
   if(f.uiType==='cascade-select'){
     // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
+    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')">
-        <option value="">먼저 구분·설비명을 선택하세요</option>
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}">
+        <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      <div class="modal-hint">구분·설비명 선택에 따라 표준 점검항목 목록이 좁혀집니다.</div>
+      <div class="modal-hint">${esc((f.dependsOn||[]).join('·'))} 선택에 따라 표준 목록이 좁혀집니다.</div>
     </div>`;
   }
   if(f.type==='file'){
