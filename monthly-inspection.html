@@ -1333,15 +1333,18 @@ function uploadInspectionPhoto(input, fieldId){
   }
   let remaining=files.length;
   if(statusEl){ statusEl.textContent='업로드 중... (0/'+files.length+')'; statusEl.style.color=''; }
+  // 선택한 순서대로 결과 슬롯을 미리 잡아두고, 전부 완료된 뒤 순서대로 _photoFiles에 반영한다
+  // (병렬 업로드라 네트워크 응답 순서가 선택 순서와 다를 수 있어, push를 개별 완료 시점에 하면 표시 순서가 어긋남)
+  const results=new Array(files.length).fill(null);
   let done=0;
-  files.forEach(file=>{
+  files.forEach((file,i)=>{
     const formData=new FormData();
     formData.append('file', file);
     formData.append('app', 'monthly-inspection');
     fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
       .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
       .then(data=>{
-        _photoFiles.push({ url:data.url, name:file.name });
+        results[i]={ url:data.url, name:file.name };
       })
       .catch(e=>{
         toast('사진 업로드 실패: '+e.message);
@@ -1351,6 +1354,7 @@ function uploadInspectionPhoto(input, fieldId){
         done++;
         if(statusEl) statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
         if(done===files.length){
+          results.forEach(r=>{ if(r) _photoFiles.push(r); });
           if(statusEl){ statusEl.textContent=_photoFiles.length?('총 '+_photoFiles.length+'장 첨부됨'):'첨부파일 없음'; statusEl.style.color=''; }
           renderPhotoFileList(fieldId);
         }
@@ -1385,7 +1389,8 @@ function submitAddForm(){
     if(f.header) return;
     const v=getFieldValue(f, idx);
     values[f.key]=v;
-    if(f.required && !v && !missing) missing=f.label||f.key;
+    const isEmpty=Array.isArray(v) ? v.length===0 : !v;
+    if(f.required && isEmpty && !missing) missing=f.label||f.key;
   });
   if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
 
