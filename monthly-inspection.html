@@ -1058,7 +1058,7 @@ function exportTabExcel(tabId){
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
-    columns, rows, orientation:'landscape'
+    columns, rows, orientation:'portrait'
   });
 }
 
