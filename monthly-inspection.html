@@ -320,6 +320,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 월간점검 -->
   <div class="panel active" id="panel-monthly">
     <div class="filter-row">
+      <div id="filterDd-monthly" style="display:contents"></div>
       <input class="search-box" id="search-monthly" placeholder="🔍 설비명·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('monthly')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('monthly')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -344,6 +345,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 전기설비기록 -->
   <div class="panel" id="panel-elec">
     <div class="filter-row">
+      <div id="filterDd-elec" style="display:contents"></div>
       <input class="search-box" id="search-elec" placeholder="🔍 설비명·점검담당자·종합의견 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('elec')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -370,6 +372,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 변압기온도 -->
   <div class="panel" id="panel-transformer">
     <div class="filter-row">
+      <div id="filterDd-transformer" style="display:contents"></div>
       <input class="search-box" id="search-transformer" placeholder="🔍 측정지점·용량 검색..." aria-label="검색" oninput="renderTabTable('transformer')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('transformer')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -394,6 +397,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 발전기점검 -->
   <div class="panel" id="panel-generator">
     <div class="filter-row">
+      <div id="filterDd-generator" style="display:contents"></div>
       <input class="search-box" id="search-generator" placeholder="🔍 제목·점검자·특기사항 검색..." aria-label="검색" oninput="renderTabTable('generator')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('generator')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -420,6 +424,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 점검사진 -->
   <div class="panel" id="panel-photo">
     <div class="filter-row">
+      <div id="filterDd-photo" style="display:contents"></div>
       <input class="search-box" id="search-photo" placeholder="🔍 제목·사진설명 검색..." aria-label="검색" oninput="renderTabTable('photo')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('photo')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -444,6 +449,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 전력사용량 -->
   <div class="panel" id="panel-power">
     <div class="filter-row">
+      <div id="filterDd-power" style="display:contents"></div>
       <input class="search-box" id="search-power" placeholder="🔍 제목·비고 검색..." aria-label="검색" oninput="renderTabTable('power')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('power')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -468,6 +474,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 업무처리 -->
   <div class="panel" id="panel-task">
     <div class="filter-row">
+      <div id="filterDd-task" style="display:contents"></div>
       <input class="search-box" id="search-task" placeholder="🔍 업무내용·조치사항·업체 검색..." aria-label="검색" oninput="renderTabTable('task')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('task')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -881,13 +888,114 @@ function updateLastUpdate(){
 }
 
 // ── 목록 렌더 ──
+// ── 탭별 연/월/터널 드롭다운(목록방식, 3-9 표준) — 검색창 왼쪽에 표시 ──
+function toggleDd(menuId,btnId){
+  const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId,btnId){
+  document.getElementById(menuId)?.classList.remove('open');
+  document.getElementById(btnId)?.classList.remove('active');
+}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.dd-menu.open').forEach(menu=>{
+    const wrap=menu.closest('.dd-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      menu.classList.remove('open');
+      wrap.querySelector('.dd-btn')?.classList.remove('active');
+    }
+  });
+});
+const _tabFilters={};
+TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; });
+function tabTunnelField(tabDef){ return dataFields(tabDef).find(f=>f.key==='터널명'); }
+function buildTabFilterDd(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields || !tabDef.dateKey) return;
+  const wrap=document.getElementById('filterDd-'+tabId);
+  if(!wrap) return;
+  const f=_tabFilters[tabId];
+  const tunnelField=tabTunnelField(tabDef);
+  if(!wrap.dataset.built){
+    wrap.dataset.built='1';
+    wrap.innerHTML=`
+      <div class="dd-wrap" id="ddYearWrap-${tabId}">
+        <button class="dd-btn" id="ddYearBtn-${tabId}" type="button" onclick="toggleDd('ddYearMenu-${tabId}','ddYearBtn-${tabId}')" aria-haspopup="listbox" aria-label="연도 선택"><span id="ddYearLabel-${tabId}">전체 연도</span></button>
+        <div class="dd-menu" id="ddYearMenu-${tabId}"></div>
+      </div>
+      <div class="dd-wrap" id="ddMonthWrap-${tabId}">
+        <button class="dd-btn" id="ddMonthBtn-${tabId}" type="button" onclick="toggleDd('ddMonthMenu-${tabId}','ddMonthBtn-${tabId}')" aria-haspopup="listbox" aria-label="월 선택"><span id="ddMonthLabel-${tabId}">전체 월</span></button>
+        <div class="dd-menu" id="ddMonthMenu-${tabId}"></div>
+      </div>
+      ${tunnelField?`<div class="dd-wrap" id="ddTunnelWrap-${tabId}">
+        <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
+        <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
+      </div>`:''}
+    `;
+  }
+  // 연도 옵션 — 로드된 레코드의 실제 연도들
+  const years=[...new Set(TAB_STATE[tabId].records.map(r=>(r[tabDef.dateKey]||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const yearMenu=document.getElementById('ddYearMenu-'+tabId);
+  if(yearMenu){
+    const opts=[{val:'ALL',label:'전체 연도'}].concat(years.map(y=>({val:y,label:y+'년'})));
+    yearMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.year===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+    document.getElementById('ddYearLabel-'+tabId).textContent = f.year==='ALL'?'전체 연도':f.year+'년';
+    document.getElementById('ddYearBtn-'+tabId)?.classList.toggle('active', f.year!=='ALL');
+    if(!yearMenu._bound){
+      yearMenu._bound=true;
+      yearMenu.addEventListener('click',e=>{
+        const opt=e.target.closest('.dd-opt'); if(!opt) return;
+        f.year=opt.dataset.val; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
+      });
+    }
+  }
+  // 월 옵션
+  const monthMenu=document.getElementById('ddMonthMenu-'+tabId);
+  if(monthMenu){
+    const opts=[{val:'ALL',label:'전체 월'}]; for(let m=1;m<=12;m++) opts.push({val:String(m).padStart(2,'0'),label:m+'월'});
+    monthMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.month===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+    document.getElementById('ddMonthLabel-'+tabId).textContent = f.month==='ALL'?'전체 월':parseInt(f.month,10)+'월';
+    document.getElementById('ddMonthBtn-'+tabId)?.classList.toggle('active', f.month!=='ALL');
+    if(!monthMenu._bound){
+      monthMenu._bound=true;
+      monthMenu.addEventListener('click',e=>{
+        const opt=e.target.closest('.dd-opt'); if(!opt) return;
+        f.month=opt.dataset.val; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
+      });
+    }
+  }
+  // 터널 옵션 — 노션 select 옵션 전체를 항상 표시(로드된 데이터에 없는 값도 노출)
+  if(tunnelField){
+    const tunnelMenu=document.getElementById('ddTunnelMenu-'+tabId);
+    if(tunnelMenu){
+      const opts=[{val:'',label:'전체 터널'}].concat((tunnelField.options||[]).map(t=>({val:t,label:t})));
+      tunnelMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.tunnel===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+      document.getElementById('ddTunnelLabel-'+tabId).textContent = f.tunnel||'전체 터널';
+      document.getElementById('ddTunnelBtn-'+tabId)?.classList.toggle('active', !!f.tunnel);
+      if(!tunnelMenu._bound){
+        tunnelMenu._bound=true;
+        tunnelMenu.addEventListener('click',e=>{
+          const opt=e.target.closest('.dd-opt'); if(!opt) return;
+          f.tunnel=opt.dataset.val; closeDd('ddTunnelMenu-'+tabId,'ddTunnelBtn-'+tabId); renderTabTable(tabId);
+        });
+      }
+    }
+  }
+}
 function renderTabTable(tabId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields) return;
+  buildTabFilterDd(tabId);
   const st=TAB_STATE[tabId];
+  const flt=_tabFilters[tabId];
   const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
   const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
   let recs=st.records;
+  if(flt.year!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').startsWith(flt.year));
+  if(flt.month!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').slice(5,7)===flt.month);
+  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
   if(q){
     recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
   }
