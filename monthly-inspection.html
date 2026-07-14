@@ -772,7 +772,7 @@ const TAB_DEFS=[
   {
     id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'점검내용', dateKey:'점검일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널'], required:true},
+      {key:'터널명', type:'select', options:['청하터널','흥해터널','남정5터널'], required:true},
       {key:'점검일자', type:'date', required:true},
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
@@ -787,7 +787,7 @@ const TAB_DEFS=[
   {
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'설비명', dateKey:'점검일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'설비명', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>dep['터널명']?[dep['터널명']]:[], emptyHint:'먼저 터널명을 선택하세요'},
       {key:'점검일자', type:'date', required:true},
@@ -809,7 +809,7 @@ const TAB_DEFS=[
   {
     id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true},
       {key:'측정일자', type:'date', required:true},
       {key:'점검자', type:'select', options:['김동록','신종섭']},
       {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
@@ -826,7 +826,7 @@ const TAB_DEFS=[
   {
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>({'청하터널(주)':['주변전실 발전기점검'],'청하터널(부)':['부변전실 발전기점검']}[dep['터널명']]||[]),
         emptyHint:'먼저 터널명을 선택하세요'},
@@ -856,7 +856,7 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'일자', type:'date', required:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>({'청하터널(주)':['주변전실'],'청하터널(부)':['변전실']}[dep['터널명']]||[]),
@@ -870,7 +870,7 @@ const TAB_DEFS=[
   {
     id:'power', label:'전력사용량', dbId:DB_IDS.power, titleKey:'제목', dateKey:'일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'일자', type:'date', required:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>({'청하터널(주)':['주변전실'],'청하터널(부)':['부변전실']}[dep['터널명']]||[]),
@@ -884,7 +884,7 @@ const TAB_DEFS=[
   {
     id:'task', label:'업무처리', dbId:DB_IDS.task, titleKey:'업무내용', dateKey:'날짜',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널'], required:true},
+      {key:'터널명', type:'select', options:['청하터널','흥해터널','남정5터널'], required:true},
       {key:'날짜', type:'date', required:true},
       {key:'업무내용', type:'title', required:true},
       {key:'조치사항', type:'text'},
