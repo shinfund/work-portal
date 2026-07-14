@@ -687,9 +687,7 @@ function acbFields(){
       out.push({key:t+' ACB 전압 '+p, label:'전압 '+p, type:'number', group:t+' ACB'});
     });
     ['R','S','T'].forEach(p=>{
-      // 노션 "일반용 ACB 전류T" 프로퍼티만 공백 누락 오탈자 상태 — 실제 프로퍼티명과 정확히 일치시켜야 값이 읽힘/저장됨
-      const key = (t==='일반용' && p==='T') ? (t+' ACB 전류'+p) : (t+' ACB 전류 '+p);
-      out.push({key, label:'전류 '+p, type:'number', group:t+' ACB'});
+      out.push({key:t+' ACB 전류 '+p, label:'전류 '+p, type:'number', group:t+' ACB'});
     });
     ['R','S','T'].forEach(p=>{
       out.push({key:t+' ACB 누설전류 '+p, label:'누설전류 '+p, type:'number', group:t+' ACB'});
