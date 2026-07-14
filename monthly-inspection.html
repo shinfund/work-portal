@@ -385,8 +385,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>터널명</th><th>설비명</th><th>점검일자</th><th>점검종별</th><th>점검담당자</th><th>점검확인자</th>
-          <th class="r">유효전력량(kWh)</th><th class="r">최대전력(kW)</th><th class="r">역률(%)</th><th>종합의견</th>
+          <th>터널명</th><th>점검일자</th><th>설비명</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th>
+          <th class="r">역률(%)</th><th class="r">유효전력량(kWh)</th><th>무효전력량(kVar)</th><th class="r">최대전력(kW)</th><th class="r">배율</th><th>종합의견</th>
         </tr></thead>
         <tbody id="tbody-elec"></tbody>
       </table>
@@ -801,10 +801,11 @@ const TAB_DEFS=[
       {key:'유효전력량(kWh)', type:'number'},
       {key:'무효전력량(kVar)', type:'text'},
       {key:'최대전력(kW)', type:'number'},
+      {key:'배율', type:'number'},
       {key:'역률(%)', type:'number'},
       {key:'종합의견', type:'text'}
     ].concat(acbFields()),
-    listCols:['터널명','설비명','점검일자','점검종별','점검담당자','점검확인자','유효전력량(kWh)','최대전력(kW)','역률(%)','종합의견']
+    listCols:['터널명','점검일자','설비명','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수','역률(%)','유효전력량(kWh)','무효전력량(kVar)','최대전력(kW)','배율','종합의견']
   },
   {
     id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
