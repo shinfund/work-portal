@@ -677,17 +677,22 @@ window.addEventListener('storage',e=>{
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-13 notion-fetch로 실스키마 확인 후 하드코딩,
 //    classifyPropKey 키워드 추론 불필요 — 실제 속성명을 그대로 사용) ──
 // ══════════════════════════════════════════════════════
+// 노션 전기설비기록DB 실스키마 기준(2026-07-14 재확인) — 전압은 상간 표기(R-S/S-T/T-R), 전류·누설전류는 단상 표기(R/S/T)로 서로 다름
 function acbFields(){
   const types=['조명용','일반용','동력용'];
-  const measures=['전압','전류','누설전류'];
-  const phases=['R-S','S-T','T-R'];
   const out=[];
   types.forEach(t=>{
     out.push({group:t+' ACB', header:true});
-    measures.forEach(m=>{
-      phases.forEach(p=>{
-        out.push({key:t+' ACB '+m+' '+p, label:m+' '+p, type:'number', group:t+' ACB'});
-      });
+    ['R-S','S-T','T-R'].forEach(p=>{
+      out.push({key:t+' ACB 전압 '+p, label:'전압 '+p, type:'number', group:t+' ACB'});
+    });
+    ['R','S','T'].forEach(p=>{
+      // 노션 "일반용 ACB 전류T" 프로퍼티만 공백 누락 오탈자 상태 — 실제 프로퍼티명과 정확히 일치시켜야 값이 읽힘/저장됨
+      const key = (t==='일반용' && p==='T') ? (t+' ACB 전류'+p) : (t+' ACB 전류 '+p);
+      out.push({key, label:'전류 '+p, type:'number', group:t+' ACB'});
+    });
+    ['R','S','T'].forEach(p=>{
+      out.push({key:t+' ACB 누설전류 '+p, label:'누설전류 '+p, type:'number', group:t+' ACB'});
     });
   });
   return out;
@@ -774,6 +779,18 @@ function getEquipmentOptions(gubun){
   return [...new Set(MONTHLY_CHECKLIST.filter(c=>c.구분===gubun).map(c=>c.설비명))];
 }
 
+// 전기설비기록DB 터널별 고정 스펙(노션 실데이터 기준, 2026-07-14 확인) — 터널명 선택 시 수전/발전전압·태양광용량·배율 자동입력용
+const TUNNEL_ELEC_SPEC={
+  '청하터널(주)':{수전:'22,900 V / 800 kW', 발전:'380 V / 900 kW', 태양광:'80 kW', 배율:'480'},
+  '청하터널(부)':{수전:'22,900 V / 700 kW', 발전:'380 V / 750 kW', 태양광:'36 kW', 배율:'480'},
+  '흥해터널':{수전:'22,900 V / 1,000 kW', 발전:'380 V / 1,250 kW', 태양광:'66 kW', 배율:'720'},
+  '남정5터널':{수전:'22,900 V / 1,100 kW', 발전:null, 태양광:null, 배율:'960'}
+};
+function elecSpecOptions(tunnel, field){
+  const v=(TUNNEL_ELEC_SPEC[tunnel]||{})[field];
+  return v ? [v] : [];
+}
+
 const TAB_DEFS=[
   {
     id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'점검내용', dateKey:'점검일자',
@@ -797,19 +814,23 @@ const TAB_DEFS=[
       {key:'설비명', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>dep['터널명']?[dep['터널명']]:[], emptyHint:'먼저 터널명을 선택하세요'},
       {key:'점검일자', type:'date', required:true},
-      {key:'점검종별', type:'select', options:['월간']},
-      {key:'점검횟수', type:'text'},
-      {key:'점검담당자', type:'text'},
-      {key:'점검확인자', type:'text'},
-      {key:'수전전압/용량', type:'text'},
-      {key:'발전전압/용량', type:'text'},
-      {key:'태양광용량', type:'text'},
+      {key:'점검종별', type:'select', options:['월간'], defaultValue:'월간'},
+      {key:'점검횟수', type:'text', uiType:'cascade-select', optionsFn:()=>['1회'], emptyHint:'선택'},
+      {key:'점검담당자', type:'text', uiType:'cascade-select', optionsFn:()=>['김동록','신종섭','김태선','공우식'], emptyHint:'선택'},
+      {key:'점검확인자', type:'text', uiType:'cascade-select', optionsFn:()=>['조성섭,강유리','조성섭,배병현'], emptyHint:'선택'},
+      {key:'수전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'수전'), emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'발전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'발전'), emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'태양광용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'태양광'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'유효전력량(kWh)', type:'number'},
       {key:'무효전력량(kVar)', type:'text'},
       {key:'최대전력(kW)', type:'number'},
-      {key:'배율', type:'number'},
-      {key:'역률(%)', type:'number'},
-      {key:'종합의견', type:'text'}
+      {key:'배율', type:'number', uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'배율'), emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'역률(%)', type:'number', uiType:'cascade-select', optionsFn:()=>['86','87','91','98','99','100'], emptyHint:'선택'},
+      {key:'종합의견', type:'text', uiType:'cascade-select', optionsFn:()=>['적합함'], emptyHint:'선택'}
     ].concat(acbFields()),
     listCols:['터널명','점검일자','설비명','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수','역률(%)','유효전력량(kWh)','무효전력량(kVar)','최대전력(kW)','배율','종합의견']
   },
@@ -1239,7 +1260,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      <div class="modal-hint">${esc((f.dependsOn||[]).join('·'))} 선택에 따라 표준 목록이 좁혀집니다.</div>
+      <div class="modal-hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
     </div>`;
   }
   if(f.type==='file'){
@@ -1295,7 +1316,16 @@ function refreshCascadeSelect(tabId, contentIdx, initialValue){
     depValues[depKey]=depIdx>=0 ? getFieldValue(tabDef.fields[depIdx], depIdx) : '';
   });
   const opts=f.optionsFn(depValues);
-  const curVal = initialValue!==undefined ? initialValue : (sel.value==='__custom__' ? (ci?ci.value:'') : sel.value);
+  const isDependencyRefresh = initialValue===undefined; // cascadeTrigger 필드 변경으로 재계산되는 호출인지(신규/수정 최초 로드는 항상 initialValue를 명시적으로 넘김)
+  let curVal = initialValue!==undefined ? initialValue : (sel.value==='__custom__' ? (ci?ci.value:'') : sel.value);
+  curVal = (curVal===undefined||curVal===null) ? '' : String(curVal); // number 타입 필드(배율 등) 수정 시 r[key]가 숫자로 들어와도 옵션 문자열과 비교되도록 통일
+  if(opts.length===1){
+    // 의존 필드(터널명 등) 변경으로 재계산되는 시점엔 이전 값이 새 터널과 무관하므로 새 후보로 스냅.
+    // 최초 신규 입력 로드 때는 값이 비어있을 때만 자동 채움. 수정 모드 최초 로드는 저장된 값을 그대로 보존.
+    if(isDependencyRefresh ? curVal!==opts[0] : !curVal) curVal=opts[0];
+  } else if(isDependencyRefresh && opts.length===0 && curVal){
+    curVal=''; // 새 의존값에 해당하는 후보가 아예 없으면(예: 남정5터널은 발전/태양광 스펙 없음) 이전 터널의 값을 지움
+  }
   const isCustom = !!curVal && !opts.includes(curVal);
   sel.innerHTML = `<option value="">${opts.length?'선택':(f.emptyHint||'선택')}</option>`
     + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
