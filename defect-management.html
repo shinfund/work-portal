@@ -413,7 +413,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- 업체연락처 수정/신규추가 모달 -->
 <div id="contactEditModal">
   <div class="modal-backdrop">
-    <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="contactEditModalTitle">업체연락처 수정</span></h3>
         <button class="detail-modal-close" onclick="closeContactEditModal()" aria-label="닫기">닫기</button>
@@ -2283,31 +2283,38 @@ function makeModalDraggable(box, handle){
   if(!box||!handle) return;
   handle.style.cursor='move';
   handle.style.userSelect='none';
-  var dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  var DRAG_THRESHOLD=6;
+  var pending=false, dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
   function onDown(e){
+    if(e.target.closest && e.target.closest('button,a,input,select,textarea')) return;
     var p=e.touches?e.touches[0]:e;
     var rect=box.getBoundingClientRect();
-    dragging=true;
+    pending=true; dragging=false;
     startX=p.clientX; startY=p.clientY;
     startLeft=rect.left; startTop=rect.top;
-    box.style.position='fixed';
-    box.style.left=startLeft+'px';
-    box.style.top=startTop+'px';
-    box.style.margin='0';
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
     document.addEventListener('touchmove', onMove, {passive:false});
     document.addEventListener('touchend', onUp);
   }
   function onMove(e){
-    if(!dragging) return;
+    if(!pending) return;
     var p=e.touches?e.touches[0]:e;
+    var dx=p.clientX-startX, dy=p.clientY-startY;
+    if(!dragging){
+      if(Math.abs(dx)<DRAG_THRESHOLD && Math.abs(dy)<DRAG_THRESHOLD) return;
+      dragging=true;
+      box.style.position='fixed';
+      box.style.left=startLeft+'px';
+      box.style.top=startTop+'px';
+      box.style.margin='0';
+    }
     if(e.touches) e.preventDefault();
-    box.style.left=(startLeft+(p.clientX-startX))+'px';
-    box.style.top=(startTop+(p.clientY-startY))+'px';
+    box.style.left=(startLeft+dx)+'px';
+    box.style.top=(startTop+dy)+'px';
   }
   function onUp(){
-    dragging=false;
+    pending=false; dragging=false;
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     document.removeEventListener('touchmove', onMove);
