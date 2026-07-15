@@ -3073,7 +3073,11 @@ function openContactAddModal(){
   buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, '');
 
   document.getElementById('ceGrp').value    = '안전관리자';
-  ['ceCoCustom','cePersonCustom','ceGrpCustom','ceTel','ceWork','ceRemark','ceTunnelCustom'].forEach(function(id){
+  ['ceTel','ceWork','ceRemark'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['ceCoCustom','cePersonCustom','ceGrpCustom','ceTunnelCustom'].forEach(function(id){
     var el = document.getElementById(id);
     if(!el) return;
     el.value = '';
