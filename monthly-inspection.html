@@ -217,6 +217,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
+/* 전기설비기록 탭 — ACB 9행·설비현황 32행 입력표(신규등록/수정 모달 내 표 형태) 전용 컴팩트 입력 */
+.elec-grid-input{width:64px;padding:4px 6px;font-size:12.5px}
+.elec-grid-select{width:56px;padding:4px 4px;font-size:12.5px}
+/* 전기설비기록처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
+.add-modal-box.wide-modal{max-width:820px}
+.detail-modal-box.wide-modal{max-width:820px}
 
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
@@ -364,7 +370,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="detail-count" id="count-monthly"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-monthly">
           <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-monthly"></tbody>
@@ -386,11 +392,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="excelLbl_elec">엑셀 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. ACB 상세 수치(27개)는 행 클릭 시 상세창과 엑셀에서 전체 확인 가능합니다.</div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. 행 클릭 시 상세창에서 ACB 전압·전류·누설전류(9개)·설비현황 점검표(32개)까지 전체 확인 가능하며, 엑셀에도 함께 포함됩니다.</div>
     <div class="detail-count" id="count-elec"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-elec">
           <th>터널명</th><th>점검일자</th><th>설비명</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th>
           <th class="r">역률(%)</th><th class="r">유효전력량(kWh)</th><th>무효전력량(kVar)</th><th class="r">최대전력(kW)</th><th class="r">배율</th><th>종합의견</th>
         </tr></thead>
@@ -416,7 +422,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="detail-count" id="count-transformer"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-transformer">
           <th>터널명</th><th>측정일자</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-transformer"></tbody>
@@ -438,11 +444,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="excelLbl_generator">엑셀 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. 유류 재고·주파수 등 전체 항목은 행 클릭 시 상세창과 엑셀에서 확인 가능합니다.</div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. "컬럼 표시"에서 필요한 항목을 추가로 켜거나, 행 클릭 시 상세창과 엑셀에서 유류 재고·주파수 등 전체 항목을 확인 가능합니다.</div>
     <div class="detail-count" id="count-generator"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-generator">
           <th>터널명</th><th>제목</th><th>가동일자</th><th>점검자</th><th>가동시간</th>
           <th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">전력(kW)</th><th>비고</th><th class="r">금일재고량(L)</th>
         </tr></thead>
@@ -468,7 +474,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="detail-count" id="count-photo"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-photo">
           <th>터널명</th><th>일자</th><th>제목</th><th class="r">번호</th><th>사진설명</th><th>점검사진</th>
         </tr></thead>
         <tbody id="tbody-photo"></tbody>
@@ -493,7 +499,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="detail-count" id="count-power"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-power">
           <th>터널명</th><th>일자</th><th>제목</th><th class="r">MAIN(kWh)</th><th class="r">조명용(kWh)</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-power"></tbody>
@@ -518,7 +524,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="detail-count" id="count-task"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr>
+        <thead><tr id="thead-task">
           <th>터널명</th><th>날짜</th><th>업무내용</th><th>조치사항</th><th>업체</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-task"></tbody>
@@ -533,7 +539,9 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 const WORKER_URL='https://notion-proxy.shinfund.workers.dev';
 const DB_IDS={
   monthly:     'a011d12d-ea9e-4cbc-84bf-a8c30621dd69', // 월간점검DB
-  elec:        '8c447abd-4a95-4b07-ba6c-1bdf7c53872f', // 전기설비기록DB
+  elec:        '8c447abd-4a95-4b07-ba6c-1bdf7c53872f', // 전기설비기록1DB(부모 — 기본정보)
+  elec2:       '1adf636e-efc7-429f-a4b0-fbfa531a5a41', // 전기설비기록2DB(자식 — ACB 전압/전류/누설전류, 9개/건)
+  elec3:       '48bed518-8009-4b24-ad4c-28e30ac12d80', // 전기설비기록3DB(자식 — 설비현황 점검표, 32개/건)
   transformer: '998fab1e-2d5c-4cae-a6aa-55a131931546', // 변압기온도DB
   generator:   'c778d924-49a9-4c44-b444-681ebeb166e1', // 발전기점검DB
   photo:       '60f5cbbf-54e4-465e-8901-af41ba515dd0', // 점검사진DB
@@ -677,24 +685,46 @@ window.addEventListener('storage',e=>{
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-13 notion-fetch로 실스키마 확인 후 하드코딩,
 //    classifyPropKey 키워드 추론 불필요 — 실제 속성명을 그대로 사용) ──
 // ══════════════════════════════════════════════════════
-// 노션 전기설비기록DB 실스키마 기준(2026-07-14 재확인) — 전압은 상간 표기(R-S/S-T/T-R), 전류·누설전류는 단상 표기(R/S/T)로 서로 다름
-function acbFields(){
-  const types=['조명용','일반용','동력용'];
-  const out=[];
-  types.forEach(t=>{
-    out.push({group:t+' ACB', header:true});
-    ['R-S','S-T','T-R'].forEach(p=>{
-      out.push({key:t+' ACB 전압 '+p, label:'전압 '+p, type:'number', group:t+' ACB'});
-    });
-    ['R','S','T'].forEach(p=>{
-      out.push({key:t+' ACB 전류 '+p, label:'전류 '+p, type:'number', group:t+' ACB'});
-    });
-    ['R','S','T'].forEach(p=>{
-      out.push({key:t+' ACB 누설전류 '+p, label:'누설전류 '+p, type:'number', group:t+' ACB'});
-    });
-  });
-  return out;
-}
+// 전기설비기록2DB(ACB 전압/전류/누설전류) — 2026-07-16 3DB 분리 후: 조명/일반/동력용(3) × 위상(3) = 9개 하위
+// 레코드로 정규화(위상 하나당 전압/전류/누설전류 3값을 같은 행에 저장, 이전 플랫 27필드와 동일한 27개 수치 유지)
+const ACB_TYPES=['조명용','일반용','동력용'];
+const ACB_PHASES=[{key:'R',label:'R (R-S)'},{key:'S',label:'S (S-T)'},{key:'T',label:'T (T-R)'}];
+
+// 전기설비기록3DB(설비현황 점검표) — 저압설비 16 + 특고(고압)설비 16 = 32개 고정 항목(노션 실데이터 기준, 2026-07-16 확인)
+const ELEC_CHECKLIST=[
+  {설비구분:'저압설비',설비항목:'개폐기'},
+  {설비구분:'저압설비',설비항목:'구내전선로'},
+  {설비구분:'저압설비',설비항목:'기타설비'},
+  {설비구분:'저압설비',설비항목:'누전차단기'},
+  {설비구분:'저압설비',설비항목:'발전기'},
+  {설비구분:'저압설비',설비항목:'배․분전반'},
+  {설비구분:'저압설비',설비항목:'배선'},
+  {설비구분:'저압설비',설비항목:'배선용차단기'},
+  {설비구분:'저압설비',설비항목:'용접기'},
+  {설비구분:'저압설비',설비항목:'인입구배선'},
+  {설비구분:'저압설비',설비항목:'전동기'},
+  {설비구분:'저압설비',설비항목:'전열설비'},
+  {설비구분:'저압설비',설비항목:'조명설비'},
+  {설비구분:'저압설비',설비항목:'차단장치'},
+  {설비구분:'저압설비',설비항목:'축전장치'},
+  {설비구분:'저압설비',설비항목:'콘덴서'},
+  {설비구분:'특고(고압)설비',설비항목:'가공전선로'},
+  {설비구분:'특고(고압)설비',설비항목:'계전기류'},
+  {설비구분:'특고(고압)설비',설비항목:'기타설비'},
+  {설비구분:'특고(고압)설비',설비항목:'배선(모선)'},
+  {설비구분:'특고(고압)설비',설비항목:'변성기'},
+  {설비구분:'특고(고압)설비',설비항목:'변압기'},
+  {설비구분:'특고(고압)설비',설비항목:'보호설비'},
+  {설비구분:'특고(고압)설비',설비항목:'부하설비'},
+  {설비구분:'특고(고압)설비',설비항목:'수배전반'},
+  {설비구분:'특고(고압)설비',설비항목:'수배전용개폐기'},
+  {설비구분:'특고(고압)설비',설비항목:'전력용콘덴서'},
+  {설비구분:'특고(고압)설비',설비항목:'전력퓨즈'},
+  {설비구분:'특고(고압)설비',설비항목:'접지시설'},
+  {설비구분:'특고(고압)설비',설비항목:'지중전선로'},
+  {설비구분:'특고(고압)설비',설비항목:'차단기류'},
+  {설비구분:'특고(고압)설비',설비항목:'피뢰기'}
+];
 
 // 월간점검 표준 체크리스트 카탈로그 — 노션 월간점검DB 실데이터에서 (구분,설비명,점검내용) 고유 조합
 // 68건을 그대로 추출(2026-07-13). 신규등록/수정 폼에서 구분+설비명 선택 시 점검내용 드롭다운을
@@ -829,7 +859,7 @@ const TAB_DEFS=[
         optionsFn:dep=>elecSpecOptions(dep['터널명'],'배율'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'역률(%)', type:'number', uiType:'cascade-select', optionsFn:()=>['86','87','91','98','99','100'], emptyHint:'선택'},
       {key:'종합의견', type:'text', uiType:'cascade-select', optionsFn:()=>['적합함'], emptyHint:'선택'}
-    ].concat(acbFields()),
+    ],
     listCols:['터널명','점검일자','설비명','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수','역률(%)','유효전력량(kWh)','무효전력량(kVar)','최대전력(kW)','배율','종합의견']
   },
   {
@@ -989,6 +1019,50 @@ async function fetchAllPages(dbId, body){
   } while(cursor && guard<50);
   return pages;
 }
+function notionFetch(path, method, body){
+  return fetch(CFG.workerUrl+path,{ method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
+}
+
+// ── 전기설비기록 탭 전용 — 부모(DB1) 레코드에 자식(DB2 ACB·DB3 설비현황) 레코드를 relation으로 매칭해 붙임 ──
+function getRelParentId(p){
+  if(!p || p.type!=='relation') return '';
+  const rel=p.relation||[];
+  return rel.length ? rel[0].id : '';
+}
+async function attachElecChildren(records){
+  const [acbPages, chkPages] = await Promise.all([
+    fetchAllPages(DB_IDS.elec2, {page_size:100}),
+    fetchAllPages(DB_IDS.elec3, {page_size:100})
+  ]);
+  const acbByParent={}, chkByParent={};
+  acbPages.forEach(p=>{
+    const pid=getRelParentId(p.properties['전기설비기록1DB']);
+    if(!pid) return;
+    (acbByParent[pid]=acbByParent[pid]||[]).push({
+      id:p.id,
+      용도:getText(p.properties['용도']),
+      위상:getText(p.properties['위상']),
+      전압:getNum(p.properties['전압(V)']),
+      전류:getNum(p.properties['전류(A)']),
+      누설전류:getNum(p.properties['누설전류(mA)'])
+    });
+  });
+  chkPages.forEach(p=>{
+    const pid=getRelParentId(p.properties['전기설비기록1DB']);
+    if(!pid) return;
+    (chkByParent[pid]=chkByParent[pid]||[]).push({
+      id:p.id,
+      설비구분:getText(p.properties['설비구분']),
+      설비항목:getText(p.properties['설비항목']),
+      점검결과판정:getText(p.properties['점검결과판정']),
+      개수:getNum(p.properties['개수수량'])
+    });
+  });
+  records.forEach(r=>{ r._acb=acbByParent[r.id]||[]; r._chk=chkByParent[r.id]||[]; });
+}
+function elecAcbLookup(r, t, ph){ return r ? (r._acb||[]).find(x=>x.용도===t && x.위상===ph.label) : null; }
+function elecChkLookup(r, c){ return r ? (r._chk||[]).find(x=>x.설비구분===c.설비구분 && x.설비항목===c.설비항목) : null; }
 
 // ── 탭 데이터 로드 ──
 async function loadTabData(tabId){
@@ -1004,6 +1078,7 @@ async function loadTabData(tabId){
     if(tabDef.dateKey) body.sorts=[{property:tabDef.dateKey, direction:'descending'}];
     const pages=await fetchAllPages(tabDef.dbId, body);
     st.records=pages.map(p=>parseRecord(tabDef,p));
+    if(tabId==='elec') await attachElecChildren(st.records);
     st.loaded=true;
     applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
@@ -1056,6 +1131,65 @@ document.addEventListener('click',e=>{
 const _tabFilters={};
 const _tabFilterUserPicked={};
 TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+// 목록에 기본 표시되지 않는 컬럼(ACB 상세 등)을 사용자가 선택해서 추가로 켜볼 수 있게 하는 상태 — 탭별로 localStorage에 저장
+const _tabExtraCols={};
+TAB_DEFS.forEach(t=>{
+  try{ _tabExtraCols[t.id]=JSON.parse(localStorage.getItem('mi_extracols_'+t.id)||'[]'); }
+  catch(e){ _tabExtraCols[t.id]=[]; }
+});
+function extraColCandidates(tabDef){
+  return dataFields(tabDef).filter(f=>!tabDef.listCols.includes(f.key) && f.type!=='file');
+}
+// ACB 필드처럼 그룹(조명용/일반용/동력용)이 있으면 "전압 R-S" 같은 짧은 label만으론 구분이 안 되므로 그룹명을 붙인다
+function fieldDisplayLabel(f){
+  return f.group ? f.group+' '+(f.label||f.key) : (f.label||f.key);
+}
+function toggleExtraCol(tabId, key, checked){
+  const list=_tabExtraCols[tabId]||(_tabExtraCols[tabId]=[]);
+  const i=list.indexOf(key);
+  if(checked && i<0) list.push(key);
+  else if(!checked && i>=0) list.splice(i,1);
+  localStorage.setItem('mi_extracols_'+tabId, JSON.stringify(list));
+  syncExtraHeaderCols(tabId);
+  renderTabTable(tabId);
+  const lbl=document.getElementById('colToggleLabel-'+tabId);
+  if(lbl) lbl.textContent = list.length ? `컬럼 표시 +${list.length}` : '컬럼 표시';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!list.length);
+}
+function syncExtraHeaderCols(tabId){
+  const tabDef=getTabDef(tabId);
+  const row=document.getElementById('thead-'+tabId);
+  if(!tabDef || !row) return;
+  row.querySelectorAll('th[data-extra]').forEach(th=>th.remove());
+  (_tabExtraCols[tabId]||[]).forEach(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    if(!f) return;
+    const th=document.createElement('th');
+    th.dataset.extra='1';
+    if(f.type==='number') th.className='r';
+    th.textContent=fieldDisplayLabel(f);
+    row.appendChild(th);
+  });
+}
+function buildColToggleDd(tabId){
+  const tabDef=getTabDef(tabId);
+  const candidates=extraColCandidates(tabDef);
+  const wrap=document.getElementById('colToggleWrap-'+tabId);
+  if(!wrap) return; // 추가로 보여줄 컬럼이 없는 탭은 buildTabFilterDd에서 애초에 렌더링하지 않음
+  const menu=document.getElementById('colToggleMenu-'+tabId);
+  const selected=_tabExtraCols[tabId]||[];
+  if(!menu.dataset.built){
+    menu.dataset.built='1';
+    menu.innerHTML=candidates.map(f=>`
+      <label class="dd-opt" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" value="${esc(f.key)}" ${selected.includes(f.key)?'checked':''} onchange="toggleExtraCol('${tabId}','${esc(f.key)}',this.checked)"/>
+        ${esc(fieldDisplayLabel(f))}
+      </label>`).join('');
+  }
+  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `컬럼 표시 +${selected.length}` : '컬럼 표시';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!selected.length);
+  syncExtraHeaderCols(tabId);
+}
 // 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
 // (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
 function applyLatestFilterDefault(tabId){
@@ -1091,8 +1225,13 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
+      ${extraColCandidates(tabDef).length?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="컬럼 표시 선택"><span id="colToggleLabel-${tabId}">컬럼 표시</span></button>
+        <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
+      </div>`:''}
     `;
   }
+  buildColToggleDd(tabId);
   // 연도 옵션 — 로드된 레코드의 실제 연도들
   const years=[...new Set(TAB_STATE[tabId].records.map(r=>(r[tabDef.dateKey]||'').slice(0,4)).filter(Boolean))].sort().reverse();
   const yearMenu=document.getElementById('ddYearMenu-'+tabId);
@@ -1162,21 +1301,28 @@ function renderTabTable(tabId){
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
   if(!recs.length){
-    tbody.innerHTML=`<tr><td colspan="${tabDef.listCols.length}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length;
+    tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
     return;
   }
   tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
 }
+function buildCellHtml(f, r){
+  const key=f.key;
+  if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
+  if(f.badgeFn) return `<td><span class="type-badge ${f.badgeFn(r[key])}">${esc(r[key]||'-')}</span></td>`;
+  if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
+  if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
+  if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
+  return `<td>${esc(r[key]||'-')}</td>`;
+}
 function buildRow(tabDef, r){
   const cells=tabDef.listCols.map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
-    if(!f) return '<td>-</td>';
-    if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
-    if(f.badgeFn) return `<td><span class="type-badge ${f.badgeFn(r[key])}">${esc(r[key]||'-')}</span></td>`;
-    if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
-    if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
-    if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
-    return `<td>${esc(r[key]||'-')}</td>`;
+    return f ? buildCellHtml(f, r) : '<td>-</td>';
+  }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    return f ? buildCellHtml(f, r) : '';
   }).join('');
   return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
 }
@@ -1228,13 +1374,35 @@ function openDetailModal(tabId, recordId){
     else val=esc(r[f.key]||'-');
     return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
   }).join('');
-  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>';
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>' + (tabId==='elec' ? buildElecDetailExtra(r) : '');
   document.getElementById('detailModalActions').innerHTML=
     `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openAddModal('${tabId}','${recordId}')">수정</button>`+
     `<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${tabId}','${recordId}')">삭제</button>`;
+  document.querySelector('#detailModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec');
   document.getElementById('detailModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
+}
+// 전기설비기록 상세 — ACB 9개 + 설비현황 32개를 읽기전용 표로 덧붙임
+function buildElecDetailExtra(r){
+  let acbHtml=`<div class="sc-hd" style="margin-top:16px">ACB 전압·전류·누설전류</div>
+    <div class="tbl-wrap" style="margin-bottom:14px"><table><thead><tr><th>용도</th><th>위상</th><th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">누설전류(mA)</th></tr></thead><tbody>`;
+  ACB_TYPES.forEach(t=>{
+    ACB_PHASES.forEach(ph=>{
+      const rec=elecAcbLookup(r,t,ph);
+      acbHtml+=`<tr><td>${esc(t)}</td><td>${esc(ph.label)}</td><td class="r">${rec?fmtWon(rec.전압):'-'}</td><td class="r">${rec?fmtWon(rec.전류):'-'}</td><td class="r">${rec?fmtWon(rec.누설전류):'-'}</td></tr>`;
+    });
+  });
+  acbHtml+='</tbody></table></div>';
+  let chkHtml=`<div class="sc-hd">설비현황 점검표</div>
+    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th></tr></thead><tbody>`;
+  ELEC_CHECKLIST.forEach(c=>{
+    const rec=elecChkLookup(r,c);
+    const badge=rec ? (rec.점검결과판정==='×'?'result-bad':rec.점검결과판정==='/'?'result-warn':'result-good') : 'result-none';
+    chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td><td><span class="type-badge ${badge}">${esc(rec&&rec.점검결과판정?rec.점검결과판정:'-')}</span></td><td class="r">${rec&&rec.개수?fmtWon(rec.개수):'-'}</td></tr>`;
+  });
+  chkHtml+='</tbody></table></div>';
+  return acbHtml+chkHtml;
 }
 function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget) return;
@@ -1352,6 +1520,39 @@ function getFieldValue(f, idx){
   }
   return (document.getElementById(id)?.value||'').trim();
 }
+// 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
+function buildElecFormExtra(r){
+  let acbHtml='';
+  ACB_TYPES.forEach((t,ti)=>{
+    acbHtml+=`<div class="form-group-hd">${esc(t)} ACB</div>
+      <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>위상</th><th>전압(V)</th><th>전류(A)</th><th>누설전류(mA)</th></tr></thead><tbody>`;
+    ACB_PHASES.forEach(ph=>{
+      const rec=elecAcbLookup(r, t, ph);
+      acbHtml+=`<tr><td>${esc(ph.label)}</td>
+        <td><input class="modal-input elec-grid-input" type="number" step="0.01" id="acbv_${ti}_${ph.key}" value="${rec&&rec.전압!=null?rec.전압:''}"/></td>
+        <td><input class="modal-input elec-grid-input" type="number" step="0.01" id="acba_${ti}_${ph.key}" value="${rec&&rec.전류!=null?rec.전류:''}"/></td>
+        <td><input class="modal-input elec-grid-input" type="number" step="0.01" id="acbl_${ti}_${ph.key}" value="${rec&&rec.누설전류!=null?rec.누설전류:''}"/></td>
+      </tr>`;
+    });
+    acbHtml+='</tbody></table></div>';
+  });
+  let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>
+    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th></tr></thead><tbody>`;
+  ELEC_CHECKLIST.forEach((c,i)=>{
+    const rec=elecChkLookup(r, c);
+    const cur=rec?rec.점검결과판정:'○';
+    chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td>
+      <td><select class="modal-select elec-grid-select" id="chkr_${i}">
+        <option value="○"${cur==='○'?' selected':''}>○</option>
+        <option value="×"${cur==='×'?' selected':''}>×</option>
+        <option value="/"${cur==='/'?' selected':''}>/</option>
+      </select></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkc_${i}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
+    </tr>`;
+  });
+  chkHtml+='</tbody></table></div>';
+  return acbHtml+chkHtml;
+}
 function openAddModal(tabId, recordId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
@@ -1376,7 +1577,9 @@ function openAddModal(tabId, recordId){
     html+=buildFieldHtml(f, idx, curVal, tabId);
   });
   if(groupOpen) html+='</div>';
+  if(tabId==='elec') html+=buildElecFormExtra(r);
   document.getElementById('addModalFields').innerHTML=html;
+  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
@@ -1456,6 +1659,7 @@ function removePhotoFile(idx, fieldId){
   renderPhotoFileList(fieldId);
 }
 function submitAddForm(){
+  if(EDIT_TAB==='elec'){ submitElecForm(); return; }
   const tabDef=getTabDef(EDIT_TAB);
   if(!tabDef) return;
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
@@ -1500,9 +1704,97 @@ function submitAddForm(){
       console.error(e);
     });
 }
+// 전기설비기록 신규등록/수정 — 부모(DB1) 1건 + ACB(DB2) 9건 + 설비현황(DB3) 32건을 순차 upsert
+// (수정 모드는 기존 자식 페이지가 있으면 PATCH, 없으면 relation과 함께 신규 생성 — 통째로 지웠다 새로 만들지 않음)
+async function submitElecForm(){
+  const tabDef=getTabDef('elec');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    const isEmpty=Array.isArray(v)?v.length===0:!v;
+    if(f.required && isEmpty && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const parentProps={};
+  tabDef.fields.forEach(f=>{
+    if(f.header) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) parentProps[f.key]=val;
+  });
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  const isEdit=!!EDIT_PAGE_ID;
+  const r = isEdit ? TAB_STATE['elec'].records.find(x=>x.id===EDIT_PAGE_ID) : null;
+  btn.disabled=true;
+  const total=1+9+ELEC_CHECKLIST.length;
+  let done=0;
+  const progress=()=>{ lbl.textContent=(isEdit?'수정':'등록')+' 중... ('+(++done)+'/'+total+')'; };
+
+  try{
+    let parentId=EDIT_PAGE_ID;
+    if(isEdit){ await notionFetch('/v1/pages/'+parentId, 'PATCH', {properties:parentProps}); }
+    else { const created=await notionFetch('/v1/pages', 'POST', {parent:{database_id:tabDef.dbId}, properties:parentProps}); parentId=created.id; }
+    progress();
+
+    for(let ti=0; ti<ACB_TYPES.length; ti++){
+      const t=ACB_TYPES[ti];
+      for(const ph of ACB_PHASES){
+        const vVal=document.getElementById('acbv_'+ti+'_'+ph.key)?.value;
+        const aVal=document.getElementById('acba_'+ti+'_'+ph.key)?.value;
+        const lVal=document.getElementById('acbl_'+ti+'_'+ph.key)?.value;
+        const existing=elecAcbLookup(r, t, ph);
+        const props={
+          '용도':buildPropValue('select', t),
+          '위상':buildPropValue('select', ph.label),
+          '점검일자':buildPropValue('date', values['점검일자']),
+          '전압(V)':buildPropValue('number', vVal),
+          '전류(A)':buildPropValue('number', aVal),
+          '누설전류(mA)':buildPropValue('number', lVal),
+          '구분':buildPropValue('title', values['터널명']+' '+t+' '+ph.key)
+        };
+        if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
+        else { props['전기설비기록1DB']={relation:[{id:parentId}]}; await notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec2}, properties:props}); }
+        progress();
+      }
+    }
+
+    for(let i=0;i<ELEC_CHECKLIST.length;i++){
+      const c=ELEC_CHECKLIST[i];
+      const resultVal=document.getElementById('chkr_'+i)?.value;
+      const countVal=document.getElementById('chkc_'+i)?.value;
+      const existing=elecChkLookup(r, c);
+      const props={
+        '설비구분':buildPropValue('select', c.설비구분),
+        '점검일자':buildPropValue('date', values['점검일자']),
+        '점검결과판정':buildPropValue('select', resultVal),
+        '개수수량':buildPropValue('number', countVal)
+      };
+      if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
+      else { props['설비항목']=buildPropValue('title', c.설비항목); props['전기설비기록1DB']={relation:[{id:parentId}]}; await notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}); }
+      progress();
+    }
+
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    closeAddModal();
+    loadTabData('elec');
+    toast((isEdit?'수정':'등록')+'되었습니다. (기본정보 + ACB 9건 + 설비현황 32건)');
+  }catch(e){
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    alert((isEdit?'수정':'등록')+' 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
+    console.error(e);
+  }
+}
 function deleteRecord(tabId, pageId){
   if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   if(!confirm('이 기록을 삭제(휴지통 이동)할까요?')) return;
+  if(tabId==='elec'){ deleteElecRecord(pageId); return; }
   fetch(CFG.workerUrl+'/v1/pages/'+pageId,{
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
@@ -1511,6 +1803,18 @@ function deleteRecord(tabId, pageId){
       if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadTabData(tabId); toast('이미 삭제된 기록입니다.'); return; }
       alert('삭제 실패: '+e.message); console.error(e);
     });
+}
+// 전기설비기록 삭제 — 부모(DB1) + 연결된 ACB(DB2)·설비현황(DB3) 자식 페이지까지 함께 휴지통 이동
+async function deleteElecRecord(pageId){
+  const r=TAB_STATE['elec'].records.find(x=>x.id===pageId);
+  const childIds=[...(r?.['_acb']||[]).map(x=>x.id), ...(r?.['_chk']||[]).map(x=>x.id)];
+  try{
+    await notionFetch('/v1/pages/'+pageId, 'PATCH', {in_trash:true});
+    for(const cid of childIds){ await notionFetch('/v1/pages/'+cid, 'PATCH', {in_trash:true}).catch(()=>{}); }
+    closeDetailModal(); loadTabData('elec'); toast('삭제되었습니다. (기본정보 + 연결 하위 항목 '+childIds.length+'건)');
+  }catch(e){
+    alert('삭제 실패: '+e.message); console.error(e);
+  }
 }
 
 // ── 엑셀 생성 (work-portal 공통 라이브러리 패턴 재사용) ──
@@ -1628,6 +1932,7 @@ function buildExcelReport(opts){
   }).finally(()=>{ btn.disabled=false; });
 }
 function exportTabExcel(tabId){
+  if(tabId==='elec'){ exportElecExcel(); return; }
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
   const fields=dataFields(tabDef);
@@ -1644,6 +1949,48 @@ function exportTabExcel(tabId){
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
+    columns, rows, orientation:'portrait'
+  });
+}
+// 전기설비기록 엑셀 — 기본정보 16 + ACB 27(전압/전류/누설전류×9행) + 설비현황 요약(부적합·점검요 항목, 총수량)
+function exportElecExcel(){
+  const tabDef=getTabDef('elec');
+  const baseFields=dataFields(tabDef);
+  const acbCols=[];
+  ACB_TYPES.forEach(t=>{
+    ACB_PHASES.forEach(ph=>{
+      acbCols.push({key:t+'_'+ph.key+'_v', header:t+' 전압 '+ph.label});
+      acbCols.push({key:t+'_'+ph.key+'_a', header:t+' 전류 '+ph.key});
+      acbCols.push({key:t+'_'+ph.key+'_l', header:t+' 누설전류 '+ph.key});
+    });
+  });
+  const rows=TAB_STATE['elec'].records.map(r=>{
+    const row={};
+    baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
+    ACB_TYPES.forEach(t=>{
+      ACB_PHASES.forEach(ph=>{
+        const rec=elecAcbLookup(r, t, ph);
+        row[t+'_'+ph.key+'_v']=rec?rec.전압:0;
+        row[t+'_'+ph.key+'_a']=rec?rec.전류:0;
+        row[t+'_'+ph.key+'_l']=rec?rec.누설전류:0;
+      });
+    });
+    const chk=r._chk||[];
+    row['부적합항목']=chk.filter(x=>x.점검결과판정==='×').map(x=>x.설비항목).join(', ');
+    row['점검요항목']=chk.filter(x=>x.점검결과판정==='/').map(x=>x.설비항목).join(', ');
+    row['설비현황총수량']=chk.reduce((s,x)=>s+(x.개수||0),0);
+    return row;
+  });
+  const columns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}))
+    .concat(acbCols.map(c=>({key:c.key, header:c.header, numFmt:'#,##0.##'})))
+    .concat([
+      {key:'부적합항목', header:'설비현황 부적합(×) 항목', wrap:true},
+      {key:'점검요항목', header:'설비현황 점검요(/) 항목', wrap:true},
+      {key:'설비현황총수량', header:'설비현황 총 수량', numFmt:'#,##0'}
+    ]);
+  buildExcelReport({
+    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
+    sheetName:'전기설비기록', title:'월간점검결과 - 전기설비기록', fnamePrefix:'월간점검결과_전기설비기록',
     columns, rows, orientation:'portrait'
   });
 }
