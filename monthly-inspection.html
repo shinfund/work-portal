@@ -116,6 +116,12 @@ td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
 
+/* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 ── */
+.view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.view-toggle-btn{background:var(--card);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s,border-color .15s}
+.view-toggle-btn:hover:not(.active){background:var(--sky50)}
+.view-toggle-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
@@ -380,6 +386,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 전기설비기록 -->
   <div class="panel" id="panel-elec">
+    <div class="view-toggle" id="elecViewToggle">
+      <button class="view-toggle-btn active" data-view="base" onclick="setElecView('base')">기본정보</button>
+      <button class="view-toggle-btn" data-view="acb" onclick="setElecView('acb')">ACB 상세(9개)</button>
+      <button class="view-toggle-btn" data-view="chk" onclick="setElecView('chk')">설비현황(32개)</button>
+    </div>
     <div class="filter-row">
       <div id="filterDd-elec" style="display:contents"></div>
       <input class="search-box" id="search-elec" placeholder="🔍 설비명·점검담당자·종합의견 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
@@ -392,7 +403,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="excelLbl_elec">엑셀 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. 행 클릭 시 상세창에서 ACB 전압·전류·누설전류(9개)·설비현황 점검표(32개)까지 전체 확인 가능하며, 엑셀에도 함께 포함됩니다.</div>
+    <div class="modal-hint" style="margin-bottom:8px" id="elecViewHint">※ 위 [기본정보|ACB 상세|설비현황] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count" id="count-elec"></div>
     <div class="tbl-wrap">
       <table>
@@ -444,7 +455,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="excelLbl_generator">엑셀 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. "컬럼 표시"에서 필요한 항목을 추가로 켜거나, 행 클릭 시 상세창과 엑셀에서 유류 재고·주파수 등 전체 항목을 확인 가능합니다.</div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. "확인자"에서 필요한 항목을 추가로 켜거나, 행 클릭 시 상세창과 엑셀에서 유류 재고·주파수 등 전체 항목을 확인 가능합니다.</div>
     <div class="detail-count" id="count-generator"></div>
     <div class="tbl-wrap">
       <table>
@@ -1153,7 +1164,7 @@ function toggleExtraCol(tabId, key, checked){
   syncExtraHeaderCols(tabId);
   renderTabTable(tabId);
   const lbl=document.getElementById('colToggleLabel-'+tabId);
-  if(lbl) lbl.textContent = list.length ? `컬럼 표시 +${list.length}` : '컬럼 표시';
+  if(lbl) lbl.textContent = list.length ? `확인자 +${list.length}` : '확인자';
   document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!list.length);
 }
 function syncExtraHeaderCols(tabId){
@@ -1186,7 +1197,7 @@ function buildColToggleDd(tabId){
         ${esc(fieldDisplayLabel(f))}
       </label>`).join('');
   }
-  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `컬럼 표시 +${selected.length}` : '컬럼 표시';
+  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `확인자 +${selected.length}` : '확인자';
   document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!selected.length);
   syncExtraHeaderCols(tabId);
 }
@@ -1226,7 +1237,7 @@ function buildTabFilterDd(tabId){
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
       ${extraColCandidates(tabDef).length?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
-        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="컬럼 표시 선택"><span id="colToggleLabel-${tabId}">컬럼 표시</span></button>
+        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
         <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
       </div>`:''}
     `;
@@ -1281,7 +1292,84 @@ function buildTabFilterDd(tabId){
     }
   }
 }
+// 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 3단 뷰 전환(대표 데이터표는 유지하고 추가 조회 기능만 덧붙임)
+let _elecView='base';
+let ELEC_BASE_THEAD=null;
+const ELEC_SEARCH_PLACEHOLDERS={
+  base:'🔍 설비명·점검담당자·종합의견 검색...',
+  acb:'🔍 용도·위상 검색...',
+  chk:'🔍 설비구분·설비항목 검색...'
+};
+function setElecView(v){
+  if(_elecView===v) return;
+  _elecView=v;
+  document.querySelectorAll('#elecViewToggle .view-toggle-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  const search=document.getElementById('search-elec');
+  if(search) search.placeholder=ELEC_SEARCH_PLACEHOLDERS[v];
+  if(v==='base'){
+    if(ELEC_BASE_THEAD!=null) document.getElementById('thead-elec').innerHTML=ELEC_BASE_THEAD;
+    syncExtraHeaderCols('elec');
+  }
+  renderTabTable('elec');
+}
+function elecFilteredRecords(){
+  const flt=_tabFilters['elec'];
+  let recs=TAB_STATE['elec'].records;
+  if(flt.year!=='ALL') recs=recs.filter(r=>(r['점검일자']||'').startsWith(flt.year));
+  if(flt.month!=='ALL') recs=recs.filter(r=>(r['점검일자']||'').slice(5,7)===flt.month);
+  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  return recs;
+}
+function renderElecFlatTable(){
+  buildTabFilterDd('elec');
+  if(ELEC_BASE_THEAD==null) ELEC_BASE_THEAD=document.getElementById('thead-elec').innerHTML;
+  const recs=elecFilteredRecords();
+  const q=(document.getElementById('search-elec')?.value||'').trim().toLowerCase();
+  const thead=document.getElementById('thead-elec');
+  const tbody=document.getElementById('tbody-elec');
+  const countEl=document.getElementById('count-elec');
+  let flat=[], colCount, headHtml, rowsHtml;
+  if(_elecView==='acb'){
+    colCount=7;
+    headHtml='<th>터널명</th><th>점검일자</th><th>용도</th><th>위상</th><th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">누설전류(mA)</th>';
+    recs.forEach(r=>{
+      (r._acb||[]).forEach(a=>{
+        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 용도:a.용도, 위상:a.위상, 전압:a.전압, 전류:a.전류, 누설전류:a.누설전류});
+      });
+    });
+    if(q) flat=flat.filter(x=>(x.용도+' '+x.위상).toLowerCase().includes(q));
+    rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('elec','${x.parentId}')" style="cursor:pointer">
+      <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
+      <td style="white-space:nowrap">${esc(fmtDate(x.점검일자))}</td>
+      <td>${esc(x.용도)}</td><td>${esc(x.위상)}</td>
+      <td class="r">${fmtWon(x.전압)}</td><td class="r">${fmtWon(x.전류)}</td><td class="r">${fmtWon(x.누설전류)}</td>
+    </tr>`).join('');
+  } else if(_elecView==='chk'){
+    colCount=6;
+    headHtml='<th>터널명</th><th>점검일자</th><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th>';
+    recs.forEach(r=>{
+      (r._chk||[]).forEach(c=>{
+        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 설비구분:c.설비구분, 설비항목:c.설비항목, 판정:c.점검결과판정, 개수:c.개수});
+      });
+    });
+    if(q) flat=flat.filter(x=>(x.설비구분+' '+x.설비항목).toLowerCase().includes(q));
+    rowsHtml=flat.map(x=>{
+      const badge = x.판정==='×'?'result-bad':x.판정==='/'?'result-warn':'result-good';
+      return `<tr onclick="openDetailModal('elec','${x.parentId}')" style="cursor:pointer">
+        <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
+        <td style="white-space:nowrap">${esc(fmtDate(x.점검일자))}</td>
+        <td>${esc(x.설비구분)}</td><td>${esc(x.설비항목)}</td>
+        <td><span class="type-badge ${badge}">${esc(x.판정||'-')}</span></td>
+        <td class="r">${x.개수?fmtWon(x.개수):'-'}</td>
+      </tr>`;
+    }).join('');
+  } else { return; }
+  thead.innerHTML=headHtml;
+  if(countEl) countEl.textContent=`총 ${flat.length}건`;
+  tbody.innerHTML=flat.length ? rowsHtml : `<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'데이터가 없습니다.','🔍')}</td></tr>`;
+}
 function renderTabTable(tabId){
+  if(tabId==='elec' && _elecView!=='base'){ renderElecFlatTable(); return; }
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields) return;
   buildTabFilterDd(tabId);
