@@ -830,6 +830,23 @@ function elecSpecOptions(tunnel, field){
   return v ? [v] : [];
 }
 
+// 변압기온도DB 터널×변압기종류별 고정 용량(노션 실데이터 기준, 2026-07-16 확인) — 조합당 값 1개로 고정
+const TUNNEL_TRANSFORMER_CAPACITY={
+  '청하터널(주)':{조명용:'200 kVA', 일반용:'200 kVA', 동력용:'400 kVA'},
+  '청하터널(부)':{조명용:'150 kVA', 일반용:'150 kVA', 동력용:'400 kVA'},
+  '흥해터널':{조명용:'250 kVA', 일반용:'250 kVA', 동력용:'500 kVA'},
+  '남정5터널':{조명용:'250 kVA', 일반용:'250 kVA', 동력용:'600 kVA'}
+};
+function transformerCapacityOptions(tunnel, type){
+  const v=(TUNNEL_TRANSFORMER_CAPACITY[tunnel]||{})[type];
+  return v ? [v] : [];
+}
+// 측정지점("동력용 #8")에서 지점번호(8)를 추출 — 측정지점과 지점번호가 따로 입력되어 어긋나는 것을 방지
+function transformerPointNoOptions(point){
+  const m=/#(\d+)\s*$/.exec(point||'');
+  return m ? [m[1]] : [];
+}
+
 const TAB_DEFS=[
   {
     id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'점검내용', dateKey:'점검일자',
@@ -876,15 +893,17 @@ const TAB_DEFS=[
   {
     id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'측정일자', type:'date', required:true},
       {key:'점검자', type:'select', options:['김동록','신종섭','김태선','공우식']},
       {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
-      {key:'용량', type:'text'},
-      {key:'측정지점', type:'title', required:true, uiType:'cascade-select', dependsOn:['변압기종류'],
+      {key:'용량', type:'text', uiType:'cascade-select', dependsOn:['터널명','변압기종류'],
+        optionsFn:dep=>transformerCapacityOptions(dep['터널명'], dep['변압기종류']), emptyHint:'먼저 터널명·변압기종류를 선택하세요'},
+      {key:'측정지점', type:'title', required:true, uiType:'cascade-select', dependsOn:['변압기종류'], cascadeTrigger:true,
         optionsFn:dep=>dep['변압기종류'] ? Array.from({length:15},(_,i)=>dep['변압기종류']+' #'+(i+1)) : [],
         emptyHint:'먼저 변압기종류를 선택하세요'},
-      {key:'지점번호', type:'number'},
+      {key:'지점번호', type:'number', uiType:'cascade-select', dependsOn:['측정지점'],
+        optionsFn:dep=>transformerPointNoOptions(dep['측정지점']), emptyHint:'먼저 측정지점을 선택하세요'},
       {key:'온도(℃)', type:'number'},
       {key:'비고', type:'select', options:['양호','불량','점검요']}
     ],
@@ -1675,6 +1694,23 @@ function buildElecFormExtra(r){
   chkHtml+='</tbody></table></div>';
   return acbHtml+chkHtml;
 }
+// 변압기온도 탭 — 지점번호 ①~⑮ 위치를 보여주는 고정 참고사진(전면/후면). 터널·변압기종류 관계없이
+// 공통(원본 4개 터널 엑셀 템플릿 "변압기온도측정" 시트에 동일 이미지가 쓰였음, 2026-07-16 확인).
+const TRANSFORMER_REF_IMAGES=[
+  {src:'assets/transformer-point-front.jpg', label:'전면 — ①~⑥번 지점'},
+  {src:'assets/transformer-point-back.jpg', label:'후면 — ⑦~⑮번 지점'}
+];
+function buildTransformerRefHtml(){
+  return `<div class="form-group-hd">측정지점 참고사진(고정)</div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 지점번호 ①~⑮ 위치 확인용 참고사진입니다(모든 터널·변압기종류 공통). 클릭하면 크게 볼 수 있고, 등록 데이터에는 저장되지 않습니다.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      ${TRANSFORMER_REF_IMAGES.map(img=>`
+        <div style="flex:1;min-width:200px">
+          <img src="${esc(img.src)}" alt="${esc(img.label)}" style="width:100%;border-radius:var(--r10);border:1px solid var(--border);cursor:zoom-in;display:block" onclick="window.open('${esc(img.src)}','_blank')"/>
+          <div style="text-align:center;font-size:11.5px;color:var(--txt3);margin-top:4px">${esc(img.label)}</div>
+        </div>`).join('')}
+    </div>`;
+}
 function openAddModal(tabId, recordId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
@@ -1700,8 +1736,9 @@ function openAddModal(tabId, recordId){
   });
   if(groupOpen) html+='</div>';
   if(tabId==='elec') html+=buildElecFormExtra(r);
+  if(tabId==='transformer') html+=buildTransformerRefHtml();
   document.getElementById('addModalFields').innerHTML=html;
-  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec');
+  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='transformer');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
