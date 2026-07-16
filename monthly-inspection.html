@@ -1034,6 +1034,27 @@ function notionFetch(path, method, body){
   return fetch(CFG.workerUrl+path,{ method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
     .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
 }
+// 다건 Notion 쓰기(전기설비기록 41개 자식 등)를 동시에 몇 개씩 묶어서 처리 — 완전 순차(느림)와 완전 동시(429 위험) 사이 절충
+function runWithConcurrency(tasks, limit){
+  return new Promise((resolve, reject)=>{
+    const results=new Array(tasks.length);
+    let idx=0, active=0, doneCount=0, failed=false;
+    function pump(){
+      if(failed) return;
+      while(active<limit && idx<tasks.length){
+        const cur=idx++;
+        active++;
+        tasks[cur]().then(v=>{
+          results[cur]=v; active--; doneCount++;
+          if(doneCount===tasks.length) resolve(results);
+          else pump();
+        }).catch(e=>{ failed=true; reject(e); });
+      }
+    }
+    if(!tasks.length) resolve(results);
+    else pump();
+  });
+}
 
 // ── 전기설비기록 탭 전용 — 부모(DB1) 레코드에 자식(DB2 ACB·DB3 설비현황) 레코드를 relation으로 매칭해 붙임 ──
 function getRelParentId(p){
@@ -1630,10 +1651,14 @@ function buildElecFormExtra(r){
     });
     acbHtml+='</tbody></table></div>';
   });
-  let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>
-    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
+  // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
+  // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
+  const chkSrc = r || TAB_STATE['elec'].records[0] || null;
+  let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>`;
+  if(!r && chkSrc) chkHtml+=`<div class="modal-hint" style="margin:-2px 0 8px">※ 가장 최근 등록(${esc(fmtDate(chkSrc['점검일자']))} · ${esc(chkSrc['터널명']||'')}) 값을 기본값으로 채웠습니다. 실제와 다르면 값을 고친 뒤 등록하세요.</div>`;
+  chkHtml+=`<div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
   ELEC_CHECKLIST.forEach((c,i)=>{
-    const rec=elecChkLookup(r, c);
+    const rec=elecChkLookup(chkSrc, c);
     const cur=rec?rec.점검결과판정:'○';
     chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td>
       <td><select class="modal-select elec-grid-select" id="chkr_${i}">
@@ -1836,10 +1861,14 @@ async function submitElecForm(){
 
   try{
     let parentId=EDIT_PAGE_ID;
-    if(isEdit){ await notionFetch('/v1/pages/'+parentId, 'PATCH', {properties:parentProps}); }
-    else { const created=await notionFetch('/v1/pages', 'POST', {parent:{database_id:tabDef.dbId}, properties:parentProps}); parentId=created.id; }
-    progress();
+    // 수정 모드는 parentId를 이미 알고 있어 부모 PATCH를 자식들과 동시에 진행. 신규등록은 관계(relation)에
+    // 새로 생성된 parentId가 필요한 자식이 있을 수 있어 부모 생성만 먼저 기다린 뒤 자식을 동시 진행한다.
+    const parentTask = isEdit
+      ? notionFetch('/v1/pages/'+parentId, 'PATCH', {properties:parentProps}).then(()=>progress())
+      : notionFetch('/v1/pages', 'POST', {parent:{database_id:tabDef.dbId}, properties:parentProps}).then(created=>{ parentId=created.id; progress(); });
+    if(!isEdit) await parentTask; // 신규등록만 parentId 확보를 위해 대기
 
+    const childTasks=[];
     for(let ti=0; ti<ACB_TYPES.length; ti++){
       const t=ACB_TYPES[ti];
       for(const ph of ACB_PHASES){
@@ -1847,21 +1876,23 @@ async function submitElecForm(){
         const aVal=document.getElementById('acba_'+ti+'_'+ph.key)?.value;
         const lVal=document.getElementById('acbl_'+ti+'_'+ph.key)?.value;
         const existing=elecAcbLookup(r, t, ph);
-        const props={
-          '용도':buildPropValue('select', t),
-          '위상':buildPropValue('select', ph.label),
-          '점검일자':buildPropValue('date', values['점검일자']),
-          '전압(V)':buildPropValue('number', vVal),
-          '전류(A)':buildPropValue('number', aVal),
-          '누설전류(mA)':buildPropValue('number', lVal),
-          '구분':buildPropValue('title', values['터널명']+' '+t+' '+ph.key)
-        };
-        if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
-        else { props['전기설비기록1DB']={relation:[{id:parentId}]}; await notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec2}, properties:props}); }
-        progress();
+        childTasks.push(()=>{
+          const props={
+            '용도':buildPropValue('select', t),
+            '위상':buildPropValue('select', ph.label),
+            '점검일자':buildPropValue('date', values['점검일자']),
+            '전압(V)':buildPropValue('number', vVal),
+            '전류(A)':buildPropValue('number', aVal),
+            '누설전류(mA)':buildPropValue('number', lVal),
+            '구분':buildPropValue('title', values['터널명']+' '+t+' '+ph.key)
+          };
+          const p = existing
+            ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
+            : (props['전기설비기록1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec2}, properties:props}));
+          return p.then(v=>{ progress(); return v; });
+        });
       }
     }
-
     for(let i=0;i<ELEC_CHECKLIST.length;i++){
       const c=ELEC_CHECKLIST[i];
       const resultVal=document.getElementById('chkr_'+i)?.value;
@@ -1870,19 +1901,26 @@ async function submitElecForm(){
       const decVal=document.getElementById('chkd_'+i)?.value;
       const defectVal=document.getElementById('chkx_'+i)?.value;
       const existing=elecChkLookup(r, c);
-      const props={
-        '설비구분':buildPropValue('select', c.설비구분),
-        '점검일자':buildPropValue('date', values['점검일자']),
-        '점검결과판정':buildPropValue('select', resultVal),
-        '개수수량':buildPropValue('number', countVal),
-        '설비현황(증)':buildPropValue('number', incVal),
-        '설비현황(감)':buildPropValue('number', decVal),
-        '부적합수량':buildPropValue('number', defectVal)
-      };
-      if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
-      else { props['설비항목']=buildPropValue('title', c.설비항목); props['전기설비기록1DB']={relation:[{id:parentId}]}; await notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}); }
-      progress();
+      childTasks.push(()=>{
+        const props={
+          '설비구분':buildPropValue('select', c.설비구분),
+          '점검일자':buildPropValue('date', values['점검일자']),
+          '점검결과판정':buildPropValue('select', resultVal),
+          '개수수량':buildPropValue('number', countVal),
+          '설비현황(증)':buildPropValue('number', incVal),
+          '설비현황(감)':buildPropValue('number', decVal),
+          '부적합수량':buildPropValue('number', defectVal)
+        };
+        const p = existing
+          ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
+          : (props['설비항목']=buildPropValue('title', c.설비항목), props['전기설비기록1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}));
+        return p.then(v=>{ progress(); return v; });
+      });
     }
+
+    const waits=[runWithConcurrency(childTasks, 6)];
+    if(isEdit) waits.push(parentTask);
+    await Promise.all(waits);
 
     btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
     closeAddModal();
@@ -1912,8 +1950,8 @@ async function deleteElecRecord(pageId){
   const r=TAB_STATE['elec'].records.find(x=>x.id===pageId);
   const childIds=[...(r?.['_acb']||[]).map(x=>x.id), ...(r?.['_chk']||[]).map(x=>x.id)];
   try{
-    await notionFetch('/v1/pages/'+pageId, 'PATCH', {in_trash:true});
-    for(const cid of childIds){ await notionFetch('/v1/pages/'+cid, 'PATCH', {in_trash:true}).catch(()=>{}); }
+    const allIds=[pageId, ...childIds]; // 부모·자식 모두 서로 독립적인 삭제라 함께 동시 진행
+    await runWithConcurrency(allIds.map(id=>()=>notionFetch('/v1/pages/'+id, 'PATCH', {in_trash:true}).catch(()=>{})), 6);
     closeDetailModal(); loadTabData('elec'); toast('삭제되었습니다. (기본정보 + 연결 하위 항목 '+childIds.length+'건)');
   }catch(e){
     alert('삭제 실패: '+e.message); console.error(e);
