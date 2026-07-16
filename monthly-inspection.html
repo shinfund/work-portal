@@ -116,11 +116,11 @@ td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
 
-/* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 ── */
+/* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 (연/월 등 dd-btn과 동일 색상 체계) ── */
 .view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.view-toggle-btn{background:var(--card);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s,color .15s,border-color .15s}
-.view-toggle-btn:hover:not(.active){background:var(--sky50)}
+.view-toggle-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
 .view-toggle-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:#0C447C}
 
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
@@ -1067,7 +1067,10 @@ async function attachElecChildren(records){
       설비구분:getText(p.properties['설비구분']),
       설비항목:getText(p.properties['설비항목']),
       점검결과판정:getText(p.properties['점검결과판정']),
-      개수:getNum(p.properties['개수수량'])
+      개수:getNum(p.properties['개수수량']),
+      증:getNum(p.properties['설비현황(증)']),
+      감:getNum(p.properties['설비현황(감)']),
+      부적합:getNum(p.properties['부적합수량'])
     });
   });
   records.forEach(r=>{ r._acb=acbByParent[r.id]||[]; r._chk=chkByParent[r.id]||[]; });
@@ -1345,11 +1348,11 @@ function renderElecFlatTable(){
       <td class="r">${fmtWon(x.전압)}</td><td class="r">${fmtWon(x.전류)}</td><td class="r">${fmtWon(x.누설전류)}</td>
     </tr>`).join('');
   } else if(_elecView==='chk'){
-    colCount=6;
-    headHtml='<th>터널명</th><th>점검일자</th><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th>';
+    colCount=9;
+    headHtml='<th>터널명</th><th>점검일자</th><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th><th class="r">증가</th><th class="r">감소</th><th class="r">부적합</th>';
     recs.forEach(r=>{
       (r._chk||[]).forEach(c=>{
-        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 설비구분:c.설비구분, 설비항목:c.설비항목, 판정:c.점검결과판정, 개수:c.개수});
+        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 설비구분:c.설비구분, 설비항목:c.설비항목, 판정:c.점검결과판정, 개수:c.개수, 증:c.증, 감:c.감, 부적합:c.부적합});
       });
     });
     if(q) flat=flat.filter(x=>(x.설비구분+' '+x.설비항목).toLowerCase().includes(q));
@@ -1361,6 +1364,9 @@ function renderElecFlatTable(){
         <td>${esc(x.설비구분)}</td><td>${esc(x.설비항목)}</td>
         <td><span class="type-badge ${badge}">${esc(x.판정||'-')}</span></td>
         <td class="r">${x.개수?fmtWon(x.개수):'-'}</td>
+        <td class="r">${x.증?fmtWon(x.증):'-'}</td>
+        <td class="r">${x.감?fmtWon(x.감):'-'}</td>
+        <td class="r">${x.부적합?fmtWon(x.부적합):'-'}</td>
       </tr>`;
     }).join('');
   } else { return; }
@@ -1483,11 +1489,11 @@ function buildElecDetailExtra(r){
   });
   acbHtml+='</tbody></table></div>';
   let chkHtml=`<div class="sc-hd">설비현황 점검표</div>
-    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th></tr></thead><tbody>`;
+    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th><th class="r">증가</th><th class="r">감소</th><th class="r">부적합</th></tr></thead><tbody>`;
   ELEC_CHECKLIST.forEach(c=>{
     const rec=elecChkLookup(r,c);
     const badge=rec ? (rec.점검결과판정==='×'?'result-bad':rec.점검결과판정==='/'?'result-warn':'result-good') : 'result-none';
-    chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td><td><span class="type-badge ${badge}">${esc(rec&&rec.점검결과판정?rec.점검결과판정:'-')}</span></td><td class="r">${rec&&rec.개수?fmtWon(rec.개수):'-'}</td></tr>`;
+    chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td><td><span class="type-badge ${badge}">${esc(rec&&rec.점검결과판정?rec.점검결과판정:'-')}</span></td><td class="r">${rec&&rec.개수?fmtWon(rec.개수):'-'}</td><td class="r">${rec&&rec.증?fmtWon(rec.증):'-'}</td><td class="r">${rec&&rec.감?fmtWon(rec.감):'-'}</td><td class="r">${rec&&rec.부적합?fmtWon(rec.부적합):'-'}</td></tr>`;
   });
   chkHtml+='</tbody></table></div>';
   return acbHtml+chkHtml;
@@ -1625,7 +1631,7 @@ function buildElecFormExtra(r){
     acbHtml+='</tbody></table></div>';
   });
   let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>
-    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th></tr></thead><tbody>`;
+    <div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
   ELEC_CHECKLIST.forEach((c,i)=>{
     const rec=elecChkLookup(r, c);
     const cur=rec?rec.점검결과판정:'○';
@@ -1636,6 +1642,9 @@ function buildElecFormExtra(r){
         <option value="/"${cur==='/'?' selected':''}>/</option>
       </select></td>
       <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkc_${i}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chki_${i}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkd_${i}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkx_${i}" value="${rec&&rec.부적합!=null?rec.부적합:''}"/></td>
     </tr>`;
   });
   chkHtml+='</tbody></table></div>';
@@ -1857,12 +1866,18 @@ async function submitElecForm(){
       const c=ELEC_CHECKLIST[i];
       const resultVal=document.getElementById('chkr_'+i)?.value;
       const countVal=document.getElementById('chkc_'+i)?.value;
+      const incVal=document.getElementById('chki_'+i)?.value;
+      const decVal=document.getElementById('chkd_'+i)?.value;
+      const defectVal=document.getElementById('chkx_'+i)?.value;
       const existing=elecChkLookup(r, c);
       const props={
         '설비구분':buildPropValue('select', c.설비구분),
         '점검일자':buildPropValue('date', values['점검일자']),
         '점검결과판정':buildPropValue('select', resultVal),
-        '개수수량':buildPropValue('number', countVal)
+        '개수수량':buildPropValue('number', countVal),
+        '설비현황(증)':buildPropValue('number', incVal),
+        '설비현황(감)':buildPropValue('number', decVal),
+        '부적합수량':buildPropValue('number', defectVal)
       };
       if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
       else { props['설비항목']=buildPropValue('title', c.설비항목); props['전기설비기록1DB']={relation:[{id:parentId}]}; await notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}); }
@@ -2067,6 +2082,9 @@ function exportElecExcel(){
     row['부적합항목']=chk.filter(x=>x.점검결과판정==='×').map(x=>x.설비항목).join(', ');
     row['점검요항목']=chk.filter(x=>x.점검결과판정==='/').map(x=>x.설비항목).join(', ');
     row['설비현황총수량']=chk.reduce((s,x)=>s+(x.개수||0),0);
+    row['설비현황증가합계']=chk.reduce((s,x)=>s+(x.증||0),0);
+    row['설비현황감소합계']=chk.reduce((s,x)=>s+(x.감||0),0);
+    row['설비현황부적합합계']=chk.reduce((s,x)=>s+(x.부적합||0),0);
     return row;
   });
   const columns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}))
@@ -2074,7 +2092,10 @@ function exportElecExcel(){
     .concat([
       {key:'부적합항목', header:'설비현황 부적합(×) 항목', wrap:true},
       {key:'점검요항목', header:'설비현황 점검요(/) 항목', wrap:true},
-      {key:'설비현황총수량', header:'설비현황 총 수량', numFmt:'#,##0'}
+      {key:'설비현황총수량', header:'설비현황 총 수량', numFmt:'#,##0'},
+      {key:'설비현황증가합계', header:'설비현황 증가 합계', numFmt:'#,##0'},
+      {key:'설비현황감소합계', header:'설비현황 감소 합계', numFmt:'#,##0'},
+      {key:'설비현황부적합합계', header:'설비현황 부적합 합계', numFmt:'#,##0'}
     ]);
   buildExcelReport({
     btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
