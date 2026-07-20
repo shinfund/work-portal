@@ -1015,6 +1015,27 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <div class="dd-menu" id="mgmtCategoryDdMenu"></div>
     </div>
+    <div class="dd-wrap" id="mgmtTypeDdWrap">
+      <button class="dd-btn" id="mgmtTypeDdBtn" onclick="toggleMgmtTypeDd()" aria-haspopup="listbox" aria-label="하자공종 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="mgmtTypeDdLabel">하자공종 전체</span>
+      </button>
+      <div class="dd-menu" id="mgmtTypeDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="mgmtPeriodDdWrap">
+      <button class="dd-btn" id="mgmtPeriodDdBtn" onclick="toggleMgmtPeriodDd()" aria-haspopup="listbox" aria-label="보증기간 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="mgmtPeriodDdLabel">보증기간 전체</span>
+      </button>
+      <div class="dd-menu" id="mgmtPeriodDdMenu"></div>
+    </div>
+    <div class="dd-wrap" id="mgmtContractorDdWrap">
+      <button class="dd-btn" id="mgmtContractorDdBtn" onclick="toggleMgmtContractorDd()" aria-haspopup="listbox" aria-label="계약자 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span id="mgmtContractorDdLabel">계약자 전체</span>
+      </button>
+      <div class="dd-menu" id="mgmtContractorDdMenu"></div>
+    </div>
     <input class="search-box" id="mgmtSearchBox" placeholder="🔍 공사명, 위치, 계약자 검색..." oninput="renderMgmtTable()">
     <button class="hdr-btn" onclick="openMgmtAddModal()" style="background:#185FA5;border-color:#185FA5;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -3840,7 +3861,7 @@ function exportContactExcel(){
    ══════════════════════════════════════════════════════════ */
 var MGMT_DATA = [];
 var MGMT_LOADED = false;
-var MGMT_FILTER = { category:'ALL' };
+var MGMT_FILTER = { category:'ALL', type:'ALL', period:'ALL', contractor:'ALL' };
 var MGMT_PROP_MAP = {}; // 실제 Notion 속성명 매핑 (빌드 후 사용)
 var MGMT_EDIT_IDX = null;
 var AFTER_MGMT_RELOAD_CB = null; // 하자관리 신규 등록 후 자동 상세 오픈 콜백
@@ -3986,15 +4007,62 @@ function filteredMgmt(){
   var q = (document.getElementById('mgmtSearchBox')||{value:''}).value.trim().toLowerCase();
   return MGMT_DATA.filter(function(r){
     var cMatch = MGMT_FILTER.category==='ALL' || r['구분']===MGMT_FILTER.category;
+    var tMatch = MGMT_FILTER.type==='ALL' || r['하자공종']===MGMT_FILTER.type;
+    var pMatch = MGMT_FILTER.period==='ALL' || r['보증기간']===MGMT_FILTER.period;
+    var conMatch = MGMT_FILTER.contractor==='ALL' || r['계약자']===MGMT_FILTER.contractor;
     var qMatch = !q
       || (r['공사명']||'').toLowerCase().includes(q)
       || (r['위치']||'').toLowerCase().includes(q)
       || (r['계약자']||'').toLowerCase().includes(q)
       || (r['번호/공구']||'').toLowerCase().includes(q)
       || (r['하자공종']||'').toLowerCase().includes(q);
-    return cMatch && qMatch;
+    return cMatch && tMatch && pMatch && conMatch && qMatch;
   });
 }
+
+// 하자공종·보증기간·계약자 필터 드롭다운 — 값이 고정 enum이 아니라 실데이터 기반이라
+// buildContactTunnelDd()와 동일하게 로드된 MGMT_DATA에서 고유값을 뽑아 목록방식으로 구성
+function buildMgmtFilterDd(opts){
+  var menu = document.getElementById(opts.menuId);
+  if(!menu) return;
+  var values = getUniqueValuesFrom(MGMT_DATA, opts.dataKey);
+  var optsList = [{val:'ALL',label:opts.allLabel}].concat(values.map(function(v){ return {val:v,label:v}; }));
+  menu.innerHTML = optsList.map(function(o){
+    return '<div class="dd-opt'+(MGMT_FILTER[opts.filterKey]===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  if(!menu._cbound){
+    menu._cbound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(!opt||!opt.dataset||!opt.dataset.val) return;
+      var val = opt.dataset.val;
+      menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
+      opt.classList.add('sel');
+      document.getElementById(opts.labelId).textContent = val==='ALL'?opts.allLabel:val;
+      var btn=document.getElementById(opts.btnId);
+      if(btn) btn.classList.toggle('active', val!=='ALL');
+      MGMT_FILTER[opts.filterKey] = val;
+      closeDd(opts.menuId, opts.btnId);
+      renderMgmtTable();
+    });
+    document.addEventListener('click', function(e){
+      var wrap=document.getElementById(opts.wrapId);
+      if(wrap&&!wrap.contains(e.target)) closeDd(opts.menuId, opts.btnId);
+    });
+  }
+}
+function buildMgmtTypeDd(){
+  buildMgmtFilterDd({ menuId:'mgmtTypeDdMenu', btnId:'mgmtTypeDdBtn', labelId:'mgmtTypeDdLabel', wrapId:'mgmtTypeDdWrap', filterKey:'type', dataKey:'하자공종', allLabel:'하자공종 전체' });
+}
+function toggleMgmtTypeDd(){ toggleDd('mgmtTypeDdMenu','mgmtTypeDdBtn'); }
+function buildMgmtPeriodDd(){
+  buildMgmtFilterDd({ menuId:'mgmtPeriodDdMenu', btnId:'mgmtPeriodDdBtn', labelId:'mgmtPeriodDdLabel', wrapId:'mgmtPeriodDdWrap', filterKey:'period', dataKey:'보증기간', allLabel:'보증기간 전체' });
+}
+function toggleMgmtPeriodDd(){ toggleDd('mgmtPeriodDdMenu','mgmtPeriodDdBtn'); }
+function buildMgmtContractorDd(){
+  buildMgmtFilterDd({ menuId:'mgmtContractorDdMenu', btnId:'mgmtContractorDdBtn', labelId:'mgmtContractorDdLabel', wrapId:'mgmtContractorDdWrap', filterKey:'contractor', dataKey:'계약자', allLabel:'계약자 전체' });
+}
+function toggleMgmtContractorDd(){ toggleDd('mgmtContractorDdMenu','mgmtContractorDdBtn'); }
 
 function buildMgmtCategoryDd(){
   var menu = document.getElementById('mgmtCategoryDdMenu');
@@ -4028,6 +4096,9 @@ function toggleMgmtCategoryDd(){ toggleDd('mgmtCategoryDdMenu','mgmtCategoryDdBt
 
 function renderMgmtPanel(){
   buildMgmtCategoryDd();
+  buildMgmtTypeDd();
+  buildMgmtPeriodDd();
+  buildMgmtContractorDd();
   renderMgmtTable();
   if(AFTER_MGMT_RELOAD_CB){ var cb=AFTER_MGMT_RELOAD_CB; AFTER_MGMT_RELOAD_CB=null; setTimeout(cb,120); }
 }
@@ -4054,7 +4125,7 @@ function renderMgmtTable(){
     var cBadge = r['구분']==='전기공사'
       ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
       : r['구분']==='소방(전기)'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral);white-space:nowrap">소방(전기)</span>'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800);white-space:nowrap">소방(전기)</span>'
       : r['구분']==='지급자재'
       ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
       : esc(r['구분']);
@@ -4095,7 +4166,7 @@ function openMgmtDetail(idx){
   var cBadge = r['구분']==='전기공사'
     ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">전기공사</span>'
     : r['구분']==='소방(전기)'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral)">소방(전기)</span>'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800)">소방(전기)</span>'
     : r['구분']==='지급자재'
     ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">지급자재</span>'
     : esc(r['구분']||'-');
