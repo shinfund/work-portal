@@ -294,7 +294,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* [개선4] 필터 - 검색박스 모바일에서 독립 줄 배치 */
   .filter-row{flex-wrap:wrap;gap:6px}
   .filter-row .search-box{width:100%;order:9;min-width:unset;margin-top:2px}
-  .search-box{font-size:12px}
+  /* [문제2 수정] 입력창 16px 미만이면 iOS 포커스 시 자동 확대(줌) 발생 → 16px로 고정 */
+  .search-box{font-size:16px}
+
+  /* [문제3 수정] KPI 요약 줄(필터결과·계약금액 합계 등)이 nowrap으로 고정폭 넘쳐
+     페이지 전체 가로 스크롤을 유발 → 모바일에서는 줄바꿈 허용 */
+  .filter-count{white-space:normal;line-height:1.7}
 
   /* 드롭다운 - 모바일 높이 제한 */
   .dd-menu{max-height:200px}
@@ -302,6 +307,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* 모달 */
   .modal-box{padding:18px;border-radius:var(--r16)}
   .detail-modal-box{max-height:90vh}
+  /* [문제2 수정] 모달 입력창도 16px 미만이면 iOS 자동 확대 발생 */
+  .modal-input,.modal-select,.modal-textarea{font-size:16px}
 }
 
 /* 소형 모바일 (~ 380px) */

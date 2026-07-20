@@ -211,7 +211,7 @@ tr:hover td{background:var(--sky50)}
 .detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
 .detail-del-btn:hover{background:var(--coral100)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
-.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
@@ -246,6 +246,13 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .header-right{flex-direction:column;align-items:flex-end;gap:3px}
   td{padding:10px 10px}
   th{padding:9px 10px}
+  /* 좁은 화면에서 우선순위 낮은 열 숨겨 가로 스크롤 폭 축소 */
+  .col-cartype,.col-via,.col-note{display:none}
+  /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
+  .modal-select,.modal-input,.search-box{font-size:16px}
+  /* 터치 타겟 확보 */
+  .hdr-btn{min-height:34px;padding:6px 11px}
+  .top-tab{padding:9px 4px}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -521,15 +528,15 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <thead><tr>
             <th style="white-space:nowrap;width:1%">날짜</th>
             <th style="white-space:nowrap;width:1%">차량번호</th>
-            <th style="white-space:nowrap;width:1%">차량구분</th>
+            <th class="col-cartype" style="white-space:nowrap;width:1%">차량구분</th>
             <th style="white-space:nowrap;width:1%">운전자</th>
             <th style="width:1%;white-space:nowrap">용무</th>
             <th style="white-space:nowrap;width:1%">출발지</th>
-            <th style="white-space:nowrap;width:1%">경유지</th>
+            <th class="col-via" style="white-space:nowrap;width:1%">경유지</th>
             <th style="white-space:nowrap;width:1%">도착지</th>
             <th class="r" style="white-space:nowrap;width:1%">운행(km)</th>
             <th class="r" style="white-space:nowrap;width:1%">운행누계(km)</th>
-            <th style="width:1%;white-space:nowrap">비고</th>
+            <th class="col-note" style="width:1%;white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
         </table>
@@ -1664,15 +1671,15 @@ function buildDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
     <td style="white-space:nowrap"><span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carNo||'—')}</span></td>
-    <td style="white-space:nowrap">${r.carType?`<span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carType)}</span>`:'-'}</td>
+    <td class="col-cartype" style="white-space:nowrap">${r.carType?`<span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carType)}</span>`:'-'}</td>
     <td style="white-space:nowrap">${esc(r.driver||'-')}</td>
     <td style="font-size:13px">${esc(r.purpose||'-')}</td>
     <td style="white-space:nowrap">${esc(r.from||'-')}</td>
-    <td style="white-space:nowrap">${esc(r.via||'-')}</td>
+    <td class="col-via" style="white-space:nowrap">${esc(r.via||'-')}</td>
     <td style="white-space:nowrap">${esc(r.to||'-')}</td>
     <td class="r" style="white-space:nowrap">${fmtKm(r.dist)}</td>
     <td class="r" style="white-space:nowrap">${fmtKm(r.cumDist)}</td>
-    <td style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
+    <td class="col-note" style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
 }
 function buildCarDetailRow(r){
