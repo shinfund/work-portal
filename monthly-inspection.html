@@ -1156,6 +1156,18 @@ async function attachElecChildren(records){
 }
 function elecAcbLookup(r, t, ph){ return r ? (r._acb||[]).find(x=>x.용도===t && x.위상===ph.label) : null; }
 function elecChkLookup(r, c){ return r ? (r._chk||[]).find(x=>x.설비구분===c.설비구분 && x.설비항목===c.설비항목) : null; }
+// ACB 상세/설비현황 온스크린 뷰와 엑셀 시트가 공유하는 평탄화 — 부모(레코드)마다 자식 배열을 펼쳐
+// {parentId, 터널명, 점검일자, ...자식필드} 행으로 만든다
+function elecAcbFlatRows(recs){
+  const out=[];
+  recs.forEach(r=>{ (r._acb||[]).forEach(a=>{ out.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 용도:a.용도, 위상:a.위상, 전압:a.전압, 전류:a.전류, 누설전류:a.누설전류}); }); });
+  return out;
+}
+function elecChkFlatRows(recs){
+  const out=[];
+  recs.forEach(r=>{ (r._chk||[]).forEach(c=>{ out.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 설비구분:c.설비구분, 설비항목:c.설비항목, 판정:c.점검결과판정, 개수:c.개수, 증:c.증, 감:c.감, 부적합:c.부적합}); }); });
+  return out;
+}
 
 // ── 발전기점검 탭 전용 — 부모(DB1) 레코드에 자식(DB2 유류현황·DB3 점검체크리스트) 레코드를 relation으로 매칭해 붙임 ──
 async function attachGeneratorChildren(records){
@@ -1191,6 +1203,20 @@ async function attachGeneratorChildren(records){
   records.forEach(r=>{ r._fuel=fuelByParent[r.id]||null; r._chk=chkByParent[r.id]||[]; });
 }
 function generatorChkLookup(r, c){ return r ? (r._chk||[]).find(x=>x.점검구분===c.점검구분 && x.점검내용===c.점검내용) : null; }
+// 유류현황/점검체크리스트 온스크린 뷰와 엑셀 시트가 공유하는 평탄화(전기설비기록의 elecAcbFlatRows 등과 동일 패턴)
+function generatorFuelFlatRows(recs){
+  const out=[];
+  recs.forEach(r=>{
+    if(!r._fuel) return;
+    out.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 종류:r._fuel.종류, 용량:r._fuel.용량, 전일재고량:r._fuel.전일재고량, 입고량:r._fuel.입고량, 사용량:r._fuel.사용량, 금일재고량:r._fuel.금일재고량});
+  });
+  return out;
+}
+function generatorChkFlatRows(recs){
+  const out=[];
+  recs.forEach(r=>{ (r._chk||[]).forEach(c=>{ out.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 점검구분:c.점검구분, 점검내용:c.점검내용, 결과:c.결과, 특이사항:c.특이사항}); }); });
+  return out;
+}
 
 // ── 탭 데이터 로드 ──
 async function loadTabData(tabId){
@@ -1450,11 +1476,7 @@ function renderElecFlatTable(){
   if(_elecView==='acb'){
     colCount=7;
     headHtml='<th>터널명</th><th>점검일자</th><th>용도</th><th>위상</th><th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">누설전류(mA)</th>';
-    recs.forEach(r=>{
-      (r._acb||[]).forEach(a=>{
-        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 용도:a.용도, 위상:a.위상, 전압:a.전압, 전류:a.전류, 누설전류:a.누설전류});
-      });
-    });
+    flat=elecAcbFlatRows(recs);
     if(q) flat=flat.filter(x=>(x.용도+' '+x.위상).toLowerCase().includes(q));
     rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('elec','${x.parentId}')" style="cursor:pointer">
       <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
@@ -1465,11 +1487,7 @@ function renderElecFlatTable(){
   } else if(_elecView==='chk'){
     colCount=9;
     headHtml='<th>터널명</th><th>점검일자</th><th>설비구분</th><th>설비항목</th><th>판정</th><th class="r">수량</th><th class="r">증가</th><th class="r">감소</th><th class="r">부적합</th>';
-    recs.forEach(r=>{
-      (r._chk||[]).forEach(c=>{
-        flat.push({parentId:r.id, 터널명:r['터널명'], 점검일자:r['점검일자'], 설비구분:c.설비구분, 설비항목:c.설비항목, 판정:c.점검결과판정, 개수:c.개수, 증:c.증, 감:c.감, 부적합:c.부적합});
-      });
-    });
+    flat=elecChkFlatRows(recs);
     if(q) flat=flat.filter(x=>(x.설비구분+' '+x.설비항목).toLowerCase().includes(q));
     rowsHtml=flat.map(x=>{
       const badge = x.판정==='×'?'result-bad':x.판정==='/'?'result-warn':'result-good';
@@ -1529,10 +1547,7 @@ function renderGeneratorFlatTable(){
   if(_generatorView==='fuel'){
     colCount=8;
     headHtml='<th>터널명</th><th>가동일자</th><th>종류</th><th class="r">용량(L)</th><th class="r">전일재고량(L)</th><th class="r">입고량(L)</th><th class="r">사용량(L)</th><th class="r">금일재고량(L)</th>';
-    recs.forEach(r=>{
-      if(!r._fuel) return;
-      flat.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 종류:r._fuel.종류, 용량:r._fuel.용량, 전일재고량:r._fuel.전일재고량, 입고량:r._fuel.입고량, 사용량:r._fuel.사용량, 금일재고량:r._fuel.금일재고량});
-    });
+    flat=generatorFuelFlatRows(recs);
     if(q) flat=flat.filter(x=>(x.종류||'').toLowerCase().includes(q));
     rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('generator','${x.parentId}')" style="cursor:pointer">
       <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
@@ -1543,11 +1558,7 @@ function renderGeneratorFlatTable(){
   } else if(_generatorView==='chk'){
     colCount=6;
     headHtml='<th>터널명</th><th>가동일자</th><th>점검구분</th><th>점검내용</th><th>결과</th><th>특이사항</th>';
-    recs.forEach(r=>{
-      (r._chk||[]).forEach(c=>{
-        flat.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 점검구분:c.점검구분, 점검내용:c.점검내용, 결과:c.결과, 특이사항:c.특이사항});
-      });
-    });
+    flat=generatorChkFlatRows(recs);
     if(q) flat=flat.filter(x=>(x.점검내용+' '+(x.결과||'')+' '+(x.특이사항||'')).toLowerCase().includes(q));
     rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('generator','${x.parentId}')" style="cursor:pointer">
       <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
@@ -2431,52 +2442,66 @@ function excelParseDate(s){
   if(!m) return null;
   return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
 }
+// 인쇄 방향 자동 판정 — 열 너비(excelAutoWidth로 이미 계산된 문자 단위) 합으로 판단한다.
+// fitToPage:1(가로 1페이지에 맞춤)이 항상 걸려 있어 어느 쪽이든 인쇄는 되지만, 열이 많고 넓을수록
+// 세로(A4 가용폭 약 19cm)보다 가로(약 26.7cm, 세로 대비 약 1.4배)가 축소율이 적어 더 읽기 좋다.
+// opts.orientation을 명시하면 이 자동판정을 덮어쓴다(강제 지정이 필요한 특수 케이스용).
+function excelAutoOrientation(colWidths){
+  const total=colWidths.reduce((s,w)=>s+w,0);
+  return total>100 ? 'landscape' : 'portrait';
+}
+// opts.sheets가 있으면 시트를 여러 개(전기설비기록·발전기점검처럼 보기 갯수만큼) 만들고, 없으면
+// 기존처럼 opts.sheetName/title/columns/rows로 단일 시트를 만든다(다른 탭들과 호환).
+// 시트별 orientation을 명시하지 않으면 excelAutoOrientation()이 열 너비 합으로 자동 판정한다.
 function buildExcelReport(opts){
   const btn=document.getElementById(opts.btnId);
   const lbl=document.getElementById(opts.lblId);
-  const rows=opts.rows;
-  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
-  const columns=opts.columns;
-  const orientation=opts.orientation||'landscape';
+  const sheets = opts.sheets || [{sheetName:opts.sheetName, title:opts.title, columns:opts.columns, rows:opts.rows, orientation:opts.orientation}];
+  if(!sheets.some(s=>(s.rows||[]).length)){ alert('내보낼 데이터가 없습니다.'); return; }
   btn.disabled=true; lbl.textContent='준비 중...';
   loadExcelLib().then(()=>{
     const wb=new ExcelJS.Workbook();
-    const ws=wb.addWorksheet(opts.sheetName,{
-      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
-      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
-      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
-    });
-    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
-    ws.columns=colWidths.map(w=>({width:w}));
-    const titleRow=ws.getRow(1);
-    titleRow.height=EXCEL_ROW_HEIGHTS.title;
-    const titleCell=titleRow.getCell(1);
-    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
-    const headerRow=ws.getRow(2);
-    headerRow.height=EXCEL_ROW_HEIGHTS.header;
-    columns.forEach((col,i)=>{
-      const cell=headerRow.getCell(i+1);
-      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
-      cell.alignment={vertical:'middle',horizontal:'center'};
-      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
-    });
-    rows.forEach((r,i)=>{
-      const rn=3+i;
-      const row=ws.getRow(rn);
-      row.height=EXCEL_ROW_HEIGHTS.data;
-      columns.forEach((col,ci)=>{
-        const cell=row.getCell(ci+1);
-        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
-        cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
-        if(col.dateCol && r[col.key]){
-          const d=excelParseDate(r[col.key]);
-          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
-        } else {
-          cell.value=r[col.key];
-          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
-        }
+    sheets.forEach(sheetOpts=>{
+      const rows=sheetOpts.rows||[];
+      const columns=sheetOpts.columns;
+      const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+      const orientation=sheetOpts.orientation || excelAutoOrientation(colWidths);
+      const ws=wb.addWorksheet(sheetOpts.sheetName,{
+        views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
+        pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+        headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
       });
-      row.commit();
+      ws.columns=colWidths.map(w=>({width:w}));
+      const titleRow=ws.getRow(1);
+      titleRow.height=EXCEL_ROW_HEIGHTS.title;
+      const titleCell=titleRow.getCell(1);
+      titleCell.value=sheetOpts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
+      const headerRow=ws.getRow(2);
+      headerRow.height=EXCEL_ROW_HEIGHTS.header;
+      columns.forEach((col,i)=>{
+        const cell=headerRow.getCell(i+1);
+        cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+        cell.alignment={vertical:'middle',horizontal:'center'};
+        cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+      });
+      rows.forEach((r,i)=>{
+        const rn=3+i;
+        const row=ws.getRow(rn);
+        row.height=EXCEL_ROW_HEIGHTS.data;
+        columns.forEach((col,ci)=>{
+          const cell=row.getCell(ci+1);
+          cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+          cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
+          if(col.dateCol && r[col.key]){
+            const d=excelParseDate(r[col.key]);
+            if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+          } else {
+            cell.value=r[col.key];
+            if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
+          }
+        });
+        row.commit();
+      });
     });
     lbl.textContent='파일 저장 중...';
     return wb.xlsx.writeBuffer();
@@ -2516,94 +2541,93 @@ function exportTabExcel(tabId){
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
-    columns, rows, orientation:'portrait'
+    columns, rows
   });
 }
-// 전기설비기록 엑셀 — 기본정보 16 + ACB 27(전압/전류/누설전류×9행) + 설비현황 요약(부적합·점검요 항목, 총수량)
+// 전기설비기록 엑셀 — 온스크린 3개 보기(기본정보/ACB 상세/설비현황)와 동일하게 3개 시트로 분리 생성
+// (열이 많아 1시트에 다 넣으면 보기 불편하다는 피드백, 2026-07-20). 인쇄방향은 시트별로 자동 판정.
 function exportElecExcel(){
   const tabDef=getTabDef('elec');
   const baseFields=dataFields(tabDef);
-  const acbCols=[];
-  ACB_TYPES.forEach(t=>{
-    ACB_PHASES.forEach(ph=>{
-      acbCols.push({key:t+'_'+ph.key+'_v', header:t+' 전압 '+ph.label});
-      acbCols.push({key:t+'_'+ph.key+'_a', header:t+' 전류 '+ph.key});
-      acbCols.push({key:t+'_'+ph.key+'_l', header:t+' 누설전류 '+ph.key});
-    });
-  });
-  const rows=TAB_STATE['elec'].records.map(r=>{
+  const baseRows=TAB_STATE['elec'].records.map(r=>{
     const row={};
     baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
-    ACB_TYPES.forEach(t=>{
-      ACB_PHASES.forEach(ph=>{
-        const rec=elecAcbLookup(r, t, ph);
-        row[t+'_'+ph.key+'_v']=rec?rec.전압:0;
-        row[t+'_'+ph.key+'_a']=rec?rec.전류:0;
-        row[t+'_'+ph.key+'_l']=rec?rec.누설전류:0;
-      });
-    });
-    const chk=r._chk||[];
-    row['부적합항목']=chk.filter(x=>x.점검결과판정==='×').map(x=>x.설비항목).join(', ');
-    row['점검요항목']=chk.filter(x=>x.점검결과판정==='/').map(x=>x.설비항목).join(', ');
-    row['설비현황총수량']=chk.reduce((s,x)=>s+(x.개수||0),0);
-    row['설비현황증가합계']=chk.reduce((s,x)=>s+(x.증||0),0);
-    row['설비현황감소합계']=chk.reduce((s,x)=>s+(x.감||0),0);
-    row['설비현황부적합합계']=chk.reduce((s,x)=>s+(x.부적합||0),0);
     return row;
   });
-  const columns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}))
-    .concat(acbCols.map(c=>({key:c.key, header:c.header, numFmt:'#,##0.##'})))
-    .concat([
-      {key:'부적합항목', header:'설비현황 부적합(×) 항목', wrap:true},
-      {key:'점검요항목', header:'설비현황 점검요(/) 항목', wrap:true},
-      {key:'설비현황총수량', header:'설비현황 총 수량', numFmt:'#,##0'},
-      {key:'설비현황증가합계', header:'설비현황 증가 합계', numFmt:'#,##0'},
-      {key:'설비현황감소합계', header:'설비현황 감소 합계', numFmt:'#,##0'},
-      {key:'설비현황부적합합계', header:'설비현황 부적합 합계', numFmt:'#,##0'}
-    ]);
+  const baseColumns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
+
+  const acbRows=elecAcbFlatRows(TAB_STATE['elec'].records).map(x=>({
+    터널명:x.터널명||'', 점검일자:x.점검일자||'', 용도:x.용도||'', 위상:x.위상||'',
+    전압:Number(x.전압)||0, 전류:Number(x.전류)||0, 누설전류:Number(x.누설전류)||0
+  }));
+  const acbColumns=[
+    {key:'터널명', header:'터널명'}, {key:'점검일자', header:'점검일자', dateCol:true},
+    {key:'용도', header:'용도'}, {key:'위상', header:'위상'},
+    {key:'전압', header:'전압(V)', numFmt:'#,##0.##'}, {key:'전류', header:'전류(A)', numFmt:'#,##0.##'},
+    {key:'누설전류', header:'누설전류(mA)', numFmt:'#,##0.##'}
+  ];
+
+  const chkRows=elecChkFlatRows(TAB_STATE['elec'].records).map(x=>({
+    터널명:x.터널명||'', 점검일자:x.점검일자||'', 설비구분:x.설비구분||'', 설비항목:x.설비항목||'',
+    판정:x.판정||'', 개수:Number(x.개수)||0, 증:Number(x.증)||0, 감:Number(x.감)||0, 부적합:Number(x.부적합)||0
+  }));
+  const chkColumns=[
+    {key:'터널명', header:'터널명'}, {key:'점검일자', header:'점검일자', dateCol:true},
+    {key:'설비구분', header:'설비구분'}, {key:'설비항목', header:'설비항목'}, {key:'판정', header:'판정'},
+    {key:'개수', header:'수량', numFmt:'#,##0'}, {key:'증', header:'증가', numFmt:'#,##0'},
+    {key:'감', header:'감소', numFmt:'#,##0'}, {key:'부적합', header:'부적합', numFmt:'#,##0'}
+  ];
+
   buildExcelReport({
-    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
-    sheetName:'전기설비기록', title:'월간점검결과 - 전기설비기록', fnamePrefix:'월간점검결과_전기설비기록',
-    columns, rows, orientation:'portrait'
+    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성', fnamePrefix:'월간점검결과_전기설비기록',
+    sheets:[
+      {sheetName:'기본정보', title:'월간점검결과 - 전기설비기록(기본정보)', columns:baseColumns, rows:baseRows},
+      {sheetName:'ACB상세', title:'월간점검결과 - 전기설비기록(ACB 상세)', columns:acbColumns, rows:acbRows},
+      {sheetName:'설비현황', title:'월간점검결과 - 전기설비기록(설비현황)', columns:chkColumns, rows:chkRows}
+    ]
   });
 }
-// 발전기점검 엑셀 — 기본정보 9 + 유류현황 6 + 점검체크리스트 20(항목별 결과 컬럼) + 특이사항 종합
+// 발전기점검 엑셀 — 온스크린 3개 보기(기본정보/유류현황/점검체크리스트)와 동일하게 3개 시트로 분리 생성
+// (열이 많아 1시트에 다 넣으면 보기 불편하다는 피드백, 2026-07-20). 인쇄방향은 시트별로 자동 판정.
 function exportGeneratorExcel(){
   const tabDef=getTabDef('generator');
   const baseFields=dataFields(tabDef);
-  const chkCols=GENERATOR_CHECKLIST.map((c,i)=>({key:'chk_'+i, header:c.점검구분+' - '+c.점검내용}));
-  const rows=TAB_STATE['generator'].records.map(r=>{
+  const baseRows=TAB_STATE['generator'].records.map(r=>{
     const row={};
     baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
-    const fuel=r._fuel;
-    row['유류종류']=fuel?fuel.종류:'';
-    row['유류용량(L)']=fuel?(fuel.용량||0):0;
-    row['전일재고량(L)']=fuel?(fuel.전일재고량||0):0;
-    row['입고량(L)']=fuel?(fuel.입고량||0):0;
-    row['사용량(L)']=fuel?(fuel.사용량||0):0;
-    row['금일재고량(L)']=fuel?(fuel.금일재고량||0):0;
-    GENERATOR_CHECKLIST.forEach((c,i)=>{
-      const rec=generatorChkLookup(r, c);
-      row['chk_'+i]=rec?rec.결과:'';
-    });
-    row['특이사항종합']=(r._chk||[]).filter(x=>x.특이사항).map(x=>x.점검내용+': '+x.특이사항).join('; ');
     return row;
   });
-  const columns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}))
-    .concat([
-      {key:'유류종류', header:'유류 종류'},
-      {key:'유류용량(L)', header:'유류 용량(L)', numFmt:'#,##0'},
-      {key:'전일재고량(L)', header:'전일재고량(L)', numFmt:'#,##0'},
-      {key:'입고량(L)', header:'입고량(L)', numFmt:'#,##0'},
-      {key:'사용량(L)', header:'사용량(L)', numFmt:'#,##0'},
-      {key:'금일재고량(L)', header:'금일재고량(L)', numFmt:'#,##0'}
-    ])
-    .concat(chkCols)
-    .concat([{key:'특이사항종합', header:'점검 특이사항', wrap:true}]);
+  const baseColumns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
+
+  const fuelRows=generatorFuelFlatRows(TAB_STATE['generator'].records).map(x=>({
+    터널명:x.터널명||'', 가동일자:x.가동일자||'', 종류:x.종류||'',
+    용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
+    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
+  }));
+  const fuelColumns=[
+    {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'종류', header:'종류'},
+    {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
+    {key:'입고량', header:'입고량(L)', numFmt:'#,##0'}, {key:'사용량', header:'사용량(L)', numFmt:'#,##0'},
+    {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
+  ];
+
+  const chkRows=generatorChkFlatRows(TAB_STATE['generator'].records).map(x=>({
+    터널명:x.터널명||'', 가동일자:x.가동일자||'', 점검구분:x.점검구분||'', 점검내용:x.점검내용||'',
+    결과:x.결과||'', 특이사항:x.특이사항||''
+  }));
+  const chkColumns=[
+    {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true},
+    {key:'점검구분', header:'점검구분'}, {key:'점검내용', header:'점검내용'},
+    {key:'결과', header:'결과'}, {key:'특이사항', header:'특이사항', wrap:true}
+  ];
+
   buildExcelReport({
-    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성',
-    sheetName:'발전기점검', title:'월간점검결과 - 발전기점검', fnamePrefix:'월간점검결과_발전기점검',
-    columns, rows, orientation:'portrait'
+    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성', fnamePrefix:'월간점검결과_발전기점검',
+    sheets:[
+      {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
+      {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
+      {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows}
+    ]
   });
 }
 
