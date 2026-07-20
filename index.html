@@ -19,7 +19,6 @@
   --r8:8px;--r12:12px;--r16:16px;--r20:20px;
   --shadow:0 2px 12px rgba(55,138,221,.09);
   --sidebar-w:180px;
-  --mobile-nav-h:58px;
   --header-h:40px;
 
   /* 사이드바·상단탭바 전용 색상(화면모드) — 기본값: 다크(검정 계열, 콘텐츠 배경과 통일) */
@@ -421,47 +420,19 @@ body{
 }
 .m-cfg-btn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
-.mobile-nav{
-  display:none;height:var(--mobile-nav-h);
-  background:var(--card);border-top:1.5px solid var(--border);
-  flex-shrink:0;z-index:200;position:relative;
+.m-left{display:flex;align-items:center;gap:9px;min-width:0;}
+.m-menu-btn{
+  width:30px;height:30px;flex-shrink:0;border-radius:8px;
+  background:var(--nav-icon-bg);border:1px solid var(--nav-border);
+  color:var(--nav-text);cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
 }
-.mn-inner{display:flex;height:100%;}
-.mn-item{
-  flex:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px;
-  cursor:pointer;color:var(--txt3);font-size:11px;font-weight:600;
-  transition:color .12s;-webkit-tap-highlight-color:transparent;position:relative;
-}
-.mn-item.on{color:var(--sky600);}
-.mn-item.on::after{
-  content:'';position:absolute;top:0;left:18%;right:18%;
-  height:2.5px;background:var(--sky);border-radius:0 0 3px 3px;
-}
-.mn-icon{width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.m-menu-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 
-/* 모바일 하단 탭 — 홈/설정/추가는 고정, 열린 앱 탭은 가운데서 스크롤 */
-.mn-item.mn-fixed{flex:0 0 64px;}
-.mn-scroll{
-  flex:1;display:flex;min-width:0;
-  overflow-x:auto;scrollbar-width:none;
-  justify-content:space-around;
-}
-.mn-scroll::-webkit-scrollbar{display:none}
-.mn-scroll .mn-item{flex:0 0 auto;min-width:64px;}
-.mn-x{
-  position:absolute;top:2px;right:14px;
-  width:15px;height:15px;border-radius:50%;
-  background:rgba(13,21,32,.4);color:#fff;
-  font-size:11px;line-height:15px;text-align:center;font-weight:700;
-}
-.mn-add-menu{
-  position:absolute;bottom:calc(100% + 8px);right:10px;
-  background:var(--card);border:1px solid var(--border);border-radius:var(--r12);
-  box-shadow:0 -8px 28px rgba(0,0,0,.16);
-  min-width:170px;padding:6px;display:none;z-index:900;
-}
-.mn-add-menu.open{display:block;}
+/* 모바일 사이드바 뒤 배경 딤(사이드바 열림 시에만 표시, 탭하면 닫힘) */
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:450;}
+.sidebar-backdrop.open{display:block;}
 
 /* ═══ 모달 ══════════════════════════════════════════════════ */
 #cfgModal{display:none}
@@ -527,11 +498,21 @@ body{
 
 /* ═══ 반응형 ════════════════════════════════════════════════ */
 @media(max-width:480px){
-  .sidebar{display:none;}
+  /* 사이드바를 숨기는 대신, 좌측에서 슬라이드되는 오버레이 드로어로 전환 (PC와 동일한 메뉴 구성) */
+  .sidebar{
+    display:block;position:fixed;top:0;left:0;height:100dvh;width:250px;
+    z-index:500;transform:translateX(-100%);
+    transition:transform .22s ease;
+    box-shadow:10px 0 28px rgba(0,0,0,.28);
+  }
+  .sidebar.mobile-open{transform:translateX(0);}
+  /* 데스크톱 "접기" 상태(sb_collapsed)가 남아있어도 모바일 드로어 폭에는 영향 없도록 무력화 */
+  .sidebar.collapsed{width:250px;border-right-color:var(--nav-border);}
+  .sidebar.collapsed.mobile-open{transform:translateX(0);}
+  .sb-inner{width:250px;}
   .tab-bar{display:none;}
   .mobile-hdr{display:flex;}
-  .mobile-nav{display:block;}
-  .main-area{height:calc(100dvh - var(--header-h) - var(--mobile-nav-h));}
+  .main-area{height:calc(100dvh - var(--header-h));}
   .home-inner{padding:12px;}
   .app-grid{grid-template-columns:1fr 1fr;}
 }
@@ -604,24 +585,30 @@ body{
       <span>연간점검결과</span>
     </div>
 
-    <div class="sb-footer-btn" onclick="openCfg()">
+    <div class="sb-footer-btn" onclick="openCfg();closeMobileSidebar();">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       설정
     </div>
   </nav>
  </div>
 </aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
 
 <!-- ─────────────── 메인 ─────────────── -->
 <div class="main-area">
 
   <!-- 모바일 헤더 -->
   <div class="mobile-hdr">
-    <div class="m-logo">
-      <div class="m-logo-icon"><svg viewBox="0 0 24 24"><path d="M5 21V13C5 7.5 8.5 4 12 4C15.5 4 19 7.5 19 13V21Z"/></svg></div>
-      <div>
-        <div class="m-logo-title">통합업무포털</div>
-        <div class="m-page-name" id="m-page-name">홈</div>
+    <div class="m-left">
+      <button class="m-menu-btn" aria-label="메뉴 열기/닫기" onclick="toggleMobileSidebar()">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+      <div class="m-logo">
+        <div class="m-logo-icon"><svg viewBox="0 0 24 24"><path d="M5 21V13C5 7.5 8.5 4 12 4C15.5 4 19 7.5 19 13V21Z"/></svg></div>
+        <div>
+          <div class="m-logo-title">통합업무포털</div>
+          <div class="m-page-name" id="m-page-name">홈</div>
+        </div>
       </div>
     </div>
     <button class="m-cfg-btn" onclick="openCfg()">
@@ -681,7 +668,7 @@ body{
         <div class="greeting-box">
           <div class="greeting-date" id="home-date"></div>
           <div class="greeting-title">통합업무포털에 오신 것을 환영합니다</div>
-          <div class="greeting-sub">좌측 메뉴(PC) 또는 하단 탭(모바일)에서 업무 앱을 선택하세요.</div>
+          <div class="greeting-sub">좌측 메뉴(PC) 또는 상단 메뉴 버튼(모바일)에서 업무 앱을 선택하세요.</div>
         </div>
 
         <div class="sec-hd"><span>업무 앱 바로가기</span></div>
@@ -744,7 +731,7 @@ body{
           <div class="notice-item">
             <div class="notice-dot"></div>
             <div>
-              <div>각 업무 앱은 좌측 메뉴(PC) 또는 하단 탭(모바일)에서 이동할 수 있습니다.</div>
+              <div>각 업무 앱은 좌측 메뉴(PC) 또는 상단 메뉴 버튼(모바일)에서 이동할 수 있습니다.</div>
               <div class="notice-sub">앱 첫 진입 시 로딩이 발생하며, 이후 전환은 빠릅니다</div>
             </div>
           </div>
@@ -842,23 +829,6 @@ body{
 
   </div>
 
-  <!-- 모바일 하단 탭 (열린 앱 탭을 데스크톱과 동일하게 동기화, 가운데 영역만 스크롤) -->
-  <nav class="mobile-nav">
-    <div class="mn-inner">
-      <div class="mn-item mn-fixed on" id="mn-home" role="button" tabindex="0" onclick="go('home')">
-        <div class="mn-icon">🏠</div><span>홈</span>
-      </div>
-      <div class="mn-scroll" id="mn-scroll"></div>
-      <div class="mn-item mn-fixed" role="button" tabindex="0" onclick="toggleMobileAddSheet(event)">
-        <div class="mn-icon">➕</div><span>추가</span>
-      </div>
-      <div class="mn-item mn-fixed" role="button" tabindex="0" onclick="openCfg()">
-        <div class="mn-icon">⚙️</div><span>설정</span>
-      </div>
-    </div>
-    <div class="mn-add-menu" id="mn-add-menu"></div>
-  </nav>
-
 </div>
 
 <!-- 설정 모달 -->
@@ -955,7 +925,7 @@ function unloadApp(id) {
   return true;
 }
 
-// ── 페이지 전환 (사이드바/모바일탭/탭바 공통 진입점) ──────────────
+// ── 페이지 전환 (사이드바/탭바 공통 진입점) ──────────────
 function go(id, opts) {
   opts = opts || {};
   const record = opts.record !== false;
@@ -1005,6 +975,7 @@ function go(id, opts) {
 
   renderTabs();
   updateNavButtons();
+  closeMobileSidebar();
 }
 
 function goBack() {
@@ -1080,25 +1051,9 @@ function renderTabs() {
         + `</div>`;
     }).join('');
   }
-  renderMobileNav();
 }
 
-// ── 모바일 하단 탭 렌더링 (홈 고정 + 열린 앱탭 스크롤 영역, 데스크톱과 상태 동기화) ──
-function renderMobileNav() {
-  document.getElementById('mn-home')?.classList.toggle('on', _cur === 'home');
-  const scroll = document.getElementById('mn-scroll');
-  if (!scroll) return;
-  scroll.innerHTML = openTabs.filter(id => id !== 'home').map(id => {
-    const a = APPS[id];
-    const on = id === _cur ? ' on' : '';
-    return `<div class="mn-item${on}" role="button" tabindex="0" aria-label="${a.name}" onclick="go('${id}')">`
-      + `<span>${a.name}</span>`
-      + `<span class="mn-x" role="button" tabindex="0" aria-label="닫기" onclick="event.stopPropagation();closeTab('${id}')">&times;</span>`
-      + `</div>`;
-  }).join('');
-}
-
-// ── 탭 추가(+) 메뉴 (PC 탭바 / 모바일 하단탭 공통) ─────────────
+// ── 탭 추가(+) 메뉴 (PC 상단 탭바) ─────────────
 function addMenuItemsHtml(onSelect) {
   const remaining = Object.keys(APPS).filter(id => !openTabs.includes(id));
   return remaining.length
@@ -1117,16 +1072,7 @@ function toggleAddMenu(e) {
 function closeAddMenu() {
   document.getElementById('tb-add-menu')?.classList.remove('open');
 }
-function toggleMobileAddSheet(e) {
-  e.stopPropagation();
-  const menu = document.getElementById('mn-add-menu');
-  menu.innerHTML = addMenuItemsHtml('closeMobileAddSheet();');
-  menu.classList.toggle('open');
-}
-function closeMobileAddSheet() {
-  document.getElementById('mn-add-menu')?.classList.remove('open');
-}
-document.addEventListener('click', () => { closeAddMenu(); closeMobileAddSheet(); });
+document.addEventListener('click', () => { closeAddMenu(); });
 
 function onIframeLoad(id) {
   // 탭 교체 시 이전 탭의 iframe을 src='' 로 비우는데, 그 자체도 load 이벤트를 다시 발생시켜
@@ -1448,6 +1394,16 @@ function loadWeather() {
 }
 loadWeather();
 setInterval(loadWeather, 1800000); // 30분마다 갱신
+
+// ── 모바일 사이드바 드로어(하단 탭 대신 좌측 슬라이드 메뉴) ─────────
+function toggleMobileSidebar() {
+  document.getElementById('sidebar')?.classList.toggle('mobile-open');
+  document.getElementById('sidebarBackdrop')?.classList.toggle('open');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar')?.classList.remove('mobile-open');
+  document.getElementById('sidebarBackdrop')?.classList.remove('open');
+}
 
 // ── 사이드바 접기/펼치기 (Notion 방식 — 완전히 숨김) ──────────────
 function toggleSidebar() {
