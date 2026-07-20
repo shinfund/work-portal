@@ -223,10 +223,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
-/* 전기설비기록 탭 — ACB 9행·설비현황 32행 입력표(신규등록/수정 모달 내 표 형태) 전용 컴팩트 입력 */
+/* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력 */
 .elec-grid-input{width:64px;padding:4px 6px;font-size:12.5px}
 .elec-grid-select{width:56px;padding:4px 4px;font-size:12.5px}
-/* 전기설비기록처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
+/* 전기설비기록·발전기점검처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
 .add-modal-box.wide-modal{max-width:820px}
 .detail-modal-box.wide-modal{max-width:820px}
 
@@ -443,9 +443,14 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 발전기점검 -->
   <div class="panel" id="panel-generator">
+    <div class="view-toggle" id="generatorViewToggle">
+      <button class="view-toggle-btn active" data-view="base" onclick="setGeneratorView('base')">기본정보</button>
+      <button class="view-toggle-btn" data-view="fuel" onclick="setGeneratorView('fuel')">유류현황(1건)</button>
+      <button class="view-toggle-btn" data-view="chk" onclick="setGeneratorView('chk')">점검체크리스트(20개)</button>
+    </div>
     <div class="filter-row">
       <div id="filterDd-generator" style="display:contents"></div>
-      <input class="search-box" id="search-generator" placeholder="🔍 제목·점검자·특기사항 검색..." aria-label="검색" oninput="renderTabTable('generator')"/>
+      <input class="search-box" id="search-generator" placeholder="🔍 제목·점검자 검색..." aria-label="검색" oninput="renderTabTable('generator')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('generator')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
@@ -455,13 +460,13 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="excelLbl_generator">엑셀 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px">※ 목록은 핵심 항목만 표시합니다. "확인자"에서 필요한 항목을 추가로 켜거나, 행 클릭 시 상세창과 엑셀에서 유류 재고·주파수 등 전체 항목을 확인 가능합니다.</div>
+    <div class="modal-hint" style="margin-bottom:8px" id="generatorViewHint">※ 위 [기본정보|유류현황|점검체크리스트] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count" id="count-generator"></div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-generator">
           <th>터널명</th><th>제목</th><th>가동일자</th><th>점검자</th><th>가동시간</th>
-          <th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">전력(kW)</th><th>비고</th><th class="r">금일재고량(L)</th>
+          <th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">전력(kW)</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-generator"></tbody>
       </table>
@@ -554,7 +559,9 @@ const DB_IDS={
   elec2:       '1adf636e-efc7-429f-a4b0-fbfa531a5a41', // 전기설비기록2DB(자식 — ACB 전압/전류/누설전류, 9개/건)
   elec3:       '48bed518-8009-4b24-ad4c-28e30ac12d80', // 전기설비기록3DB(자식 — 설비현황 점검표, 32개/건)
   transformer: '998fab1e-2d5c-4cae-a6aa-55a131931546', // 변압기온도DB
-  generator:   'c778d924-49a9-4c44-b444-681ebeb166e1', // 발전기점검DB
+  generator:   'c778d924-49a9-4c44-b444-681ebeb166e1', // 발전기점검1DB(부모 — 기본정보/운전값)
+  generator2:  '3a359c8c-9c0a-804f-8857-f1c2cbdeb4af', // 발전기점검2DB(자식 — 유류현황, 1건/건)
+  generator3:  '19f4f433-846e-4b99-a993-7eeb7c4b1fa8', // 발전기점검3DB(자식 — 점검체크리스트, 20개/건)
   photo:       '60f5cbbf-54e4-465e-8901-af41ba515dd0', // 점검사진DB
   power:       '10bfd710-9afb-4b06-b6c2-7943da777956', // 전력사용량DB
   task:        '125ebd28-64c9-4a9a-b265-e0ab6ed4f21f'  // 업무처리DB
@@ -809,6 +816,37 @@ const MONTHLY_CHECKLIST=[
   {구분:'특고압설비',설비명:'인입설비',점검내용:'LBS외관 및 PF 균열 여부'},
   {구분:'특고압설비',설비명:'인입설비',점검내용:'특고 인입선로 및 단말처리상태'}
 ];
+// 발전기점검3DB(점검체크리스트) — 일반점검사항 10 + 운전중점검사항 10 = 20개 고정 항목(노션 실데이터 기준, 2026-07-20 확인,
+// 4개 터널 모두 동일 카탈로그)
+const GENERATOR_CHECKLIST=[
+  {점검구분:'일반점검사항',점검내용:'냉각수 HEATER 작동상태'},
+  {점검구분:'일반점검사항',점검내용:'냉각수 라인 누수 여부'},
+  {점검구분:'일반점검사항',점검내용:'냉각수 상태'},
+  {점검구분:'일반점검사항',점검내용:'배터리 단자의 고정, 청결상태'},
+  {점검구분:'일반점검사항',점검내용:'배터리 충전 상태'},
+  {점검구분:'일반점검사항',점검내용:'에어 크리너 청결 상태'},
+  {점검구분:'일반점검사항',점검내용:'연료 공급 라인의 누유여부'},
+  {점검구분:'일반점검사항',점검내용:'연료량 확인'},
+  {점검구분:'일반점검사항',점검내용:'오일 필터 상태'},
+  {점검구분:'일반점검사항',점검내용:'주연료 탱크 외관 확인'},
+  {점검구분:'운전중점검사항',점검내용:'ACB 차단기 동작 상태'},
+  {점검구분:'운전중점검사항',점검내용:'AVR 자동전압조정기 동작상태'},
+  {점검구분:'운전중점검사항',점검내용:'급기용 댐퍼 개방 상태'},
+  {점검구분:'운전중점검사항',점검내용:'냉각수 온도 적정 여부'},
+  {점검구분:'운전중점검사항',점검내용:'베어링 이상소음 발생여부'},
+  {점검구분:'운전중점검사항',점검내용:'사이렌서 상태'},
+  {점검구분:'운전중점검사항',점검내용:'시간 기록계 기록'},
+  {점검구분:'운전중점검사항',점검내용:'운전중 엔진의 동작상태'},
+  {점검구분:'운전중점검사항',점검내용:'자동 컨트롤 패널의 작동상태'},
+  {점검구분:'운전중점검사항',점검내용:'회전 기록계 기록'}
+];
+// 발전기점검2DB(유류현황) 터널별 고정 유종/탱크용량(노션 실데이터 기준, 2026-07-20 확인) — 터널명 선택 시 자동입력
+const TUNNEL_GENERATOR_FUEL={
+  '청하터널(주)':{종류:'경유', 용량:2000},
+  '청하터널(부)':{종류:'경유', 용량:990},
+  '흥해터널':{종류:'경유', 용량:2000},
+  '남정5터널':{종류:'경유', 용량:2000}
+};
 function getChecklistOptions(gubun, seolbi){
   if(!gubun || !seolbi) return [];
   return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
@@ -912,7 +950,7 @@ const TAB_DEFS=[
   {
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncGeneratorFuelDefault()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>({'청하터널(주)':['주변전실 발전기점검'],'청하터널(부)':['부변전실 발전기점검']}[dep['터널명']]||[]),
         emptyHint:'먼저 터널명을 선택하세요'},
@@ -925,19 +963,9 @@ const TAB_DEFS=[
       {key:'전력(kW)', type:'number'},
       {key:'주파수(Hz)', type:'number'},
       {key:'역률(%)', type:'number'},
-      {key:'비고', type:'select', options:['부하 시운전','무부하 시운전']},
-      {key:'구분', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>({'청하터널(주)':['탱크용량  2,000L'],'청하터널(부)':['탱크용량  990L']}[dep['터널명']]||[]),
-        emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'종류', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명']?['경유']:[], emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'전일재고량(L)', type:'number'},
-      {key:'입고량(L)', type:'number'},
-      {key:'사용량(L)', type:'number'},
-      {key:'금일재고량(L)', type:'number'},
-      {key:'특기사항', type:'text'}
+      {key:'비고', type:'select', options:['부하 시운전','무부하 시운전','무부하운전','부하운전']}
     ],
-    listCols:['터널명','제목','가동일자','점검자','가동시간','전압(V)','전류(A)','전력(kW)','비고','금일재고량(L)']
+    listCols:['터널명','제목','가동일자','점검자','가동시간','전압(V)','전류(A)','전력(kW)','비고']
   },
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
@@ -1118,6 +1146,41 @@ async function attachElecChildren(records){
 function elecAcbLookup(r, t, ph){ return r ? (r._acb||[]).find(x=>x.용도===t && x.위상===ph.label) : null; }
 function elecChkLookup(r, c){ return r ? (r._chk||[]).find(x=>x.설비구분===c.설비구분 && x.설비항목===c.설비항목) : null; }
 
+// ── 발전기점검 탭 전용 — 부모(DB1) 레코드에 자식(DB2 유류현황·DB3 점검체크리스트) 레코드를 relation으로 매칭해 붙임 ──
+async function attachGeneratorChildren(records){
+  const [fuelPages, chkPages] = await Promise.all([
+    fetchAllPages(DB_IDS.generator2, {page_size:100}),
+    fetchAllPages(DB_IDS.generator3, {page_size:100})
+  ]);
+  const fuelByParent={}, chkByParent={};
+  fuelPages.forEach(p=>{
+    const pid=getRelParentId(p.properties['발전기점검1DB']);
+    if(!pid) return;
+    fuelByParent[pid]={
+      id:p.id,
+      종류:getText(p.properties['종류']),
+      용량:getNum(p.properties['용량(L)']),
+      전일재고량:getNum(p.properties['전일재고량(L)']),
+      입고량:getNum(p.properties['입고량(L)']),
+      사용량:getNum(p.properties['사용량(L)']),
+      금일재고량:getNum(p.properties['금일재고량(L)'])
+    };
+  });
+  chkPages.forEach(p=>{
+    const pid=getRelParentId(p.properties['발전기점검1DB']);
+    if(!pid) return;
+    (chkByParent[pid]=chkByParent[pid]||[]).push({
+      id:p.id,
+      점검구분:getText(p.properties['점검구분']),
+      점검내용:getText(p.properties['점검내용']),
+      결과:getText(p.properties['결과']),
+      특이사항:getText(p.properties['특이사항'])
+    });
+  });
+  records.forEach(r=>{ r._fuel=fuelByParent[r.id]||null; r._chk=chkByParent[r.id]||[]; });
+}
+function generatorChkLookup(r, c){ return r ? (r._chk||[]).find(x=>x.점검구분===c.점검구분 && x.점검내용===c.점검내용) : null; }
+
 // ── 탭 데이터 로드 ──
 async function loadTabData(tabId){
   const tabDef=getTabDef(tabId);
@@ -1133,6 +1196,7 @@ async function loadTabData(tabId){
     const pages=await fetchAllPages(tabDef.dbId, body);
     st.records=pages.map(p=>parseRecord(tabDef,p));
     if(tabId==='elec') await attachElecChildren(st.records);
+    if(tabId==='generator') await attachGeneratorChildren(st.records);
     st.loaded=true;
     applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
@@ -1414,8 +1478,80 @@ function renderElecFlatTable(){
   if(countEl) countEl.textContent=`총 ${flat.length}건`;
   tbody.innerHTML=flat.length ? rowsHtml : `<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'데이터가 없습니다.','🔍')}</td></tr>`;
 }
+// 발전기점검 탭 — 기본정보/유류현황/점검체크리스트 3단 뷰 전환(전기설비기록 탭과 동일 패턴)
+let _generatorView='base';
+let GENERATOR_BASE_THEAD=null;
+const GENERATOR_SEARCH_PLACEHOLDERS={
+  base:'🔍 제목·점검자 검색...',
+  fuel:'🔍 종류 검색...',
+  chk:'🔍 점검내용·결과·특이사항 검색...'
+};
+function setGeneratorView(v){
+  if(_generatorView===v) return;
+  _generatorView=v;
+  document.querySelectorAll('#generatorViewToggle .view-toggle-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  const search=document.getElementById('search-generator');
+  if(search) search.placeholder=GENERATOR_SEARCH_PLACEHOLDERS[v];
+  if(v==='base'){
+    if(GENERATOR_BASE_THEAD!=null) document.getElementById('thead-generator').innerHTML=GENERATOR_BASE_THEAD;
+    syncExtraHeaderCols('generator');
+  }
+  renderTabTable('generator');
+}
+function generatorFilteredRecords(){
+  const flt=_tabFilters['generator'];
+  let recs=TAB_STATE['generator'].records;
+  if(flt.year!=='ALL') recs=recs.filter(r=>(r['가동일자']||'').startsWith(flt.year));
+  if(flt.month!=='ALL') recs=recs.filter(r=>(r['가동일자']||'').slice(5,7)===flt.month);
+  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  return recs;
+}
+function renderGeneratorFlatTable(){
+  buildTabFilterDd('generator');
+  if(GENERATOR_BASE_THEAD==null) GENERATOR_BASE_THEAD=document.getElementById('thead-generator').innerHTML;
+  const recs=generatorFilteredRecords();
+  const q=(document.getElementById('search-generator')?.value||'').trim().toLowerCase();
+  const thead=document.getElementById('thead-generator');
+  const tbody=document.getElementById('tbody-generator');
+  const countEl=document.getElementById('count-generator');
+  let flat=[], colCount, headHtml, rowsHtml;
+  if(_generatorView==='fuel'){
+    colCount=8;
+    headHtml='<th>터널명</th><th>가동일자</th><th>종류</th><th class="r">용량(L)</th><th class="r">전일재고량(L)</th><th class="r">입고량(L)</th><th class="r">사용량(L)</th><th class="r">금일재고량(L)</th>';
+    recs.forEach(r=>{
+      if(!r._fuel) return;
+      flat.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 종류:r._fuel.종류, 용량:r._fuel.용량, 전일재고량:r._fuel.전일재고량, 입고량:r._fuel.입고량, 사용량:r._fuel.사용량, 금일재고량:r._fuel.금일재고량});
+    });
+    if(q) flat=flat.filter(x=>(x.종류||'').toLowerCase().includes(q));
+    rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('generator','${x.parentId}')" style="cursor:pointer">
+      <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
+      <td style="white-space:nowrap">${esc(fmtDate(x.가동일자))}</td>
+      <td>${esc(x.종류||'-')}</td>
+      <td class="r">${fmtWon(x.용량)}</td><td class="r">${fmtWon(x.전일재고량)}</td><td class="r">${fmtWon(x.입고량)}</td><td class="r">${fmtWon(x.사용량)}</td><td class="r">${fmtWon(x.금일재고량)}</td>
+    </tr>`).join('');
+  } else if(_generatorView==='chk'){
+    colCount=6;
+    headHtml='<th>터널명</th><th>가동일자</th><th>점검구분</th><th>점검내용</th><th>결과</th><th>특이사항</th>';
+    recs.forEach(r=>{
+      (r._chk||[]).forEach(c=>{
+        flat.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 점검구분:c.점검구분, 점검내용:c.점검내용, 결과:c.결과, 특이사항:c.특이사항});
+      });
+    });
+    if(q) flat=flat.filter(x=>(x.점검내용+' '+(x.결과||'')+' '+(x.특이사항||'')).toLowerCase().includes(q));
+    rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('generator','${x.parentId}')" style="cursor:pointer">
+      <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
+      <td style="white-space:nowrap">${esc(fmtDate(x.가동일자))}</td>
+      <td>${esc(x.점검구분)}</td><td>${esc(x.점검내용)}</td>
+      <td>${esc(x.결과||'-')}</td><td>${esc(x.특이사항||'-')}</td>
+    </tr>`).join('');
+  } else { return; }
+  thead.innerHTML=headHtml;
+  if(countEl) countEl.textContent=`총 ${flat.length}건`;
+  tbody.innerHTML=flat.length ? rowsHtml : `<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'데이터가 없습니다.','🔍')}</td></tr>`;
+}
 function renderTabTable(tabId){
   if(tabId==='elec' && _elecView!=='base'){ renderElecFlatTable(); return; }
+  if(tabId==='generator' && _generatorView!=='base'){ renderGeneratorFlatTable(); return; }
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields) return;
   buildTabFilterDd(tabId);
@@ -1508,11 +1644,13 @@ function openDetailModal(tabId, recordId){
     else val=esc(r[f.key]||'-');
     return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
   }).join('');
-  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>' + (tabId==='elec' ? buildElecDetailExtra(r) : '');
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>'
+    + (tabId==='elec' ? buildElecDetailExtra(r) : '')
+    + (tabId==='generator' ? buildGeneratorDetailExtra(r) : '');
   document.getElementById('detailModalActions').innerHTML=
     `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openAddModal('${tabId}','${recordId}')">수정</button>`+
     `<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${tabId}','${recordId}')">삭제</button>`;
-  document.querySelector('#detailModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec');
+  document.querySelector('#detailModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator');
   document.getElementById('detailModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
@@ -1538,6 +1676,22 @@ function buildElecDetailExtra(r){
   chkHtml+='</tbody></table></div>';
   return acbHtml+chkHtml;
 }
+// 발전기점검 상세 — 유류현황 1건 + 점검체크리스트 20개를 읽기전용 표로 덧붙임
+function buildGeneratorDetailExtra(r){
+  const fuel=r._fuel;
+  let fuelHtml=`<div class="sc-hd" style="margin-top:16px">유류현황</div>
+    <div class="tbl-wrap" style="margin-bottom:14px"><table><thead><tr><th>종류</th><th class="r">용량(L)</th><th class="r">전일재고량(L)</th><th class="r">입고량(L)</th><th class="r">사용량(L)</th><th class="r">금일재고량(L)</th></tr></thead><tbody>
+      <tr><td>${esc(fuel?fuel.종류:'-')}</td><td class="r">${fuel?fmtWon(fuel.용량):'-'}</td><td class="r">${fuel?fmtWon(fuel.전일재고량):'-'}</td><td class="r">${fuel?fmtWon(fuel.입고량):'-'}</td><td class="r">${fuel?fmtWon(fuel.사용량):'-'}</td><td class="r">${fuel?fmtWon(fuel.금일재고량):'-'}</td></tr>
+    </tbody></table></div>`;
+  let chkHtml=`<div class="sc-hd">점검체크리스트(20개)</div>
+    <div class="tbl-wrap"><table><thead><tr><th>점검구분</th><th>점검내용</th><th>결과</th><th>특이사항</th></tr></thead><tbody>`;
+  GENERATOR_CHECKLIST.forEach(c=>{
+    const rec=generatorChkLookup(r, c);
+    chkHtml+=`<tr><td>${esc(c.점검구분)}</td><td>${esc(c.점검내용)}</td><td>${esc(rec&&rec.결과?rec.결과:'-')}</td><td>${esc(rec&&rec.특이사항?rec.특이사항:'-')}</td></tr>`;
+  });
+  chkHtml+='</tbody></table></div>';
+  return fuelHtml+chkHtml;
+}
 function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget) return;
   document.getElementById('detailModal').classList.remove('modal-open');
@@ -1555,8 +1709,9 @@ function buildFieldHtml(f, idx, curVal, tabId){
   if(f.uiType==='cascade-select'){
     // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
     const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
+    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}">
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
@@ -1577,8 +1732,9 @@ function buildFieldHtml(f, idx, curVal, tabId){
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
     const isCustom = curVal && !(f.options||[]).includes(curVal);
     const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
+    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}">
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
         <option value="">선택</option>
         <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
@@ -1694,6 +1850,43 @@ function buildElecFormExtra(r){
   chkHtml+='</tbody></table></div>';
   return acbHtml+chkHtml;
 }
+// 발전기점검 신규등록/수정 — 유류현황 1건(단일 행 입력) + 점검체크리스트 20개 입력 그리드(부모 필드 뒤에 덧붙임)
+function buildGeneratorFormExtra(r){
+  const fuel=r?r._fuel:null;
+  let fuelHtml=`<div class="form-group-hd">유류현황(1건)</div>
+    <div class="modal-hint" style="margin:-2px 0 8px">※ 종류·용량(L)은 터널명 선택 시 자동으로 채워집니다(필요하면 직접 수정 가능). 재고 값은 실측값을 입력하세요.</div>
+    <div class="form-group-grid">
+      <div class="modal-field"><label class="modal-label">종류</label><input class="modal-input" id="gfuel_type" type="text" value="${esc(fuel?fuel.종류:'경유')}"/></div>
+      <div class="modal-field"><label class="modal-label">용량(L)</label><input class="modal-input" id="gfuel_cap" type="number" step="1" value="${fuel&&fuel.용량!=null?fuel.용량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">전일재고량(L)</label><input class="modal-input" id="gfuel_prev" type="number" step="1" value="${fuel&&fuel.전일재고량!=null?fuel.전일재고량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">입고량(L)</label><input class="modal-input" id="gfuel_in" type="number" step="1" value="${fuel&&fuel.입고량!=null?fuel.입고량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">사용량(L)</label><input class="modal-input" id="gfuel_use" type="number" step="1" value="${fuel&&fuel.사용량!=null?fuel.사용량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">금일재고량(L)</label><input class="modal-input" id="gfuel_today" type="number" step="1" value="${fuel&&fuel.금일재고량!=null?fuel.금일재고량:''}"/></div>
+    </div>`;
+  let chkHtml=`<div class="form-group-hd">점검체크리스트(20개)</div>
+    <div class="tbl-wrap"><table><thead><tr><th>점검구분</th><th>점검내용</th><th>결과</th><th>특이사항</th></tr></thead><tbody>`;
+  GENERATOR_CHECKLIST.forEach((c,i)=>{
+    const rec=generatorChkLookup(r, c);
+    chkHtml+=`<tr><td>${esc(c.점검구분)}</td><td>${esc(c.점검내용)}</td>
+      <td><input class="modal-input elec-grid-input" style="width:100px" type="text" id="gchkr_${i}" value="${esc(rec?rec.결과:'')}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:100px" type="text" id="gchks_${i}" value="${esc(rec?rec.특이사항:'')}"/></td>
+    </tr>`;
+  });
+  chkHtml+='</tbody></table></div>';
+  return fuelHtml+chkHtml;
+}
+// 발전기점검 탭 전용 — 터널명 select(ff_0) 변경 시 유류현황 종류/용량(L) 입력을 자동으로 맞춰준다(고정 스펙,
+// TAB_DEFS 터널명 필드의 extraOnChange 훅으로 연결됨)
+function syncGeneratorFuelDefault(){
+  const tunnelSel=document.getElementById('ff_0');
+  if(!tunnelSel) return;
+  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_0c')?.value||'') : tunnelSel.value;
+  const def=TUNNEL_GENERATOR_FUEL[t];
+  if(!def) return;
+  const typeEl=document.getElementById('gfuel_type'), capEl=document.getElementById('gfuel_cap');
+  if(typeEl) typeEl.value=def.종류;
+  if(capEl) capEl.value=def.용량;
+}
 // 변압기온도 탭 — 지점번호 ①~⑮ 위치를 보여주는 고정 참고사진(전면/후면). 터널·변압기종류 관계없이
 // 공통(원본 4개 터널 엑셀 템플릿 "변압기온도측정" 시트에 동일 이미지가 쓰였음, 2026-07-16 확인).
 const TRANSFORMER_REF_IMAGES=[
@@ -1736,9 +1929,10 @@ function openAddModal(tabId, recordId){
   });
   if(groupOpen) html+='</div>';
   if(tabId==='elec') html+=buildElecFormExtra(r);
+  if(tabId==='generator') html+=buildGeneratorFormExtra(r);
   if(tabId==='transformer') html+=buildTransformerRefHtml();
   document.getElementById('addModalFields').innerHTML=html;
-  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='transformer');
+  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator' || tabId==='transformer');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
@@ -1819,6 +2013,7 @@ function removePhotoFile(idx, fieldId){
 }
 function submitAddForm(){
   if(EDIT_TAB==='elec'){ submitElecForm(); return; }
+  if(EDIT_TAB==='generator'){ submitGeneratorForm(); return; }
   const tabDef=getTabDef(EDIT_TAB);
   if(!tabDef) return;
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
@@ -1969,10 +2164,110 @@ async function submitElecForm(){
     console.error(e);
   }
 }
+// 발전기점검 신규등록/수정 — 부모(DB1) 1건 + 유류현황(DB2) 1건 + 점검체크리스트(DB3) 20건을 순차 upsert
+// (수정 모드는 기존 자식 페이지가 있으면 PATCH, 없으면 relation과 함께 신규 생성 — 전기설비기록 탭과 동일 방식)
+async function submitGeneratorForm(){
+  const tabDef=getTabDef('generator');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    const isEmpty=Array.isArray(v)?v.length===0:!v;
+    if(f.required && isEmpty && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const parentProps={};
+  tabDef.fields.forEach(f=>{
+    if(f.header) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) parentProps[f.key]=val;
+  });
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  const isEdit=!!EDIT_PAGE_ID;
+  const r = isEdit ? TAB_STATE['generator'].records.find(x=>x.id===EDIT_PAGE_ID) : null;
+  btn.disabled=true;
+  const total=1+1+GENERATOR_CHECKLIST.length;
+  let done=0;
+  const progress=()=>{ lbl.textContent=(isEdit?'수정':'등록')+' 중... ('+(++done)+'/'+total+')'; };
+
+  try{
+    let parentId=EDIT_PAGE_ID;
+    const parentTask = isEdit
+      ? notionFetch('/v1/pages/'+parentId, 'PATCH', {properties:parentProps}).then(()=>progress())
+      : notionFetch('/v1/pages', 'POST', {parent:{database_id:tabDef.dbId}, properties:parentProps}).then(created=>{ parentId=created.id; progress(); });
+    if(!isEdit) await parentTask;
+
+    const childTasks=[];
+    const existingFuel = r ? r._fuel : null;
+    const fuelType=document.getElementById('gfuel_type')?.value||'';
+    const fuelCap=document.getElementById('gfuel_cap')?.value;
+    const fuelPrev=document.getElementById('gfuel_prev')?.value;
+    const fuelIn=document.getElementById('gfuel_in')?.value;
+    const fuelUse=document.getElementById('gfuel_use')?.value;
+    const fuelToday=document.getElementById('gfuel_today')?.value;
+    childTasks.push(()=>{
+      const props={
+        '터널명':buildPropValue('select', values['터널명']),
+        '가동일자':buildPropValue('date', values['가동일자']),
+        '종류':buildPropValue('text', fuelType),
+        '용량(L)':buildPropValue('number', fuelCap),
+        '전일재고량(L)':buildPropValue('number', fuelPrev),
+        '입고량(L)':buildPropValue('number', fuelIn),
+        '사용량(L)':buildPropValue('number', fuelUse),
+        '금일재고량(L)':buildPropValue('number', fuelToday)
+      };
+      const p = existingFuel
+        ? notionFetch('/v1/pages/'+existingFuel.id, 'PATCH', {properties:props})
+        : (props['제목']=buildPropValue('title', values['터널명']+' 유류사용량'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator2}, properties:props}));
+      return p.then(v=>{ progress(); return v; });
+    });
+
+    for(let i=0;i<GENERATOR_CHECKLIST.length;i++){
+      const c=GENERATOR_CHECKLIST[i];
+      const resultVal=document.getElementById('gchkr_'+i)?.value;
+      const noteVal=document.getElementById('gchks_'+i)?.value;
+      const existing=generatorChkLookup(r, c);
+      childTasks.push(()=>{
+        const props={
+          '터널명':buildPropValue('select', values['터널명']),
+          '가동일자':buildPropValue('date', values['가동일자']),
+          '점검구분':buildPropValue('select', c.점검구분),
+          '결과':buildPropValue('text', resultVal),
+          '특이사항':buildPropValue('text', noteVal)
+        };
+        const p = existing
+          ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
+          : (props['점검내용']=buildPropValue('text', c.점검내용), props['제목']=buildPropValue('title', values['터널명']+' 점검사항'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator3}, properties:props}));
+        return p.then(v=>{ progress(); return v; });
+      });
+    }
+
+    const waits=[runWithConcurrency(childTasks, 6)];
+    if(isEdit) waits.push(parentTask);
+    await Promise.all(waits);
+
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    closeAddModal();
+    loadTabData('generator');
+    toast((isEdit?'수정':'등록')+'되었습니다. (기본정보 + 유류현황 1건 + 점검체크리스트 20건)');
+  }catch(e){
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    alert((isEdit?'수정':'등록')+' 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
+    console.error(e);
+  }
+}
 function deleteRecord(tabId, pageId){
   if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   if(!confirm('이 기록을 삭제(휴지통 이동)할까요?')) return;
   if(tabId==='elec'){ deleteElecRecord(pageId); return; }
+  if(tabId==='generator'){ deleteGeneratorRecord(pageId); return; }
   fetch(CFG.workerUrl+'/v1/pages/'+pageId,{
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
@@ -1990,6 +2285,18 @@ async function deleteElecRecord(pageId){
     const allIds=[pageId, ...childIds]; // 부모·자식 모두 서로 독립적인 삭제라 함께 동시 진행
     await runWithConcurrency(allIds.map(id=>()=>notionFetch('/v1/pages/'+id, 'PATCH', {in_trash:true}).catch(()=>{})), 6);
     closeDetailModal(); loadTabData('elec'); toast('삭제되었습니다. (기본정보 + 연결 하위 항목 '+childIds.length+'건)');
+  }catch(e){
+    alert('삭제 실패: '+e.message); console.error(e);
+  }
+}
+// 발전기점검 삭제 — 부모(DB1) + 연결된 유류현황(DB2)·점검체크리스트(DB3) 자식 페이지까지 함께 휴지통 이동
+async function deleteGeneratorRecord(pageId){
+  const r=TAB_STATE['generator'].records.find(x=>x.id===pageId);
+  const childIds=[...(r&&r._fuel?[r._fuel.id]:[]), ...(r?.['_chk']||[]).map(x=>x.id)];
+  try{
+    const allIds=[pageId, ...childIds];
+    await runWithConcurrency(allIds.map(id=>()=>notionFetch('/v1/pages/'+id, 'PATCH', {in_trash:true}).catch(()=>{})), 6);
+    closeDetailModal(); loadTabData('generator'); toast('삭제되었습니다. (기본정보 + 연결 하위 항목 '+childIds.length+'건)');
   }catch(e){
     alert('삭제 실패: '+e.message); console.error(e);
   }
@@ -2111,6 +2418,7 @@ function buildExcelReport(opts){
 }
 function exportTabExcel(tabId){
   if(tabId==='elec'){ exportElecExcel(); return; }
+  if(tabId==='generator'){ exportGeneratorExcel(); return; }
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
   const fields=dataFields(tabDef);
@@ -2175,6 +2483,45 @@ function exportElecExcel(){
   buildExcelReport({
     btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
     sheetName:'전기설비기록', title:'월간점검결과 - 전기설비기록', fnamePrefix:'월간점검결과_전기설비기록',
+    columns, rows, orientation:'portrait'
+  });
+}
+// 발전기점검 엑셀 — 기본정보 9 + 유류현황 6 + 점검체크리스트 20(항목별 결과 컬럼) + 특이사항 종합
+function exportGeneratorExcel(){
+  const tabDef=getTabDef('generator');
+  const baseFields=dataFields(tabDef);
+  const chkCols=GENERATOR_CHECKLIST.map((c,i)=>({key:'chk_'+i, header:c.점검구분+' - '+c.점검내용}));
+  const rows=TAB_STATE['generator'].records.map(r=>{
+    const row={};
+    baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
+    const fuel=r._fuel;
+    row['유류종류']=fuel?fuel.종류:'';
+    row['유류용량(L)']=fuel?(fuel.용량||0):0;
+    row['전일재고량(L)']=fuel?(fuel.전일재고량||0):0;
+    row['입고량(L)']=fuel?(fuel.입고량||0):0;
+    row['사용량(L)']=fuel?(fuel.사용량||0):0;
+    row['금일재고량(L)']=fuel?(fuel.금일재고량||0):0;
+    GENERATOR_CHECKLIST.forEach((c,i)=>{
+      const rec=generatorChkLookup(r, c);
+      row['chk_'+i]=rec?rec.결과:'';
+    });
+    row['특이사항종합']=(r._chk||[]).filter(x=>x.특이사항).map(x=>x.점검내용+': '+x.특이사항).join('; ');
+    return row;
+  });
+  const columns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}))
+    .concat([
+      {key:'유류종류', header:'유류 종류'},
+      {key:'유류용량(L)', header:'유류 용량(L)', numFmt:'#,##0'},
+      {key:'전일재고량(L)', header:'전일재고량(L)', numFmt:'#,##0'},
+      {key:'입고량(L)', header:'입고량(L)', numFmt:'#,##0'},
+      {key:'사용량(L)', header:'사용량(L)', numFmt:'#,##0'},
+      {key:'금일재고량(L)', header:'금일재고량(L)', numFmt:'#,##0'}
+    ])
+    .concat(chkCols)
+    .concat([{key:'특이사항종합', header:'점검 특이사항', wrap:true}]);
+  buildExcelReport({
+    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성',
+    sheetName:'발전기점검', title:'월간점검결과 - 발전기점검', fnamePrefix:'월간점검결과_발전기점검',
     columns, rows, orientation:'portrait'
   });
 }
