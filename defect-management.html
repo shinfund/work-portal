@@ -494,19 +494,31 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">번호/공구</label>
-        <input id="mgNo" class="modal-input" type="text" placeholder="예) 제1공구, 1, 6-2" autocomplete="off"/>
+        <select id="mgNo" class="modal-select" onchange="onSelectChange(this,'mgNoCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="mgNoCustom" class="modal-input" type="text" placeholder="예) 제1공구, 1, 6-2 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">공사명 <span class="modal-required">*</span></label>
-        <input id="mgName" class="modal-input" type="text" placeholder="공사명 입력" autocomplete="off"/>
+        <select id="mgName" class="modal-select" onchange="onSelectChange(this,'mgNameCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="mgNameCustom" class="modal-input" type="text" placeholder="공사명 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">위치</label>
-        <input id="mgLoc" class="modal-input" type="text" placeholder="위치 입력" autocomplete="off"/>
+        <select id="mgLoc" class="modal-select" onchange="onSelectChange(this,'mgLocCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="mgLocCustom" class="modal-input" type="text" placeholder="위치 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">하자공종</label>
-        <input id="mgType" class="modal-input" type="text" placeholder="예) 전기, 자탐설비" autocomplete="off"/>
+        <select id="mgType" class="modal-select" onchange="onSelectChange(this,'mgTypeCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="mgTypeCustom" class="modal-input" type="text" placeholder="예) 전기, 자탐설비 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">계약금액(원)</label>
@@ -548,7 +560,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">계약자</label>
-        <input id="mgContractor" class="modal-input" type="text" placeholder="계약자(업체명) 입력" autocomplete="off"/>
+        <select id="mgContractor" class="modal-select" onchange="onSelectChange(this,'mgContractorCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="mgContractorCustom" class="modal-input" type="text" placeholder="계약자(업체명) 직접 입력" autocomplete="off" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeMgmtEditModal()">취소</button>
@@ -4203,7 +4218,20 @@ function openMgmtAddModal(){
   var lbl = document.getElementById('mgSubmitLabel');
   if(lbl) lbl.textContent = '등록';
 
-  ['mgNo','mgName','mgLoc','mgType','mgAmt','mgGuaranteeAmt','mgStart','mgEnd','mgContractor'].forEach(function(id){
+  // 번호/공구·공사명·위치·하자공종·계약자는 기존 데이터에서 자주 반복되는 값이라
+  // 업체연락처 탭의 ceTunnel/ceCo 패턴과 동일하게 목록 드롭다운+직접입력으로 구성
+  var mgNos         = getUniqueValuesFrom(MGMT_DATA, '번호/공구');
+  var mgNames       = getUniqueValuesFrom(MGMT_DATA, '공사명');
+  var mgLocs        = getUniqueValuesFrom(MGMT_DATA, '위치');
+  var mgTypes       = getUniqueValuesFrom(MGMT_DATA, '하자공종');
+  var mgContractors = getUniqueValuesFrom(MGMT_DATA, '계약자');
+  buildGenericSelectOpts(document.getElementById('mgNo'), document.getElementById('mgNoCustom'), mgNos, '');
+  buildGenericSelectOpts(document.getElementById('mgName'), document.getElementById('mgNameCustom'), mgNames, '');
+  buildGenericSelectOpts(document.getElementById('mgLoc'), document.getElementById('mgLocCustom'), mgLocs, '');
+  buildGenericSelectOpts(document.getElementById('mgType'), document.getElementById('mgTypeCustom'), mgTypes, '');
+  buildGenericSelectOpts(document.getElementById('mgContractor'), document.getElementById('mgContractorCustom'), mgContractors, '');
+
+  ['mgAmt','mgGuaranteeAmt','mgStart','mgEnd'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.value = '';
   });
@@ -4239,18 +4267,24 @@ function openMgmtEditModal(idx){
     if(el.style !== undefined) el.style.display = 'none';
   });
 
+  var mgNos         = getUniqueValuesFrom(MGMT_DATA, '번호/공구');
+  var mgNames       = getUniqueValuesFrom(MGMT_DATA, '공사명');
+  var mgLocs        = getUniqueValuesFrom(MGMT_DATA, '위치');
+  var mgTypes       = getUniqueValuesFrom(MGMT_DATA, '하자공종');
+  var mgContractors = getUniqueValuesFrom(MGMT_DATA, '계약자');
+  buildGenericSelectOpts(document.getElementById('mgNo'), document.getElementById('mgNoCustom'), mgNos, r['번호/공구']||'');
+  buildGenericSelectOpts(document.getElementById('mgName'), document.getElementById('mgNameCustom'), mgNames, r['공사명']||'');
+  buildGenericSelectOpts(document.getElementById('mgLoc'), document.getElementById('mgLocCustom'), mgLocs, r['위치']||'');
+  buildGenericSelectOpts(document.getElementById('mgType'), document.getElementById('mgTypeCustom'), mgTypes, r['하자공종']||'');
+  buildGenericSelectOpts(document.getElementById('mgContractor'), document.getElementById('mgContractorCustom'), mgContractors, r['계약자']||'');
+
   document.getElementById('mgCategory').value = r['구분']||'';
-  document.getElementById('mgNo').value = r['번호/공구']||'';
-  document.getElementById('mgName').value = r['공사명']||'';
-  document.getElementById('mgLoc').value = r['위치']||'';
-  document.getElementById('mgType').value = r['하자공종']||'';
   document.getElementById('mgAmt').value = r['계약금액(원)']||'';
   document.getElementById('mgGuaranteeAmt').value = r['보증금액(원)']||'';
   document.getElementById('mgRate').value = r['보증율']||'';
   document.getElementById('mgStart').value = r['하자보수시작일']||'';
   document.getElementById('mgEnd').value = r['하자보수종료일']||'';
   document.getElementById('mgPeriod').value = r['보증기간']||'';
-  document.getElementById('mgContractor').value = r['계약자']||'';
 
   closeDetail();
   document.getElementById('mgmtEditModal').classList.add('modal-open');
@@ -4266,7 +4300,7 @@ function closeMgmtEditModal(){
 function submitMgmtForm(confirmed){
   var isAdd = (MGMT_EDIT_IDX === null);
 
-  var name = document.getElementById('mgName').value.trim();
+  var name = getSelectValue('mgName','mgNameCustom');
   if(!name){ alert('공사명을 입력해주세요.'); document.getElementById('mgName').focus(); return; }
 
   if(!isAdd && !confirmed){
@@ -4280,16 +4314,16 @@ function submitMgmtForm(confirmed){
   if(lbl) lbl.textContent = isAdd ? '등록 중...' : '저장 중...';
 
   var category    = getSelectValue('mgCategory','mgCategoryCustom');
-  var no          = document.getElementById('mgNo').value.trim();
-  var loc         = document.getElementById('mgLoc').value.trim();
-  var type        = document.getElementById('mgType').value.trim();
+  var no          = getSelectValue('mgNo','mgNoCustom');
+  var loc         = getSelectValue('mgLoc','mgLocCustom');
+  var type        = getSelectValue('mgType','mgTypeCustom');
   var amtRaw      = document.getElementById('mgAmt').value.trim();
   var gAmtRaw     = document.getElementById('mgGuaranteeAmt').value.trim();
   var rate        = getSelectValue('mgRate','mgRateCustom');
   var start       = document.getElementById('mgStart').value;
   var end         = document.getElementById('mgEnd').value;
   var period      = getSelectValue('mgPeriod','mgPeriodCustom');
-  var contractor  = document.getElementById('mgContractor').value.trim();
+  var contractor  = getSelectValue('mgContractor','mgContractorCustom');
   var amt  = amtRaw==='' ? null : Number(amtRaw);
   var gAmt = gAmtRaw==='' ? null : Number(gAmtRaw);
 
