@@ -307,8 +307,9 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* 모달 */
   .modal-box{padding:18px;border-radius:var(--r16)}
   .detail-modal-box{max-height:90vh}
-  /* [문제2 수정] 모달 입력창도 16px 미만이면 iOS 자동 확대 발생 */
-  .modal-input,.modal-select,.modal-textarea{font-size:16px}
+  /* [문제2 수정] 모달 입력창도 16px 미만이면 iOS 자동 확대 발생
+     (select·textarea는 정의가 파일 뒤쪽에 있어 거기서 별도로 재지정함) */
+  .modal-input{font-size:16px}
 }
 
 /* 소형 모바일 (~ 380px) */
@@ -367,7 +368,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:640px){.modal-form-row{grid-template-columns:1fr}}
+@media(max-width:640px){
+  .modal-form-row{grid-template-columns:1fr}
+  /* [문제2 수정] select/textarea 정의가 이 아래(cascade 순서상 나중)에 있어 위쪽 모바일
+     블록의 16px 지정이 무효화됨 — 여기서 다시 지정해 iOS 자동 확대 방지 */
+  .modal-select,.modal-textarea{font-size:16px}
+}
 
 /* ── PHOTO UPLOAD ── */
 .photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}

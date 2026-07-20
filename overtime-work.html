@@ -78,7 +78,7 @@ html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
 /* ── HEADER ── */
-.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
+.header{background:var(--hdr-bg);min-height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
 .header-left{display:flex;align-items:center;gap:10px}
 .logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
 .header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
@@ -276,6 +276,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
 .theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
 
+/* ── 모바일: 폼 입력 확대(iOS 자동 줌 방지) + 터치 타겟 확보 ── */
+@media(max-width:640px){
+  .search-box,.modal-input,.modal-select{font-size:16px}
+  .hdr-btn{min-height:34px;padding:6px 12px}
+  .top-tab{min-height:38px;padding:9px 4px}
+}
 @media(max-width:480px){
   .main{padding:10px 10px}
   .header{padding:11px 12px}
@@ -283,7 +289,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   td{padding:10px 10px}
   th{padding:9px 10px}
 }
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100% - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;line-height:1.5}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 </style>
 </head>
