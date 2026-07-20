@@ -64,14 +64,17 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── HEADER ── */
 .header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
-.header-left{display:flex;align-items:center;gap:10px}
-.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
-.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
-.header-btns{display:flex;gap:6px}
-.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1}
+/* 로그인 전(⚠ 로그인 필요 안내) 등 last-update 문구가 길어지는 상태에서 header-right가 넓어지면
+   header-left가 좁아지는데, 기존엔 줄바꿈되어 44px 고정 header 높이를 넘어 위로 잘려 보이는 문제가
+   있었다 — nowrap+ellipsis로 잘림 없이 말줄임 처리 */
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;flex-shrink:0}
+.header-btns{display:flex;gap:6px;flex-shrink:0}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0}
 .hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
 .hdr-btn:disabled{opacity:.4;cursor:not-allowed}
-.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
@@ -253,7 +256,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   th{padding:9px 10px}
   .form-group-grid{grid-template-columns:1fr}
 }
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 </style>
 </head>
