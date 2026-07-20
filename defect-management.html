@@ -342,6 +342,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 #contactEditModal{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s,visibility .15s}
 #contactEditModal.modal-open{visibility:visible;opacity:1;pointer-events:auto}
 
+/* ── 하자관리(보증) EDIT MODAL ── */
+#mgmtEditModal{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s,visibility .15s}
+#mgmtEditModal.modal-open{visibility:visible;opacity:1;pointer-events:auto}
+
 /* ── ADD FORM MODAL ── */
 #addModal{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .15s,visibility .15s}
 #addModal.modal-open{visibility:visible;opacity:1;pointer-events:auto}
@@ -464,6 +468,91 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeContactEditModal()">취소</button>
         <button class="modal-save" id="ceSubmitBtn" onclick="submitContactForm()"><span id="ceSubmitLabel">저장</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 하자관리(보증) 수정/신규등록 모달 -->
+<div id="mgmtEditModal">
+  <div class="modal-backdrop">
+    <div class="modal-box" style="max-width:480px;max-height:90vh;overflow-y:auto" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="mgmtEditModalTitle">하자관리 수정</span></h3>
+        <button class="detail-modal-close" onclick="closeMgmtEditModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">구분</label>
+        <select id="mgCategory" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'mgCategoryCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="전기공사">전기공사</option>
+          <option value="소방(전기)">소방(전기)</option>
+          <option value="지급자재">지급자재</option>
+        </select>
+        <input id="mgCategoryCustom" class="modal-input" type="text" placeholder="구분 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">번호/공구</label>
+        <input id="mgNo" class="modal-input" type="text" placeholder="예) 제1공구, 1, 6-2" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">공사명 <span class="modal-required">*</span></label>
+        <input id="mgName" class="modal-input" type="text" placeholder="공사명 입력" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">위치</label>
+        <input id="mgLoc" class="modal-input" type="text" placeholder="위치 입력" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">하자공종</label>
+        <input id="mgType" class="modal-input" type="text" placeholder="예) 전기, 자탐설비" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">계약금액(원)</label>
+        <input id="mgAmt" class="modal-input" type="number" placeholder="숫자만 입력" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">보증금액(원)</label>
+        <input id="mgGuaranteeAmt" class="modal-input" type="number" placeholder="숫자만 입력" autocomplete="off"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">보증율</label>
+        <select id="mgRate" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'mgRateCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="2%">2%</option>
+          <option value="3%">3%</option>
+          <option value="5%">5%</option>
+        </select>
+        <input id="mgRateCustom" class="modal-input" type="text" placeholder="보증율 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">하자보수시작일</label>
+        <input id="mgStart" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">하자보수종료일</label>
+        <input id="mgEnd" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">보증기간</label>
+        <select id="mgPeriod" class="modal-select" style="max-width:200px" onchange="onSelectChange(this,'mgPeriodCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="1년">1년</option>
+          <option value="2년">2년</option>
+          <option value="3년">3년</option>
+        </select>
+        <input id="mgPeriodCustom" class="modal-input" type="text" placeholder="보증기간 직접 입력" style="display:none;margin-top:6px;max-width:200px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">계약자</label>
+        <input id="mgContractor" class="modal-input" type="text" placeholder="계약자(업체명) 입력" autocomplete="off"/>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeMgmtEditModal()">취소</button>
+        <button class="modal-save" id="mgSubmitBtn" onclick="submitMgmtForm()"><span id="mgSubmitLabel">저장</span></button>
       </div>
     </div>
   </div>
@@ -700,6 +789,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div class="top-nav" role="tablist">
     <button class="tab-btn on" role="tab" aria-selected="true"  onclick="switchTab(1,this)">하자내역</button>
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(5,this)">업체연락처</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(6,this)">하자관리</button>
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(2,this)">미처리</button>
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(3,this)">터널별</button>
     <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab(4,this)">업체별</button>
@@ -915,6 +1005,50 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   </div>
 </div>
 
+<!-- 패널6: 하자관리(보증) -->
+<div class="panel" id="p6">
+  <div class="filter-row">
+    <div class="dd-wrap" id="mgmtCategoryDdWrap">
+      <button class="dd-btn" id="mgmtCategoryDdBtn" onclick="toggleMgmtCategoryDd()" aria-haspopup="listbox" aria-label="구분 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="mgmtCategoryDdLabel">구분 전체</span>
+      </button>
+      <div class="dd-menu" id="mgmtCategoryDdMenu"></div>
+    </div>
+    <input class="search-box" id="mgmtSearchBox" placeholder="🔍 공사명, 위치, 계약자 검색..." oninput="renderMgmtTable()">
+    <button class="hdr-btn" onclick="openMgmtAddModal()" style="background:#185FA5;border-color:#185FA5;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      신규등록
+    </button>
+    <button id="mgmtExcelExportBtn" onclick="exportMgmtExcel()" style="background:#0F6E56;border-color:#0F6E56;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="mgmtExcelExportLabel">엑셀 생성</span>
+    </button>
+  </div>
+  <div class="filter-count" id="mgmtCount"></div>
+  <div class="tbl-wrap">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th style="width:84px;white-space:nowrap">구분</th>
+          <th style="width:70px;white-space:nowrap">번호/공구</th>
+          <th style="min-width:220px">공사명</th>
+          <th style="min-width:160px">위치</th>
+          <th style="width:84px;white-space:nowrap">하자공종</th>
+          <th style="width:110px;white-space:nowrap">계약금액(원)</th>
+          <th style="width:110px;white-space:nowrap">보증금액(원)</th>
+          <th style="width:60px;white-space:nowrap">보증율</th>
+          <th style="width:90px;white-space:nowrap">보수시작일</th>
+          <th style="width:90px;white-space:nowrap">보수종료일</th>
+          <th style="width:60px;white-space:nowrap">보증기간</th>
+          <th style="min-width:140px">계약자</th>
+        </tr></thead>
+        <tbody id="mgmtBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 </div><!-- /wrap -->
 
 <script>
@@ -960,7 +1094,8 @@ var EDIT_PAGE_ID = null; // 수정 모드: 노션 페이지 ID (null이면 등�
 var WORKER_URL    = 'https://notion-proxy.shinfund.workers.dev';
 var DB_ID         = '2e159c8c9c0a80d4afa2d9421e1fdc0e';
 var CONTACT_DB_ID = '5104d4ad640e4c69884d3d32dc2d4b11';
-var CFG = { workerUrl: WORKER_URL, dbId: DB_ID, contactDbId: CONTACT_DB_ID, authToken:'', authExpires:0 };
+var MGMT_DB_ID    = 'c63f683a34d94382908ea2e62f32eb38';
+var CFG = { workerUrl: WORKER_URL, dbId: DB_ID, contactDbId: CONTACT_DB_ID, mgmtDbId: MGMT_DB_ID, authToken:'', authExpires:0 };
 (function(){
   try{
     CFG.authToken   = localStorage.getItem('wp_authToken') || '';
@@ -1090,6 +1225,9 @@ window.addEventListener('storage', function(e){
     // 업체연락처 탭도 로그인 상태 변경에 맞춰 다시 불러오도록 리셋(현재 그 탭이면 즉시 재조회)
     CONTACT_LOADED = false;
     if(CURRENT_TAB === 5){ loadContactData(); }
+    // 하자관리 탭도 동일하게 리셋
+    MGMT_LOADED = false;
+    if(CURRENT_TAB === 6){ loadMgmtData(); }
   }
 });
 // ESC 키로 모달 닫기
@@ -1099,6 +1237,7 @@ document.addEventListener('keydown',function(e){
     document.getElementById('detailModal').classList.remove('modal-open');
     document.getElementById('addModal').classList.remove('modal-open');
     document.getElementById('contactEditModal').classList.remove('modal-open');
+    document.getElementById('mgmtEditModal').classList.remove('modal-open');
     document.body.style.overflow='';
   }
 });
@@ -2234,6 +2373,7 @@ function switchTab(n,el){
   el.setAttribute('aria-selected','true');
   updateKPI();
   if(n===5 && !CONTACT_LOADED){ loadContactData(); }
+  if(n===6 && !MGMT_LOADED){ loadMgmtData(); }
   if(n<5) renderCurrentTab();
 }
 
@@ -3690,6 +3830,595 @@ function exportContactExcel(){
     btnId:'contactExcelExportBtn', lblId:'contactExcelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'업체연락처', title:'업체연락처', fnamePrefix:'업체연락처',
     columns: EXCEL_CONTACT_COLUMNS, rows: rows, orientation:'portrait'
+  });
+}
+
+/* ══════════════════════════════════════════════════════════
+   ── 하자관리(보증) 탭 — 노션 하자관리DB 연동 (전기공사/소방(전기)/
+   지급자재 계약별 보증기간·보증금액 관리, 업체연락처 탭과 동일한
+   probe 기반 속성맵 + CRUD + 엑셀생성 패턴을 그대로 재사용) ──
+   ══════════════════════════════════════════════════════════ */
+var MGMT_DATA = [];
+var MGMT_LOADED = false;
+var MGMT_FILTER = { category:'ALL' };
+var MGMT_PROP_MAP = {}; // 실제 Notion 속성명 매핑 (빌드 후 사용)
+var MGMT_EDIT_IDX = null;
+var AFTER_MGMT_RELOAD_CB = null; // 하자관리 신규 등록 후 자동 상세 오픈 콜백
+
+// 공개 배포 앱이라 실제 계약 상대방·구간명 대신 마스킹한 견본 데이터(비로그인 상태 폴백)
+var MGMT_DEMO_DATA = [
+  {'구분':'전기공사','번호/공구':'제1공구','공사명':'○○터널 전기공사 (제1공구)','위치':'○○시 ○○읍 ~ ○○시 ○○면','하자공종':'전기','계약금액(원)':'9049131000','보증금액(원)':'180982620','보증율':'2%','하자보수시작일':'2025-12-18','하자보수종료일':'2026-12-17','보증기간':'1년','계약자':'업체A'},
+  {'구분':'소방(전기)','번호/공구':'제1공구','공사명':'○○터널 소방(전기)공사 (제1공구)','위치':'○○시 ○○읍 ~ ○○시 ○○면','하자공종':'자탐설비','계약금액(원)':'621230045','보증금액(원)':'12424601','보증율':'2%','하자보수시작일':'2025-12-18','하자보수종료일':'2026-12-17','보증기간':'3년','계약자':'업체B'},
+  {'구분':'지급자재','번호/공구':'1','공사명':'○○터널 수배전반 제조구매(설치포함)','위치':'','하자공종':'전기','계약금액(원)':'1093123608','보증금액(원)':'32793708','보증율':'3%','하자보수시작일':'2025-11-08','하자보수종료일':'2027-11-07','보증기간':'2년','계약자':'업체C'},
+  {'구분':'전기공사','번호/공구':'제2공구','공사명':'○○터널 전기공사 (제2공구)','위치':'○○면 ~ ○○리','하자공종':'전기','계약금액(원)':'2685100600','보증금액(원)':'53702012','보증율':'2%','하자보수시작일':'2025-12-18','하자보수종료일':'2026-12-17','보증기간':'1년','계약자':'업체D'},
+  {'구분':'지급자재','번호/공구':'21','공사명':'○○터널 등 4개소 LED 터널등기구 제조구매','위치':'','하자공종':'전기','계약금액(원)':'545805500','보증금액(원)':'27290275','보증율':'5%','하자보수시작일':'2025-11-30','하자보수종료일':'2028-11-29','보증기간':'3년','계약자':'업체E'},
+  {'구분':'소방(전기)','번호/공구':'제2공구','공사명':'○○터널 소방(전기)공사 (제2공구)','위치':'○○면 ~ ○○리','하자공종':'비상경보','계약금액(원)':'544541742','보증금액(원)':'10890835','보증율':'2%','하자보수시작일':'2025-12-18','하자보수종료일':'2026-12-17','보증기간':'2년','계약자':'업체F'}
+];
+
+function fmtWon(v){
+  if(v===''||v===null||v===undefined) return '-';
+  var n = Number(v);
+  if(isNaN(n)) return '-';
+  return n.toLocaleString('ko-KR')+'원';
+}
+
+function buildMgmtPropMap(page){
+  if(!page || !page.properties) return;
+  var keys = Object.keys(page.properties);
+  var matchers = [
+    { key:'구분',           kws:['구분','category'] },
+    { key:'번호/공구',      kws:['번호/공구','번호공구','번호','공구','no'] },
+    { key:'공사명',         kws:['공사명','name','title'] },
+    { key:'위치',           kws:['위치','location'] },
+    { key:'하자공종',       kws:['하자공종','공종'] },
+    { key:'계약금액(원)',   kws:['계약금액(원)','계약금액','contract amount'] },
+    { key:'보증금액(원)',   kws:['보증금액(원)','보증금액','guarantee amount'] },
+    { key:'보증율',         kws:['보증율','보증률','rate'] },
+    { key:'하자보수시작일', kws:['하자보수시작일','시작일','start'] },
+    { key:'하자보수종료일', kws:['하자보수종료일','종료일','end'] },
+    { key:'보증기간',       kws:['보증기간','period'] },
+    { key:'계약자',         kws:['계약자','contractor'] },
+  ];
+  matchers.forEach(function(m){
+    for(var i=0;i<m.kws.length;i++){
+      var kw = m.kws[i].toLowerCase();
+      var found = null;
+      for(var j=0;j<keys.length;j++){
+        if(keys[j].toLowerCase()===kw){ found=keys[j]; break; }
+      }
+      if(!found) for(var j=0;j<keys.length;j++){
+        if(keys[j].toLowerCase().includes(kw)){ found=keys[j]; break; }
+      }
+      if(found){ MGMT_PROP_MAP[m.key]=found; break; }
+    }
+  });
+}
+function mpk(internalKey){
+  return Object.keys(MGMT_PROP_MAP).length ? (MGMT_PROP_MAP[internalKey]||null) : internalKey;
+}
+function setMProp(props, key, val){
+  var k = mpk(key);
+  if(k) props[k] = val;
+}
+
+function loadMgmtData(){
+  if(!isAuthed()){
+    MGMT_DATA = MGMT_DEMO_DATA.map(function(r,i){ return Object.assign({},r,{_idx:i+1,_pageId:null}); });
+    MGMT_LOADED = true;
+    renderMgmtPanel();
+    return;
+  }
+  fetch(CFG.workerUrl+'/v1/databases/'+CFG.mgmtDbId+'/query', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ page_size:100 })
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(data){
+    var pages = data.results||[];
+    if(pages.length && !Object.keys(MGMT_PROP_MAP).length) buildMgmtPropMap(pages[0]);
+    MGMT_DATA = pages.map(parseMgmtPage).filter(function(r){return r['공사명']||r._pageId;});
+    if(data.has_more && data.next_cursor){
+      return fetchMgmtNext(data.next_cursor);
+    }
+  })
+  .then(function(){
+    // 노션 뷰 기본 정렬(구분→번호/공구 오름차순)과 동일하게 클라이언트 정렬
+    MGMT_DATA.sort(function(a,b){
+      var ga=(a['구분']||''), gb=(b['구분']||'');
+      if(ga!==gb) return ga<gb?-1:1;
+      var na=(a['번호/공구']||''), nb=(b['번호/공구']||'');
+      return na<nb?-1:na>nb?1:0;
+    });
+    MGMT_DATA = MGMT_DATA.map(function(r,i){r._idx=i+1;return r;});
+    MGMT_LOADED = true;
+    renderMgmtPanel();
+  })
+  .catch(function(e){
+    console.error('하자관리 로드 실패:', e);
+    MGMT_DATA = MGMT_DEMO_DATA.map(function(r,i){ return Object.assign({},r,{_idx:i+1,_pageId:null}); });
+    // CONTACT와 동일하게 로드 실패를 LOADED=true로 고정하지 않아, 탭을 벗어났다가
+    // 다시 들어오면(switchTab의 !MGMT_LOADED 가드) 재시도되게 한다.
+    MGMT_LOADED = false;
+    renderMgmtPanel();
+  });
+}
+
+function fetchMgmtNext(cursor){
+  return fetch(CFG.workerUrl+'/v1/databases/'+CFG.mgmtDbId+'/query', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ page_size:100, start_cursor:cursor })
+  })
+  .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+  .then(function(data){
+    MGMT_DATA = MGMT_DATA.concat((data.results||[]).map(parseMgmtPage).filter(function(r){return r['공사명']||r._pageId;}));
+    if(data.has_more && data.next_cursor) return fetchMgmtNext(data.next_cursor);
+  });
+}
+
+function parseMgmtPage(page){
+  var p = page.properties||{};
+  var m = MGMT_PROP_MAP;
+  function gprop(internalKey){
+    var mapped = m[internalKey];
+    var name = mapped || internalKey;
+    return p[name] ? getPropText(p[name]) : '';
+  }
+  return {
+    _pageId: page.id||null,
+    '구분':           gprop('구분'),
+    '번호/공구':      gprop('번호/공구'),
+    '공사명':         gprop('공사명'),
+    '위치':           gprop('위치'),
+    '하자공종':       gprop('하자공종'),
+    '계약금액(원)':   gprop('계약금액(원)'),
+    '보증금액(원)':   gprop('보증금액(원)'),
+    '보증율':         gprop('보증율'),
+    '하자보수시작일': gprop('하자보수시작일'),
+    '하자보수종료일': gprop('하자보수종료일'),
+    '보증기간':       gprop('보증기간'),
+    '계약자':         gprop('계약자'),
+  };
+}
+
+function filteredMgmt(){
+  var q = (document.getElementById('mgmtSearchBox')||{value:''}).value.trim().toLowerCase();
+  return MGMT_DATA.filter(function(r){
+    var cMatch = MGMT_FILTER.category==='ALL' || r['구분']===MGMT_FILTER.category;
+    var qMatch = !q
+      || (r['공사명']||'').toLowerCase().includes(q)
+      || (r['위치']||'').toLowerCase().includes(q)
+      || (r['계약자']||'').toLowerCase().includes(q)
+      || (r['번호/공구']||'').toLowerCase().includes(q)
+      || (r['하자공종']||'').toLowerCase().includes(q);
+    return cMatch && qMatch;
+  });
+}
+
+function buildMgmtCategoryDd(){
+  var menu = document.getElementById('mgmtCategoryDdMenu');
+  if(!menu) return;
+  var opts = [{val:'ALL',label:'구분 전체'},{val:'전기공사',label:'전기공사'},{val:'소방(전기)',label:'소방(전기)'},{val:'지급자재',label:'지급자재'}];
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(MGMT_FILTER.category===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  if(!menu._cbound){
+    menu._cbound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(!opt||!opt.dataset||!opt.dataset.val) return;
+      var val = opt.dataset.val;
+      menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
+      opt.classList.add('sel');
+      document.getElementById('mgmtCategoryDdLabel').textContent = val==='ALL'?'구분 전체':val;
+      var btn=document.getElementById('mgmtCategoryDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
+      MGMT_FILTER.category = val;
+      closeDd('mgmtCategoryDdMenu','mgmtCategoryDdBtn');
+      renderMgmtTable();
+    });
+    document.addEventListener('click', function(e){
+      var wrap=document.getElementById('mgmtCategoryDdWrap');
+      if(wrap&&!wrap.contains(e.target)) closeDd('mgmtCategoryDdMenu','mgmtCategoryDdBtn');
+    });
+  }
+}
+function toggleMgmtCategoryDd(){ toggleDd('mgmtCategoryDdMenu','mgmtCategoryDdBtn'); }
+
+function renderMgmtPanel(){
+  buildMgmtCategoryDd();
+  renderMgmtTable();
+  if(AFTER_MGMT_RELOAD_CB){ var cb=AFTER_MGMT_RELOAD_CB; AFTER_MGMT_RELOAD_CB=null; setTimeout(cb,120); }
+}
+
+function renderMgmtTable(){
+  var rows = filteredMgmt();
+  var byCat = {};
+  rows.forEach(function(r){ var c=r['구분']||'(미지정)'; byCat[c]=(byCat[c]||0)+1; });
+  var totalAmt = rows.reduce(function(s,r){ var n=Number(r['계약금액(원)']); return s+(isNaN(n)?0:n); },0);
+  renderKpiCountLine('mgmtCount', [
+    { label:'총 계약', value:rows.length },
+    { label:'전기공사', value:byCat['전기공사']||0, color:'var(--sky800)' },
+    { label:'소방(전기)', value:byCat['소방(전기)']||0, color:'var(--coral)' },
+    { label:'지급자재', value:byCat['지급자재']||0, color:'var(--teal600)' },
+    { label:'계약금액 합계', value:fmtWon(totalAmt) }
+  ]);
+  var tbody = document.getElementById('mgmtBody');
+  if(!tbody) return;
+  if(!rows.length){
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r){
+    var cBadge = r['구분']==='전기공사'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
+      : r['구분']==='소방(전기)'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral);white-space:nowrap">소방(전기)</span>'
+      : r['구분']==='지급자재'
+      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
+      : esc(r['구분']);
+    return '<tr onclick="openMgmtDetail('+r._idx+')" style="cursor:pointer">'
+      +'<td class="td-nowrap">'+cBadge+'</td>'
+      +'<td class="td-nowrap">'+esc(r['번호/공구']||'-')+'</td>'
+      +'<td style="font-size:13px;line-height:1.5">'+esc(r['공사명']||'-')+'</td>'
+      +'<td style="font-size:13px;line-height:1.5">'+esc(r['위치']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['하자공종']||'-')+'</td>'
+      +'<td class="td-nowrap">'+fmtWon(r['계약금액(원)'])+'</td>'
+      +'<td class="td-nowrap">'+fmtWon(r['보증금액(원)'])+'</td>'
+      +'<td class="td-nowrap">'+esc(r['보증율']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['하자보수시작일']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['하자보수종료일']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['보증기간']||'-')+'</td>'
+      +'<td class="td-nowrap">'+esc(r['계약자']||'-')+'</td>'
+      +'</tr>';
+  }).join('');
+}
+
+/* ── 하자관리 상세 (detailModal 재사용) ── */
+function openMgmtDetail(idx){
+  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r) return;
+  document.getElementById('detailTitle').textContent = r['공사명']||'-';
+
+  var actionsEl = document.getElementById('detailActions');
+  if(actionsEl){
+    actionsEl.innerHTML =
+      '<button class="detail-act-btn detail-edit-btn" onclick="openMgmtEditModal('+idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>수정</button>'
+      +'<button class="detail-act-btn detail-del-btn" onclick="showMgmtDeleteConfirm('+idx+')">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>삭제</button>';
+  }
+  var footer = document.getElementById('detailFooter');
+  if(footer) footer.innerHTML = '';
+
+  var cBadge = r['구분']==='전기공사'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">전기공사</span>'
+    : r['구분']==='소방(전기)'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral)">소방(전기)</span>'
+    : r['구분']==='지급자재'
+    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">지급자재</span>'
+    : esc(r['구분']||'-');
+
+  var rows = [
+    ['구분', cBadge],
+    ['번호/공구', esc(r['번호/공구']||'-')],
+    ['공사명', esc(r['공사명']||'-')],
+    ['위치', esc(r['위치']||'-')],
+    ['하자공종', esc(r['하자공종']||'-')],
+    ['계약금액(원)', fmtWon(r['계약금액(원)'])],
+    ['보증금액(원)', fmtWon(r['보증금액(원)'])],
+    ['보증율', esc(r['보증율']||'-')],
+    ['하자보수시작일', esc(r['하자보수시작일']||'-')],
+    ['하자보수종료일', esc(r['하자보수종료일']||'-')],
+    ['보증기간', esc(r['보증기간']||'-')],
+    ['계약자', esc(r['계약자']||'-')],
+  ];
+  var infoHtml = '<div class="detail-info-wrap">'
+    + rows.map(function(rv){
+        return '<div class="detail-row"><div class="detail-key">'+rv[0]+'</div><div class="detail-val">'+rv[1]+'</div></div>';
+      }).join('')
+    + '</div>';
+
+  document.getElementById('detailBody').innerHTML = infoHtml;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function openMgmtAddModal(){
+  MGMT_EDIT_IDX = null;
+  var titleEl = document.getElementById('mgmtEditModalTitle');
+  if(titleEl) titleEl.textContent = '하자관리 신규등록';
+  var lbl = document.getElementById('mgSubmitLabel');
+  if(lbl) lbl.textContent = '등록';
+
+  ['mgNo','mgName','mgLoc','mgType','mgAmt','mgGuaranteeAmt','mgStart','mgEnd','mgContractor'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['mgCategory','mgRate','mgPeriod'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  ['mgCategoryCustom','mgRateCustom','mgPeriodCustom'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.value = '';
+    if(el.style !== undefined) el.style.display = 'none';
+  });
+
+  document.getElementById('mgmtEditModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function openMgmtEditModal(idx){
+  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r) return;
+  MGMT_EDIT_IDX = idx;
+
+  var titleEl = document.getElementById('mgmtEditModalTitle');
+  if(titleEl) titleEl.textContent = '하자관리 수정';
+  var lbl = document.getElementById('mgSubmitLabel');
+  if(lbl) lbl.textContent = '저장';
+
+  ['mgCategoryCustom','mgRateCustom','mgPeriodCustom'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.value = '';
+    if(el.style !== undefined) el.style.display = 'none';
+  });
+
+  document.getElementById('mgCategory').value = r['구분']||'';
+  document.getElementById('mgNo').value = r['번호/공구']||'';
+  document.getElementById('mgName').value = r['공사명']||'';
+  document.getElementById('mgLoc').value = r['위치']||'';
+  document.getElementById('mgType').value = r['하자공종']||'';
+  document.getElementById('mgAmt').value = r['계약금액(원)']||'';
+  document.getElementById('mgGuaranteeAmt').value = r['보증금액(원)']||'';
+  document.getElementById('mgRate').value = r['보증율']||'';
+  document.getElementById('mgStart').value = r['하자보수시작일']||'';
+  document.getElementById('mgEnd').value = r['하자보수종료일']||'';
+  document.getElementById('mgPeriod').value = r['보증기간']||'';
+  document.getElementById('mgContractor').value = r['계약자']||'';
+
+  closeDetail();
+  document.getElementById('mgmtEditModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+}
+
+function closeMgmtEditModal(){
+  document.getElementById('mgmtEditModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('mgmtEditModal');
+}
+
+function submitMgmtForm(confirmed){
+  var isAdd = (MGMT_EDIT_IDX === null);
+
+  var name = document.getElementById('mgName').value.trim();
+  if(!name){ alert('공사명을 입력해주세요.'); document.getElementById('mgName').focus(); return; }
+
+  if(!isAdd && !confirmed){
+    showConfirm('입력한 내용으로 수정하시겠습니까?', function(){ submitMgmtForm(true); }, '수정');
+    return;
+  }
+
+  var btn = document.getElementById('mgSubmitBtn');
+  var lbl = document.getElementById('mgSubmitLabel');
+  btn.disabled=true;
+  if(lbl) lbl.textContent = isAdd ? '등록 중...' : '저장 중...';
+
+  var category    = getSelectValue('mgCategory','mgCategoryCustom');
+  var no          = document.getElementById('mgNo').value.trim();
+  var loc         = document.getElementById('mgLoc').value.trim();
+  var type        = document.getElementById('mgType').value.trim();
+  var amtRaw      = document.getElementById('mgAmt').value.trim();
+  var gAmtRaw     = document.getElementById('mgGuaranteeAmt').value.trim();
+  var rate        = getSelectValue('mgRate','mgRateCustom');
+  var start       = document.getElementById('mgStart').value;
+  var end         = document.getElementById('mgEnd').value;
+  var period      = getSelectValue('mgPeriod','mgPeriodCustom');
+  var contractor  = document.getElementById('mgContractor').value.trim();
+  var amt  = amtRaw==='' ? null : Number(amtRaw);
+  var gAmt = gAmtRaw==='' ? null : Number(gAmtRaw);
+
+  function resetBtn(label){
+    btn.disabled=false;
+    if(lbl) lbl.textContent = label;
+  }
+
+  function buildMProps(){
+    var props = {};
+    setMProp(props, '공사명', { title: [{ text: { content: name } }] });
+    if(category)      setMProp(props, '구분', { select: { name: category } });
+    if(no)             setMProp(props, '번호/공구', { rich_text: [{ text: { content: no } }] });
+    if(loc)            setMProp(props, '위치', { rich_text: [{ text: { content: loc } }] });
+    if(type)           setMProp(props, '하자공종', { rich_text: [{ text: { content: type } }] });
+    if(amt!==null && !isNaN(amt))   setMProp(props, '계약금액(원)', { number: amt });
+    if(gAmt!==null && !isNaN(gAmt)) setMProp(props, '보증금액(원)', { number: gAmt });
+    if(rate)           setMProp(props, '보증율', { select: { name: rate } });
+    if(start)          setMProp(props, '하자보수시작일', { date: { start: start } });
+    if(end)            setMProp(props, '하자보수종료일', { date: { start: end } });
+    if(period)         setMProp(props, '보증기간', { select: { name: period } });
+    if(contractor)     setMProp(props, '계약자', { rich_text: [{ text: { content: contractor } }] });
+    return props;
+  }
+
+  if(isAdd){
+    if(!isAuthed() || !CFG.mgmtDbId){
+      var newIdx = MGMT_DATA.length
+        ? Math.max.apply(null, MGMT_DATA.map(function(d){ return d._idx; })) + 1
+        : 1;
+      MGMT_DATA.push({ _idx:newIdx, _pageId:null,
+        '구분':category, '번호/공구':no, '공사명':name, '위치':loc, '하자공종':type,
+        '계약금액(원)':amtRaw, '보증금액(원)':gAmtRaw, '보증율':rate,
+        '하자보수시작일':start, '하자보수종료일':end, '보증기간':period, '계약자':contractor });
+      resetBtn('등록');
+      closeMgmtEditModal();
+      AFTER_MGMT_RELOAD_CB = function(){ openMgmtDetail(newIdx); };
+      renderMgmtPanel();
+      toast('등록되었습니다.');
+      return;
+    }
+    var doPost = function(){
+      return fetch(CFG.workerUrl+'/v1/pages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ parent:{ database_id: CFG.mgmtDbId }, properties: buildMProps() })
+      });
+    };
+    var probeAndPost = function(){
+      if(Object.keys(MGMT_PROP_MAP).length) return doPost();
+      return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.mgmtDbId)+'/query', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ page_size:1 })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ if((data.results||[]).length) buildMgmtPropMap(data.results[0]); })
+      .then(doPost)
+      .catch(function(){ return doPost(); });
+    };
+    probeAndPost()
+    .then(function(res){
+      if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+      return res.json();
+    })
+    .then(function(saved){
+      resetBtn('등록');
+      closeMgmtEditModal();
+      if(saved && saved.id){
+        var newId = saved.id;
+        AFTER_MGMT_RELOAD_CB = function(){
+          var r = MGMT_DATA.find(function(d){ return d._pageId===newId; });
+          if(r) openMgmtDetail(r._idx);
+        };
+      }
+      MGMT_LOADED=false; loadMgmtData();
+      toast('등록되었습니다.');
+    })
+    .catch(function(e){
+      resetBtn('등록');
+      alert('등록 실패: '+e.message);
+      console.error(e);
+    });
+  } else {
+    var r = MGMT_DATA.find(function(d){ return d._idx===MGMT_EDIT_IDX; });
+    if(!r || !r._pageId){
+      alert('로그인 후 사용 가능합니다.');
+      resetBtn('저장');
+      return;
+    }
+    fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ properties: buildMProps() })
+    })
+    .then(function(res){
+      if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+      return res.json();
+    })
+    .then(function(){
+      resetBtn('저장');
+      closeMgmtEditModal();
+      MGMT_LOADED=false; loadMgmtData();
+      toast('수정되었습니다.');
+    })
+    .catch(function(e){
+      resetBtn('저장');
+      alert('수정 실패: '+e.message);
+      console.error(e);
+    });
+  }
+}
+
+function showMgmtDeleteConfirm(idx){
+  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !r._pageId || !isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
+  var footer = document.getElementById('detailFooter');
+  if(!footer) return;
+  footer.innerHTML = '<div class="del-confirm-bar">'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
+    +'<button class="detail-act-btn detail-del-btn" id="mDeleteExecBtn" onclick="deleteMgmtItem('+idx+')">삭제 확인</button>'
+    +'</div></div>';
+  footer.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function deleteMgmtItem(idx){
+  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
+  if(!r || !r._pageId) return;
+  var btn = document.getElementById('mDeleteExecBtn');
+  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
+  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ in_trash: true })
+  })
+  .then(function(res){
+    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+    return res.json();
+  })
+  .then(function(){
+    closeDetail();
+    MGMT_LOADED=false;
+    loadMgmtData();
+    toast('삭제되었습니다.');
+  })
+  .catch(function(e){
+    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+    if((e.message||'').indexOf('archived')>-1){
+      closeDetail();
+      MGMT_LOADED=false;
+      loadMgmtData();
+      toast('이미 삭제된 항목입니다.');
+      return;
+    }
+    alert('삭제 실패: '+e.message);
+    console.error(e);
+  });
+}
+
+// 헤더 라벨은 노션 하자관리DB 실제 속성명과 동일. 공사명·위치만 자동폭+줄바꿈,
+// 계약금액(원)·보증금액(원)은 정수 numFmt('#,##0', 소수점 서식 없음), 나머지는 자동폭
+// (새 탭/앱 추가 시 표준 패턴, ~/.claude/skills/xlsx-report-export/SKILL.md 참고)
+var EXCEL_MGMT_COLUMNS = [
+  { key:'구분', header:'구분' },
+  { key:'번호/공구', header:'번호/공구' },
+  { key:'공사명', header:'공사명', width:40, wrap:true, align:'left' },
+  { key:'위치', header:'위치', width:34, wrap:true, align:'left' },
+  { key:'하자공종', header:'하자공종' },
+  { key:'계약금액(원)', header:'계약금액(원)', numFmt:'#,##0' },
+  { key:'보증금액(원)', header:'보증금액(원)', numFmt:'#,##0' },
+  { key:'보증율', header:'보증율' },
+  { key:'하자보수시작일', header:'하자보수시작일', dateCol:true },
+  { key:'하자보수종료일', header:'하자보수종료일', dateCol:true },
+  { key:'보증기간', header:'보증기간' },
+  { key:'계약자', header:'계약자' }
+];
+
+function exportMgmtExcel(){
+  var rows = filteredMgmt().slice().sort(function(a,b){
+    var ga=(a['구분']||''), gb=(b['구분']||'');
+    if(ga!==gb) return ga<gb?-1:1;
+    var na=(a['번호/공구']||''), nb=(b['번호/공구']||'');
+    return na<nb?-1:na>nb?1:0;
+  }).map(function(r){
+    // buildExcelReport의 numFmt는 cell.value가 실제 number 타입일 때만 적용되므로
+    // 문자열로 보관 중인 금액 필드를 export 시점에만 숫자로 변환한다(빈 값은 빈 문자열 유지).
+    var amtRaw = r['계약금액(원)'];
+    var gAmtRaw = r['보증금액(원)'];
+    var amt = (amtRaw===''||amtRaw===null||amtRaw===undefined) ? '' : Number(amtRaw);
+    var gAmt = (gAmtRaw===''||gAmtRaw===null||gAmtRaw===undefined) ? '' : Number(gAmtRaw);
+    return Object.assign({}, r, {
+      '계약금액(원)': (typeof amt==='number' && !isNaN(amt)) ? amt : '',
+      '보증금액(원)': (typeof gAmt==='number' && !isNaN(gAmt)) ? gAmt : ''
+    });
+  });
+  buildExcelReport({
+    btnId:'mgmtExcelExportBtn', lblId:'mgmtExcelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'하자관리', title:'하자관리(보증)현황', fnamePrefix:'하자관리',
+    columns: EXCEL_MGMT_COLUMNS, rows: rows, orientation:'landscape'
   });
 }
 
