@@ -2941,7 +2941,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
 
   ws.mergeCells('A2:F2');
   const subCell=ws.getCell('A2');
-  subCell.value='전기안전관리자 정기점검표';
+  subCell.value='□ 전기안전관리자 정기점검표';
   subCell.font={name:'맑은 고딕', size:15, bold:true};
   subCell.alignment={vertical:'middle', horizontal:'left'};
   ws.getRow(2).height=30;
