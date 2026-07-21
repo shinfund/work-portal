@@ -2854,32 +2854,9 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   subCell.alignment={vertical:'middle', horizontal:'left'};
   ws.getRow(2).height=30;
 
-  // 표 전체 바깥 테두리만 가는 실선, 안쪽 칸 구분선은 더 촘촘한 hair(엑셀에서 가장 얇은 선,
-  // 2026-07-21 사용자 요청 — 처음엔 dotted였다가 더 촘촘한 선으로 변경) — 시트 하나가 인쇄 1페이지에
-  // 들어가는 걸 전제로 하므로(그래서 3개 시트로 분리) 표 처음/끝만 판단하면 된다.
-  // ri/lastRi는 헤더행=0, 데이터행=1..rows.length 기준.
-  function reportBorder(ri, ci, lastRi){
-    const THIN={style:'thin'}, HAIR={style:'hair'};
-    return {
-      top: ri===0 ? THIN : HAIR,
-      bottom: ri===lastRi ? THIN : HAIR,
-      left: ci===0 ? THIN : HAIR,
-      right: ci===5 ? THIN : HAIR
-    };
-  }
-  // 병합된 범위(구분/설비명 열)는 ExcelJS가 병합 시 마스터(좌상단) 셀 하나의 스타일만 남기고 나머지
-  // 칸의 개별 설정은 전부 버린다(순서와 무관, 2026-07-21 실측) — 그래서 마스터 셀에는 "그 행 하나"가
-  // 아니라 "병합 구간 전체"를 기준으로 위/아래 바깥 테두리 여부를 판단해서 넣어야 한다.
-  function reportSpanBorder(startRi, endRi, ci, lastRi){
-    const THIN={style:'thin'}, HAIR={style:'hair'};
-    return {
-      top: startRi===0 ? THIN : HAIR,
-      bottom: endRi===lastRi ? THIN : HAIR,
-      left: ci===0 ? THIN : HAIR,
-      right: ci===5 ? THIN : HAIR
-    };
-  }
-
+  // 테두리는 전체 칸 동일하게 가는 실선(EXCEL_CELL_BORDER, 다른 탭 엑셀생성과 동일한 규칙) — 바깥/안쪽을
+  // 다르게(가는 실선/점선/hair) 나눴더니 병합 셀 처리 과정에서 일부 구간의 테두리가 빠지는 문제가
+  // 반복돼서(2026-07-21) 단순하고 일관된 스타일로 되돌렸다.
   const headerLabels=['구분','설비명','점검내용','점검결과','점검일자','비고'];
   const headerRow=ws.getRow(3);
   headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -2887,7 +2864,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=EXCEL_BODY_FONT;
     cell.alignment={vertical:'middle', horizontal:'center'};
-    cell.border=reportBorder(0, i, rows.length); cell.fill=EXCEL_HEADER_FILL;
+    cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
   });
 
   // 구분 연속 구간을 미리 계산 — row.commit() 이후에는 셀 스타일을 수정해도 반영되지 않아
@@ -2905,8 +2882,6 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const gubunSpans=computeSpans(r=>r.구분);
   const equipSpans=computeSpans(r=>r.구분+'|'+r.설비명);
 
-  // 병합(구분/설비명 열)을 먼저 실행 — 병합 자체는 순서와 무관하지만, 마스터 셀에 넣을 "구간 전체
-  // 기준" 테두리를 아래 rows.forEach에서 함께 계산하려면 span 목록이 먼저 있어야 한다.
   gubunSpans.forEach(span=>{
     const first=rows[span.start];
     if(first.combined) ws.mergeCells(`A${4+span.start}:B${4+span.end}`);
@@ -2916,9 +2891,6 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     if(rows[span.start].combined) return; // 위에서 A+B로 이미 처리됨
     if(span.end>span.start) ws.mergeCells(`B${4+span.start}:B${4+span.end}`);
   });
-  // 구분/설비명 병합의 시작 행 인덱스(0-based) → 그 구간(span) 매핑 — 마스터 셀 테두리 계산용
-  const gubunSpanByStart=new Map(gubunSpans.filter(sp=>sp.end>sp.start).map(sp=>[sp.start, sp]));
-  const equipSpanByStart=new Map(equipSpans.filter(sp=>sp.end>sp.start).map(sp=>[sp.start, sp]));
 
   rows.forEach((r,i)=>{
     const rn=4+i;
@@ -2927,17 +2899,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font = (ci>=2 && tagColor) ? Object.assign({}, EXCEL_BODY_FONT, {color:{argb:tagColor}}) : EXCEL_BODY_FONT;
-      let border;
-      if(ci===0 && gubunSpanByStart.has(i)){
-        const sp=gubunSpanByStart.get(i);
-        border=reportSpanBorder(sp.start+1, sp.end+1, 0, rows.length);
-      } else if(ci===1 && !r.combined && equipSpanByStart.has(i)){
-        const sp=equipSpanByStart.get(i);
-        border=reportSpanBorder(sp.start+1, sp.end+1, 1, rows.length);
-      } else {
-        border=reportBorder(i+1, ci, rows.length);
-      }
-      cell.border=border;
+      cell.border=EXCEL_CELL_BORDER;
       // 구분 열은 글자 수가 많으면 자동 줄바꿈(2026-07-21 사용자 요청 — 처음엔 세로쌓기용 수동
       // 줄바꿈+"셀에 맞춤" 혼합이었다가 자동 줄바꿈으로 통일), 점검내용 열은 "셀에 맞춤"(shrinkToFit)
       // 유지, 나머지 열도 셀에 맞춤.
