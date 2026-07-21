@@ -3181,7 +3181,8 @@ function buildElecReportSheet(wb, r, tunnel){
   // border: 생략하면 EXCEL_CELL_BORDER(전체 칸 가는 실선), false면 테두리 없음, 객체를 직접 넘기면
   // 그 값 그대로(예: 33~41행 "종합의견" 박스는 외곽만 남기고 안쪽 가로선은 뺀다 — 2026-07-21 요청).
   // 원본 템플릿과 달리 이 보고서는 "1.기본사항"(7~8행)·"2.점검내역"(11~29행)·"3.종합의견"
-  // (33~41행) 3개 블록에만 테두리를 두고, 제목·소제목·안내문·서명란은 테두리 없이 둔다.
+  // (33~41행)·서명란(46~47행)에만 테두리를 두고, 제목·소제목·안내문은 테두리 없이 둔다
+  // (2026-07-21 서명란도 테두리 필요하다는 사용자 피드백 반영).
   function mc(range, value, font, alignment, numFmt, border){
     const addr=range.split(':')[0];
     const cell=ws.getCell(addr);
@@ -3315,13 +3316,13 @@ function buildElecReportSheet(wb, r, tunnel){
   mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
   mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
 
-  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP, undefined, false);
-  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP, undefined, false);
-  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER, undefined, false);
-  mc('P46:R46', '(인)', F14(10), CENTER, undefined, false);
-  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP, undefined, false);
-  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER, undefined, false);
-  mc('P47:R47', '(인)', F14(10), CENTER, undefined, false);
+  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP);
+  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP);
+  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER);
+  mc('P46:R46', '(인)', F14(10), CENTER);
+  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP);
+  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
+  mc('P47:R47', '(인)', F14(10), CENTER);
   ws.getRow(46).height=20.15; ws.getRow(47).height=20.15;
 }
 function buildOneElecReport(tunnel, year, month){
