@@ -2792,6 +2792,11 @@ function exportTabExcel(tabId){
 // 매달 새 레코드가 쌓임), 분기/반기/연차 주기 항목은 점검일자가 비어있는 레코드 1건만 존재해서
 // 결과가 항상 "-"로 표시된다(2026-07-21 실데이터로 확인). REPORT_CHECKLIST_ORDER 순서대로 훑으며
 // 해당 월에 실제 기록된 레코드가 있으면 그 값을, 없으면 날짜 없는 고정 레코드의 "-" 값을 채운다.
+// 구분="기타"/"태양광발전설비"는 노션 실데이터의 설비명이 공란이라(위 데이터정리 참고) 구분·설비명을
+// 별도 표시하지 않고 한 셀로 합쳐서 보여준다(2026-07-21 사용자 피드백).
+const REPORT_COMBINE_GUBUN=new Set(['기타','태양광발전설비']);
+// 원본 템플릿에서 분기/반기/연차 주기 항목에 적용된 글자색을 그대로 재현(2026-07-21, 셀 폰트색 실측).
+const REPORT_TAG_COLORS={'분기':'FF0000FF', '연차':'FFFF00FF', '반기':'FFB97135'};
 function buildMonthlyReportRows(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   const recs=(TAB_STATE.monthly.records||[]).filter(r=>r['터널명']===tunnel);
@@ -2802,8 +2807,10 @@ function buildMonthlyReportRows(tunnel, year, month){
     const dated=matches.find(r=>(r['점검일자']||'').startsWith(ymStr));
     const staticRow=matches.find(r=>!r['점검일자']);
     const src=dated||staticRow;
+    const combined=REPORT_COMBINE_GUBUN.has(item.구분);
     rows.push({
-      구분:item.구분, 설비명:item.설비명||item.구분, 점검내용:item.점검내용,
+      구분:item.구분, 설비명:combined?'':(item.설비명||''), combined,
+      점검내용:item.점검내용,
       점검결과:(src&&src['점검결과'])||'-',
       점검일자:dated?dated['점검일자']:'-',
       비고:(src&&src['비고'])||''
@@ -2822,22 +2829,22 @@ function buildOneMonthlyReport(tunnel, year, month){
     const ws=wb.addWorksheet('월간점검결과표',{
       views:[{state:'frozen', ySplit:3, showGridLines:false, zoomScale:90}],
       pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'3:3'},
-      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T', oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
     });
     const colWidths=[10,14,46,10,13,10];
     ws.columns=colWidths.map(w=>({width:w}));
 
     ws.mergeCells('A1:F1');
     const titleCell=ws.getCell('A1');
-    titleCell.value='월간점검결과표'; titleCell.font=EXCEL_TITLE_FONT;
-    titleCell.alignment={vertical:'middle', horizontal:'center'};
+    titleCell.value='1. 월간점검결과표'; titleCell.font=EXCEL_TITLE_FONT;
+    titleCell.alignment={vertical:'middle', horizontal:'left'};
     ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
 
     ws.mergeCells('A2:F2');
     const subCell=ws.getCell('A2');
-    subCell.value=`${tunnel}  ·  ${year}년 ${String(month).padStart(2,'0')}월  ·  전기안전관리자 정기점검표`;
+    subCell.value='전기안전관리자 정기점검표';
     subCell.font={name:'맑은 고딕', size:15, bold:true};
-    subCell.alignment={vertical:'middle', horizontal:'center'};
+    subCell.alignment={vertical:'middle', horizontal:'left'};
     ws.getRow(2).height=30;
 
     const headerLabels=['구분','설비명','점검내용','점검결과','점검일자','비고'];
@@ -2850,39 +2857,57 @@ function buildOneMonthlyReport(tunnel, year, month){
       cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
     });
 
+    // 구분 연속 구간을 미리 계산 — row.commit() 이후에는 셀 스타일을 수정해도 반영되지 않아
+    // (스트리밍 라이터 특성, 2026-07-21 확인) 세로쓰기 여부를 행을 쓰기 전에 먼저 정해둬야 한다.
+    function computeSpans(keyFn){
+      const spans=[]; let i=0;
+      while(i<rows.length){
+        let j=i;
+        while(j<rows.length && keyFn(rows[j])===keyFn(rows[i])) j++;
+        spans.push({start:i, end:j-1});
+        i=j;
+      }
+      return spans;
+    }
+    const gubunSpans=computeSpans(r=>r.구분);
+    const equipSpans=computeSpans(r=>r.구분+'|'+r.설비명);
+    const rotateRowIdx=new Set(gubunSpans.filter(sp=>!rows[sp.start].combined && excelStrWidth(rows[sp.start].구분)>colWidths[0]-2).map(sp=>sp.start));
+
     rows.forEach((r,i)=>{
       const rn=4+i;
       const row=ws.getRow(rn);
+      const tagColor=REPORT_TAG_COLORS[r.비고];
       for(let ci=0; ci<6; ci++){
         const cell=row.getCell(ci+1);
-        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.font = (ci>=2 && tagColor) ? Object.assign({}, EXCEL_BODY_FONT, {color:{argb:tagColor}}) : EXCEL_BODY_FONT;
+        cell.border=EXCEL_CELL_BORDER;
         cell.alignment={vertical:'middle', horizontal:ci===2?'left':'center', wrapText:ci===2};
+        if(ci===0 && rotateRowIdx.has(i)) cell.alignment.textRotation=90;
       }
       row.getCell(1).value=r.구분;
-      row.getCell(2).value=r.설비명;
+      if(!r.combined) row.getCell(2).value=r.설비명;
       row.getCell(3).value=r.점검내용;
       row.getCell(4).value=r.점검결과;
       row.getCell(6).value=r.비고;
       const dateCell=row.getCell(5);
       const d=r.점검일자!=='-' ? excelParseDate(r.점검일자) : null;
-      if(d){ dateCell.value=d; dateCell.numFmt='yyyy-mm-dd'; } else { dateCell.value=r.점검일자; }
+      if(d){ dateCell.value=d; dateCell.numFmt='m"/"d;@'; } else { dateCell.value=r.점검일자; }
       const lines=reportEstimateLines(r.점검내용, colWidths[2]);
       row.height=Math.max(EXCEL_ROW_HEIGHTS.data, lines*EXCEL_BODY_FONT.size*1.4+6);
       row.commit();
     });
 
-    // 구분·설비명 연속 구간을 병합(원본 템플릿의 A/B열 그룹 병합과 동일한 효과)
-    function mergeGroups(colLetter, keyFn){
-      let i=0;
-      while(i<rows.length){
-        let j=i;
-        while(j<rows.length && keyFn(rows[j])===keyFn(rows[i])) j++;
-        if(j-1>i) ws.mergeCells(`${colLetter}${4+i}:${colLetter}${4+j-1}`);
-        i=j;
-      }
-    }
-    mergeGroups('A', r=>r.구분);
-    mergeGroups('B', r=>r.구분+'|'+r.설비명);
+    // 구분="기타"/"태양광발전설비"는 설비명 없이 구분값 하나만 표시하므로 A+B를 통째로 병합,
+    // 나머지는 A만/설비명별로 B만 병합한다(병합 자체는 커밋 이후에도 정상 반영됨).
+    gubunSpans.forEach(span=>{
+      const first=rows[span.start];
+      if(first.combined) ws.mergeCells(`A${4+span.start}:B${4+span.end}`);
+      else if(span.end>span.start) ws.mergeCells(`A${4+span.start}:A${4+span.end}`);
+    });
+    equipSpans.forEach(span=>{
+      if(rows[span.start].combined) return; // 위에서 A+B로 이미 처리됨
+      if(span.end>span.start) ws.mergeCells(`B${4+span.start}:B${4+span.end}`);
+    });
 
     return wb.xlsx.writeBuffer();
   }).then(buf=>{
