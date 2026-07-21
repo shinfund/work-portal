@@ -2818,9 +2818,6 @@ function buildMonthlyReportRows(tunnel, year, month){
   });
   return rows;
 }
-function reportEstimateLines(text, colWidth){
-  return Math.max(1, Math.ceil(excelStrWidth(text)/Math.max(1,colWidth-2)));
-}
 function buildOneMonthlyReport(tunnel, year, month){
   const rows=buildMonthlyReportRows(tunnel, year, month);
   if(!rows.length) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
@@ -2871,20 +2868,29 @@ function buildOneMonthlyReport(tunnel, year, month){
     }
     const gubunSpans=computeSpans(r=>r.구분);
     const equipSpans=computeSpans(r=>r.구분+'|'+r.설비명);
-    const rotateRowIdx=new Set(gubunSpans.filter(sp=>!rows[sp.start].combined && excelStrWidth(rows[sp.start].구분)>colWidths[0]-2).map(sp=>sp.start));
+    // ExcelJS(브라우저 번들)가 alignment.textRotation을 0~90 범위 밖(255=세로누적 포함)이면 저장 시
+    // 조용히 누락시켜서(2026-07-21 실측) 회전 대신 글자 사이에 줄바꿈을 넣어 세로로 쌓는 방식을 쓴다
+    // — 원본 템플릿의 "세로 누적" 표시와 동일하게 첫 글자가 위에서부터 시작한다.
+    const stackRowIdx=new Set(gubunSpans.filter(sp=>!rows[sp.start].combined && excelStrWidth(rows[sp.start].구분)>colWidths[0]-2).map(sp=>sp.start));
 
     rows.forEach((r,i)=>{
       const rn=4+i;
       const row=ws.getRow(rn);
       const tagColor=REPORT_TAG_COLORS[r.비고];
+      const stacked=stackRowIdx.has(i);
       for(let ci=0; ci<6; ci++){
         const cell=row.getCell(ci+1);
         cell.font = (ci>=2 && tagColor) ? Object.assign({}, EXCEL_BODY_FONT, {color:{argb:tagColor}}) : EXCEL_BODY_FONT;
         cell.border=EXCEL_CELL_BORDER;
-        cell.alignment={vertical:'middle', horizontal:ci===2?'left':'center', wrapText:ci===2};
-        if(ci===0 && rotateRowIdx.has(i)) cell.alignment.textRotation=90;
+        // 열 너비보다 글자 수가 많은 셀은 줄바꿈 대신 원본 템플릿과 동일하게 "셀에 맞춤"(shrinkToFit)으로
+        // 처리한다 — 구분 열의 세로쌓기 셀만 줄바꿈이 실제로 필요해서 예외로 둔다.
+        cell.alignment = ci===2
+          ? {vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1}
+          : (ci===0 && stacked)
+            ? {vertical:'middle', horizontal:'center', wrapText:true}
+            : {vertical:'middle', horizontal:'center', shrinkToFit:true};
       }
-      row.getCell(1).value=r.구분;
+      row.getCell(1).value = stacked ? r.구분.split('').join('\n') : r.구분;
       if(!r.combined) row.getCell(2).value=r.설비명;
       row.getCell(3).value=r.점검내용;
       row.getCell(4).value=r.점검결과;
@@ -2892,8 +2898,7 @@ function buildOneMonthlyReport(tunnel, year, month){
       const dateCell=row.getCell(5);
       const d=r.점검일자!=='-' ? excelParseDate(r.점검일자) : null;
       if(d){ dateCell.value=d; dateCell.numFmt='m"/"d;@'; } else { dateCell.value=r.점검일자; }
-      const lines=reportEstimateLines(r.점검내용, colWidths[2]);
-      row.height=Math.max(EXCEL_ROW_HEIGHTS.data, lines*EXCEL_BODY_FONT.size*1.4+6);
+      row.height=EXCEL_ROW_HEIGHTS.data;
       row.commit();
     });
 
