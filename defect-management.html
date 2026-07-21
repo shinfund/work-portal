@@ -142,7 +142,6 @@ tbody tr:last-child td{border-bottom:none}
 .col-contact{width:76px;white-space:nowrap}
 .col-manager{width:72px;white-space:nowrap}
 .col-photo{width:56px;min-width:52px;text-align:center}
-@media(max-width:640px){.col-photo{display:none}}
 
 /* ── STATUS BADGE ── */
 .badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:var(--r8);font-size:12px;font-weight:400;white-space:nowrap}
@@ -294,7 +293,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* [개선4] 필터 - 검색박스 모바일에서 독립 줄 배치 */
   .filter-row{flex-wrap:wrap;gap:6px}
   .filter-row .search-box{width:100%;order:9;min-width:unset;margin-top:2px}
-  .search-box{font-size:12px}
+  /* [문제2 수정] 입력창 16px 미만이면 iOS 포커스 시 자동 확대(줌) 발생 → 16px로 고정 */
+  .search-box{font-size:16px}
+
+  /* [문제3 수정] KPI 요약 줄(필터결과·계약금액 합계 등)이 nowrap으로 고정폭 넘쳐
+     페이지 전체 가로 스크롤을 유발 → 모바일에서는 줄바꿈 허용 */
+  .filter-count{white-space:normal;line-height:1.7}
 
   /* 드롭다운 - 모바일 높이 제한 */
   .dd-menu{max-height:200px}
@@ -302,6 +306,9 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* 모달 */
   .modal-box{padding:18px;border-radius:var(--r16)}
   .detail-modal-box{max-height:90vh}
+  /* [문제2 수정] 모달 입력창도 16px 미만이면 iOS 자동 확대 발생
+     (select·textarea는 정의가 파일 뒤쪽에 있어 거기서 별도로 재지정함) */
+  .modal-input{font-size:16px}
 }
 
 /* 소형 모바일 (~ 380px) */
@@ -360,7 +367,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:640px){.modal-form-row{grid-template-columns:1fr}}
+@media(max-width:640px){
+  .modal-form-row{grid-template-columns:1fr}
+  /* [문제2 수정] select/textarea 정의가 이 아래(cascade 순서상 나중)에 있어 위쪽 모바일
+     블록의 16px 지정이 무효화됨 — 여기서 다시 지정해 iOS 자동 확대 방지 */
+  .modal-select,.modal-textarea{font-size:16px}
+}
 
 /* ── PHOTO UPLOAD ── */
 .photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
