@@ -3178,11 +3178,39 @@ function buildElecReportSheet(wb, r, tunnel){
   const LEFT={vertical:'middle', horizontal:'left'};
   // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
   // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
-  // border: 생략하면 EXCEL_CELL_BORDER(전체 칸 가는 실선), false면 테두리 없음, 객체를 직접 넘기면
-  // 그 값 그대로(예: 33~41행 "종합의견" 박스는 외곽만 남기고 안쪽 가로선은 뺀다 — 2026-07-21 요청).
+  // border: 생략하면 표 영역(아래 BORDER_REGIONS) 기준 자동 계산 — 그 영역의 절대 바깥 경계에
+  // 걸치는 변만 thin, 안쪽 격자선은 hair(2026-07-22 요청, "얇은 실선보다 더 가늘게"). 각 변을
+  // 셀이 아니라 영역 좌표와 비교해서 판정하므로 인접한 두 mc() 호출이 같은 경계에서 서로 다른
+  // 스타일을 갖는 불일치가 구조적으로 생기지 않는다(2026-07-21 buildMonthlyReportSheet에서
+  // 겪은 "일부 구간 테두리 누락" 버그는 이 방식으로 재발하지 않아야 함 — 출력물로 확인 필요).
+  // false면 테두리 없음, 객체를 직접 넘기면 그 값 그대로(예: 33~41행 "종합의견" 박스는 외곽만
+  // 남기고 안쪽 가로선은 뺀다 — 2026-07-21 요청, 이미 thin 외곽선이라 이번 변경 대상 아님).
   // 원본 템플릿과 달리 이 보고서는 "1.기본사항"(7~8행)·"2.점검내역"(11~29행)·"3.종합의견"
   // (33~41행)·서명란(46~47행)에만 테두리를 두고, 제목·소제목·안내문은 테두리 없이 둔다
   // (2026-07-21 서명란도 테두리 필요하다는 사용자 피드백 반영).
+  const BORDER_REGIONS=[
+    {r1:7, r2:8, c1:1, c2:18},   // 1.기본사항
+    {r1:11, r2:29, c1:1, c2:18}, // 2.점검내역
+    {r1:46, r2:47, c1:10, c2:18} // 서명란(J~R열)
+  ];
+  function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
+  function rangeBounds(range){
+    const parts=range.split(':');
+    const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
+    const m2=/^([A-Z]+)(\d+)$/.exec(parts[1]||parts[0]);
+    return {c1:colNum(m1[1]), r1:+m1[2], c2:colNum(m2[1]), r2:+m2[2]};
+  }
+  function gridBorder(range){
+    const b=rangeBounds(range);
+    const region=BORDER_REGIONS.find(rg=>b.r1>=rg.r1 && b.r2<=rg.r2 && b.c1>=rg.c1 && b.c2<=rg.c2);
+    if(!region) return EXCEL_CELL_BORDER; // 정의된 영역 밖 호출(있어선 안 됨)에 대한 안전장치
+    return {
+      top:{style: b.r1===region.r1 ? 'thin' : 'hair'},
+      bottom:{style: b.r2===region.r2 ? 'thin' : 'hair'},
+      left:{style: b.c1===region.c1 ? 'thin' : 'hair'},
+      right:{style: b.c2===region.c2 ? 'thin' : 'hair'}
+    };
+  }
   function mc(range, value, font, alignment, numFmt, border){
     const addr=range.split(':')[0];
     const cell=ws.getCell(addr);
@@ -3190,7 +3218,7 @@ function buildElecReportSheet(wb, r, tunnel){
     cell.font=font||F14(10);
     cell.alignment=alignment||CENTER;
     if(numFmt) cell.numFmt=numFmt;
-    cell.border = border===false ? undefined : (border || EXCEL_CELL_BORDER);
+    cell.border = border===false ? undefined : (border || gridBorder(range));
     if(range.indexOf(':')>=0) ws.mergeCells(range);
     return cell;
   }
