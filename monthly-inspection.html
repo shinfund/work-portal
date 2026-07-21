@@ -417,7 +417,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     </div>
     <div class="filter-row">
       <div id="filterDd-elec" style="display:contents"></div>
-      <input class="search-box" id="search-elec" placeholder="🔍 설비명·점검담당자·종합의견 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
+      <input class="search-box" id="search-elec" placeholder="🔍 제목·수전전압 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('elec')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
@@ -426,14 +426,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_elec">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_elec" onclick="exportElecInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_elec">보고서 생성</span>
+      </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="elecViewHint">※ 위 [기본정보|ACB 상세|설비현황] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count" id="count-elec"></div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-elec">
-          <th>터널명</th><th>점검일자</th><th>설비명</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th>
-          <th class="r">역률(%)</th><th class="r">유효전력량(kWh)</th><th>무효전력량(kVar)</th><th class="r">최대전력(kW)</th><th class="r">배율</th><th>종합의견</th>
+          <th>터널명</th><th>점검일자</th><th>제목</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th>
         </tr></thead>
         <tbody id="tbody-elec"></tbody>
       </table>
@@ -1030,31 +1033,30 @@ const TAB_DEFS=[
     listCols:['터널명','점검일자','구분','설비명','제목','점검내용','점검결과','비고']
   },
   {
-    id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'설비명', dateKey:'점검일자',
+    // 2026-07-21 노션 실스키마 재확인 후 수정: elec1DB(부모)의 진짜 title 속성은 '제목'이고(예전 코드는
+    // 존재하지 않는 '설비명' 속성에 title 포맷으로 썼음 — Notion API가 프로퍼티 미존재로 거절했을 것),
+    // '설비명(상호)'는 터널명과 사실상 같은 값을 담는 별도 select 속성(신규/수정 시 터널명 선택값을
+    // 그대로 같이 써서 동기화, 폼에는 별도 노출 안 함). 유효전력량(kWh)/무효전력량(kVar)/최대전력(kW)/
+    // 배율/역률(%)은 elec1이 아니라 elec2(ACB, 9건에 동일값 반복), 점검담당자/점검확인자/종합의견은
+    // elec1이 아니라 elec3(설비현황, 32건에 동일값 반복)에 있는 속성 — 전부 buildElecFormExtra의
+    // "공통값" 섹션(자식 upsert 시 반복 저장)으로 이동. [[project_monthly_inspection_app]]
+    id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'제목', dateKey:'점검일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'설비명', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명']?[dep['터널명']]:[], emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 전기설비점검결과기록표'] : [],
+        emptyHint:'먼저 터널명을 선택하세요'},
       {key:'점검일자', type:'date', required:true},
       {key:'점검종별', type:'select', options:['월간'], defaultValue:'월간'},
       {key:'점검횟수', type:'text', uiType:'cascade-select', optionsFn:()=>['1회'], emptyHint:'선택'},
-      {key:'점검담당자', type:'text', uiType:'cascade-select', optionsFn:()=>['김동록','신종섭','김태선','공우식'], emptyHint:'선택'},
-      {key:'점검확인자', type:'text', uiType:'cascade-select', optionsFn:()=>['조성섭,강유리','조성섭,배병현'], emptyHint:'선택'},
       {key:'수전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>elecSpecOptions(dep['터널명'],'수전'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'발전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>elecSpecOptions(dep['터널명'],'발전'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'태양광용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>elecSpecOptions(dep['터널명'],'태양광'), emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'유효전력량(kWh)', type:'number'},
-      {key:'무효전력량(kVar)', type:'text'},
-      {key:'최대전력(kW)', type:'number'},
-      {key:'배율', type:'number', uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>elecSpecOptions(dep['터널명'],'배율'), emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'역률(%)', type:'number', uiType:'cascade-select', optionsFn:()=>['86','87','91','98','99','100'], emptyHint:'선택'},
-      {key:'종합의견', type:'text', uiType:'cascade-select', optionsFn:()=>['적합함'], emptyHint:'선택'}
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'태양광'), emptyHint:'먼저 터널명을 선택하세요'}
     ],
-    listCols:['터널명','점검일자','설비명','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수','역률(%)','유효전력량(kWh)','무효전력량(kVar)','최대전력(kW)','배율','종합의견']
+    listCols:['터널명','점검일자','제목','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수']
   },
   {
     id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
@@ -1258,7 +1260,14 @@ async function attachElecChildren(records){
       위상:getText(p.properties['위상']),
       전압:getNum(p.properties['전압(V)']),
       전류:getNum(p.properties['전류(A)']),
-      누설전류:getNum(p.properties['누설전류(mA)'])
+      누설전류:getNum(p.properties['누설전류(mA)']),
+      // elec2(ACB)DB에 실제로 있는 속성 — 9건 전부 같은 값이 반복 저장되는 구조(2026-07-21 실스키마 확인).
+      // 부모(elec1)에는 이 속성들이 없어 대표로 _acb[0]에서 읽어 쓴다(공통값 폼 섹션·보고서 생성용).
+      유효전력량:getNum(p.properties['유효전력량(kWh)']),
+      무효전력량:getText(p.properties['무효전력량(kVar)']),
+      최대전력:getNum(p.properties['최대전력(kW)']),
+      배율:getNum(p.properties['배율']),
+      역률:getNum(p.properties['역률(%)'])
     });
   });
   chkPages.forEach(p=>{
@@ -1272,7 +1281,12 @@ async function attachElecChildren(records){
       개수:getNum(p.properties['개수수량']),
       증:getNum(p.properties['설비현황(증)']),
       감:getNum(p.properties['설비현황(감)']),
-      부적합:getNum(p.properties['부적합수량'])
+      부적합:getNum(p.properties['부적합수량']),
+      // elec3(설비현황)DB에 실제로 있는 속성 — 32건 전부 같은 값이 반복 저장되는 구조(2026-07-21 실스키마
+      // 확인). 부모(elec1)에는 없어 대표로 _chk[0]에서 읽어 쓴다(공통값 폼 섹션·보고서 생성용).
+      점검담당자:getText(p.properties['점검담당자']),
+      점검확인자:getText(p.properties['점검확인자']),
+      종합의견:getText(p.properties['종합의견'])
     });
   });
   records.forEach(r=>{ r._acb=acbByParent[r.id]||[]; r._chk=chkByParent[r.id]||[]; });
@@ -1563,7 +1577,7 @@ function buildTabFilterDd(tabId){
 let _elecView='base';
 let ELEC_BASE_THEAD=null;
 const ELEC_SEARCH_PLACEHOLDERS={
-  base:'🔍 설비명·점검담당자·종합의견 검색...',
+  base:'🔍 제목·수전전압 검색...',
   acb:'🔍 용도·위상 검색...',
   chk:'🔍 설비구분·설비항목 검색...'
 };
@@ -1821,7 +1835,12 @@ function openDetailModal(tabId, recordId){
 }
 // 전기설비기록 상세 — ACB 9개 + 설비현황 32개를 읽기전용 표로 덧붙임
 function buildElecDetailExtra(r){
-  let acbHtml=`<div class="sc-hd" style="margin-top:16px">ACB 전압·전류·누설전류</div>
+  const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
+  let summaryHtml=`<div class="sc-hd" style="margin-top:16px">측정값·확인 요약(ACB·설비현황에 공통 저장된 값)</div>
+    <div class="tbl-wrap" style="margin-bottom:14px"><table><thead><tr><th>유효전력량(kWh)</th><th>무효전력량(kVar)</th><th>최대전력(kW)</th><th>배율</th><th>역률(%)</th><th>점검담당자</th><th>점검확인자</th><th>종합의견</th></tr></thead><tbody>
+      <tr><td class="r">${acb0&&acb0.유효전력량!=null?fmtWon(acb0.유효전력량):'-'}</td><td>${esc(acb0?acb0.무효전력량:'-')||'-'}</td><td class="r">${acb0&&acb0.최대전력!=null?fmtWon(acb0.최대전력):'-'}</td><td class="r">${acb0&&acb0.배율!=null?fmtWon(acb0.배율):'-'}</td><td class="r">${acb0&&acb0.역률!=null?fmtWon(acb0.역률):'-'}</td><td>${esc(chk0?chk0.점검담당자:'-')||'-'}</td><td>${esc(chk0?chk0.점검확인자:'-')||'-'}</td><td>${esc(chk0?chk0.종합의견:'-')||'-'}</td></tr>
+    </tbody></table></div>`;
+  let acbHtml=`<div class="sc-hd">ACB 전압·전류·누설전류</div>
     <div class="tbl-wrap" style="margin-bottom:14px"><table><thead><tr><th>용도</th><th>위상</th><th class="r">전압(V)</th><th class="r">전류(A)</th><th class="r">누설전류(mA)</th></tr></thead><tbody>`;
   ACB_TYPES.forEach(t=>{
     ACB_PHASES.forEach(ph=>{
@@ -1838,7 +1857,7 @@ function buildElecDetailExtra(r){
     chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td><td><span class="type-badge ${badge}">${esc(rec&&rec.점검결과판정?rec.점검결과판정:'-')}</span></td><td class="r">${rec&&rec.개수?fmtWon(rec.개수):'-'}</td><td class="r">${rec&&rec.증?fmtWon(rec.증):'-'}</td><td class="r">${rec&&rec.감?fmtWon(rec.감):'-'}</td><td class="r">${rec&&rec.부적합?fmtWon(rec.부적합):'-'}</td></tr>`;
   });
   chkHtml+='</tbody></table></div>';
-  return acbHtml+chkHtml;
+  return summaryHtml+acbHtml+chkHtml;
 }
 // 발전기점검 상세 — 유류현황 1건 + 점검체크리스트 20개를 읽기전용 표로 덧붙임
 function buildGeneratorDetailExtra(r){
@@ -2004,6 +2023,18 @@ function buildElecFormExtra(r){
     });
     acbHtml+='</tbody></table></div>';
   });
+  // 유효전력량(kWh)/무효전력량(kVar)/최대전력(kW)/배율/역률(%)은 elec1(부모)이 아니라 elec2(ACB)DB
+  // 속성이고, ACB 9건 전부 같은 값이 반복 저장되는 구조(2026-07-21 실스키마 확인) — 입력창은 1벌만
+  // 두고 저장 시 9건 모두에 복사해서 쓴다. 대표값은 기존 ACB 레코드 중 첫 번째(_acb[0])에서 가져온다.
+  const acb0 = (r && r._acb && r._acb[0]) || null;
+  const acbCommonHtml=`<div class="form-group-hd">측정값 요약(ACB 9건에 공통 저장)</div>
+    <div class="form-group-grid">
+      <div class="modal-field"><label class="modal-label">유효전력량(kWh)</label><input class="modal-input" id="ec_yuhyo" type="number" step="0.01" value="${acb0&&acb0.유효전력량!=null?acb0.유효전력량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
+      <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="number" step="0.01" value="${acb0&&acb0.최대전력!=null?acb0.최대전력:''}"/></div>
+      <div class="modal-field"><label class="modal-label">배율</label><input class="modal-input" id="ec_baeyul" type="number" step="1" value="${acb0&&acb0.배율!=null?acb0.배율:''}"/></div>
+      <div class="modal-field"><label class="modal-label">역률(%)</label><input class="modal-input" id="ec_yeokryul" type="number" step="0.01" value="${acb0&&acb0.역률!=null?acb0.역률:''}"/></div>
+    </div>`;
   // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
   const chkSrc = r || TAB_STATE['elec'].records[0] || null;
@@ -2026,7 +2057,28 @@ function buildElecFormExtra(r){
     </tr>`;
   });
   chkHtml+='</tbody></table></div>';
-  return acbHtml+chkHtml;
+  // 점검담당자/점검확인자/종합의견도 elec1이 아니라 elec3(설비현황)DB 속성이고 32건 전부 같은 값이
+  // 반복 저장되는 구조 — 마찬가지로 입력창 1벌만 두고 저장 시 32건 모두에 복사한다.
+  const chk0 = (r && r._chk && r._chk[0]) || null;
+  const chkCommonHtml=`<div class="form-group-hd">확인·종합의견(설비현황 32건에 공통 저장)</div>
+    <div class="form-group-grid">
+      <div class="modal-field"><label class="modal-label">점검담당자</label>
+        <select class="modal-select" id="ec_damdang" onchange="onSelectChange(this,'ec_damdangc')">
+          <option value="">선택</option><option value="__custom__">직접입력</option>
+          ${['김동록','신종섭','김태선','공우식'].map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검담당자===o?' selected':''}>${esc(o)}</option>`).join('')}
+        </select>
+        <input id="ec_damdangc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검담당자&&!['김동록','신종섭','김태선','공우식'].includes(chk0.점검담당자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검담당자&&!['김동록','신종섭','김태선','공우식'].includes(chk0.점검담당자)?esc(chk0.점검담당자):''}"/>
+      </div>
+      <div class="modal-field"><label class="modal-label">점검확인자</label>
+        <select class="modal-select" id="ec_hwakin" onchange="onSelectChange(this,'ec_hwakinc')">
+          <option value="">선택</option><option value="__custom__">직접입력</option>
+          ${['조성섭,강유리','조성섭,배병현'].map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검확인자===o?' selected':''}>${esc(o)}</option>`).join('')}
+        </select>
+        <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!['조성섭,강유리','조성섭,배병현'].includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!['조성섭,강유리','조성섭,배병현'].includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
+      </div>
+      <div class="modal-field"><label class="modal-label">종합의견</label><input class="modal-input" id="ec_jonghap" type="text" value="${esc(chk0?chk0.종합의견:'적합함')}"/></div>
+    </div>`;
+  return acbHtml+acbCommonHtml+chkHtml+chkCommonHtml;
 }
 // 발전기점검 탭 전용 — 특정 터널의 가장 최근 레코드(가동일자 내림차순으로 이미 정렬된 TAB_STATE 기준
 // 첫 매치) — 유류/운전값/체크리스트 기본값 채움에 공용으로 재사용
@@ -2327,6 +2379,31 @@ async function submitElecForm(){
     const val=buildPropValue(f.type, values[f.key]);
     if(val) parentProps[f.key]=val;
   });
+  // '설비명(상호)'는 elec1DB의 별도 select 속성(터널명과 사실상 같은 값) — 폼에는 노출하지 않고
+  // 터널명 선택값을 그대로 같이 써서 두 속성이 어긋나는 일을 방지한다(2026-07-21, 과거 청하터널(부)
+  // 6건이 터널명만 "청하터널(주)"로 잘못 저장돼있던 데이터 오류를 노션에서 직접 수정한 뒤 재발 방지).
+  parentProps['설비명(상호)']=buildPropValue('select', values['터널명']);
+
+  // ACB 9건·설비현황 32건에 공통으로 반복 저장되는 값(elec1이 아니라 elec2/elec3의 실제 속성,
+  // buildElecFormExtra의 "공통값" 입력 섹션 참고)
+  const commonAcb={
+    유효전력량:document.getElementById('ec_yuhyo')?.value,
+    무효전력량:document.getElementById('ec_muhyo')?.value,
+    최대전력:document.getElementById('ec_choidae')?.value,
+    배율:document.getElementById('ec_baeyul')?.value,
+    역률:document.getElementById('ec_yeokryul')?.value
+  };
+  function commonSelectValue(id){
+    const sel=document.getElementById(id);
+    if(!sel) return '';
+    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
+    return sel.value;
+  }
+  const commonChk={
+    점검담당자:commonSelectValue('ec_damdang'),
+    점검확인자:commonSelectValue('ec_hwakin'),
+    종합의견:document.getElementById('ec_jonghap')?.value||''
+  };
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
@@ -2357,13 +2434,18 @@ async function submitElecForm(){
         const existing=elecAcbLookup(r, t, ph);
         childTasks.push(()=>{
           const props={
+            '제목':buildPropValue('title', values['터널명']+' 측정값'),
             '용도':buildPropValue('select', t),
             '위상':buildPropValue('select', ph.label),
             '점검일자':buildPropValue('date', values['점검일자']),
             '전압(V)':buildPropValue('number', vVal),
             '전류(A)':buildPropValue('number', aVal),
             '누설전류(mA)':buildPropValue('number', lVal),
-            '구분':buildPropValue('title', values['터널명']+' '+t+' '+ph.key)
+            '유효전력량(kWh)':buildPropValue('number', commonAcb.유효전력량),
+            '무효전력량(kVar)':buildPropValue('text', commonAcb.무효전력량),
+            '최대전력(kW)':buildPropValue('number', commonAcb.최대전력),
+            '배율':buildPropValue('number', commonAcb.배율),
+            '역률(%)':buildPropValue('number', commonAcb.역률)
           };
           const p = existing
             ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
@@ -2382,17 +2464,22 @@ async function submitElecForm(){
       const existing=elecChkLookup(r, c);
       childTasks.push(()=>{
         const props={
+          '제목':buildPropValue('title', values['터널명']+' 점검내역'),
           '설비구분':buildPropValue('select', c.설비구분),
+          '설비항목':buildPropValue('text', c.설비항목),
           '점검일자':buildPropValue('date', values['점검일자']),
           '점검결과판정':buildPropValue('select', resultVal),
           '개수수량':buildPropValue('number', countVal),
           '설비현황(증)':buildPropValue('number', incVal),
           '설비현황(감)':buildPropValue('number', decVal),
-          '부적합수량':buildPropValue('number', defectVal)
+          '부적합수량':buildPropValue('number', defectVal),
+          '점검담당자':buildPropValue('text', commonChk.점검담당자),
+          '점검확인자':buildPropValue('text', commonChk.점검확인자),
+          '종합의견':buildPropValue('text', commonChk.종합의견)
         };
         const p = existing
           ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
-          : (props['설비항목']=buildPropValue('title', c.설비항목), props['전기설비기록1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}));
+          : (props['전기설비기록1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.elec3}, properties:props}));
         return p.then(v=>{ progress(); return v; });
       });
     }
@@ -2991,12 +3078,33 @@ function exportMonthlyInspectionReport(){
 function exportElecExcel(){
   const tabDef=getTabDef('elec');
   const baseFields=dataFields(tabDef);
+  // 유효전력량(kWh)/무효전력량(kVar)/최대전력(kW)/배율/역률(%)/점검담당자/점검확인자/종합의견은
+  // elec1(부모) 필드가 아니라 elec2/elec3 자식에 공통 반복 저장된 값이라(2026-07-21 실스키마 확인)
+  // 기본정보 시트에는 대표값(_acb[0]/_chk[0])을 별도 컬럼으로 덧붙인다.
   const baseRows=TAB_STATE['elec'].records.map(r=>{
     const row={};
     baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
+    const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
+    row['유효전력량(kWh)']=acb0&&acb0.유효전력량!=null?acb0.유효전력량:0;
+    row['무효전력량(kVar)']=(acb0&&acb0.무효전력량)||'';
+    row['최대전력(kW)']=acb0&&acb0.최대전력!=null?acb0.최대전력:0;
+    row['배율']=acb0&&acb0.배율!=null?acb0.배율:0;
+    row['역률(%)']=acb0&&acb0.역률!=null?acb0.역률:0;
+    row['점검담당자']=(chk0&&chk0.점검담당자)||'';
+    row['점검확인자']=(chk0&&chk0.점검확인자)||'';
+    row['종합의견']=(chk0&&chk0.종합의견)||'';
     return row;
   });
-  const baseColumns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
+  const baseColumns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined})).concat([
+    {key:'유효전력량(kWh)', header:'유효전력량(kWh)', numFmt:'#,##0.##'},
+    {key:'무효전력량(kVar)', header:'무효전력량(kVar)'},
+    {key:'최대전력(kW)', header:'최대전력(kW)', numFmt:'#,##0.##'},
+    {key:'배율', header:'배율', numFmt:'#,##0'},
+    {key:'역률(%)', header:'역률(%)', numFmt:'#,##0.##'},
+    {key:'점검담당자', header:'점검담당자'},
+    {key:'점검확인자', header:'점검확인자'},
+    {key:'종합의견', header:'종합의견'}
+  ]);
 
   const acbRows=elecAcbFlatRows(TAB_STATE['elec'].records).map(x=>({
     터널명:x.터널명||'', 점검일자:x.점검일자||'', 용도:x.용도||'', 위상:x.위상||'',
@@ -3029,6 +3137,226 @@ function exportElecExcel(){
     ]
   });
 }
+
+// ── 전기설비기록 "보고서 생성" (원본 엑셀 템플릿의 "전기설비기록표" 시트를 재현) ──
+// 월간점검 탭과 달리 이 시트는 행 순서가 유동적인 목록형 표가 아니라 고정 칸(A1:R47)에 라벨·값이
+// 박혀있는 서식지 형태 — 구분/설비명 연속구간을 병합하는 대신, 원본 템플릿을 ExcelJS로 직접 셀
+// 덤프해서 확인한 정적 병합·좌표를 그대로 하드코딩한다(2026-07-21, 4개 터널 템플릿 전부 동일 레이아웃
+// 확인, 청하(주)/청하(부)만 시트가 분리돼 있고 흥해·남정5는 단일 시트 — 내용 구조는 완전히 같음).
+// 저압설비/특고(고압)설비 각 16항목의 인쇄 순서는 ELEC_CHECKLIST(신규등록 폼 카탈로그, 구분+설비항목
+// 조합만 취급, 순서 무관)와 별개로 이 배열에서 관리한다.
+const ELEC_REPORT_LOWVOLT=[
+  {설비항목:'인입구배선'}, {설비항목:'배․분전반'}, {설비항목:'배선용차단기'}, {설비항목:'누전차단기'},
+  {설비항목:'개폐기'}, {설비항목:'배선'}, {설비항목:'전동기'}, {설비항목:'전열설비'},
+  {설비항목:'용접기'}, {설비항목:'콘덴서'}, {설비항목:'조명설비'}, {설비항목:'구내전선로'},
+  {설비항목:'기타설비'},
+  {설비항목:'발전기', group:'발전\n설비'}, {설비항목:'차단장치', group:'발전\n설비'}, {설비항목:'축전장치', group:'발전\n설비'}
+];
+const ELEC_REPORT_HIGHVOLT=[
+  '가공전선로','지중전선로','수배전용개폐기','배선(모선)','피뢰기','변성기','전력퓨즈','변압기',
+  '수배전반','계전기류','차단기류','전력용콘덴서','보호설비','부하설비','접지시설','기타설비'
+];
+const ELEC_REPORT_ACB_PHASE_LABEL={R:'R-S', S:'S-T', T:'T-R'};
+function buildElecReportSheet(wb, r, tunnel){
+  const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
+  const ws=wb.addWorksheet('전기설비기록표',{
+    views:[{showGridLines:false, zoomScale:95}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
+      margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(1.5)})},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  ws.columns=[4.5,6.1,3.3,2.8,2.8,4.3,3.8,10.8,3.3,2.8,2.8,4.3,3.8,8.8,3.8,3.8,3.8,3.8].map(w=>({width:w}));
+
+  const F14=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
+  const CENTER={vertical:'middle', horizontal:'center'};
+  const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
+  // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
+  function mc(range, value, font, alignment, numFmt){
+    const addr=range.split(':')[0];
+    const cell=ws.getCell(addr);
+    if(value!==undefined && value!==null) cell.value=value;
+    cell.font=font||F14(10);
+    cell.alignment=alignment||CENTER;
+    if(numFmt) cell.numFmt=numFmt;
+    cell.border=EXCEL_CELL_BORDER;
+    if(range.indexOf(':')>=0) ws.mergeCells(range);
+    return cell;
+  }
+
+  mc('A2:J2', '□ 전기설비 점검결과 기록표', F14(14,true), LEFT);
+  mc('A4:F4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT);
+  mc('A6:F6', ' 1. 기본사항', F14(10), LEFT);
+
+  mc('A7:B7', '수전전압/용량', F14(10), CENTER);
+  mc('C7:G7', r['수전전압/용량']||'', F14(10), CENTER);
+  mc('H7:H7', '발전전압/용량', F14(10), CENTER);
+  mc('I7:M7', r['발전전압/용량']||'', F14(10), CENTER);
+  mc('N7:O7', '태양광용량', F14(10), CENTER);
+  mc('P7:R7', r['태양광용량']||'', F14(10), CENTER);
+
+  mc('A8:B8', '점검일자', F14(10), CENTER);
+  const d=excelParseDate(r['점검일자']);
+  mc('C8:G8', d, F14(10), CENTER, 'yyyy-mm-dd');
+  mc('H8:H8', '점검종별', F14(10), CENTER);
+  mc('I8:M8', r['점검종별']||'월간', F14(10), CENTER);
+  mc('N8:O8', '점검횟수', F14(10), CENTER);
+  mc('P8:R8', r['점검횟수']||'', F14(10), CENTER);
+
+  mc('A10:A10', '2. 점검내역 ', F14(10), LEFT);
+
+  // 헤더(11~13행) — 원본 템플릿의 병합 구조를 그대로 재현
+  mc('A11:B13', '저 압 설 비', F14(8), CENTER);
+  mc('C11:C13', '점검\n결과\n판정', F14(8), CENTER_WRAP);
+  mc('D11:E12', '설비현황', F14(8), CENTER_WRAP);
+  mc('D13:D13', '증', F14(8), CENTER);
+  mc('E13:E13', '감', F14(8), CENTER);
+  mc('F11:F13', '부적합\n수량', F14(8), CENTER_WRAP);
+  mc('G11:G13', '개수\n수량', F14(8), CENTER_WRAP);
+  mc('H11:H13', '특고(고압)설비', F14(8), CENTER);
+  mc('I11:I13', '점검\n결과\n판정', F14(8), CENTER_WRAP);
+  mc('J11:K12', '설비현황', F14(8), CENTER_WRAP);
+  mc('J13:J13', '증', F14(8), CENTER);
+  mc('K13:K13', '감', F14(8), CENTER);
+  mc('L11:L13', '부적합\n수량', F14(8), CENTER_WRAP);
+  mc('M11:M13', '개수\n수량', F14(8), CENTER_WRAP);
+  mc('N11:O13', '구 분', F14(8), CENTER);
+  mc('P11:P13', '전압\n(V)', F14(8), CENTER_WRAP);
+  mc('Q11:Q13', '전류\n(A)', F14(8), CENTER_WRAP);
+  mc('R11:R13', '누설\n전류\n(mA)', F14(8), CENTER_WRAP);
+
+  // 14~29행(16행) — 저압설비 16항목 / 특고(고압)설비 16항목 / ACB 9개(12행) + 역률·전력량 요약(4행)
+  for(let i=0;i<16;i++){
+    const rn=14+i;
+    // 저압설비(A~G)
+    const lv=ELEC_REPORT_LOWVOLT[i];
+    const lvRec=elecChkLookup(r, {설비구분:'저압설비', 설비항목:lv.설비항목});
+    if(lv.group){
+      if(i===13) mc(`A27:A29`, lv.group, F14(8), CENTER_WRAP);
+      mc(`B${rn}:B${rn}`, lv.설비항목, F14(8), CENTER);
+    } else {
+      mc(`A${rn}:B${rn}`, lv.설비항목, F14(8), CENTER);
+    }
+    mc(`C${rn}:C${rn}`, lvRec?lvRec.점검결과판정:'', F14(8), CENTER);
+    mc(`D${rn}:D${rn}`, lvRec&&lvRec.증?lvRec.증:null, F14(8), CENTER);
+    mc(`E${rn}:E${rn}`, lvRec&&lvRec.감?lvRec.감:null, F14(8), CENTER);
+    mc(`F${rn}:F${rn}`, lvRec&&lvRec.부적합?lvRec.부적합:null, F14(8), CENTER);
+    mc(`G${rn}:G${rn}`, lvRec&&lvRec.개수?lvRec.개수:null, F14(8), CENTER);
+
+    // 특고(고압)설비(H~M)
+    const hvItem=ELEC_REPORT_HIGHVOLT[i];
+    const hvRec=elecChkLookup(r, {설비구분:'특고(고압)설비', 설비항목:hvItem});
+    mc(`H${rn}:H${rn}`, hvItem, F14(8), CENTER);
+    mc(`I${rn}:I${rn}`, hvRec?hvRec.점검결과판정:'', F14(8), CENTER);
+    mc(`J${rn}:J${rn}`, hvRec&&hvRec.증?hvRec.증:null, F14(8), CENTER);
+    mc(`K${rn}:K${rn}`, hvRec&&hvRec.감?hvRec.감:null, F14(8), CENTER);
+    mc(`L${rn}:L${rn}`, hvRec&&hvRec.부적합?hvRec.부적합:null, F14(8), CENTER);
+    mc(`M${rn}:M${rn}`, hvRec&&hvRec.개수?hvRec.개수:null, F14(8), CENTER);
+
+    // ACB(N~R) — 0~11행(i<12)은 조명/일반/동력용 각 4행(R/S/T/공백), 12~15행(i>=12)은 역률·전력량 요약
+    if(i<12){
+      const typeIdx=Math.floor(i/4), subIdx=i%4;
+      const type=ACB_TYPES[typeIdx];
+      if(subIdx===0) mc(`N${rn}:N${rn+3}`, `측정개소 :\n${type}\nABC 2차`, F14(8), CENTER_WRAP);
+      if(subIdx<3){
+        const ph=ACB_PHASES[subIdx];
+        const acbRec=elecAcbLookup(r, type, ph);
+        mc(`O${rn}:O${rn}`, ELEC_REPORT_ACB_PHASE_LABEL[ph.key], F14(8), CENTER);
+        mc(`P${rn}:P${rn}`, acbRec&&acbRec.전압!=null?acbRec.전압:null, F14(8), CENTER);
+        mc(`Q${rn}:Q${rn}`, acbRec&&acbRec.전류!=null?acbRec.전류:null, F14(8), CENTER);
+        mc(`R${rn}:R${rn}`, acbRec&&acbRec.누설전류!=null?acbRec.누설전류:null, F14(8), CENTER);
+      } else {
+        mc(`O${rn}:O${rn}`, 'N', F14(8), CENTER);
+      }
+    } else if(rn===26){
+      mc('N26:N26', '역률(%)', F14(8), CENTER);
+      mc('O26:R26', acb0&&acb0.역률!=null?acb0.역률:null, F14(8), CENTER);
+    } else if(rn===27){
+      mc('N27:N27', '유효전력량(kW)', F14(8), CENTER);
+      mc('O27:R27', acb0&&acb0.유효전력량!=null?acb0.유효전력량:null, F14(8), CENTER, '#,##0_ ');
+    } else if(rn===28){
+      mc('N28:N28', '무효전력량(kVar)', F14(8), CENTER);
+      mc('O28:R28', (acb0&&acb0.무효전력량)||'', F14(8), CENTER);
+    } else if(rn===29){
+      mc('N29:N29', '최대전력(kW)', F14(8), CENTER);
+      mc('O29:P29', acb0&&acb0.최대전력!=null?acb0.최대전력:null, F14(8), CENTER);
+      mc('Q29:Q29', '배율', F14(8), CENTER);
+      mc('R29:R29', acb0&&acb0.배율!=null?String(acb0.배율):'', F14(8), Object.assign({},CENTER,{shrinkToFit:true}), '@');
+    }
+  }
+
+  mc('A30:A30', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT);
+  mc('A32:A32', '3. 종합의견', F14(10), LEFT);
+  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT);
+  for(let rn=34; rn<=41; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT);
+  mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT);
+  mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT);
+
+  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP);
+  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP);
+  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER);
+  mc('P46:R46', '(인)', F14(10), CENTER);
+  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP);
+  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
+  mc('P47:R47', '(인)', F14(10), CENTER);
+  ws.getRow(46).height=20.15; ws.getRow(47).height=20.15;
+}
+function buildOneElecReport(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const r=(TAB_STATE.elec.records||[]).find(x=>x['터널명']===tunnel && (x['점검일자']||'').startsWith(ymStr));
+  if(!r) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    buildElecReportSheet(wb, r, tunnel);
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전기설비기록표_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportElecInspectionReport(){
+  const btn=document.getElementById('reportBtn_elec');
+  const lbl=document.getElementById('reportLbl_elec');
+  const f=_tabFilters['elec'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.elec.records||[]).map(r=>r['점검일자']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('elec'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOneElecReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
 // 발전기점검 엑셀 — 온스크린 3개 보기(기본정보/유류현황/점검체크리스트)와 동일하게 3개 시트로 분리 생성
 // (열이 많아 1시트에 다 넣으면 보기 불편하다는 피드백, 2026-07-20). 인쇄방향은 시트별로 자동 판정.
 function exportGeneratorExcel(){
