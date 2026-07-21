@@ -194,6 +194,17 @@ html[data-theme="dark"] .result-none{background:rgba(255,255,255,.1);color:rgba(
 .detail-info-key{display:table-cell;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);border-bottom:1px solid var(--border2);vertical-align:top;line-height:1.5}
 .detail-info-val{display:table-cell;font-size:13px;color:var(--txt);line-height:1.6;padding:10px 14px;word-break:break-all;border-bottom:1px solid var(--border2);vertical-align:top;width:100%}
 .detail-info-row:last-child .detail-info-key,.detail-info-row:last-child .detail-info-val{border-bottom:none}
+.photo-section{padding:10px 0;border-top:1px solid var(--border2)}
+.photo-label{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
 .detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
@@ -857,6 +868,18 @@ function generatorInspectorOptions(tunnel){
   const v=TUNNEL_GENERATOR_INSPECTOR[tunnel];
   return v ? [v] : [];
 }
+// 점검사진 탭 "사진설명" — 터널명×번호 조합으로 이미 등록된 과거 사진설명들을 후보로 제시(월마다
+// 내용이 조금씩 달라 고정 카탈로그는 아니지만, 반복되는 표현이 많아 직접입력 부담을 줄여줌)
+function photoDescOptions(tunnel, num){
+  if(!tunnel || !num) return [];
+  const recs=(TAB_STATE.photo && TAB_STATE.photo.records) || [];
+  const numStr=String(num);
+  const seen=new Set();
+  recs.forEach(r=>{
+    if(r['터널명']===tunnel && String(r['번호'])===numStr && r['사진설명']) seen.add(r['사진설명']);
+  });
+  return Array.from(seen);
+}
 function getChecklistOptions(gubun, seolbi){
   if(!gubun || !seolbi) return [];
   return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
@@ -986,8 +1009,10 @@ const TAB_DEFS=[
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 점검사진'] : [],
         emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'번호', type:'number'},
-      {key:'사진설명', type:'text'},
+      {key:'번호', type:'number', uiType:'fixed-select', options:['1','2','3','4','5','6'], required:true, cascadeTrigger:true},
+      {key:'사진설명', type:'text', uiType:'cascade-select', dependsOn:['터널명','번호'],
+        optionsFn:dep=>photoDescOptions(dep['터널명'], dep['번호']),
+        emptyHint:'먼저 터널명·번호를 선택하세요'},
       {key:'점검사진', type:'file'}
     ],
     listCols:['터널명','일자','제목','번호','사진설명','점검사진']
@@ -1645,6 +1670,23 @@ function buildPhotoThumbs(files, maxShow){
   const more = files.length>shown.length ? `<span style="font-size:11px;color:var(--txt3);margin-left:4px">+${files.length-shown.length}</span>` : '';
   return html+more;
 }
+function buildPhotoSection(label, files){
+  files=files||[];
+  const inner = files.length
+    ? files.map(f=>{
+        const url=f.url||'';
+        return '<div class="photo-wrap" style="margin-bottom:8px"><a href="'+esc(url)+'" target="_blank" rel="noopener">'
+          +'<img class="photo-img loading" src="'+esc(url)+'" alt="'+esc(label)+'"'
+          +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +'></a>'
+          +'<div class="photo-spinner"></div>'
+          +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(url)+'" target="_blank">링크로 직접 열기 →</a></div>'
+          +'</div>';
+      }).join('')
+    : '<div style="padding:18px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
+  return '<div class="photo-section"><div class="photo-label">'+esc(label)+'</div>'+inner+'</div>';
+}
 function emptyState(desc, icon){
   icon=icon||'📋';
   return `<div class="empty"><div class="empty-icon">${icon}</div>
@@ -1658,15 +1700,17 @@ function openDetailModal(tabId, recordId){
   const r=TAB_STATE[tabId].records.find(x=>x.id===recordId);
   if(!r) return;
   document.getElementById('detailModalTitle').textContent=tabDef.label+' 상세';
-  const rows=dataFields(tabDef).map(f=>{
+  const fields=dataFields(tabDef);
+  const rows=fields.filter(f=>f.type!=='file').map(f=>{
     let val;
     if(f.type==='date') val=esc(fmtDate(r[f.key]));
     else if(f.type==='number') val=fmtWon(r[f.key]);
-    else if(f.type==='file') val=buildPhotoThumbs(r[f.key], 20);
     else val=esc(r[f.key]||'-');
     return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
   }).join('');
+  const photoHtml=fields.filter(f=>f.type==='file').map(f=>buildPhotoSection(f.key, r[f.key])).join('');
   document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>'
+    + photoHtml
     + (tabId==='elec' ? buildElecDetailExtra(r) : '')
     + (tabId==='generator' ? buildGeneratorDetailExtra(r) : '');
   document.getElementById('detailModalActions').innerHTML=
@@ -1738,6 +1782,20 @@ function buildFieldHtml(f, idx, curVal, tabId){
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
       <div class="modal-hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
+    </div>`;
+  }
+  if(f.uiType==='fixed-select'){
+    // 후보가 고정된 소수의 값(예: 1~6번)뿐이라 직접입력 없이 select만 제공 — cascade-select와 달리
+    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상이 아니다.
+    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${String(curVal)===String(o)?' selected':''}>${esc(o)}</option>`).join('');
+    const onchangeParts=[];
+    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
+    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
+        <option value="">선택</option>
+        ${opts}
+      </select>
     </div>`;
   }
   if(f.type==='file'){
@@ -1824,7 +1882,7 @@ function getFieldValue(f, idx){
   if(f.type==='file'){
     return _photoFiles;
   }
-  if(f.type==='select' || f.uiType==='cascade-select'){
+  if(f.type==='select' || f.uiType==='cascade-select' || f.uiType==='fixed-select'){
     const sel=document.getElementById(id);
     if(!sel) return '';
     if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
@@ -2396,8 +2454,9 @@ async function deleteGeneratorRecord(pageId){
 
 // ── 엑셀 생성 (work-portal 공통 라이브러리 패턴 재사용) ──
 var EXCEL_LIB_LOADING=null;
-function loadExcelLib(){
-  if(window.ExcelJS) return Promise.resolve();
+function loadExcelLib(needsZip){
+  const ready = (!needsZip || window.JSZip) && window.ExcelJS;
+  if(ready) return Promise.resolve();
   if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
   function loadScript(src, integrity){
     return new Promise((resolve, reject)=>{
@@ -2408,17 +2467,21 @@ function loadExcelLib(){
       document.head.appendChild(s);
     });
   }
-  EXCEL_LIB_LOADING=loadScript(
-    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
-    'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
-  ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  EXCEL_LIB_LOADING=Promise.all([
+    window.ExcelJS ? Promise.resolve() : loadScript(
+      'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+      'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'),
+    (needsZip && !window.JSZip) ? loadScript(
+      'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+      'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG') : Promise.resolve()
+  ]).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
   return EXCEL_LIB_LOADING;
 }
 const EXCEL_COMPANY_NAME='수자원기술(주)';
 const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
-const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
 const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
 function excelCm2in(cm){ return cm/2.54; }
 const EXCEL_PAGE_PRESETS={
@@ -2450,6 +2513,53 @@ function excelAutoOrientation(colWidths){
   const total=colWidths.reduce((s,w)=>s+w,0);
   return total>100 ? 'landscape' : 'portrait';
 }
+// ── 엑셀 사진 임베드 (하자보수현황 앱 buildExcelReport()와 동일 로직 이식, 2026-07-21) ──
+const EXCEL_PHOTO_INSET_EMU=19050;
+function excelFetchImage(url){
+  if(!url || !/^https?:\/\//i.test(url)) return Promise.resolve(null);
+  // cache:'no-store' — 다른 origin에서 캐시된 CORS 헤더 없는 응답이 재사용돼 fetch가 실패하는
+  // 사례가 있어 항상 네트워크에서 새로 받는다(xlsx-report-export 스킬 참고).
+  return fetch(url, {cache:'no-store'}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const contentType=r.headers.get('content-type');
+    return r.arrayBuffer().then(buf=>{
+      const ext=/png/i.test(contentType||url)?'png':/gif/i.test(contentType||url)?'gif':(/jpe?g/i.test(contentType||url)?'jpeg':null);
+      if(!ext){ console.warn('지원하지 않는 이미지 형식:', url, contentType); return null; }
+      return {buffer:buf, extension:ext};
+    });
+  }).catch(e=>{ console.warn('사진 로드 실패:', url, e.message); return null; });
+}
+// 사진 셀 앵커 — 열/행 폭을 직접 계산하지 않고 "다음 열/행의 시작점에서 인셋만큼 음수 오프셋으로
+// 당겨" 지정한다(EMU/폰트 근사식 의존 버그를 피하는 방식, scripts/lib/xlsx_report_lib.mjs와 동일).
+function excelPhotoAnchor(col, rn0){
+  return {
+    tl:{nativeCol:col, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:rn0, nativeRowOff:EXCEL_PHOTO_INSET_EMU},
+    br:{nativeCol:col+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:rn0+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU},
+    editAs:'twoCell'
+  };
+}
+// exceljs는 삽입 이미지의 "가로 세로 비율 고정"을 항상 1로 하드코딩해서 옵션이 없음 —
+// 저장된 xlsx의 drawing XML을 직접 열어 0으로 바꿔준다.
+function excelUnlockAspectRatio(buffer){
+  return JSZip.loadAsync(buffer).then(zip=>{
+    const files=Object.keys(zip.files).filter(f=>/^xl\/drawings\/drawing\d+\.xml$/.test(f));
+    return Promise.all(files.map(f=>
+      zip.file(f).async('string').then(xml=>{ zip.file(f, xml.replace(/noChangeAspect="1"/g,'noChangeAspect="0"')); })
+    )).then(()=>zip.generateAsync({type:'blob'}));
+  });
+}
+// 동시 fetch 과다로 인한 지연/차단을 막기 위해 N개씩 배치 처리
+function excelBatchPromises(items, worker, batchSize){
+  batchSize=batchSize||6;
+  let idx=0;
+  function next(){
+    if(idx>=items.length) return Promise.resolve();
+    const batch=items.slice(idx, idx+batchSize);
+    idx+=batchSize;
+    return Promise.all(batch.map(worker)).then(next);
+  }
+  return next();
+}
 // opts.sheets가 있으면 시트를 여러 개(전기설비기록·발전기점검처럼 보기 갯수만큼) 만들고, 없으면
 // 기존처럼 opts.sheetName/title/columns/rows로 단일 시트를 만든다(다른 탭들과 호환).
 // 시트별 orientation을 명시하지 않으면 excelAutoOrientation()이 열 너비 합으로 자동 판정한다.
@@ -2458,13 +2568,16 @@ function buildExcelReport(opts){
   const lbl=document.getElementById(opts.lblId);
   const sheets = opts.sheets || [{sheetName:opts.sheetName, title:opts.title, columns:opts.columns, rows:opts.rows, orientation:opts.orientation}];
   if(!sheets.some(s=>(s.rows||[]).length)){ alert('내보낼 데이터가 없습니다.'); return; }
+  const anyPhoto = sheets.some(s=>(s.columns||[]).some(c=>c.photo));
+  let failedPhotoCount=0;
   btn.disabled=true; lbl.textContent='준비 중...';
-  loadExcelLib().then(()=>{
+  loadExcelLib(anyPhoto).then(()=>{
     const wb=new ExcelJS.Workbook();
+    const photoTasks=[];
     sheets.forEach(sheetOpts=>{
       const rows=sheetOpts.rows||[];
       const columns=sheetOpts.columns;
-      const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+      const colWidths=columns.map(col=>col.width || excelAutoWidth(col.photo?[col.header]:[col.header].concat(rows.map(r=>r[col.key]))));
       const orientation=sheetOpts.orientation || excelAutoOrientation(colWidths);
       const ws=wb.addWorksheet(sheetOpts.sheetName,{
         views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
@@ -2484,14 +2597,20 @@ function buildExcelReport(opts){
         cell.alignment={vertical:'middle',horizontal:'center'};
         cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
       });
+      // 사진 컬럼이 스키마에 하나라도 있으면 전체 데이터행을 큰 높이로 통일(인쇄 줄맞춤용,
+      // 하자보수현황 앱과 동일 원칙 — 행마다 실제 사진 유무로 들쭉날쭉하게 하지 않는다)
+      const photoColumns=[];
+      columns.forEach((c,i)=>{ if(c.photo) photoColumns.push({col:c, i:i}); });
+      const rowHeightForData = photoColumns.length ? EXCEL_ROW_HEIGHTS.dataWithPhoto : EXCEL_ROW_HEIGHTS.data;
       rows.forEach((r,i)=>{
         const rn=3+i;
         const row=ws.getRow(rn);
-        row.height=EXCEL_ROW_HEIGHTS.data;
+        row.height=rowHeightForData;
         columns.forEach((col,ci)=>{
           const cell=row.getCell(ci+1);
           cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
           cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
+          if(col.photo) return;
           if(col.dateCol && r[col.key]){
             const d=excelParseDate(r[col.key]);
             if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
@@ -2502,11 +2621,30 @@ function buildExcelReport(opts){
         });
         row.commit();
       });
+      rows.forEach((r,i)=>{
+        const rn0=2+i;
+        photoColumns.forEach(pc=>{
+          const url=r[pc.col.key+'_URL'];
+          if(url) photoTasks.push({url, colIdx:pc.i, rn0, ws});
+        });
+      });
     });
-    lbl.textContent='파일 저장 중...';
-    return wb.xlsx.writeBuffer();
-  }).then(buf=>{
-    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    if(photoTasks.length) lbl.textContent='사진 불러오는 중...';
+    return excelBatchPromises(photoTasks, task=>{
+      return excelFetchImage(task.url).then(img=>{
+        if(!img){ failedPhotoCount++; return; }
+        const imgId=wb.addImage(img);
+        task.ws.addImage(imgId, excelPhotoAnchor(task.colIdx, task.rn0));
+      });
+    }).then(()=>{
+      lbl.textContent='파일 저장 중...';
+      return wb.xlsx.writeBuffer();
+    }).then(buf=>{
+      return anyPhoto
+        ? excelUnlockAspectRatio(buf)
+        : new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    });
+  }).then(blob=>{
     const url=URL.createObjectURL(blob);
     const now=new Date();
     const p2=n=>String(n).padStart(2,'0');
@@ -2514,8 +2652,9 @@ function buildExcelReport(opts){
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+    // 사진 fetch가 일부/전부 실패해도 파일 자체는 정상 생성되므로, 실패 건수를 알려준다
+    lbl.textContent = failedPhotoCount>0 ? ('완료(사진 '+failedPhotoCount+'건 누락)') : '완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, failedPhotoCount>0 ? 3000 : 1500);
   }).catch(e=>{
     alert('엑셀 생성 실패: '+e.message);
     console.error(e);
@@ -2532,12 +2671,17 @@ function exportTabExcel(tabId){
     const row={};
     fields.forEach(f=>{
       if(f.type==='number') row[f.key]=Number(r[f.key])||0;
-      else if(f.type==='file') row[f.key]=(r[f.key]||[]).map(x=>x.url).join(', ');
+      else if(f.type==='file') row[f.key+'_URL']=(r[f.key]||[])[0]?.url||'';
       else row[f.key]=r[f.key]||'';
     });
     return row;
   });
-  const columns=fields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
+  const columns=fields.map(f=>({
+    key:f.key, header:f.key,
+    numFmt: f.type==='number'?'#,##0.##':undefined,
+    photo: f.type==='file'||undefined,
+    width: f.type==='file'?18:undefined
+  }));
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
