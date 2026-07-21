@@ -381,7 +381,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div class="panel active" id="panel-monthly">
     <div class="filter-row">
       <div id="filterDd-monthly" style="display:contents"></div>
-      <input class="search-box" id="search-monthly" placeholder="🔍 설비명·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('monthly')"/>
+      <input class="search-box" id="search-monthly" placeholder="🔍 설비명·제목·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('monthly')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('monthly')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
@@ -395,7 +395,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-monthly">
-          <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>비고</th>
+          <th>터널명</th><th>점검일자</th><th>구분</th><th>설비명</th><th>제목</th><th>점검내용</th><th>점검결과</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-monthly"></tbody>
       </table>
