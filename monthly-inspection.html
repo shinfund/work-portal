@@ -1028,7 +1028,7 @@ const TAB_DEFS=[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'일자', type:'date', required:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>({'청하터널(주)':['주변전실'],'청하터널(부)':['부변전실']}[dep['터널명']]||[]),
+        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 전력사용량'] : [],
         emptyHint:'먼저 터널명을 선택하세요'},
       {key:'MAIN(kWh)', type:'number'},
       {key:'조명용(kWh)', type:'number'},
