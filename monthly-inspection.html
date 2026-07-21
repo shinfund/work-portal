@@ -3195,7 +3195,7 @@ function buildElecReportSheet(wb, r, tunnel){
   }
 
   mc('A2:J2', '□ 전기설비 점검결과 기록표', F14(14,true), LEFT, undefined, false);
-  mc('A4:F4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
+  mc('A4:J4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
   mc('A6:F6', ' 1. 기본사항', F14(10), LEFT, undefined, false);
 
   mc('A7:B7', '수전전압/용량', F14(10), CENTER);
