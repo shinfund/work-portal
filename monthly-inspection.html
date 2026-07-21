@@ -885,9 +885,6 @@ function photoDescOptions(tunnel, num){
   });
   return Array.from(seen);
 }
-// 구분="기타"/"태양광발전설비"는 제목을 "{터널명} 월간점검결과표" 고정 문구로 쓰고 점검항목은 점검내용에 담음
-// (2026-07-21 노션 데이터 정리 기준). 나머지 구분은 기존처럼 제목=점검항목, 점검내용 미사용.
-const MONTHLY_TITLE_GUBUN=['기타','태양광발전설비'];
 function getChecklistOptions(gubun, seolbi){
   if(!gubun || !seolbi) return [];
   return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
@@ -935,14 +932,11 @@ const TAB_DEFS=[
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
         optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명','구분','설비명'],
-        optionsFn:dep=>MONTHLY_TITLE_GUBUN.includes(dep['구분'])
-          ? (dep['터널명'] ? [dep['터널명']+' 월간점검결과표'] : [])
-          : getChecklistOptions(dep['구분'], dep['설비명']),
-        emptyHint:'먼저 구분·설비명을 선택하세요'},
-      {key:'점검내용', type:'text', uiType:'cascade-select', dependsOn:['구분','설비명'],
-        optionsFn:dep=>MONTHLY_TITLE_GUBUN.includes(dep['구분']) ? getChecklistOptions(dep['구분'], dep['설비명']) : [],
-        emptyHint:'이 구분에서는 사용하지 않음'},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 월간점검결과표'] : [],
+        emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'점검내용', type:'text', required:true, uiType:'cascade-select', dependsOn:['구분','설비명'],
+        optionsFn:dep=>getChecklistOptions(dep['구분'], dep['설비명']), emptyHint:'먼저 구분·설비명을 선택하세요'},
       {key:'점검결과', type:'select', options:['양호','-','불량','점검요'], defaultValue:'양호', badgeFn:resultSlug},
       {key:'비고', type:'text'}
     ],
