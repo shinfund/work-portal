@@ -3160,51 +3160,60 @@ const ELEC_REPORT_ACB_PHASE_LABEL={R:'R-S', S:'S-T', T:'T-R'};
 function buildElecReportSheet(wb, r, tunnel){
   const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
   const ws=wb.addWorksheet('전기설비기록표',{
-    views:[{showGridLines:false, zoomScale:95}],
+    views:[{showGridLines:false, zoomScale:120}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(1.5)})},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
-  ws.columns=[4.5,6.1,3.3,2.8,2.8,4.3,3.8,10.8,3.3,2.8,2.8,4.3,3.8,8.8,3.8,3.8,3.8,3.8].map(w=>({width:w}));
+  // 2026-07-21 사용자 피드백으로 원본 템플릿 실측 너비보다 A/B/D/E/F/H/N(+대칭인 J/K/L) 열을 넓힘
+  // (짧은 라벨은 문제없지만 "수전전압/용량"·"설비현황"·"부적합\n수량"·"유효전력량(kW)"처럼 긴
+  // 라벨이 8pt에서도 잘려 보였음). fitToWidth:1이 인쇄 시 자동으로 배율을 맞추므로 폭을 늘려도
+  // 1페이지 제약은 깨지지 않는다.
+  ws.columns=[5.5,7.2,3.3,3.5,3.5,5.3,3.8,12.5,3.3,3.5,3.5,5.3,3.8,11,3.8,3.8,3.8,3.8].map(w=>({width:w}));
 
   const F14=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
+  const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
   const LEFT={vertical:'middle', horizontal:'left'};
   // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
   // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
-  function mc(range, value, font, alignment, numFmt){
+  // border: 생략하면 EXCEL_CELL_BORDER(전체 칸 가는 실선), false면 테두리 없음, 객체를 직접 넘기면
+  // 그 값 그대로(예: 33~41행 "종합의견" 박스는 외곽만 남기고 안쪽 가로선은 뺀다 — 2026-07-21 요청).
+  // 원본 템플릿과 달리 이 보고서는 "1.기본사항"(7~8행)·"2.점검내역"(11~29행)·"3.종합의견"
+  // (33~41행) 3개 블록에만 테두리를 두고, 제목·소제목·안내문·서명란은 테두리 없이 둔다.
+  function mc(range, value, font, alignment, numFmt, border){
     const addr=range.split(':')[0];
     const cell=ws.getCell(addr);
     if(value!==undefined && value!==null) cell.value=value;
     cell.font=font||F14(10);
     cell.alignment=alignment||CENTER;
     if(numFmt) cell.numFmt=numFmt;
-    cell.border=EXCEL_CELL_BORDER;
+    cell.border = border===false ? undefined : (border || EXCEL_CELL_BORDER);
     if(range.indexOf(':')>=0) ws.mergeCells(range);
     return cell;
   }
 
-  mc('A2:J2', '□ 전기설비 점검결과 기록표', F14(14,true), LEFT);
-  mc('A4:F4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT);
-  mc('A6:F6', ' 1. 기본사항', F14(10), LEFT);
+  mc('A2:J2', '□ 전기설비 점검결과 기록표', F14(14,true), LEFT, undefined, false);
+  mc('A4:F4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
+  mc('A6:F6', ' 1. 기본사항', F14(10), LEFT, undefined, false);
 
   mc('A7:B7', '수전전압/용량', F14(10), CENTER);
-  mc('C7:G7', r['수전전압/용량']||'', F14(10), CENTER);
+  mc('C7:G7', r['수전전압/용량']||'', F14(10), CENTER_SHRINK);
   mc('H7:H7', '발전전압/용량', F14(10), CENTER);
-  mc('I7:M7', r['발전전압/용량']||'', F14(10), CENTER);
+  mc('I7:M7', r['발전전압/용량']||'', F14(10), CENTER_SHRINK);
   mc('N7:O7', '태양광용량', F14(10), CENTER);
-  mc('P7:R7', r['태양광용량']||'', F14(10), CENTER);
+  mc('P7:R7', r['태양광용량']||'', F14(10), CENTER_SHRINK);
 
   mc('A8:B8', '점검일자', F14(10), CENTER);
   const d=excelParseDate(r['점검일자']);
-  mc('C8:G8', d, F14(10), CENTER, 'yyyy-mm-dd');
+  mc('C8:G8', d, F14(10), CENTER_SHRINK, 'yyyy-mm-dd');
   mc('H8:H8', '점검종별', F14(10), CENTER);
-  mc('I8:M8', r['점검종별']||'월간', F14(10), CENTER);
+  mc('I8:M8', r['점검종별']||'월간', F14(10), CENTER_SHRINK);
   mc('N8:O8', '점검횟수', F14(10), CENTER);
-  mc('P8:R8', r['점검횟수']||'', F14(10), CENTER);
+  mc('P8:R8', r['점검횟수']||'', F14(10), CENTER_SHRINK);
 
-  mc('A10:A10', '2. 점검내역 ', F14(10), LEFT);
+  mc('A10:A10', '2. 점검내역 ', F14(10), LEFT, undefined, false);
 
   // 헤더(11~13행) — 원본 템플릿의 병합 구조를 그대로 재현
   mc('A11:B13', '저 압 설 비', F14(8), CENTER);
@@ -3267,7 +3276,13 @@ function buildElecReportSheet(wb, r, tunnel){
         mc(`Q${rn}:Q${rn}`, acbRec&&acbRec.전류!=null?acbRec.전류:null, F14(8), CENTER);
         mc(`R${rn}:R${rn}`, acbRec&&acbRec.누설전류!=null?acbRec.누설전류:null, F14(8), CENTER);
       } else {
+        // 위상 4번째 행(N=중성/공백행)은 값이 없지만, 표 전체 테두리가 끊겨 보이지 않도록
+        // P·Q·R열도 빈 값으로나마 반드시 그려야 한다(2026-07-21 사용자 피드백 — 이 세 칸만
+        // mc()를 호출하지 않아 테두리가 비어있던 버그).
         mc(`O${rn}:O${rn}`, 'N', F14(8), CENTER);
+        mc(`P${rn}:P${rn}`, null, F14(8), CENTER);
+        mc(`Q${rn}:Q${rn}`, null, F14(8), CENTER);
+        mc(`R${rn}:R${rn}`, null, F14(8), CENTER);
       }
     } else if(rn===26){
       mc('N26:N26', '역률(%)', F14(8), CENTER);
@@ -3286,20 +3301,27 @@ function buildElecReportSheet(wb, r, tunnel){
     }
   }
 
-  mc('A30:A30', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT);
-  mc('A32:A32', '3. 종합의견', F14(10), LEFT);
-  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT);
-  for(let rn=34; rn<=41; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT);
-  mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT);
-  mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT);
+  mc('A30:A30', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT, undefined, false);
+  mc('A32:A32', '3. 종합의견', F14(10), LEFT, undefined, false);
+  // 33~41행은 하나의 "종합의견" 박스 — 외곽 테두리만 남기고 행 사이 안쪽 가로선은 뺀다
+  // (2026-07-21 요청). 각 행이 A:R 병합 셀 하나씩이라 좌우 테두리는 9개 행 전부에 넣어야
+  // 이어져 보이고, 위/아래는 첫 행(33)·마지막 행(41)에만 넣는다.
+  const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
+  const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
+  const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
+  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT, undefined, BOX_TOP);
+  for(let rn=34; rn<=40; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT, undefined, BOX_LR);
+  mc('A41:R41', '', F14(10), LEFT, undefined, BOX_BOTTOM);
+  mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
+  mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
 
-  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP);
-  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP);
-  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER);
-  mc('P46:R46', '(인)', F14(10), CENTER);
-  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP);
-  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
-  mc('P47:R47', '(인)', F14(10), CENTER);
+  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP, undefined, false);
+  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP, undefined, false);
+  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER, undefined, false);
+  mc('P46:R46', '(인)', F14(10), CENTER, undefined, false);
+  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP, undefined, false);
+  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER, undefined, false);
+  mc('P47:R47', '(인)', F14(10), CENTER, undefined, false);
   ws.getRow(46).height=20.15; ws.getRow(47).height=20.15;
 }
 function buildOneElecReport(tunnel, year, month){
