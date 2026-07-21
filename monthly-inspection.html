@@ -2795,8 +2795,12 @@ function exportTabExcel(tabId){
 // 구분="기타"/"태양광발전설비"는 노션 실데이터의 설비명이 공란이라(위 데이터정리 참고) 구분·설비명을
 // 별도 표시하지 않고 한 셀로 합쳐서 보여준다(2026-07-21 사용자 피드백).
 const REPORT_COMBINE_GUBUN=new Set(['기타','태양광발전설비']);
-// 원본 템플릿에서 분기/반기/연차 주기 항목에 적용된 글자색을 그대로 재현(2026-07-21, 셀 폰트색 실측).
-const REPORT_TAG_COLORS={'분기':'FF0000FF', '연차':'FFFF00FF', '반기':'FFB97135'};
+// 원본 템플릿에서 분기/반기/연차 주기 항목에 적용된 글자색을 재현(2026-07-21, 셀 폰트색 실측). 분기/연차는
+// 원본 파일에 있던 값을 그대로, 반기는 원본에 테마색(accent6)+틴트로만 지정돼 있어 근사값을 계산해
+// 썼는데 흰 배경 대비 3.83:1로 WCAG AA(4.5:1) 미달이라 가독성이 떨어져(2026-07-21 사용자 피드백)
+// 틴트를 더 강하게(-25%→-50%) 줘서 7.27:1로 보정했다. 연차(FFFF00FF)도 계산상 3.14:1로 기준 미달이지만
+// 이건 원본 파일 실측값이라 사용자 확인 없이 임의로 바꾸지 않았다.
+const REPORT_TAG_COLORS={'분기':'FF0000FF', '연차':'FFFF00FF', '반기':'FF7C4B23'};
 function buildMonthlyReportRows(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   const recs=(TAB_STATE.monthly.records||[]).filter(r=>r['터널명']===tunnel);
