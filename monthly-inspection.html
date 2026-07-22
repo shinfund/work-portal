@@ -550,6 +550,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_power">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_power" onclick="exportPowerInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_power">보고서 생성</span>
+      </button>
     </div>
     <div class="detail-count" id="count-power"></div>
     <div class="tbl-wrap">
@@ -4054,6 +4058,217 @@ function exportPhotoInspectionReport(){
     const tunnel=tunnels[idx++];
     lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
     buildOnePhotoReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
+// ── 전력사용량 "보고서 생성" (원본 엑셀 템플릿의 "전력사용량" 시트 재현) ──
+// 원본에는 4~18행에 네이티브 엑셀 차트가 들어있는데 ExcelJS는 차트 생성 API가 없어(4.4.0 기준
+// addChart류 메서드 자체가 없음), Chart.js로 오프스크린 캔버스에 그려 PNG로 저장한 뒤 이미지로
+// 삽입하는 방식을 택했다(2026-07-22 사용자 선택 — "이미지로 삽입"). 이미지 삽입 범위(A4:D18)는
+// 사용자가 원본 템플릿 파일에서 직접 셀 병합해 확정해줬다.
+var CHARTJS_LIB_LOADING=null; // ExcelJS/JSZip과 별개 캐시(loadExcelLib()와 동일 원칙)
+function loadChartLib(){
+  if(window.Chart) return Promise.resolve();
+  if(!CHARTJS_LIB_LOADING){
+    CHARTJS_LIB_LOADING=new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';
+      s.integrity='sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt';
+      s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); CHARTJS_LIB_LOADING=null; reject(new Error('라이브러리 로드 실패: '+s.src)); };
+      document.head.appendChild(s);
+    });
+  }
+  return CHARTJS_LIB_LOADING;
+}
+function buildPowerReportData(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const recs=(TAB_STATE.power.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').startsWith(ymStr));
+  if(!recs.length) return null;
+  const daysInMonth=new Date(year, month, 0).getDate();
+  const byDay={};
+  recs.forEach(r=>{
+    const day=parseInt((r['일자']||'').slice(8,10),10);
+    if(!day) return;
+    byDay[day]={MAIN: r['MAIN(kWh)']!=null&&r['MAIN(kWh)']!=='' ? Number(r['MAIN(kWh)']) : null,
+      조명: r['조명용(kWh)']!=null&&r['조명용(kWh)']!=='' ? Number(r['조명용(kWh)']) : null,
+      비고: r['비고']||''};
+  });
+  const days=[];
+  for(let d=1; d<=daysInMonth; d++) days.push(byDay[d]||null);
+  return {tunnel, year, month, daysInMonth, days};
+}
+// 캔버스 크기는 삽입 박스(A4:D18, 4열×32.79너비 / 15행×25.1pt) 실측 비율(약 1.83:1)에 맞춘 근사값
+// — twoCellAnchor(excelPhotoAnchorBlock)가 어차피 셀 범위에 맞춰 늘려 채우므로 소스 크기는
+// 화질에만 영향을 준다. 캔버스는 DOM에 붙이지 않아도(detached) 2D 컨텍스트 렌더링에는 문제없다.
+function renderPowerChartImage(data){
+  return loadChartLib().then(()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=1600; canvas.height=876;
+    const labels=data.days.map((_,i)=>String(i+1));
+    const mainData=data.days.map(d=>d?d.MAIN:null);
+    const lightData=data.days.map(d=>d?d.조명:null);
+    const chart=new Chart(canvas, {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'MAIN(kWh)', data:mainData, borderColor:'#2563eb', backgroundColor:'#2563eb', spanGaps:true, tension:0.15, pointRadius:3, borderWidth:2.5},
+          {label:'조명용(kWh)', data:lightData, borderColor:'#f59e0b', backgroundColor:'#f59e0b', spanGaps:true, tension:0.15, pointRadius:3, borderWidth:2.5}
+        ]
+      },
+      options:{
+        responsive:false, maintainAspectRatio:false, animation:false,
+        plugins:{
+          legend:{position:'top', labels:{font:{size:18}, boxWidth:22}},
+          title:{display:true, text:`${data.tunnel} 일별 전력사용량 (${data.year}년 ${data.month}월)`, font:{size:22}, padding:{bottom:14}}
+        },
+        scales:{
+          x:{title:{display:true, text:'일', font:{size:16}}, ticks:{font:{size:13}}},
+          y:{title:{display:true, text:'kWh', font:{size:16}}, ticks:{font:{size:13}}, beginAtZero:true}
+        }
+      },
+      plugins:[{
+        id:'whiteBg',
+        beforeDraw:(c)=>{ const ctx=c.ctx; ctx.save(); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore(); }
+      }]
+    });
+    return new Promise(resolve=>{
+      requestAnimationFrame(()=>{
+        canvas.toBlob(blob=>{
+          chart.destroy();
+          blob.arrayBuffer().then(resolve);
+        }, 'image/png');
+      });
+    });
+  });
+}
+function buildPowerReportSheet(wb, data, tunnel, chartBuf){
+  const ws=wb.addWorksheet('전력사용량표',{
+    views:[{showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  ws.columns=Array(4).fill(0).map(()=>({width:32.79})); // 원본 템플릿 실측 너비 그대로
+
+  const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
+  const CENTER={vertical:'middle', horizontal:'center'};
+  const VMID={vertical:'middle'}; // MAIN/조명용 숫자열 — 원본처럼 horizontal 지정 없이 숫자 자동 우측정렬
+  const LEFT={vertical:'middle', horizontal:'left'};
+  const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}}; // 헤더행(원본 실측 theme0 tint -5% 근사값)
+
+  // 표 영역(헤더 19행 + 그 달 일수만큼의 데이터행) 기준 바깥=thin·안쪽=hair — 다른 보고서와 동일한
+  // gridBorder 방식. 원본처럼 항상 50행까지 채우지 않고 그 달 실제 일수만큼만 만든다(28~31일 가변).
+  const lastRow=19+data.daysInMonth;
+  const REGION={r1:19, r2:lastRow, c1:1, c2:4};
+  function gridBorder(r,c){
+    return {
+      top:{style: r===REGION.r1 ? 'thin':'hair'},
+      bottom:{style: r===REGION.r2 ? 'thin':'hair'},
+      left:{style: c===REGION.c1 ? 'thin':'hair'},
+      right:{style: c===REGION.c2 ? 'thin':'hair'}
+    };
+  }
+
+  ws.mergeCells('A1:D1');
+  const titleCell=ws.getCell('A1');
+  titleCell.value='5. 전력데이터 분석'; titleCell.font={name:'HY헤드라인M', size:20}; titleCell.alignment=LEFT;
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+
+  ws.getRow(2).height=30; // 원본 템플릿에서 2행은 그냥 빈 공간행
+
+  ws.mergeCells('A3:D3');
+  const subCell=ws.getCell('A3');
+  subCell.value='□ '+tunnel; subCell.font=F(16,true); subCell.alignment=LEFT;
+  ws.getRow(3).height=30;
+
+  // 4~18행: 차트 이미지 삽입 영역(사용자가 원본 템플릿에서 직접 병합 확정한 범위)
+  ws.mergeCells('A4:D18');
+  for(let r=4; r<=18; r++) ws.getRow(r).height=25.1;
+  if(chartBuf){
+    const imgId=wb.addImage({buffer:chartBuf, extension:'png'});
+    ws.addImage(imgId, excelPhotoAnchorBlock(0,3,3,17));
+  }
+
+  // 19행 헤더 — 값·테두리·폰트는 원본 템플릿 실측 그대로(2026-07-22 재확인: 19~50행 글자 크기 13)
+  ws.getRow(19).height=25.1;
+  ['날짜','MAIN (kWh)','조명용 (kWh)','비고'].forEach((h,i)=>{
+    const c=i+1;
+    const cell=ws.getCell(`${colLetter(c)}19`);
+    cell.value=h; cell.font=F(13); cell.alignment=CENTER; cell.fill=SECTION_FILL;
+    cell.border=gridBorder(19,c);
+  });
+
+  const ACC_FMT='_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-'; // 원본 실측 회계형식
+  data.days.forEach((d,i)=>{
+    const rn=20+i, day=i+1;
+    ws.getRow(rn).height=25.1;
+
+    const dateCell=ws.getCell(`A${rn}`);
+    dateCell.value=new Date(Date.UTC(data.year, data.month-1, day));
+    dateCell.numFmt='mm-dd-yy'; dateCell.font=F(13); dateCell.alignment=CENTER; dateCell.border=gridBorder(rn,1);
+
+    const mainCell=ws.getCell(`B${rn}`);
+    mainCell.value=d&&d.MAIN!=null?d.MAIN:null; mainCell.numFmt=ACC_FMT; mainCell.font=F(13); mainCell.alignment=VMID; mainCell.border=gridBorder(rn,2);
+
+    const lightCell=ws.getCell(`C${rn}`);
+    lightCell.value=d&&d.조명!=null?d.조명:null; lightCell.numFmt=ACC_FMT; lightCell.font=F(13); lightCell.alignment=VMID; lightCell.border=gridBorder(rn,3);
+
+    const noteCell=ws.getCell(`D${rn}`);
+    noteCell.value=d?d.비고:null; noteCell.font=F(13); noteCell.alignment=VMID; noteCell.border=gridBorder(rn,4);
+  });
+}
+function buildOnePowerReport(tunnel, year, month){
+  const data=buildPowerReportData(tunnel, year, month);
+  if(!data) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return Promise.all([loadExcelLib(true), renderPowerChartImage(data)]).then(([_, chartBuf])=>{
+    const wb=new ExcelJS.Workbook();
+    buildPowerReportSheet(wb, data, tunnel, chartBuf);
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전력사용량_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportPowerInspectionReport(){
+  const btn=document.getElementById('reportBtn_power');
+  const lbl=document.getElementById('reportLbl_power');
+  const f=_tabFilters['power'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.power.records||[]).map(r=>r['일자']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('power'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOnePowerReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
         alert(`${tunnel} 보고서 생성 실패: `+e.message);
