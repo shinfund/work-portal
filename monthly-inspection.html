@@ -490,6 +490,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_generator">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_generator" onclick="exportGeneratorInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_generator">보고서 생성</span>
+      </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="generatorViewHint">※ 위 [기본정보|유류현황|점검체크리스트] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count" id="count-generator"></div>
@@ -857,7 +861,7 @@ const GENERATOR_CHECKLIST=[
   {점검구분:'일반점검사항',점검내용:'냉각수 상태'},
   {점검구분:'일반점검사항',점검내용:'배터리 단자의 고정, 청결상태'},
   {점검구분:'일반점검사항',점검내용:'배터리 충전 상태'},
-  {점검구분:'일반점검사항',점검내용:'에어 크리너 청결 상태'},
+  {점검구분:'일반점검사항',점검내용:'에어클리너 청결 상태'},
   {점검구분:'일반점검사항',점검내용:'연료 공급 라인의 누유여부'},
   {점검구분:'일반점검사항',점검내용:'연료량 확인'},
   {점검구분:'일반점검사항',점검내용:'오일 필터 상태'},
@@ -867,11 +871,30 @@ const GENERATOR_CHECKLIST=[
   {점검구분:'운전중점검사항',점검내용:'급기용 댐퍼 개방 상태'},
   {점검구분:'운전중점검사항',점검내용:'냉각수 온도 적정 여부'},
   {점검구분:'운전중점검사항',점검내용:'베어링 이상소음 발생여부'},
-  {점검구분:'운전중점검사항',점검내용:'사이렌서 상태'},
+  {점검구분:'운전중점검사항',점검내용:'사일런서 상태'},
   {점검구분:'운전중점검사항',점검내용:'시간 기록계 기록'},
   {점검구분:'운전중점검사항',점검내용:'운전중 엔진의 동작상태'},
   {점검구분:'운전중점검사항',점검내용:'자동 컨트롤 패널의 작동상태'},
   {점검구분:'운전중점검사항',점검내용:'회전 기록계 기록'}
+];
+// 발전기점검 "보고서 생성" 전용 인쇄 순서 — 원본 엑셀 템플릿(템플릿_월간점검결과_청하.xlsx의
+// "발전기점검표(주)/(부)" 시트, 17~26행)을 ExcelJS로 셀 덤프해 확인한 실제 인쇄 순서(2026-07-22).
+// 한 행에 일반점검사항 1개 + 운전중점검사항 1개가 나란히 인쇄되는 구조라 쌍으로 묶어뒀다. 텍스트는
+// 원본 참고파일 표기("사일런서", "에어클리너")와 노션 실데이터가 이제 동일하다(2026-07-22, 노션
+// 발전기점검3DB의 "사이렌서"→"사일런서"·"에어 크리너"→"에어클리너" 오타·표기를 참고파일 기준으로
+// 직접 수정 — 코드 카탈로그가 노션에 맞추던 기존 원칙과 반대로, 이번엔 노션 쪽을 원본 서식에 맞춰
+// 고쳤다. 결과(자유서술형) 필드의 "1800rpm"→"1800 rpm", "26.6(V)"→"26.6 V" 등 표기도 함께 정리함).
+const GENERATOR_REPORT_ROWS=[
+  {일반:'연료량 확인', 운전중:'사일런서 상태'},
+  {일반:'주연료 탱크 외관 확인', 운전중:'운전중 엔진의 동작상태'},
+  {일반:'연료 공급 라인의 누유여부', 운전중:'급기용 댐퍼 개방 상태'},
+  {일반:'오일 필터 상태', 운전중:'자동 컨트롤 패널의 작동상태'},
+  {일반:'에어클리너 청결 상태', 운전중:'냉각수 온도 적정 여부'},
+  {일반:'냉각수 상태', 운전중:'AVR 자동전압조정기 동작상태'},
+  {일반:'냉각수 라인 누수 여부', 운전중:'시간 기록계 기록'},
+  {일반:'냉각수 HEATER 작동상태', 운전중:'회전 기록계 기록'},
+  {일반:'배터리 충전 상태', 운전중:'베어링 이상소음 발생여부'},
+  {일반:'배터리 단자의 고정, 청결상태', 운전중:'ACB 차단기 동작 상태'}
 ];
 // 발전기점검2DB(유류현황) 터널별 고정 유종/탱크용량(노션 실데이터 기준, 2026-07-20 확인) — 터널명 선택 시 자동입력
 const TUNNEL_GENERATOR_FUEL={
@@ -3645,6 +3668,190 @@ function exportTransformerInspectionReport(){
     const tunnel=tunnels[idx++];
     lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
     buildOneTransformerReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
+// ── 발전기점검 "보고서 생성" (원본 엑셀 템플릿의 "발전기점검표(주)/(부)" 시트를 재현) ──
+// 노션 발전기점검DB는 elec와 같은 부모(DB1)+자식(DB2 유류현황 1건, DB3 점검체크리스트 20건) 구조라
+// attachGeneratorChildren()이 이미 붙여둔 r._fuel(단일 객체)·r._chk(20개 배열)를 그대로 쓴다(2026-07-22,
+// 원본 템플릿을 ExcelJS로 셀 덤프해 서식·병합·테두리 실측 후 재현 — 발전기운전/유류사용량 표는 원본이
+// 값 1건을 2행 병합으로 세로로 길게 그렸지만 실제로는 레코드 1건뿐이라 헤더 1행+데이터 1행으로 압축).
+function buildGeneratorReportSheet(wb, r, tunnel){
+  const ws=wb.addWorksheet('발전기점검표',{
+    views:[{showGridLines:false, zoomScale:110}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
+      margins:EXCEL_PAGE_PRESETS.portrait},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  // 원본 템플릿 실측 너비(A~R 18열, 전부 5.57)를 그대로 재현 — 병합 폭이 넉넉해 13pt 텍스트가
+  // wrapText 없이도 대부분 한 줄에 들어간다(예: "배터리 단자의 고정, 청결상태"가 7열 병합에 들어감).
+  ws.columns=Array(18).fill(0).map(()=>({width:5.57}));
+
+  const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
+  const CENTER={vertical:'middle', horizontal:'center'};
+  const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
+  const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true};
+
+  // 표 영역 경계 3개(발전기운전/유류사용량/점검사항) — buildElecReportSheet()의 gridBorder(range)
+  // 패턴 그대로: 각 mc() 호출 범위를 이 영역들과 비교해 절대 바깥 경계만 thin, 안쪽은 hair로 자동 계산.
+  const BORDER_REGIONS=[
+    {r1:5, r2:7, c1:1, c2:18},   // 발전기운전(제목+헤더+데이터)
+    {r1:8, r2:10, c1:1, c2:18},  // 유류사용량(제목+헤더+데이터)
+    {r1:11, r2:22, c1:1, c2:18}  // 점검사항(제목+열헤더+10행)
+  ];
+  function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
+  function rangeBounds(range){
+    const parts=range.split(':');
+    const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
+    const m2=/^([A-Z]+)(\d+)$/.exec(parts[1]||parts[0]);
+    return {c1:colNum(m1[1]), r1:+m1[2], c2:colNum(m2[1]), r2:+m2[2]};
+  }
+  function gridBorder(range){
+    const b=rangeBounds(range);
+    const region=BORDER_REGIONS.find(rg=>b.r1>=rg.r1 && b.r2<=rg.r2 && b.c1>=rg.c1 && b.c2<=rg.c2);
+    if(!region) return undefined;
+    return {
+      top:{style: b.r1===region.r1 ? 'thin' : 'hair'},
+      bottom:{style: b.r2===region.r2 ? 'thin' : 'hair'},
+      left:{style: b.c1===region.c1 ? 'thin' : 'hair'},
+      right:{style: b.c2===region.c2 ? 'thin' : 'hair'}
+    };
+  }
+  function mc(range, value, font, alignment, numFmt, border){
+    const addr=range.split(':')[0];
+    const cell=ws.getCell(addr);
+    if(value!==undefined && value!==null && value!=='') cell.value=value;
+    cell.font=font||F(13);
+    cell.alignment=alignment||CENTER;
+    if(numFmt) cell.numFmt=numFmt;
+    cell.border = border===false ? undefined : (border || gridBorder(range));
+    if(range.indexOf(':')>=0) ws.mergeCells(range);
+    return cell;
+  }
+
+  mc('A1:R1', '3. 비상발전기 점검 및 가동일지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  mc('A2:R2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
+  ws.getRow(2).height=30;
+
+  mc('A3:B3', '가동일자:', F(13), LEFT);
+  mc('C3:E3', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
+  mc('A4:B4', '점검자:', F(13), LEFT);
+  mc('C4:D4', (r['점검자']||'').split('').join(' '), F(13), LEFT, undefined, false);
+
+  mc('A5:R5', '발 전 기 운 전', F(13,true), CENTER);
+  mc('A6:C6', '가동시간', F(11), CENTER_WRAP);
+  mc('D6:E6', '전압(V)', F(11), CENTER_WRAP);
+  mc('F6:G6', '전류(A)', F(11), CENTER_WRAP);
+  mc('H6:I6', '전력(kW)', F(11), CENTER_WRAP);
+  mc('J6:K6', '주파수(Hz)', F(11), CENTER_WRAP);
+  mc('L6:M6', '역률(%)', F(11), CENTER_WRAP);
+  mc('N6:O6', '가동시간\n(min)', F(11), CENTER_WRAP);
+  mc('P6:R6', '비 고', F(11), CENTER_WRAP);
+  mc('A7:C7', r['가동시간']||'', F(13), CENTER);
+  mc('D7:E7', r['전압(V)']!=null?r['전압(V)']:null, F(13), CENTER);
+  mc('F7:G7', r['전류(A)']!=null?r['전류(A)']:null, F(13), CENTER);
+  mc('H7:I7', r['전력(kW)']!=null?r['전력(kW)']:null, F(13), CENTER);
+  mc('J7:K7', r['주파수(Hz)']!=null?r['주파수(Hz)']:null, F(13), CENTER);
+  mc('L7:M7', r['역률(%)']!=null?r['역률(%)']:null, F(13), CENTER);
+  mc('N7:O7', r['가동시간(min)']!=null?r['가동시간(min)']:null, F(13), CENTER);
+  mc('P7:R7', r['비고']||'', F(13), CENTER_SHRINK);
+
+  mc('A8:R8', '유 류 사 용 량', F(13,true), CENTER);
+  mc('A9:C9', '용량(L)', F(11), CENTER_WRAP);
+  mc('D9:E9', '종류', F(11), CENTER_WRAP);
+  mc('F9:I9', '전일재고량(L)', F(11), CENTER_WRAP);
+  mc('J9:L9', '입고량(L)', F(11), CENTER_WRAP);
+  mc('M9:O9', '사용량(L)', F(11), CENTER_WRAP);
+  mc('P9:R9', '금일재고량(L)', F(11), CENTER_WRAP);
+  const fuel=r._fuel||{};
+  mc('A10:C10', fuel.용량!=null?fuel.용량:null, F(13), CENTER, '#,##0');
+  mc('D10:E10', fuel.종류||'', F(13), CENTER);
+  mc('F10:I10', fuel.전일재고량!=null?fuel.전일재고량:null, F(13), CENTER, '#,##0');
+  mc('J10:L10', fuel.입고량!=null?fuel.입고량:null, F(13), CENTER, '#,##0');
+  mc('M10:O10', fuel.사용량!=null?fuel.사용량:null, F(13), CENTER, '#,##0');
+  mc('P10:R10', fuel.금일재고량!=null?fuel.금일재고량:null, F(13), CENTER, '#,##0');
+
+  mc('A11:R11', '점 검 사 항', F(13,true), CENTER);
+  mc('A12:G12', '일 반 점 검 사 항', F(11), CENTER_WRAP);
+  mc('H12:J12', '결 과', F(11), CENTER_WRAP);
+  mc('K12:P12', '운 전 중 점 검 사 항', F(11), CENTER_WRAP);
+  mc('Q12:R12', '결 과', F(11), CENTER_WRAP);
+  GENERATOR_REPORT_ROWS.forEach((item, i)=>{
+    const rn=13+i;
+    const gen1=generatorChkLookup(r, {점검구분:'일반점검사항', 점검내용:item.일반});
+    const gen2=generatorChkLookup(r, {점검구분:'운전중점검사항', 점검내용:item.운전중});
+    mc(`A${rn}:G${rn}`, item.일반, F(13), LEFT_WRAP);
+    mc(`H${rn}:J${rn}`, gen1?gen1.결과:'', F(13), CENTER_SHRINK);
+    mc(`K${rn}:P${rn}`, item.운전중, F(13), LEFT_WRAP);
+    mc(`Q${rn}:R${rn}`, gen2?gen2.결과:'', F(13), CENTER_SHRINK);
+  });
+
+  // 원본 템플릿의 점검사항 표 아래엔 라벨 없는 여백 박스(6행)가 있음 — 손글씨 특이사항 기재용으로
+  // 추정되나 노션에 대응 필드가 없어 원본은 항상 빈칸이었다. 대신 점검체크리스트 20개 중 "특이사항"이
+  // 실제로 입력된 항목이 있으면 이 칸에 채워 넣는다(없으면 원본과 동일하게 빈 박스만 유지).
+  const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
+  const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
+  const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
+  const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
+  mc('A23:R23', notes[0]||'', F(11), LEFT, undefined, BOX_TOP);
+  for(let i=1;i<5;i++) mc(`A${23+i}:R${23+i}`, notes[i]||'', F(11), LEFT, undefined, BOX_LR);
+  mc('A28:R28', notes[5]||'', F(11), LEFT, undefined, BOX_BOTTOM);
+}
+function buildOneGeneratorReport(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const r=(TAB_STATE.generator.records||[]).find(x=>x['터널명']===tunnel && (x['가동일자']||'').startsWith(ymStr));
+  if(!r) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    buildGeneratorReportSheet(wb, r, tunnel);
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 발전기점검표_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportGeneratorInspectionReport(){
+  const btn=document.getElementById('reportBtn_generator');
+  const lbl=document.getElementById('reportLbl_generator');
+  const f=_tabFilters['generator'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.generator.records||[]).map(r=>r['가동일자']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('generator'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOneGeneratorReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
         alert(`${tunnel} 보고서 생성 실패: `+e.message);
