@@ -3257,7 +3257,10 @@ function buildElecReportSheet(wb, r, tunnel){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
-  const LEFT={vertical:'middle', horizontal:'left'};
+  // 좌측 정렬 셀은 indent:1로 셀 왼쪽 여백을 줌(2026-07-21 buildMonthlyReportSheet()에서
+  // 점검내용 열에 처음 확정한 규칙 — 테두리 있는 표 안에서 글자가 셀 경계에 바로 붙으면
+  // 답답해 보인다는 사용자 피드백, 2026-07-22 이 보고서에도 동일 적용).
+  const LEFT={vertical:'middle', horizontal:'left', indent:1};
   // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
   // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
   // border: 생략하면 표 영역(아래 BORDER_REGIONS) 기준 자동 계산 — 그 영역의 절대 바깥 경계에
@@ -3531,7 +3534,7 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const LABEL_ALIGN={vertical:'middle', horizontal:'distributed', wrapText:true};
-  const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true};
+  const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}}; // 원본 템플릿 실측(theme0 tint -5%) 근사값
 
   // 표 영역 경계 — 이 보고서는 표가 4개(참고사진 박스 + 변압기종류 3개) 독립된 박스로 나뉘어 있어
@@ -3712,8 +3715,11 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
-  const LEFT={vertical:'middle', horizontal:'left'};
-  const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true};
+  // 좌측 정렬 셀은 indent:1로 셀 왼쪽 여백을 줌(2026-07-21 buildMonthlyReportSheet()에서
+  // 점검내용 열에 처음 확정한 규칙 — 테두리 있는 표 안에서 글자가 셀 경계에 바로 붙으면
+  // 답답해 보인다는 사용자 피드백, 2026-07-22 이 보고서에도 동일 적용).
+  const LEFT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
 
   // 표 영역 경계 3개(발전기운전/유류사용량/점검사항) — buildElecReportSheet()의 gridBorder(range)
   // 패턴 그대로: 각 mc() 호출 범위를 이 영역들과 비교해 절대 바깥 경계만 thin, 안쪽은 hair로 자동 계산.
@@ -3771,7 +3777,9 @@ function buildGeneratorReportSheet(wb, r, tunnel){
 
   ws.getRow(6).height=30;
   mc('A6:R6', '발 전 기 운 전', F(13,true), CENTER);
-  ws.getRow(7).height=30;
+  // 7행은 N7:O7("가동시간\n(min)")만 2줄로 표기돼 다른 헤더 셀보다 더 높은 행 높이가 필요
+  // (2026-07-22 사용자 요청 — 나머지 본문 행은 30 유지, 이 행만 40).
+  ws.getRow(7).height=40;
   mc('A7:C7', '가동시간', F(13), CENTER_WRAP);
   mc('D7:E7', '전압(V)', F(13), CENTER_WRAP);
   mc('F7:G7', '전류(A)', F(13), CENTER_WRAP);
@@ -3923,8 +3931,8 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
 
   const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
-  const LEFT={vertical:'middle', horizontal:'left'};
-  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true};
+  const LEFT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1};
   const IMG_BORDER={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
 
   function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
