@@ -4373,8 +4373,8 @@ function buildTaskReportSheet(wb, rows, tunnel){
       cell.font=EXCEL_BODY_FONT;
       cell.border=taskGridBorder(rn,rn,ci+1,ci+1);
       cell.alignment = ci===0 ? {vertical:'middle', horizontal:'center'}
-        : ci===2 ? {vertical:'middle', horizontal:'left', wrapText:true}
-        : ci===1 ? {vertical:'middle', horizontal:'left'}
+        : ci===2 ? {vertical:'middle', horizontal:'left', wrapText:true, indent:1}
+        : ci===1 ? {vertical:'middle', horizontal:'left', indent:1}
         : {vertical:'middle', horizontal:'center'};
     }
     if(r){
