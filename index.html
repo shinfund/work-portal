@@ -713,6 +713,14 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
+          <div class="app-card" onclick="go('monthly')">
+            <div>
+              <div class="ac-name">월간점검결과-안전관리(작업중)</div>
+              <div class="ac-kpi" id="kpi-monthly">—</div>
+              <div class="ac-desc">터널별 정기점검·설비기록·안전관리 현황 조회 및 등록.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
         </div>
 
         <div class="guide-card" id="guide-card">
@@ -1329,6 +1337,12 @@ function renderHomeKpi() {
     const s = readPortalSummary('equip');
     if (s) { eEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; eEl.className = 'ac-kpi'; }
     else { eEl.textContent = emptyKpiLabel(); eEl.className = 'ac-kpi empty'; }
+  }
+  const mEl = document.getElementById('kpi-monthly');
+  if (mEl) {
+    const s = readPortalSummary('monthly');
+    if (s) { mEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; mEl.className = 'ac-kpi'; }
+    else { mEl.textContent = emptyKpiLabel(); mEl.className = 'ac-kpi empty'; }
   }
 }
 renderHomeKpi();

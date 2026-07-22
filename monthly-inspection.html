@@ -1411,6 +1411,14 @@ async function loadTabData(tabId){
     if(tabId==='elec') await attachElecChildren(st.records);
     if(tabId==='generator') await attachGeneratorChildren(st.records);
     st.loaded=true;
+    if(tabId==='monthly'){
+      // "이달 점검 N건"은 그 달 점검이 아직 안 끝난 초순엔 0으로 보여 고장난 것처럼 보일 수 있어
+      // (월간점검은 매달 특정 시점에 몰아서 기록되는 경우가 많음), 비품대장 카드와 동일하게
+      // 전체 누적 건수로 표시(2026-07-22).
+      try{
+        localStorage.setItem('portal_summary_monthly', JSON.stringify({totalCount:st.records.length, updatedAt:Date.now()}));
+      }catch(e){}
+    }
     applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
     updateLastUpdate();
