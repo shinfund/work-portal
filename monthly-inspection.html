@@ -4396,13 +4396,13 @@ function buildTaskReportRows(tunnel, year, month){
 function taskReportRowHeight(text){
   const w=excelStrWidth(text);
   const lines=w ? Math.max(1, Math.ceil(w/50)) : 1;
-  return Math.max(40, lines*18+16);
+  return Math.max(40.1, lines*18+16);
 }
 function buildTaskReportSheet(wb, rows, tunnel){
   const totalRows=Math.max(rows.length, TASK_REPORT_MIN_ROWS);
   const ws=wb.addWorksheet('업무처리사항',{
-    views:[{state:'frozen', ySplit:3, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'3:3'},
+    views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=[15,34,52,18,15].map(w=>({width:w}));
@@ -4412,14 +4412,22 @@ function buildTaskReportSheet(wb, rows, tunnel){
   titleCell.value='7. 월간 업무처리사항'; titleCell.font={name:'HY헤드라인M', size:20};
   titleCell.alignment={vertical:'middle'};
   ws.getRow(1).height=50.05;
-  // 2026-07-22 사용자가 원본 참고파일 1~3행을 편집(다른 보고서와 동일하게 1행 20pt/50.05,
-  // 2행 여백 10, 3행 헤더 16pt bold/30로 통일) — 그대로 반영.
   ws.getRow(2).height=10;
 
-  // 표 영역(헤더 3행 + 데이터 totalRows행) 절대 경계 기준 바깥=thin·안쪽=hair 자동 계산
+  // 2026-07-23 사용자가 원본 참고파일에 다른 보고서와 동일한 "3행 부제(□ 터널명)" 구조를
+  // 새로 추가(이전엔 업무처리 시트만 부제 없이 헤더가 바로 3행이었음) — buildMonthlyReportSheet(),
+  // buildPowerReportSheet() 등과 동일하게 통일되면서 헤더·데이터가 각각 4행·5행으로 한 칸씩
+  // 밀리고, 헤더 글꼴도 16pt bold → 13pt(EXCEL_BODY_FONT 기본값, bold 없음)로 바뀌었다(실측 확인).
+  ws.mergeCells('A3:E3');
+  const subCell=ws.getCell('A3');
+  subCell.value='□ '+tunnel; subCell.font={name:'맑은 고딕', size:16, bold:true};
+  subCell.alignment={vertical:'middle', horizontal:'left'};
+  ws.getRow(3).height=30;
+
+  // 표 영역(헤더 4행 + 데이터 totalRows행) 절대 경계 기준 바깥=thin·안쪽=hair 자동 계산
   // (buildMonthlyReportSheet()의 reportGridBorder()와 동일 원리 — 병합 셀이 없는 단순 표라
   // 물리 행 좌표만으로 판정 가능).
-  const REGION={r1:3, r2:3+totalRows, c1:1, c2:5};
+  const REGION={r1:4, r2:4+totalRows, c1:1, c2:5};
   function taskGridBorder(r1,r2,c1,c2){
     return {
       top:{style: r1===REGION.r1 ? 'thin':'hair'}, bottom:{style: r2===REGION.r2 ? 'thin':'hair'},
@@ -4427,20 +4435,20 @@ function buildTaskReportSheet(wb, rows, tunnel){
     };
   }
   const headerLabels=['날짜','업무내용','조치사항','업체명','비고'];
-  const headerRow=ws.getRow(3);
-  headerRow.height=30;
+  const headerRow=ws.getRow(4);
+  headerRow.height=EXCEL_ROW_HEIGHTS.header;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=Object.assign({}, EXCEL_BODY_FONT, {size:16, bold:true});
+    cell.value=h; cell.font=EXCEL_BODY_FONT;
     cell.alignment={vertical:'middle', horizontal:'center'};
-    cell.border=taskGridBorder(3,3,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
+    cell.border=taskGridBorder(4,4,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
   });
 
   for(let i=0;i<totalRows;i++){
     const r=rows[i]||null;
-    const rn=4+i;
+    const rn=5+i;
     const row=ws.getRow(rn);
-    row.height = r ? taskReportRowHeight(r.조치사항) : 40;
+    row.height = r ? taskReportRowHeight(r.조치사항) : 40.1;
     for(let ci=0; ci<5; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
