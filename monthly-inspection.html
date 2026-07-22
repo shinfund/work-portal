@@ -398,7 +398,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_monthly">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportUnifiedReport()" title="표지+7개 탭 보고서+간지를 한 파일로 묶어 생성">
+      <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportUnifiedReport()" title="표지+8개 항목 보고서+간지를 한 파일로 묶어 생성">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
@@ -3332,6 +3332,11 @@ function buildElecReportSheet(wb, r, tunnel){
     return cell;
   }
 
+  // 원본 템플릿엔 없던 1행 큰 제목 — 통합 보고서에 이 시트가 포함되면서(2026-07-22, 사용자가
+  // 원본 목차엔 없던 전기설비기록도 포함시키기로 재결정) 다른 6개 보고서와 동일하게 시트
+  // 맨 위에 "N. 제목" 표시가 있어야 한다는 요청으로 추가(원본은 A2 소제목만 있고 A1은 빈 행이었음).
+  mc('A1:R1', '2. 전기설비 점검결과기록표', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   mc('A2:J2', '□ 전기설비 점검결과기록표', F14(14,true), LEFT, undefined, false);
   mc('A4:J4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
   mc('A6:F6', ' 1. 기본사항', F14(10), LEFT, undefined, false);
@@ -3461,6 +3466,7 @@ function buildElecReportSheet(wb, r, tunnel){
   mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
   mc('P47:R47', '(인)', F14(10), CENTER);
   ws.getRow(46).height=20.15; ws.getRow(47).height=20.15;
+  return ws;
 }
 function buildOneElecReport(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
@@ -3603,7 +3609,7 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
     return cell;
   }
 
-  mc('A1:J1', '2. 변압기 온도측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
+  mc('A1:J1', '3. 변압기 온도측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   mc('A2:J2', '□ '+tunnel, F(16,true), VALUE_ALIGN);
   ws.getRow(2).height=30;
@@ -3787,7 +3793,7 @@ function buildGeneratorReportSheet(wb, r, tunnel){
     return cell;
   }
 
-  mc('A1:R1', '3. 비상발전기 점검 및 가동일지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  mc('A1:R1', '4. 비상발전기 점검 및 가동일지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   // 2행은 원본 참고파일처럼 내용 없는 여백행(2026-07-22 사용자 요청) — 이하 전부 원래보다 1행씩 밀림.
   ws.getRow(2).height=30;
@@ -3996,7 +4002,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
     return cell;
   }
 
-  mc('A1:J1', '4. 운영관리 사진대지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  mc('A1:J1', '5. 운영관리 사진대지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   mc('A2:J2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
   ws.getRow(2).height=30;
@@ -4221,7 +4227,7 @@ function buildPowerReportSheet(wb, data, tunnel, chartBuf){
 
   ws.mergeCells('A1:D1');
   const titleCell=ws.getCell('A1');
-  titleCell.value='5. 전력데이터 분석'; titleCell.font={name:'HY헤드라인M', size:20}; titleCell.alignment=LEFT;
+  titleCell.value='6. 전력데이터 분석'; titleCell.font={name:'HY헤드라인M', size:20}; titleCell.alignment=LEFT;
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
 
   ws.getRow(2).height=30; // 원본 템플릿에서 2행은 그냥 빈 공간행
@@ -4355,7 +4361,7 @@ function buildTaskReportSheet(wb, rows, tunnel){
 
   ws.mergeCells('A1:E1');
   const titleCell=ws.getCell('A1');
-  titleCell.value='6. 월간 업무처리사항'; titleCell.font=EXCEL_TITLE_FONT;
+  titleCell.value='7. 월간 업무처리사항'; titleCell.font=EXCEL_TITLE_FONT;
   titleCell.alignment={vertical:'middle'};
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   ws.getRow(2).height=20;
@@ -4465,8 +4471,12 @@ function exportTaskInspectionReport(){
 // 고르는 값)만으로 완성되는 표지·간지라 저장할 레코드 자체가 없다(2026-07-22). 그래서 이
 // 2개를 위한 별도 사이드바 탭을 만들지 않고, 이미 구현된 7개 탭의 build*ReportSheet()를
 // 그대로 재사용해 표지+각 탭 보고서+간지를 한 워크북에 순서대로 이어붙이는 "통합 보고서
-// 생성" 버튼 하나로 구현했다(사용자 확인 후 결정, 원본 템플릿 목차 순서 그대로 — 목차에는
-// 없는 "전기설비기록"은 통합 보고서에서 제외).
+// 생성" 버튼 하나로 구현했다(사용자 확인 후 결정). 원본 템플릿 목차엔 "전기설비기록"이
+// 없었지만(내부 기록용으로 추정) 통합 보고서에는 포함시키기로 재결정(2026-07-22) —
+// 목차·시트 제목 번호를 1.월간점검 2.전기설비기록 3.변압기온도측정 4.발전기점검 5.점검사진
+// 6.전력사용량 7.업무처리 8.일일점검일지 순으로 다시 매겼다. 전기설비기록표는 원본에 1행
+// 큰 제목이 없었는데(A2 소제목만 있었음) 다른 시트와 통일하려고 1행 제목을 새로 추가했다
+// (buildElecReportSheet() 쪽 주석 참고).
 // 원본 템플릿의 표지는 "가.흥해터널-나.청하터널-다.남정5터널" 순번 문자를 쓴다(2026-07-22
 // 사용자 확인). 청하터널만 전기설비/변압기온도/발전기점검/점검사진/전력사용량 5개 카테고리에서
 // "청하터널(주)"/"청하터널(부)" 2개 시설로 나뉘어 있어(터널 자체가 왕복 2개 갱으로 추정) 그
@@ -4477,8 +4487,9 @@ function unifiedTunnelSplit(tunnel){
   return tunnel==='청하터널' ? ['청하터널(주)', '청하터널(부)'] : [tunnel];
 }
 const UNIFIED_TOC_ITEMS=[
-  '1. 월간 점검결과표', '2. 변압기 온도측정표', '3. 비상발전기 점검 및 가동일지',
-  '4. 운영관리 사진대지', '5. 전력데이터 분석', '6. 월간 업무처리사항', '7. 일일점검일지'
+  '1. 월간 점검결과표', '2. 전기설비 점검결과기록표', '3. 변압기 온도측정표',
+  '4. 비상발전기 점검 및 가동일지', '5. 운영관리 사진대지', '6. 전력데이터 분석',
+  '7. 월간 업무처리사항', '8. 일일점검일지'
 ];
 function buildCoverReportSheet(wb, tunnel, year, month){
   const ws=wb.addWorksheet('표지',{
@@ -4520,7 +4531,7 @@ function buildDailyLogDividerSheet(wb, tunnel, year, month){
 
   ws.getRow(1).height=50.15;
   const titleCell=ws.getCell('A1');
-  titleCell.value='7. 일일점검일지'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
+  titleCell.value='8. 일일점검일지'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
 
   ws.getRow(2).height=20.15;
   for(let r=3; r<=13; r++) ws.getRow(r).height=30;
@@ -4535,15 +4546,16 @@ function buildDailyLogDividerSheet(wb, tunnel, year, month){
   for(let r=15; r<=25; r++) ws.getRow(r).height=30;
 }
 // 통합 보고서는 월간점검 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는 탭
-// (변압기온도/발전기점검/점검사진/전력사용량/업무처리)은 먼저 로드해줘야 한다 — 안 그러면
-// "해당 월에 데이터가 없어서" 빠진 게 아니라 "탭을 안 열어봐서" 빠지는 조용한 누락이 생긴다.
+// (전기설비기록/변압기온도/발전기점검/점검사진/전력사용량/업무처리)은 먼저 로드해줘야 한다 —
+// 안 그러면 "해당 월에 데이터가 없어서" 빠진 게 아니라 "탭을 안 열어봐서" 빠지는 조용한
+// 누락이 생긴다.
 async function ensureTabLoaded(id){
   if(TAB_STATE[id].loaded) return;
   await loadTabData(id);
 }
 async function buildOneUnifiedReport(tunnel, year, month){
   await loadExcelLib(true);
-  await Promise.all(['transformer','generator','photo','power','task'].map(ensureTabLoaded));
+  await Promise.all(['elec','transformer','generator','photo','power','task'].map(ensureTabLoaded));
 
   const wb=new ExcelJS.Workbook();
   let hasData=false;
@@ -4562,7 +4574,17 @@ async function buildOneUnifiedReport(tunnel, year, month){
   const splitTunnels=unifiedTunnelSplit(tunnel);
   const suffixes=splitTunnels.length>1 ? ['(주)','(부)'] : [''];
 
-  // 2. 변압기온도측정표
+  // 2. 전기설비 점검결과기록표 — elec/generator처럼 터널·연월당 레코드 1건(점검일자 기준)
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  splitTunnels.forEach((dt, i)=>{
+    const r=(TAB_STATE.elec.records||[]).find(x=>x['터널명']===dt && (x['점검일자']||'').startsWith(ymStr));
+    if(!r) return;
+    const ws=buildElecReportSheet(wb, r, dt);
+    if(suffixes[i]) ws.name=ws.name+suffixes[i];
+    hasData=true;
+  });
+
+  // 3. 변압기온도측정표
   let refImages=null;
   if(splitTunnels.some(dt=>buildTransformerReportData(dt, year, month))){
     refImages=await loadTransformerRefImages().catch(()=>null);
@@ -4575,8 +4597,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
     hasData=true;
   });
 
-  // 3. 발전기점검표
-  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  // 4. 발전기점검표
   splitTunnels.forEach((dt, i)=>{
     const r=(TAB_STATE.generator.records||[]).find(x=>x['터널명']===dt && (x['가동일자']||'').startsWith(ymStr));
     if(!r) return;
@@ -4585,7 +4606,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
     hasData=true;
   });
 
-  // 4. 점검사진대지
+  // 5. 점검사진대지
   for(let i=0;i<splitTunnels.length;i++){
     const dt=splitTunnels[i];
     const data=buildPhotoReportData(dt, year, month);
@@ -4595,7 +4616,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
     hasData=true;
   }
 
-  // 5. 전력사용량표
+  // 6. 전력사용량표
   for(let i=0;i<splitTunnels.length;i++){
     const dt=splitTunnels[i];
     const data=buildPowerReportData(dt, year, month);
@@ -4606,11 +4627,11 @@ async function buildOneUnifiedReport(tunnel, year, month){
     hasData=true;
   }
 
-  // 6. 월간 업무처리사항
+  // 7. 월간 업무처리사항
   const taskRows=buildTaskReportRows(tunnel, year, month);
   if(taskRows.length){ buildTaskReportSheet(wb, taskRows, tunnel); hasData=true; }
 
-  // 7. 일일점검일지(간지) — 항상 포함(간지 자체는 원본처럼 데이터 없이도 항상 존재)
+  // 8. 일일점검일지(간지) — 항상 포함(간지 자체는 원본처럼 데이터 없이도 항상 존재)
   buildDailyLogDividerSheet(wb, tunnel, year, month);
 
   if(!hasData) throw new Error('해당 터널·연월에 생성할 데이터가 없습니다.');
