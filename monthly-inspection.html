@@ -4127,18 +4127,36 @@ function renderPowerChartImage(data){
       },
       options:{
         responsive:false, maintainAspectRatio:false, animation:false,
+        layout:{padding:{right:16, top:4}},
         plugins:{
-          legend:{position:'top', labels:{font:{size:18}, boxWidth:22}},
-          title:{display:true, text:`${data.tunnel} 일별 전력사용량 (${data.year}년 ${data.month}월)`, font:{size:22}, padding:{bottom:14}}
+          legend:{position:'top', labels:{font:{size:18, weight:'600'}, color:'#1f2937', boxWidth:22}},
+          title:{display:true, text:`${data.tunnel} 일별 전력사용량 (${data.year}년 ${data.month}월)`, font:{size:22, weight:'bold'}, color:'#111827', padding:{bottom:14}}
         },
         scales:{
-          x:{title:{display:true, text:'일', font:{size:16}}, ticks:{font:{size:13}}},
-          y:{title:{display:true, text:'kWh', font:{size:16}}, ticks:{font:{size:13}}, beginAtZero:true}
+          // Chart.js 기본 눈금/격자 색(#666, rgba(0,0,0,0.1))이 인쇄 축소 시 흐리게 보여
+          // 더 진한 색+굵기로 대비를 높이고(2026-07-22 사용자 피드백), 축 자체 선(border)은
+          // 격자선보다 진하게 별도 지정.
+          x:{title:{display:true, text:'일', font:{size:16, weight:'600'}, color:'#1f2937'},
+            ticks:{font:{size:13, weight:'500'}, color:'#374151'},
+            grid:{color:'rgba(0,0,0,0.12)'}, border:{color:'#4b5563', width:1.5}},
+          y:{title:{display:true, text:'kWh', font:{size:16, weight:'600'}, color:'#1f2937'},
+            ticks:{font:{size:13, weight:'500'}, color:'#374151'},
+            grid:{color:'rgba(0,0,0,0.12)'}, border:{color:'#4b5563', width:1.5}, beginAtZero:true}
         }
       },
       plugins:[{
         id:'whiteBg',
         beforeDraw:(c)=>{ const ctx=c.ctx; ctx.save(); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore(); }
+      },{
+        // 차트 이미지 전체를 감싸는 외곽선 — 안쪽 격자선(rgba(0,0,0,0.12), 1px대)보다 확실히
+        // 진하고 굵게(2026-07-22 사용자 요청 "차트 외곽선은 안쪽 격자선보다 더 진하게").
+        id:'outerBorder',
+        afterDraw:(c)=>{
+          const ctx=c.ctx, w=c.width, h=c.height, lw=3;
+          ctx.save(); ctx.strokeStyle='#1f2937'; ctx.lineWidth=lw;
+          ctx.strokeRect(lw/2, lw/2, w-lw, h-lw);
+          ctx.restore();
+        }
       }]
     });
     // requestAnimationFrame은 브라우저 자동화 탭처럼 비활성/백그라운드 탭에서 콜백이 아예
