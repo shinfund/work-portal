@@ -521,6 +521,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_photo">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_photo" onclick="exportPhotoInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_photo">보고서 생성</span>
+      </button>
     </div>
     <div class="detail-count" id="count-photo"></div>
     <div class="tbl-wrap">
@@ -3867,6 +3871,160 @@ function exportGeneratorInspectionReport(){
     const tunnel=tunnels[idx++];
     lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
     buildOneGeneratorReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
+// ── 점검사진 "보고서 생성" (원본 엑셀 템플릿의 "점검사진(주)/(부)" 시트 = "운영관리 사진대지"를 재현) ──
+// 노션 점검사진DB는 지점 하나(번호 1~6)당 레코드 하나(터널명·일자·제목·번호·사진설명·점검사진 파일).
+// 원본 템플릿은 3개 행밴드(각 13행짜리 사진박스+2행짜리 라벨박스)×2열(왼쪽 #홀수/오른쪽 #짝수)로
+// 6슬롯을 배치한다(2026-07-22, ExcelJS로 셀 덤프해 확인 — 사진박스는 병합 셀 하나라 안쪽 구분선이
+// 필요 없고, 라벨박스만 "일자"/"사진설명" 사이 안쪽 경계에 hair가 필요해 gridBorder(range,region)로
+// 계산한다. 부제 셀(A2)에 "창하터널(주)"라는 오타가 있었지만 터널명은 변수로 조립하므로 전파 안 됨).
+function colLetter(n){ let s=''; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); } return s; }
+function buildPhotoReportData(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').startsWith(ymStr));
+  if(!recs.length) return null;
+  const byNo={};
+  recs.forEach(r=>{
+    const no=parseInt(r['번호'],10);
+    if(!no || no<1 || no>6) return;
+    const file=(r['점검사진']||[])[0];
+    byNo[no]={일자:r['일자'], 사진설명:r['사진설명']||'', url:file?file.url:''};
+  });
+  return byNo;
+}
+function buildPhotoReportSheet(wb, photosByNo, tunnel){
+  const ws=wb.addWorksheet('점검사진대지',{
+    views:[{showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  ws.columns=Array(10).fill(0).map(()=>({width:7.86}));
+
+  const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
+  const CENTER={vertical:'middle', horizontal:'center'};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true};
+  const IMG_BORDER={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
+
+  function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
+  function rangeBounds(range){
+    const parts=range.split(':');
+    const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
+    const m2=/^([A-Z]+)(\d+)$/.exec(parts[1]||parts[0]);
+    return {c1:colNum(m1[1]), r1:+m1[2], c2:colNum(m2[1]), r2:+m2[2]};
+  }
+  function gridBorder(range, region){
+    const b=rangeBounds(range);
+    return {
+      top:{style: b.r1===region.r1 ? 'thin' : 'hair'},
+      bottom:{style: b.r2===region.r2 ? 'thin' : 'hair'},
+      left:{style: b.c1===region.c1 ? 'thin' : 'hair'},
+      right:{style: b.c2===region.c2 ? 'thin' : 'hair'}
+    };
+  }
+  function mc(range, value, font, alignment, numFmt, border){
+    const addr=range.split(':')[0];
+    const cell=ws.getCell(addr);
+    if(value!==undefined && value!==null && value!=='') cell.value=value;
+    cell.font=font||F(10);
+    cell.alignment=alignment||CENTER;
+    if(numFmt) cell.numFmt=numFmt;
+    cell.border = border===false ? undefined : border;
+    if(range.indexOf(':')>=0) ws.mergeCells(range);
+    return cell;
+  }
+
+  mc('A1:J1', '4. 운영관리 사진대지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  mc('A2:J2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
+  ws.getRow(2).height=30;
+
+  const photoTasks=[]; // {url, c1,r1,c2,r2}(0-based, addImage 앵커용)
+  for(let band=0; band<3; band++){
+    const imgStart=3+band*15, imgEnd=imgStart+12;
+    const lbl1=imgEnd+1, lbl2=imgEnd+2;
+    // 원본 템플릿 실측 행높이(사진행 13.1×13, 라벨행 25.1×2) 그대로 재현 — 명시적으로 지정하지
+    // 않으면 기본 행높이(~15pt)라 표 전체가 페이지 상단에 몰리는 문제가 생긴다(발전기점검 보고서에서
+    // 겪은 것과 동일한 함정, 2026-07-22).
+    for(let rn=imgStart; rn<=imgEnd; rn++) ws.getRow(rn).height=13.1;
+    ws.getRow(lbl1).height=25.1; ws.getRow(lbl2).height=25.1;
+    for(let side=0; side<2; side++){
+      const no=band*2+side+1;
+      const c1=side===0?1:6, c2=side===0?5:10;
+      const cL=colLetter(c1), cR=colLetter(c2), cNo=cL, cLbl=colLetter(c1+1), cVal1=colLetter(c1+2), cVal2=cR;
+      const p=photosByNo[no];
+
+      mc(`${cL}${imgStart}:${cR}${imgEnd}`, null, F(11), CENTER, undefined, IMG_BORDER);
+      if(p && p.url) photoTasks.push({url:p.url, c1:c1-1, r1:imgStart-1, c2:c2-1, r2:imgEnd-1});
+
+      const region={r1:lbl1, r2:lbl2, c1, c2};
+      mc(`${cNo}${lbl1}:${cNo}${lbl2}`, '#'+no, F(10), CENTER, undefined, gridBorder(`${cNo}${lbl1}:${cNo}${lbl2}`, region));
+      mc(`${cLbl}${lbl1}`, '일      자', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl1}`, region));
+      mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, p?excelParseDate(p.일자):null, F(10), LEFT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, region));
+      mc(`${cLbl}${lbl2}`, '사진설명', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl2}`, region));
+      mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, p?p.사진설명:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, region));
+    }
+  }
+
+  return Promise.all(photoTasks.map(t=>
+    excelFetchImage(t.url).then(img=>{
+      if(!img) return;
+      const imgId=wb.addImage(img);
+      ws.addImage(imgId, excelPhotoAnchorBlock(t.c1, t.r1, t.c2, t.r2));
+    })
+  ));
+}
+function buildOnePhotoReport(tunnel, year, month){
+  const data=buildPhotoReportData(tunnel, year, month);
+  if(!data) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return loadExcelLib(true).then(()=>{
+    const wb=new ExcelJS.Workbook();
+    return buildPhotoReportSheet(wb, data, tunnel).then(()=>wb.xlsx.writeBuffer());
+  }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검사진대지_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportPhotoInspectionReport(){
+  const btn=document.getElementById('reportBtn_photo');
+  const lbl=document.getElementById('reportLbl_photo');
+  const f=_tabFilters['photo'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.photo.records||[]).map(r=>r['일자']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('photo'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOnePhotoReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
         alert(`${tunnel} 보고서 생성 실패: `+e.message);
