@@ -4127,33 +4127,34 @@ function renderPowerChartImage(data){
       },
       options:{
         responsive:false, maintainAspectRatio:false, animation:false,
-        layout:{padding:{right:16, top:4}},
+        layout:{padding:{right:20, top:4}},
         plugins:{
-          legend:{position:'top', labels:{font:{size:18, weight:'600'}, color:'#1f2937', boxWidth:22}},
-          title:{display:true, text:`${data.tunnel} 일별 전력사용량 (${data.year}년 ${data.month}월)`, font:{size:22, weight:'bold'}, color:'#111827', padding:{bottom:14}}
+          legend:{position:'top', labels:{font:{size:26, weight:'700'}, color:'#000000', boxWidth:26}},
+          title:{display:true, text:`${data.tunnel} 일별 전력사용량 (${data.year}년 ${data.month}월)`, font:{size:30, weight:'bold'}, color:'#000000', padding:{bottom:16}}
         },
         scales:{
-          // Chart.js 기본 눈금/격자 색(#666, rgba(0,0,0,0.1))이 인쇄 축소 시 흐리게 보여
-          // 더 진한 색+굵기로 대비를 높이고(2026-07-22 사용자 피드백), 축 자체 선(border)은
-          // 격자선보다 진하게 별도 지정.
-          x:{title:{display:true, text:'일', font:{size:16, weight:'600'}, color:'#1f2937'},
-            ticks:{font:{size:13, weight:'500'}, color:'#374151'},
-            grid:{color:'rgba(0,0,0,0.12)'}, border:{color:'#4b5563', width:1.5}},
-          y:{title:{display:true, text:'kWh', font:{size:16, weight:'600'}, color:'#1f2937'},
-            ticks:{font:{size:13, weight:'500'}, color:'#374151'},
-            grid:{color:'rgba(0,0,0,0.12)'}, border:{color:'#4b5563', width:1.5}, beginAtZero:true}
+          // 셀 4칸(A4:D18) 안에 축소 삽입되면 Chart.js 기본 크기/색(눈금 #666, 격자 rgba(0,0,0,0.1))이
+          // 훨씬 더 흐리고 작게 보인다(2026-07-22 실제 인쇄 미리보기로 재확인) — 눈금 글자는 화면
+          // 미리보기 기준이 아니라 "삽입 후 축소된 크기"를 기준으로 크게 키우고 거의 검정에 가깝게,
+          // 격자선은 눈에 띄되 외곽선보다는 옅게, 외곽선은 격자선보다 진하지만 두께는 얇게(가는 실선).
+          x:{title:{display:true, text:'일', font:{size:24, weight:'700'}, color:'#000000'},
+            ticks:{font:{size:20, weight:'700'}, color:'#000000'},
+            grid:{color:'#9aa1ac', lineWidth:1.5}, border:{color:'#000000', width:2}},
+          y:{title:{display:true, text:'kWh', font:{size:24, weight:'700'}, color:'#000000'},
+            ticks:{font:{size:20, weight:'700'}, color:'#000000'},
+            grid:{color:'#9aa1ac', lineWidth:1.5}, border:{color:'#000000', width:2}, beginAtZero:true}
         }
       },
       plugins:[{
         id:'whiteBg',
         beforeDraw:(c)=>{ const ctx=c.ctx; ctx.save(); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore(); }
       },{
-        // 차트 이미지 전체를 감싸는 외곽선 — 안쪽 격자선(rgba(0,0,0,0.12), 1px대)보다 확실히
-        // 진하고 굵게(2026-07-22 사용자 요청 "차트 외곽선은 안쪽 격자선보다 더 진하게").
+        // 차트 이미지 전체를 감싸는 외곽선 — 안쪽 격자선(#9aa1ac)보다 진하되, 두께는 가는 실선
+        // 1px로(2026-07-22 사용자 피드백 — 처음엔 3px로 너무 두꺼웠음).
         id:'outerBorder',
         afterDraw:(c)=>{
-          const ctx=c.ctx, w=c.width, h=c.height, lw=3;
-          ctx.save(); ctx.strokeStyle='#1f2937'; ctx.lineWidth=lw;
+          const ctx=c.ctx, w=c.width, h=c.height, lw=2;
+          ctx.save(); ctx.strokeStyle='#000000'; ctx.lineWidth=lw;
           ctx.strokeRect(lw/2, lw/2, w-lw, h-lw);
           ctx.restore();
         }
