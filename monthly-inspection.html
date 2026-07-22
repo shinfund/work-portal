@@ -2668,10 +2668,21 @@ const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
 const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+// 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
+// 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨(고정 서식지의
+// buildElecReportSheet()가 쓰는 표 영역 경계 기준 gridBorder()와는 별개의 단순 버전).
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
 function excelCm2in(cm){ return cm/2.54; }
 const EXCEL_PAGE_PRESETS={
-  landscape:{top:excelCm2in(1),bottom:excelCm2in(0.5),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
-  portrait:{top:excelCm2in(2),bottom:excelCm2in(0.5),left:excelCm2in(1),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
 };
 function excelCharWeight(ch){
   const code=ch.codePointAt(0);
@@ -2780,7 +2791,7 @@ function buildExcelReport(opts){
         const cell=headerRow.getCell(i+1);
         cell.value=col.header; cell.font=EXCEL_BODY_FONT;
         cell.alignment={vertical:'middle',horizontal:'center'};
-        cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+        cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
       });
       // 사진 컬럼이 스키마에 하나라도 있으면 전체 데이터행을 큰 높이로 통일(인쇄 줄맞춤용,
       // 하자보수현황 앱과 동일 원칙 — 행마다 실제 사진 유무로 들쭉날쭉하게 하지 않는다)
@@ -2793,7 +2804,7 @@ function buildExcelReport(opts){
         row.height=rowHeightForData;
         columns.forEach((col,ci)=>{
           const cell=row.getCell(ci+1);
-          cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+          cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
           cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
           if(col.photo) return;
           if(col.dateCol && r[col.key]){
@@ -2919,11 +2930,10 @@ const REPORT_SHEET_GROUPS=[
 function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const ws=wb.addWorksheet(sheetName,{
     views:[{state:'frozen', ySplit:3, showGridLines:false, zoomScale:90}],
-    // 좌측 여백만 1.5cm로(제본 여백, 2026-07-21 사용자 요청 — 처음엔 원본 템플릿과 동일하게 2cm였다가
-    // 스테이플러 등 간단한 제본 기준으로는 과하다고 판단해 축소, 우측은 원본과 동일하게 1cm 유지).
-    // EXCEL_PAGE_PRESETS.portrait는 다른 탭 엑셀 생성과 공유하는 상수라 직접 바꾸지 않고 여기서만 덮어쓴다.
+    // 좌측 여백 1.5cm(제본 여백)는 2026-07-22부터 EXCEL_PAGE_PRESETS.portrait 기본값 자체가
+    // 1.5cm로 바뀌어서(사용자 지정 신규 기본 여백) 더 이상 별도 덮어쓸 필요 없음.
     // 시트 1개=인쇄 1페이지(3개 시트로 분리했으니 세로도 1페이지에 강제로 맞춘다, 2026-07-21 사용자 요청)
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(1.5)}), printTitlesRow:'3:3'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'3:3'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const colWidths=[10,14,46,10,13,10];
@@ -2946,9 +2956,21 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   subCell.alignment={vertical:'middle', horizontal:'left'};
   ws.getRow(2).height=30;
 
-  // 테두리는 전체 칸 동일하게 가는 실선(EXCEL_CELL_BORDER, 다른 탭 엑셀생성과 동일한 규칙) — 바깥/안쪽을
-  // 다르게(가는 실선/점선/hair) 나눴더니 병합 셀 처리 과정에서 일부 구간의 테두리가 빠지는 문제가
-  // 반복돼서(2026-07-21) 단순하고 일관된 스타일로 되돌렸다.
+  // 표 영역(헤더 3행 + 데이터 rows.length행) 절대 경계 기준으로 바깥=thin·안쪽=hair를 자동
+  // 계산(2026-07-22 요청) — buildElecReportSheet()의 gridBorder(range) 방식과 동일 원리:
+  // 병합 범위는 "그 병합의 실제 r1~r2" 기준으로 판정해야 안전하다(2026-07-21엔 물리적 행마다
+  // EXCEL_CELL_BORDER를 덮어써서 병합 마스터 셀의 최종 테두리가 span과 무관하게 결정돼
+  // 일부 구간에서 빠지는 문제가 있었음 — 이번엔 gubunSpans/equipSpans의 실제 병합범위(rn1~rn2)에
+  // 맞춰 마스터 셀에 한 번만 지정해서 재발을 피한다).
+  const REPORT_REGION={r1:3, r2:3+rows.length, c1:1, c2:6};
+  function reportGridBorder(r1,r2,c1,c2){
+    return {
+      top:{style: r1===REPORT_REGION.r1 ? 'thin':'hair'},
+      bottom:{style: r2===REPORT_REGION.r2 ? 'thin':'hair'},
+      left:{style: c1===REPORT_REGION.c1 ? 'thin':'hair'},
+      right:{style: c2===REPORT_REGION.c2 ? 'thin':'hair'}
+    };
+  }
   const headerLabels=['구분','설비명','점검내용','점검결과','점검일자','비고'];
   const headerRow=ws.getRow(3);
   headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -2956,7 +2978,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=EXCEL_BODY_FONT;
     cell.alignment={vertical:'middle', horizontal:'center'};
-    cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+    cell.border=reportGridBorder(3,3,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
   });
 
   // 구분 연속 구간을 미리 계산 — row.commit() 이후에는 셀 스타일을 수정해도 반영되지 않아
@@ -2976,12 +2998,20 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
 
   gubunSpans.forEach(span=>{
     const first=rows[span.start];
-    if(first.combined) ws.mergeCells(`A${4+span.start}:B${4+span.end}`);
-    else if(span.end>span.start) ws.mergeCells(`A${4+span.start}:A${4+span.end}`);
+    const rn1=4+span.start, rn2=4+span.end;
+    if(first.combined){
+      ws.mergeCells(`A${rn1}:B${rn2}`);
+      ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,2);
+    } else {
+      if(span.end>span.start) ws.mergeCells(`A${rn1}:A${rn2}`);
+      ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,1);
+    }
   });
   equipSpans.forEach(span=>{
     if(rows[span.start].combined) return; // 위에서 A+B로 이미 처리됨
-    if(span.end>span.start) ws.mergeCells(`B${4+span.start}:B${4+span.end}`);
+    const rn1=4+span.start, rn2=4+span.end;
+    if(span.end>span.start) ws.mergeCells(`B${rn1}:B${rn2}`);
+    ws.getCell(`B${rn1}`).border=reportGridBorder(rn1,rn2,2,2);
   });
 
   rows.forEach((r,i)=>{
@@ -2991,7 +3021,9 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font = (ci>=2 && tagColor) ? Object.assign({}, EXCEL_BODY_FONT, {color:{argb:tagColor}}) : EXCEL_BODY_FONT;
-      cell.border=EXCEL_CELL_BORDER;
+      // 0·1열(구분·설비명)은 병합 범위가 있어 위 gubunSpans/equipSpans 루프에서 마스터 셀에
+      // 이미 테두리를 지정했다(물리 행마다 다시 덮어쓰면 span 경계와 어긋나는 문제 재발 위험).
+      if(ci>=2) cell.border=reportGridBorder(rn,rn,ci+1,ci+1);
       // 구분 열은 글자 수가 많으면 자동 줄바꿈(2026-07-21 사용자 요청 — 처음엔 세로쌓기용 수동
       // 줄바꿈+"셀에 맞춤" 혼합이었다가 자동 줄바꿈으로 통일), 점검내용 열은 "셀에 맞춤"(shrinkToFit)
       // 유지, 나머지 열도 셀에 맞춤.
@@ -3162,7 +3194,7 @@ function buildElecReportSheet(wb, r, tunnel){
   const ws=wb.addWorksheet('전기설비기록표',{
     views:[{showGridLines:false, zoomScale:120}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
-      margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(1.5)})},
+      margins:EXCEL_PAGE_PRESETS.portrait}, // 좌측 1.5cm는 2026-07-22부터 portrait 기본값 자체에 포함됨
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   // 2026-07-21 사용자 피드백으로 원본 템플릿 실측 너비보다 A/B/D/E/F/H/N(+대칭인 J/K/L) 열을 넓힘

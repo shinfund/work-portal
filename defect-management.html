@@ -3552,15 +3552,24 @@ var EXCEL_TITLE_FONT = { name:'HY헤드라인M', size:28 };
 var EXCEL_BODY_FONT = { name:'맑은 고딕', size:13 };
 var EXCEL_HEADER_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE9F8'} };
 var EXCEL_ROW_HEIGHTS = { title:60, header:30, data:30, dataWithPhoto:85 };
-var EXCEL_CELL_BORDER = { top:{style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+// 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
+// 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨.
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
 var EXCEL_EMU_PER_PX = 9525;
 var EXCEL_PHOTO_INSET_EMU = 3 * EXCEL_EMU_PER_PX;
 function excelCm2in(cm){ return cm/2.54; }
 // 방향별 표준 여백(cm) — 새 탭/앱 추가 시 방향만 지정하면 이 기준값이 자동 적용됨
 // (scripts/lib/xlsx_report_lib.mjs의 PAGE_PRESETS와 동일 값, ~/.claude/skills/xlsx-report-export 참고)
 var EXCEL_PAGE_PRESETS = {
-  landscape: { top:excelCm2in(1), bottom:excelCm2in(0.5), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) },
-  portrait:  { top:excelCm2in(2), bottom:excelCm2in(0.5), left:excelCm2in(1), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) }
+  landscape: { top:excelCm2in(1), bottom:excelCm2in(1), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) },
+  portrait:  { top:excelCm2in(1.5), bottom:excelCm2in(1), left:excelCm2in(1.5), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) }
 };
 
 var EXCEL_COLUMNS = [
@@ -3769,7 +3778,7 @@ function buildExcelReport(opts){
       cell.value = col.header;
       cell.font = EXCEL_BODY_FONT;
       cell.alignment = { vertical:'middle', horizontal:'center' };
-      cell.border = EXCEL_CELL_BORDER;
+      cell.border = excelGridBorder(true, false, i, i===columns.length-1);
       cell.fill = EXCEL_HEADER_FILL;
     });
 
@@ -3787,7 +3796,7 @@ function buildExcelReport(opts){
       columns.forEach(function(col, ci){
         var cell = row.getCell(ci+1);
         cell.font = EXCEL_BODY_FONT;
-        cell.border = EXCEL_CELL_BORDER;
+        cell.border = excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
         cell.alignment = col.align==='left'
           ? { vertical:'middle', horizontal:'left', wrapText: !!col.wrap }
           : { vertical:'middle', horizontal:'center', wrapText: !!col.wrap };

@@ -2002,11 +2002,39 @@ const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
-const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+// 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
+// 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨.
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
+// 표 영역의 절대 경계(r1~r2, c1~c2)를 기준으로 자동 계산하는 버전 — 병합 셀이 섞인 고정
+// 서식지(예: buildOneVehicleReport의 결재란·정보박스)에서 사용. 병합 범위는 그 범위의
+// 실제 r1~r2/c1~c2를 넘겨서 마스터 셀 하나에만 적용할 것(2026-07-22, monthly-inspection.html
+// buildElecReportSheet()/buildMonthlyReportSheet()와 동일 원칙).
+function excelRegionBorder(region, r1, r2, c1, c2){
+  return {
+    top:{style: r1===region.r1 ? 'thin':'hair'},
+    bottom:{style: r2===region.r2 ? 'thin':'hair'},
+    left:{style: c1===region.c1 ? 'thin':'hair'},
+    right:{style: c2===region.c2 ? 'thin':'hair'}
+  };
+}
+function excelColNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
+function excelRangeBounds(range){
+  const parts=range.split(':');
+  const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
+  const m2=/^([A-Z]+)(\d+)$/.exec(parts[1]||parts[0]);
+  return {c1:excelColNum(m1[1]), r1:+m1[2], c2:excelColNum(m2[1]), r2:+m2[2]};
+}
 function excelCm2in(cm){ return cm/2.54; }
 const EXCEL_PAGE_PRESETS={
-  landscape:{top:excelCm2in(1),bottom:excelCm2in(0.5),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
-  portrait:{top:excelCm2in(2),bottom:excelCm2in(0.5),left:excelCm2in(1),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
 };
 const EXCEL_COLUMNS_VEHICLE=[
   {key:'날짜',header:'날짜',dateCol:true},
@@ -2075,7 +2103,7 @@ function buildExcelReport(opts){
       const cell=headerRow.getCell(i+1);
       cell.value=col.header; cell.font=EXCEL_BODY_FONT;
       cell.alignment={vertical:'middle',horizontal:'center'};
-      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+      cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
     });
     rows.forEach((r,i)=>{
       const rn=3+i;
@@ -2083,7 +2111,7 @@ function buildExcelReport(opts){
       row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
       columns.forEach((col,ci)=>{
         const cell=row.getCell(ci+1);
-        cell.font=EXCEL_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
         cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
         if(col.dateCol && r[col.key]){
           const d=excelParseDate(r[col.key]);
@@ -2253,20 +2281,25 @@ function buildOneVehicleReport(carNo,year,month){
     // 확보를 위해 늘린다(행2는 제목행이라 이미 40으로 커서 그대로 활용).
     ws.getRow(1).height=20;
     ws.getRow(3).height=26;
-    ws.mergeCells('G1:G3');
-    ws.mergeCells('H2:H3');
-    ws.mergeCells('I2:I3');
-    function setApprovalCell(coord,value){
-      const cell=ws.getCell(coord);
-      cell.value=value;
+    // 결재란 영역 경계 기준으로 바깥=thin·안쪽=hair 자동 계산(2026-07-22) — 병합 범위는 그
+    // 범위의 실제 r1~r2/c1~c2로 판정해야 안전하다(monthly-inspection.html의 gridBorder(range)와
+    // 동일 원칙). rangeBounds()는 파일 상단에서 정의.
+    const REGION_APPROVAL={r1:1,r2:3,c1:7,c2:9};
+    function setApprovalCell(range,value){
+      const addr=range.split(':')[0];
+      const cell=ws.getCell(addr);
+      if(value!==undefined && value!==null) cell.value=value;
       cell.font=REPORT_BODY_FONT;
-      cell.border=EXCEL_CELL_BORDER;
+      const b=excelRangeBounds(range);
+      cell.border=excelRegionBorder(REGION_APPROVAL,b.r1,b.r2,b.c1,b.c2);
       cell.alignment={vertical:'middle',horizontal:'center'};
+      if(range.indexOf(':')>=0) ws.mergeCells(range);
     }
-    setApprovalCell('G1','결   재');
+    setApprovalCell('G1:G3','결   재');
     setApprovalCell('H1','담당');
     setApprovalCell('I1','소장');
-    ['G1','G2','G3','H1','H2','H3','I1','I2','I3'].forEach(c=>{ ws.getCell(c).border=EXCEL_CELL_BORDER; });
+    setApprovalCell('H2:H3');
+    setApprovalCell('I2:I3');
     // 서명란(H2:H3, I2:I3) 전체 크기(px) 기준으로 절반 크기로 축소해 가운데 배치
     const sigCellW_H=excelColWidthToPx(colWidths[7]);
     const sigCellW_I=excelColWidthToPx(colWidths[8]);
@@ -2277,28 +2310,33 @@ function buildOneVehicleReport(carNo,year,month){
     if(sigDamdang) await placeSignatureImage(ws,wb,sigDamdang,7,1,sigCellW_H,sigCellH); // H열(0-based 7)
     if(sigSojang) await placeSignatureImage(ws,wb,sigSojang,8,1,sigCellW_I,sigCellH); // I열(0-based 8)
 
-    function setCell(coord,value,opts){
-      const cell=ws.getCell(coord);
+    // 정보박스(A5:I7) 영역 경계 기준 자동 계산 — 병합 범위를 mc()처럼 range 문자열로 받아
+    // 그 실제 r1~r2/c1~c2로 판정한다(2026-07-22, buildElecReportSheet()의 mc()/gridBorder(range)와 동일 패턴).
+    const REGION_INFO={r1:5,r2:7,c1:1,c2:9};
+    function setCell(range,value,opts){
+      const addr=range.split(':')[0];
+      const cell=ws.getCell(addr);
       cell.value=value;
       cell.font=REPORT_BODY_FONT;
-      cell.border=EXCEL_CELL_BORDER;
+      const b=excelRangeBounds(range);
+      cell.border=excelRegionBorder(REGION_INFO,b.r1,b.r2,b.c1,b.c2);
       cell.alignment=Object.assign({vertical:'middle',horizontal:'center'},opts||{});
+      if(range.indexOf(':')>=0) ws.mergeCells(range);
       return cell;
     }
-    ['B5:C5','D5:E5','F5:G5','H5:I5','A6:A7','B6:C7','D6:E6','D7:E7','F6:G6','F7:G7','H6:I6','H7:I7'].forEach(r=>ws.mergeCells(r));
     setCell('A5','차량번호');
-    setCell('B5','차량 구분');
-    setCell('D5','전월누계');
-    setCell('F5',data.prevCum,{horizontal:'right'}).numFmt='#,##0 "km"';
-    setCell('H5','');
-    setCell('A6',carNo);
-    setCell('B6',data.carType);
-    setCell('D6','당월누계');
-    setCell('F6',data.endCum,{horizontal:'right'}).numFmt='#,##0 "km"';
-    setCell('H6','');
-    setCell('D7','당월운행거리');
-    setCell('F7',data.monthDist,{horizontal:'right'}).numFmt='#,##0 "km"';
-    setCell('H7','');
+    setCell('B5:C5','차량 구분');
+    setCell('D5:E5','전월누계');
+    setCell('F5:G5',data.prevCum,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H5:I5','');
+    setCell('A6:A7',carNo);
+    setCell('B6:C7',data.carType);
+    setCell('D6:E6','당월누계');
+    setCell('F6:G6',data.endCum,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H6:I6','');
+    setCell('D7:E7','당월운행거리');
+    setCell('F7:G7',data.monthDist,{horizontal:'right'}).numFmt='#,##0 "km"';
+    setCell('H7:I7','');
     for(let r=5;r<=7;r++) ws.getRow(r).height=26;
 
     const headerRow=ws.getRow(8);
@@ -2307,7 +2345,7 @@ function buildOneVehicleReport(carNo,year,month){
       const cell=headerRow.getCell(i+1);
       cell.value=h; cell.font=REPORT_BODY_FONT;
       cell.alignment={vertical:'middle',horizontal:'center'};
-      cell.border=EXCEL_CELL_BORDER; cell.fill=EXCEL_HEADER_FILL;
+      cell.border=excelGridBorder(true, false, i, i===headerLabels.length-1); cell.fill=EXCEL_HEADER_FILL;
     });
 
     data.rows.forEach((r,i)=>{
@@ -2316,7 +2354,7 @@ function buildOneVehicleReport(carNo,year,month){
       cells.forEach((val,ci)=>{
         const cell=row.getCell(ci+1);
         const wrap=ci===2||ci===8; // 용무·비고는 내용이 길 수 있어 줄바꿈 허용
-        cell.font=REPORT_BODY_FONT; cell.border=EXCEL_CELL_BORDER;
+        cell.font=REPORT_BODY_FONT; cell.border=excelGridBorder(false, i===data.rows.length-1, ci, ci===cells.length-1);
         cell.alignment={vertical:'middle',horizontal:'center',wrapText:wrap};
         cell.value=val;
         if(ci===0){ cell.numFmt='d (aaa)'; }
