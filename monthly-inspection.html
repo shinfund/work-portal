@@ -4141,13 +4141,15 @@ function renderPowerChartImage(data){
         beforeDraw:(c)=>{ const ctx=c.ctx; ctx.save(); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,c.width,c.height); ctx.restore(); }
       }]
     });
+    // requestAnimationFrame은 브라우저 자동화 탭처럼 비활성/백그라운드 탭에서 콜백이 아예
+    // 실행되지 않아 무한 대기에 빠질 수 있다(2026-07-22 실측 — 45초 타임아웃까지 응답 없음).
+    // animation:false면 Chart.js가 생성자 안에서 이미 동기적으로 그려두므로 rAF 없이 바로
+    // toBlob 호출.
     return new Promise(resolve=>{
-      requestAnimationFrame(()=>{
-        canvas.toBlob(blob=>{
-          chart.destroy();
-          blob.arrayBuffer().then(resolve);
-        }, 'image/png');
-      });
+      canvas.toBlob(blob=>{
+        chart.destroy();
+        blob.arrayBuffer().then(resolve);
+      }, 'image/png');
     });
   });
 }
