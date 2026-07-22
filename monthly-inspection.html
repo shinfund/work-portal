@@ -456,6 +456,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_transformer">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_transformer" onclick="exportTransformerInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_transformer">보고서 생성</span>
+      </button>
     </div>
     <div class="detail-count" id="count-transformer"></div>
     <div class="tbl-wrap">
@@ -2734,6 +2738,15 @@ function excelPhotoAnchor(col, rn0){
     editAs:'twoCell'
   };
 }
+// 여러 칸에 걸친 병합 범위(예: 참고사진 박스) 전체를 채우는 앵커 — excelPhotoAnchor(1칸 전용)의
+// 일반화 버전, col0/row0(0-based, 병합 시작칸)~col1/row1(0-based, 병합 끝칸) 그대로 받는다.
+function excelPhotoAnchorBlock(col0, row0, col1, row1){
+  return {
+    tl:{nativeCol:col0, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:row0, nativeRowOff:EXCEL_PHOTO_INSET_EMU},
+    br:{nativeCol:col1+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:row1+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU},
+    editAs:'twoCell'
+  };
+}
 // exceljs는 삽입 이미지의 "가로 세로 비율 고정"을 항상 1로 하드코딩해서 옵션이 없음 —
 // 저장된 xlsx의 drawing XML을 직접 열어 0으로 바꿔준다.
 function excelUnlockAspectRatio(buffer){
@@ -3430,6 +3443,208 @@ function exportElecInspectionReport(){
     const tunnel=tunnels[idx++];
     lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
     buildOneElecReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
+// ── 변압기온도 "보고서 생성" (원본 엑셀 템플릿의 "변압기온도측정(표)" 시트를 재현) ──
+// 노션 변압기온도DB는 elec/generator처럼 부모-자식 구조가 아니라, 지점 하나당 레코드 하나
+// (터널명·측정일자·점검자·변압기종류·용량은 지점마다 반복 저장, 측정지점="{종류} #N"/지점번호=N).
+// 템플릿은 변압기종류(조명용/일반용/동력용)별로 15개 지점을 저압측(1~8, A~E열)/고압측(9~15, F~J열)
+// 두 열로 나눠 배치한다(2026-07-22, ExcelJS로 원본 셀 덤프해 확인 — 순전히 지면 배치용 구분이라
+// "저압/고압 전기설비"와는 무관, 실제로는 한 변압기의 15개 온도 측정 지점을 8+7로 나눈 것뿐).
+const TRANSFORMER_REPORT_TYPES=['조명용','일반용','동력용'];
+function buildTransformerReportData(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  const recs=(TAB_STATE.transformer.records||[]).filter(r=>r['터널명']===tunnel && (r['측정일자']||'').startsWith(ymStr));
+  if(!recs.length) return null;
+  const byType={}; TRANSFORMER_REPORT_TYPES.forEach(t=>{ byType[t]={}; });
+  recs.forEach(r=>{
+    const type=r['변압기종류'];
+    if(!byType[type]) return;
+    const no=parseInt(r['지점번호'],10);
+    if(!no || no<1 || no>15) return;
+    byType[type][no]={온도:r['온도(℃)'], 비고:r['비고']||''};
+  });
+  return {
+    측정일자: recs[0]['측정일자'],
+    점검자: recs[0]['점검자']||'',
+    types: TRANSFORMER_REPORT_TYPES.map(t=>({
+      type:t,
+      용량:(TUNNEL_TRANSFORMER_CAPACITY[tunnel]||{})[t]||'',
+      points:byType[t]
+    }))
+  };
+}
+function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
+  const ws=wb.addWorksheet('변압기온도측정표',{
+    views:[{showGridLines:false, zoomScale:110}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  ws.columns=Array(10).fill(0).map(()=>({width:8.6}));
+
+  const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
+  const CENTER={vertical:'middle', horizontal:'center'};
+  const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
+  const LABEL_ALIGN={vertical:'middle', horizontal:'distributed', wrapText:true};
+  const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true};
+  const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}}; // 원본 템플릿 실측(theme0 tint -5%) 근사값
+
+  // 표 영역 경계 — 이 보고서는 표가 4개(참고사진 박스 + 변압기종류 3개) 독립된 박스로 나뉘어 있어
+  // 각각 별도 region으로 등록(2026-07-22, buildElecReportSheet()의 gridBorder(range) 방식과 동일 —
+  // 원본 템플릿 자체가 이미 이 "박스별 외곽 thin·안쪽 hair" 스타일을 쓰고 있음을 셀 테두리 실측으로 확인).
+  const BORDER_REGIONS=[
+    {r1:5, r2:14, c1:1, c2:10},  // 측정지점 참고사진
+    {r1:16, r2:25, c1:1, c2:10}, // 조명용
+    {r1:27, r2:36, c1:1, c2:10}, // 일반용
+    {r1:38, r2:47, c1:1, c2:10}  // 동력용
+  ];
+  function colNum(l){ let n=0; for(let i=0;i<l.length;i++) n=n*26+(l.charCodeAt(i)-64); return n; }
+  function rangeBounds(range){
+    const parts=range.split(':');
+    const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
+    const m2=/^([A-Z]+)(\d+)$/.exec(parts[1]||parts[0]);
+    return {c1:colNum(m1[1]), r1:+m1[2], c2:colNum(m2[1]), r2:+m2[2]};
+  }
+  function gridBorder(range){
+    const b=rangeBounds(range);
+    const region=BORDER_REGIONS.find(rg=>b.r1>=rg.r1 && b.r2<=rg.r2 && b.c1>=rg.c1 && b.c2<=rg.c2);
+    if(!region) return undefined; // region 밖(제목·측정일자 등 안내문 영역)은 테두리 없음
+    return {
+      top:{style: b.r1===region.r1 ? 'thin':'hair'},
+      bottom:{style: b.r2===region.r2 ? 'thin':'hair'},
+      left:{style: b.c1===region.c1 ? 'thin':'hair'},
+      right:{style: b.c2===region.c2 ? 'thin':'hair'}
+    };
+  }
+  function mc(range, value, font, alignment, numFmt, fill){
+    const addr=range.split(':')[0];
+    const cell=ws.getCell(addr);
+    if(value!==undefined && value!==null) cell.value=value;
+    cell.font=font||F(10);
+    cell.alignment=alignment||CENTER;
+    if(numFmt) cell.numFmt=numFmt;
+    cell.border=gridBorder(range);
+    if(fill) cell.fill=fill;
+    if(range.indexOf(':')>=0) ws.mergeCells(range);
+    return cell;
+  }
+
+  mc('A1:J1', '2. 변압기 온도 측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  mc('A2:J2', '□ '+tunnel, F(16,true), VALUE_ALIGN);
+  ws.getRow(2).height=30;
+
+  mc('A3:B3', '측정일자:', F(13), LABEL_ALIGN);
+  mc('C3:E3', excelParseDate(data.측정일자), F(13), VALUE_ALIGN, 'yyyy-mm-dd');
+  mc('A4:B4', '점검자:', F(13), LABEL_ALIGN);
+  mc('C4:D4', data.점검자, F(13), VALUE_ALIGN);
+
+  mc('A5:E5', '저압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
+  mc('F5:J5', '고압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
+  ws.mergeCells('A6:E14');
+  ws.mergeCells('F6:J14');
+  ws.getCell('A6').border=gridBorder('A6:E14');
+  ws.getCell('F6').border=gridBorder('F6:J14');
+  if(refImageBuffers){
+    const imgIdFront=wb.addImage({buffer:refImageBuffers[0], extension:'jpeg'});
+    const imgIdBack=wb.addImage({buffer:refImageBuffers[1], extension:'jpeg'});
+    ws.addImage(imgIdFront, excelPhotoAnchorBlock(0,5,4,13));
+    ws.addImage(imgIdBack, excelPhotoAnchorBlock(5,5,9,13));
+  }
+
+  const rowOffsets={조명용:16, 일반용:27, 동력용:38};
+  data.types.forEach(t=>{
+    const base=rowOffsets[t.type];
+    mc(`A${base}:J${base}`, `${t.type} (${t.용량})`, F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
+    const hr=base+1;
+    mc(`A${hr}:A${hr}`, 'No', F(10), CENTER_WRAP);
+    mc(`B${hr}:C${hr}`, '온도 (℃)', F(10), CENTER);
+    mc(`D${hr}:E${hr}`, '비고', F(10), CENTER);
+    mc(`F${hr}:F${hr}`, 'No.', F(10), CENTER);
+    mc(`G${hr}:H${hr}`, '온도 (℃)', F(10), CENTER);
+    mc(`I${hr}:J${hr}`, '비고', F(10), CENTER);
+    for(let i=0;i<8;i++){
+      const rn=hr+1+i, no=i+1, p=t.points[no];
+      mc(`A${rn}:A${rn}`, no, F(10), CENTER_WRAP);
+      mc(`B${rn}:C${rn}`, p&&p.온도!=null&&p.온도!=='' ? p.온도 : null, F(11), CENTER_WRAP);
+      mc(`D${rn}:E${rn}`, p ? p.비고 : null, F(10), CENTER_WRAP);
+    }
+    // 저압측(1~8)은 8행, 고압측(9~15)은 7행뿐이라 마지막 행(hr+8)의 F~J는 항상 빈 값으로나마
+    // mc()를 호출해야 한다 — 값이 없다고 건너뛰면 그 칸만 테두리도 같이 빠진다
+    // (buildElecReportSheet()의 ACB 4번째 위상 공백행과 동일한 함정, xlsx-report-export 스킬 참고).
+    for(let i=0;i<7;i++){
+      const rn=hr+1+i, no=i+9, p=t.points[no];
+      mc(`F${rn}:F${rn}`, no, F(10), CENTER_WRAP);
+      mc(`G${rn}:H${rn}`, p&&p.온도!=null&&p.온도!=='' ? p.온도 : null, F(11), CENTER_WRAP);
+      mc(`I${rn}:J${rn}`, p ? p.비고 : null, F(10), CENTER_WRAP);
+    }
+    const lastRn=hr+8;
+    mc(`F${lastRn}:F${lastRn}`, null, F(10), CENTER_WRAP);
+    mc(`G${lastRn}:H${lastRn}`, null, F(11), CENTER_WRAP);
+    mc(`I${lastRn}:J${lastRn}`, null, F(10), CENTER_WRAP);
+  });
+}
+// 측정지점 참고사진(전면/후면)은 터널·연월과 무관하게 항상 같은 정적 파일(assets/, 신규등록 폼과
+// 공용) — 세션 중 첫 보고서 생성 시 한 번만 fetch해서 ArrayBuffer로 캐싱, 이후 호출은 재사용.
+let _transformerRefImagesLoading=null;
+function loadTransformerRefImages(){
+  if(_transformerRefImagesLoading) return _transformerRefImagesLoading;
+  _transformerRefImagesLoading=Promise.all(TRANSFORMER_REF_IMAGES.map(img=>
+    fetch(img.src).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); })
+  )).catch(e=>{ _transformerRefImagesLoading=null; throw e; });
+  return _transformerRefImagesLoading;
+}
+function buildOneTransformerReport(tunnel, year, month){
+  const data=buildTransformerReportData(tunnel, year, month);
+  if(!data) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return loadExcelLib(true).then(()=>loadTransformerRefImages()).then(refImages=>{
+    const wb=new ExcelJS.Workbook();
+    buildTransformerReportSheet(wb, data, tunnel, refImages);
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 변압기온도측정표_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportTransformerInspectionReport(){
+  const btn=document.getElementById('reportBtn_transformer');
+  const lbl=document.getElementById('reportLbl_transformer');
+  const f=_tabFilters['transformer'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.transformer.records||[]).map(r=>r['측정일자']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('transformer'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOneTransformerReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
         alert(`${tunnel} 보고서 생성 실패: `+e.message);
