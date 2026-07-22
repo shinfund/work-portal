@@ -3257,10 +3257,12 @@ function buildElecReportSheet(wb, r, tunnel){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
-  // 좌측 정렬 셀은 indent:1로 셀 왼쪽 여백을 줌(2026-07-21 buildMonthlyReportSheet()에서
-  // 점검내용 열에 처음 확정한 규칙 — 테두리 있는 표 안에서 글자가 셀 경계에 바로 붙으면
-  // 답답해 보인다는 사용자 피드백, 2026-07-22 이 보고서에도 동일 적용).
-  const LEFT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  // 좌측 정렬 + indent:1 — 테두리(BOX_TOP/LR/BOTTOM 등)가 있는 셀에서만 쓴다. 제목·소제목·
+  // 안내문처럼 테두리 없는 좌측정렬 텍스트에는 적용하지 않음(2026-07-22 사용자 요청으로
+  // 범위 한정 — 처음엔 LEFT 상수 자체에 indent를 넣었다가, 테두리 없는 셀까지 여백이 생겨
+  // 되돌림). 종합의견 박스(A33:R41)에만 사용.
+  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
   // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
   // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
   // border: 생략하면 표 영역(아래 BORDER_REGIONS) 기준 자동 계산 — 그 영역의 절대 바깥 경계에
@@ -3423,9 +3425,9 @@ function buildElecReportSheet(wb, r, tunnel){
   const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
-  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT, undefined, BOX_TOP);
-  for(let rn=34; rn<=40; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT, undefined, BOX_LR);
-  mc('A41:R41', '', F14(10), LEFT, undefined, BOX_BOTTOM);
+  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT_INDENT, undefined, BOX_TOP);
+  for(let rn=34; rn<=40; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT_INDENT, undefined, BOX_LR);
+  mc('A41:R41', '', F14(10), LEFT_INDENT, undefined, BOX_BOTTOM);
   mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
   mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
 
@@ -3534,7 +3536,9 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const LABEL_ALIGN={vertical:'middle', horizontal:'distributed', wrapText:true};
-  const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
+  // 제목·부제·측정일자·점검자 값 전부 테두리 없는 안내문/정보줄이라 indent 없이 사용
+  // (2026-07-22 사용자 요청 — indent:1은 테두리 있는 셀에만 한정).
+  const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true};
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}}; // 원본 템플릿 실측(theme0 tint -5%) 근사값
 
   // 표 영역 경계 — 이 보고서는 표가 4개(참고사진 박스 + 변압기종류 3개) 독립된 박스로 나뉘어 있어
@@ -3715,11 +3719,12 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
-  // 좌측 정렬 셀은 indent:1로 셀 왼쪽 여백을 줌(2026-07-21 buildMonthlyReportSheet()에서
-  // 점검내용 열에 처음 확정한 규칙 — 테두리 있는 표 안에서 글자가 셀 경계에 바로 붙으면
-  // 답답해 보인다는 사용자 피드백, 2026-07-22 이 보고서에도 동일 적용).
-  const LEFT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  // 좌측 정렬 + indent:1 — 테두리가 있는 셀에만 한정(2026-07-22 사용자 요청, 제목·부제·
+  // 가동일자/점검자 정보줄처럼 테두리 없는 곳은 LEFT를 그대로 씀). 점검사항 데이터 열
+  // (LEFT_WRAP)은 전부 표 안(테두리 있음)이라 그대로 유지, 특이사항 박스는 LEFT_INDENT 사용.
   const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
+  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
 
   // 표 영역 경계 3개(발전기운전/유류사용량/점검사항) — buildElecReportSheet()의 gridBorder(range)
   // 패턴 그대로: 각 mc() 호출 범위를 이 영역들과 비교해 절대 바깥 경계만 thin, 안쪽은 hair로 자동 계산.
@@ -3842,9 +3847,9 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
   const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
   for(let i=0;i<6;i++) ws.getRow(24+i).height=30;
-  mc('A24:R24', notes[0]||'', F(13), LEFT, undefined, BOX_TOP);
-  for(let i=1;i<5;i++) mc(`A${24+i}:R${24+i}`, notes[i]||'', F(13), LEFT, undefined, BOX_LR);
-  mc('A29:R29', notes[5]||'', F(13), LEFT, undefined, BOX_BOTTOM);
+  mc('A24:R24', notes[0]||'', F(13), LEFT_INDENT, undefined, BOX_TOP);
+  for(let i=1;i<5;i++) mc(`A${24+i}:R${24+i}`, notes[i]||'', F(13), LEFT_INDENT, undefined, BOX_LR);
+  mc('A29:R29', notes[5]||'', F(13), LEFT_INDENT, undefined, BOX_BOTTOM);
 }
 function buildOneGeneratorReport(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
@@ -3931,7 +3936,11 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
 
   const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
-  const LEFT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT={vertical:'middle', horizontal:'left'};
+  // 테두리 있는 라벨박스(일자 값) 전용 — 제목·부제(테두리 없음)에는 LEFT를 그대로 씀
+  // (2026-07-22 사용자 요청, indent는 테두리 있는 셀에만 한정). 사진설명(LEFT_SHRINK)은
+  // 항상 라벨박스 안(테두리 있음)이라 그대로 유지.
+  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
   const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1};
   const IMG_BORDER={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
 
@@ -3989,7 +3998,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
       const region={r1:lbl1, r2:lbl2, c1, c2};
       mc(`${cNo}${lbl1}:${cNo}${lbl2}`, '#'+no, F(10), CENTER, undefined, gridBorder(`${cNo}${lbl1}:${cNo}${lbl2}`, region));
       mc(`${cLbl}${lbl1}`, '일      자', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl1}`, region));
-      mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, p?excelParseDate(p.일자):null, F(10), LEFT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, region));
+      mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, p?excelParseDate(p.일자):null, F(10), LEFT_INDENT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, region));
       mc(`${cLbl}${lbl2}`, '사진설명', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl2}`, region));
       mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, p?p.사진설명:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, region));
     }
