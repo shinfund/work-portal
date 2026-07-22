@@ -3242,7 +3242,7 @@ const ELEC_REPORT_ACB_PHASE_LABEL={R:'R-S', S:'S-T', T:'T-R'};
 function buildElecReportSheet(wb, r, tunnel){
   const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
   const ws=wb.addWorksheet('전기설비기록표',{
-    views:[{showGridLines:false, zoomScale:120}],
+    views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait}, // 좌측 1.5cm는 2026-07-22부터 portrait 기본값 자체에 포함됨
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
@@ -3521,7 +3521,7 @@ function buildTransformerReportData(tunnel, year, month){
 }
 function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const ws=wb.addWorksheet('변압기온도측정표',{
-    views:[{showGridLines:false, zoomScale:110}],
+    views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
@@ -3699,7 +3699,7 @@ function exportTransformerInspectionReport(){
 // 값 1건을 2행 병합으로 세로로 길게 그렸지만 실제로는 레코드 1건뿐이라 헤더 1행+데이터 1행으로 압축).
 function buildGeneratorReportSheet(wb, r, tunnel){
   const ws=wb.addWorksheet('발전기점검표',{
-    views:[{showGridLines:false, zoomScale:110}],
+    views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
