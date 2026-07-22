@@ -3001,40 +3001,43 @@ const REPORT_SHEET_GROUPS=[
 ];
 function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const ws=wb.addWorksheet(sheetName,{
-    views:[{state:'frozen', ySplit:3, showGridLines:false, zoomScale:90}],
+    views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
     // 좌측 여백 1.5cm(제본 여백)는 2026-07-22부터 EXCEL_PAGE_PRESETS.portrait 기본값 자체가
     // 1.5cm로 바뀌어서(사용자 지정 신규 기본 여백) 더 이상 별도 덮어쓸 필요 없음.
     // 시트 1개=인쇄 1페이지(3개 시트로 분리했으니 세로도 1페이지에 강제로 맞춘다, 2026-07-21 사용자 요청)
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'3:3'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const colWidths=[10,14,46,10,13,10];
   ws.columns=colWidths.map(w=>({width:w}));
 
   // 큰 제목("1. 월간 점검결과표")은 원본 템플릿처럼 첫 시트에만 넣고, 2·3번째 시트는 이어지는
-  // 표라 생략한다(2026-07-21 사용자 요청) — 행 구조(부제=2행, 헤더=3행)는 시트마다 동일하게 유지.
+  // 표라 생략한다(2026-07-21 사용자 요청) — 행 구조(부제=3행, 헤더=4행)는 시트마다 동일하게 유지.
+  // 2026-07-22 사용자가 원본 참고파일 1~3행을 편집(다른 보고서와 동일하게 1행 큰 제목+2행
+  // 여백행+3행 부제 구조로 통일) — 부제·헤더·데이터가 전부 구 위치에서 +1행씩 밀림.
   if(showTitle){
     ws.mergeCells('A1:F1');
     const titleCell=ws.getCell('A1');
-    titleCell.value='1. 월간 점검결과표'; titleCell.font=EXCEL_TITLE_FONT;
+    titleCell.value='1. 월간 점검결과표'; titleCell.font={name:'HY헤드라인M', size:20};
     titleCell.alignment={vertical:'middle', horizontal:'left'};
-    ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+    ws.getRow(1).height=50.05;
   }
+  ws.getRow(2).height=10;
 
-  ws.mergeCells('A2:F2');
-  const subCell=ws.getCell('A2');
+  ws.mergeCells('A3:F3');
+  const subCell=ws.getCell('A3');
   subCell.value='□ 전기안전관리자 정기점검표';
-  subCell.font={name:'맑은 고딕', size:15, bold:true};
+  subCell.font={name:'맑은 고딕', size:16, bold:true};
   subCell.alignment={vertical:'middle', horizontal:'left'};
-  ws.getRow(2).height=30;
+  ws.getRow(3).height=30;
 
-  // 표 영역(헤더 3행 + 데이터 rows.length행) 절대 경계 기준으로 바깥=thin·안쪽=hair를 자동
+  // 표 영역(헤더 4행 + 데이터 rows.length행) 절대 경계 기준으로 바깥=thin·안쪽=hair를 자동
   // 계산(2026-07-22 요청) — buildElecReportSheet()의 gridBorder(range) 방식과 동일 원리:
   // 병합 범위는 "그 병합의 실제 r1~r2" 기준으로 판정해야 안전하다(2026-07-21엔 물리적 행마다
   // EXCEL_CELL_BORDER를 덮어써서 병합 마스터 셀의 최종 테두리가 span과 무관하게 결정돼
   // 일부 구간에서 빠지는 문제가 있었음 — 이번엔 gubunSpans/equipSpans의 실제 병합범위(rn1~rn2)에
   // 맞춰 마스터 셀에 한 번만 지정해서 재발을 피한다).
-  const REPORT_REGION={r1:3, r2:3+rows.length, c1:1, c2:6};
+  const REPORT_REGION={r1:4, r2:4+rows.length, c1:1, c2:6};
   function reportGridBorder(r1,r2,c1,c2){
     return {
       top:{style: r1===REPORT_REGION.r1 ? 'thin':'hair'},
@@ -3044,13 +3047,13 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     };
   }
   const headerLabels=['구분','설비명','점검내용','점검결과','점검일자','비고'];
-  const headerRow=ws.getRow(3);
+  const headerRow=ws.getRow(4);
   headerRow.height=EXCEL_ROW_HEIGHTS.header;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=EXCEL_BODY_FONT;
+    cell.value=h; cell.font=Object.assign({}, EXCEL_BODY_FONT, {bold:true});
     cell.alignment={vertical:'middle', horizontal:'center'};
-    cell.border=reportGridBorder(3,3,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
+    cell.border=reportGridBorder(4,4,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
   });
 
   // 구분 연속 구간을 미리 계산 — row.commit() 이후에는 셀 스타일을 수정해도 반영되지 않아
@@ -3070,7 +3073,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
 
   gubunSpans.forEach(span=>{
     const first=rows[span.start];
-    const rn1=4+span.start, rn2=4+span.end;
+    const rn1=5+span.start, rn2=5+span.end;
     if(first.combined){
       ws.mergeCells(`A${rn1}:B${rn2}`);
       ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,2);
@@ -3081,13 +3084,13 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   });
   equipSpans.forEach(span=>{
     if(rows[span.start].combined) return; // 위에서 A+B로 이미 처리됨
-    const rn1=4+span.start, rn2=4+span.end;
+    const rn1=5+span.start, rn2=5+span.end;
     if(span.end>span.start) ws.mergeCells(`B${rn1}:B${rn2}`);
     ws.getCell(`B${rn1}`).border=reportGridBorder(rn1,rn2,2,2);
   });
 
   rows.forEach((r,i)=>{
-    const rn=4+i;
+    const rn=5+i;
     const row=ws.getRow(rn);
     const tagColor=REPORT_TAG_COLORS[r.비고];
     for(let ci=0; ci<6; ci++){
@@ -3294,13 +3297,14 @@ function buildElecReportSheet(wb, r, tunnel){
   // 겪은 "일부 구간 테두리 누락" 버그는 이 방식으로 재발하지 않아야 함 — 출력물로 확인 필요).
   // false면 테두리 없음, 객체를 직접 넘기면 그 값 그대로(예: 33~41행 "종합의견" 박스는 외곽만
   // 남기고 안쪽 가로선은 뺀다 — 2026-07-21 요청, 이미 thin 외곽선이라 이번 변경 대상 아님).
-  // 원본 템플릿과 달리 이 보고서는 "1.기본사항"(7~8행)·"2.점검내역"(11~29행)·"3.종합의견"
-  // (33~41행)·서명란(46~47행)에만 테두리를 두고, 제목·소제목·안내문은 테두리 없이 둔다
-  // (2026-07-21 서명란도 테두리 필요하다는 사용자 피드백 반영).
+  // 원본 템플릿과 달리 이 보고서는 "1.기본사항"(5~6행)·"2.점검내역"(9~27행)·"3.종합의견"
+  // (31~39행)·서명란(44~45행)에만 테두리를 두고, 제목·소제목·안내문은 테두리 없이 둔다
+  // (2026-07-21 서명란도 테두리 필요하다는 사용자 피드백 반영. 2026-07-22 원본 템플릿 1~3행
+  // 개편으로 전체 -2행 이동 — 아래 "원본 템플릿엔 없던 1행 큰 제목" 주석 참고).
   const BORDER_REGIONS=[
-    {r1:7, r2:8, c1:1, c2:18},   // 1.기본사항
-    {r1:11, r2:29, c1:1, c2:18}, // 2.점검내역
-    {r1:46, r2:47, c1:10, c2:18} // 서명란(J~R열)
+    {r1:5, r2:6, c1:1, c2:18},   // 1.기본사항
+    {r1:9, r2:27, c1:1, c2:18},  // 2.점검내역
+    {r1:44, r2:45, c1:10, c2:18} // 서명란(J~R열)
   ];
   function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
   function rangeBounds(range){
@@ -3335,57 +3339,61 @@ function buildElecReportSheet(wb, r, tunnel){
   // 원본 템플릿엔 없던 1행 큰 제목 — 통합 보고서에 이 시트가 포함되면서(2026-07-22, 사용자가
   // 원본 목차엔 없던 전기설비기록도 포함시키기로 재결정) 다른 6개 보고서와 동일하게 시트
   // 맨 위에 "N. 제목" 표시가 있어야 한다는 요청으로 추가(원본은 A2 소제목만 있고 A1은 빈 행이었음).
+  // 2026-07-22 사용자가 원본 참고파일 1~3행을 직접 편집(다른 6개 보고서와 동일한 1행 큰 제목+
+  // 2행 여백행+3행 부제 구조로 통일) — 기존 "□ 전기설비 점검결과기록표"(구 2행)와 "설비명(상호)"
+  // (구 4행) 두 줄을 3행 하나로 합쳤고, 본문("1.기본사항" 이하)이 구 6행→4행으로 전체 -2행 이동.
   mc('A1:R1', '2. 전기설비 점검결과기록표', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
-  mc('A2:J2', '□ 전기설비 점검결과기록표', F14(14,true), LEFT, undefined, false);
-  mc('A4:J4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
-  mc('A6:F6', ' 1. 기본사항', F14(10), LEFT, undefined, false);
+  ws.getRow(1).height=50.05;
+  ws.getRow(2).height=10;
+  mc('A3:H3', `설비명(상호) : ${tunnel}`, F14(16,true), LEFT, undefined, false);
+  ws.getRow(3).height=30;
+  mc('A4:F4', ' 1. 기본사항', F14(10), LEFT, undefined, false);
 
-  mc('A7:B7', '수전전압/용량', F14(10), CENTER);
-  mc('C7:G7', r['수전전압/용량']||'', F14(10), CENTER_SHRINK);
-  mc('H7:H7', '발전전압/용량', F14(10), CENTER);
-  mc('I7:M7', r['발전전압/용량']||'', F14(10), CENTER_SHRINK);
-  mc('N7:O7', '태양광용량', F14(10), CENTER);
-  mc('P7:R7', r['태양광용량']||'', F14(10), CENTER_SHRINK);
+  mc('A5:B5', '수전전압/용량', F14(10), CENTER);
+  mc('C5:G5', r['수전전압/용량']||'', F14(10), CENTER_SHRINK);
+  mc('H5:H5', '발전전압/용량', F14(10), CENTER);
+  mc('I5:M5', r['발전전압/용량']||'', F14(10), CENTER_SHRINK);
+  mc('N5:O5', '태양광용량', F14(10), CENTER);
+  mc('P5:R5', r['태양광용량']||'', F14(10), CENTER_SHRINK);
 
-  mc('A8:B8', '점검일자', F14(10), CENTER);
+  mc('A6:B6', '점검일자', F14(10), CENTER);
   const d=excelParseDate(r['점검일자']);
-  mc('C8:G8', d, F14(10), CENTER_SHRINK, 'yyyy-mm-dd');
-  mc('H8:H8', '점검종별', F14(10), CENTER);
-  mc('I8:M8', r['점검종별']||'월간', F14(10), CENTER_SHRINK);
-  mc('N8:O8', '점검횟수', F14(10), CENTER);
-  mc('P8:R8', r['점검횟수']||'', F14(10), CENTER_SHRINK);
+  mc('C6:G6', d, F14(10), CENTER_SHRINK, 'yyyy-mm-dd');
+  mc('H6:H6', '점검종별', F14(10), CENTER);
+  mc('I6:M6', r['점검종별']||'월간', F14(10), CENTER_SHRINK);
+  mc('N6:O6', '점검횟수', F14(10), CENTER);
+  mc('P6:R6', r['점검횟수']||'', F14(10), CENTER_SHRINK);
 
-  mc('A10:A10', '2. 점검내역 ', F14(10), LEFT, undefined, false);
+  mc('A8:A8', '2. 점검내역 ', F14(10), LEFT, undefined, false);
 
-  // 헤더(11~13행) — 원본 템플릿의 병합 구조를 그대로 재현
-  mc('A11:B13', '저 압 설 비', F14(8), CENTER);
-  mc('C11:C13', '점검\n결과\n판정', F14(8), CENTER_WRAP);
-  mc('D11:E12', '설비현황', F14(8), CENTER_WRAP);
-  mc('D13:D13', '증', F14(8), CENTER);
-  mc('E13:E13', '감', F14(8), CENTER);
-  mc('F11:F13', '부적합\n수량', F14(8), CENTER_WRAP);
-  mc('G11:G13', '개수\n수량', F14(8), CENTER_WRAP);
-  mc('H11:H13', '특고(고압)설비', F14(8), CENTER);
-  mc('I11:I13', '점검\n결과\n판정', F14(8), CENTER_WRAP);
-  mc('J11:K12', '설비현황', F14(8), CENTER_WRAP);
-  mc('J13:J13', '증', F14(8), CENTER);
-  mc('K13:K13', '감', F14(8), CENTER);
-  mc('L11:L13', '부적합\n수량', F14(8), CENTER_WRAP);
-  mc('M11:M13', '개수\n수량', F14(8), CENTER_WRAP);
-  mc('N11:O13', '구 분', F14(8), CENTER);
-  mc('P11:P13', '전압\n(V)', F14(8), CENTER_WRAP);
-  mc('Q11:Q13', '전류\n(A)', F14(8), CENTER_WRAP);
-  mc('R11:R13', '누설\n전류\n(mA)', F14(8), CENTER_WRAP);
+  // 헤더(9~11행) — 원본 템플릿의 병합 구조를 그대로 재현
+  mc('A9:B11', '저 압 설 비', F14(8), CENTER);
+  mc('C9:C11', '점검\n결과\n판정', F14(8), CENTER_WRAP);
+  mc('D9:E10', '설비현황', F14(8), CENTER_WRAP);
+  mc('D11:D11', '증', F14(8), CENTER);
+  mc('E11:E11', '감', F14(8), CENTER);
+  mc('F9:F11', '부적합\n수량', F14(8), CENTER_WRAP);
+  mc('G9:G11', '개수\n수량', F14(8), CENTER_WRAP);
+  mc('H9:H11', '특고(고압)설비', F14(8), CENTER);
+  mc('I9:I11', '점검\n결과\n판정', F14(8), CENTER_WRAP);
+  mc('J9:K10', '설비현황', F14(8), CENTER_WRAP);
+  mc('J11:J11', '증', F14(8), CENTER);
+  mc('K11:K11', '감', F14(8), CENTER);
+  mc('L9:L11', '부적합\n수량', F14(8), CENTER_WRAP);
+  mc('M9:M11', '개수\n수량', F14(8), CENTER_WRAP);
+  mc('N9:O11', '구 분', F14(8), CENTER);
+  mc('P9:P11', '전압\n(V)', F14(8), CENTER_WRAP);
+  mc('Q9:Q11', '전류\n(A)', F14(8), CENTER_WRAP);
+  mc('R9:R11', '누설\n전류\n(mA)', F14(8), CENTER_WRAP);
 
-  // 14~29행(16행) — 저압설비 16항목 / 특고(고압)설비 16항목 / ACB 9개(12행) + 역률·전력량 요약(4행)
+  // 12~27행(16행) — 저압설비 16항목 / 특고(고압)설비 16항목 / ACB 9개(12행) + 역률·전력량 요약(4행)
   for(let i=0;i<16;i++){
-    const rn=14+i;
+    const rn=12+i;
     // 저압설비(A~G)
     const lv=ELEC_REPORT_LOWVOLT[i];
     const lvRec=elecChkLookup(r, {설비구분:'저압설비', 설비항목:lv.설비항목});
     if(lv.group){
-      if(i===13) mc(`A27:A29`, lv.group, F14(8), CENTER_WRAP);
+      if(i===13) mc(`A25:A27`, lv.group, F14(8), CENTER_WRAP);
       mc(`B${rn}:B${rn}`, lv.설비항목, F14(8), CENTER);
     } else {
       mc(`A${rn}:B${rn}`, lv.설비항목, F14(8), CENTER);
@@ -3427,45 +3435,45 @@ function buildElecReportSheet(wb, r, tunnel){
         mc(`Q${rn}:Q${rn}`, null, F14(8), CENTER);
         mc(`R${rn}:R${rn}`, null, F14(8), CENTER);
       }
+    } else if(rn===24){
+      mc('N24:N24', '역률(%)', F14(8), CENTER);
+      mc('O24:R24', acb0&&acb0.역률!=null?acb0.역률:null, F14(8), CENTER);
+    } else if(rn===25){
+      mc('N25:N25', '유효전력량(kW)', F14(8), CENTER);
+      mc('O25:R25', acb0&&acb0.유효전력량!=null?acb0.유효전력량:null, F14(8), CENTER, '#,##0_ ');
     } else if(rn===26){
-      mc('N26:N26', '역률(%)', F14(8), CENTER);
-      mc('O26:R26', acb0&&acb0.역률!=null?acb0.역률:null, F14(8), CENTER);
+      mc('N26:N26', '무효전력량(kVar)', F14(8), CENTER);
+      mc('O26:R26', (acb0&&acb0.무효전력량)||'', F14(8), CENTER);
     } else if(rn===27){
-      mc('N27:N27', '유효전력량(kW)', F14(8), CENTER);
-      mc('O27:R27', acb0&&acb0.유효전력량!=null?acb0.유효전력량:null, F14(8), CENTER, '#,##0_ ');
-    } else if(rn===28){
-      mc('N28:N28', '무효전력량(kVar)', F14(8), CENTER);
-      mc('O28:R28', (acb0&&acb0.무효전력량)||'', F14(8), CENTER);
-    } else if(rn===29){
-      mc('N29:N29', '최대전력(kW)', F14(8), CENTER);
-      mc('O29:P29', acb0&&acb0.최대전력!=null?acb0.최대전력:null, F14(8), CENTER);
-      mc('Q29:Q29', '배율', F14(8), CENTER);
-      mc('R29:R29', acb0&&acb0.배율!=null?String(acb0.배율):'', F14(8), Object.assign({},CENTER,{shrinkToFit:true}), '@');
+      mc('N27:N27', '최대전력(kW)', F14(8), CENTER);
+      mc('O27:P27', acb0&&acb0.최대전력!=null?acb0.최대전력:null, F14(8), CENTER);
+      mc('Q27:Q27', '배율', F14(8), CENTER);
+      mc('R27:R27', acb0&&acb0.배율!=null?String(acb0.배율):'', F14(8), Object.assign({},CENTER,{shrinkToFit:true}), '@');
     }
   }
 
-  mc('A30:A30', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT, undefined, false);
-  mc('A32:A32', '3. 종합의견', F14(10), LEFT, undefined, false);
-  // 33~41행은 하나의 "종합의견" 박스 — 외곽 테두리만 남기고 행 사이 안쪽 가로선은 뺀다
+  mc('A28:A28', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT, undefined, false);
+  mc('A30:A30', '3. 종합의견', F14(10), LEFT, undefined, false);
+  // 31~39행은 하나의 "종합의견" 박스 — 외곽 테두리만 남기고 행 사이 안쪽 가로선은 뺀다
   // (2026-07-21 요청). 각 행이 A:R 병합 셀 하나씩이라 좌우 테두리는 9개 행 전부에 넣어야
-  // 이어져 보이고, 위/아래는 첫 행(33)·마지막 행(41)에만 넣는다.
+  // 이어져 보이고, 위/아래는 첫 행(31)·마지막 행(39)에만 넣는다.
   const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
-  mc('A33:R33', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT_INDENT, undefined, BOX_TOP);
-  for(let rn=34; rn<=40; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT_INDENT, undefined, BOX_LR);
-  mc('A41:R41', '', F14(10), LEFT_INDENT, undefined, BOX_BOTTOM);
-  mc('A42:A42', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
-  mc('A43:A43', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
+  mc('A31:R31', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT_INDENT, undefined, BOX_TOP);
+  for(let rn=32; rn<=38; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT_INDENT, undefined, BOX_LR);
+  mc('A39:R39', '', F14(10), LEFT_INDENT, undefined, BOX_BOTTOM);
+  mc('A40:A40', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
+  mc('A41:A41', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
 
-  mc('J46:J47', '확\n인', F14(10), CENTER_WRAP);
-  mc('K46:M46', '점검확인자', F14(10), CENTER_WRAP);
-  mc('N46:O46', (chk0&&chk0.점검확인자)||'', F14(10), CENTER);
-  mc('P46:R46', '(인)', F14(10), CENTER);
-  mc('K47:M47', '점검담당자', F14(10), CENTER_WRAP);
-  mc('N47:O47', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
-  mc('P47:R47', '(인)', F14(10), CENTER);
-  ws.getRow(46).height=20.15; ws.getRow(47).height=20.15;
+  mc('J44:J45', '확\n인', F14(10), CENTER_WRAP);
+  mc('K44:M44', '점검확인자', F14(10), CENTER_WRAP);
+  mc('N44:O44', (chk0&&chk0.점검확인자)||'', F14(10), CENTER);
+  mc('P44:R44', '(인)', F14(10), CENTER);
+  mc('K45:M45', '점검담당자', F14(10), CENTER_WRAP);
+  mc('N45:O45', (chk0&&chk0.점검담당자)||'', F14(10), CENTER);
+  mc('P45:R45', '(인)', F14(10), CENTER);
+  ws.getRow(44).height=20.15; ws.getRow(45).height=20.15;
   return ws;
 }
 function buildOneElecReport(tunnel, year, month){
@@ -3573,10 +3581,10 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   // 각각 별도 region으로 등록(2026-07-22, buildElecReportSheet()의 gridBorder(range) 방식과 동일 —
   // 원본 템플릿 자체가 이미 이 "박스별 외곽 thin·안쪽 hair" 스타일을 쓰고 있음을 셀 테두리 실측으로 확인).
   const BORDER_REGIONS=[
-    {r1:5, r2:14, c1:1, c2:10},  // 측정지점 참고사진
-    {r1:16, r2:25, c1:1, c2:10}, // 조명용
-    {r1:27, r2:36, c1:1, c2:10}, // 일반용
-    {r1:38, r2:47, c1:1, c2:10}  // 동력용
+    {r1:6, r2:15, c1:1, c2:10},  // 측정지점 참고사진
+    {r1:17, r2:26, c1:1, c2:10}, // 조명용
+    {r1:28, r2:37, c1:1, c2:10}, // 일반용
+    {r1:39, r2:48, c1:1, c2:10}  // 동력용
   ];
   function colNum(l){ let n=0; for(let i=0;i<l.length;i++) n=n*26+(l.charCodeAt(i)-64); return n; }
   function rangeBounds(range){
@@ -3610,29 +3618,32 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   }
 
   mc('A1:J1', '3. 변압기 온도측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
-  mc('A2:J2', '□ '+tunnel, F(16,true), VALUE_ALIGN);
-  ws.getRow(2).height=30;
+  ws.getRow(1).height=50.05;
+  ws.getRow(2).height=10;
+  mc('A3:J3', '□ '+tunnel, F(16,true), VALUE_ALIGN);
+  ws.getRow(3).height=30;
+  // 2026-07-22 사용자가 원본 참고파일 1~3행을 편집(1행 큰 제목+2행 여백행+3행 부제 구조로
+  // 통일) — 측정일자·점검자·저압측/고압측 헤더 등 이하 전부 구 위치에서 +1행씩 밀림.
 
-  mc('A3:B3', '측정일자:', F(13), LABEL_ALIGN);
-  mc('C3:E3', excelParseDate(data.측정일자), F(13), VALUE_ALIGN, 'yyyy"년" m"월" d"일" aaa"요일"');
-  mc('A4:B4', '점검자:', F(13), LABEL_ALIGN);
-  mc('C4:D4', (data.점검자||'').split('').join(' '), F(13), VALUE_ALIGN);
+  mc('A4:B4', '측정일자:', F(13), LABEL_ALIGN);
+  mc('C4:E4', excelParseDate(data.측정일자), F(13), VALUE_ALIGN, 'yyyy"년" m"월" d"일" aaa"요일"');
+  mc('A5:B5', '점검자:', F(13), LABEL_ALIGN);
+  mc('C5:D5', (data.점검자||'').split('').join(' '), F(13), VALUE_ALIGN);
 
-  mc('A5:E5', '저압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
-  mc('F5:J5', '고압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
-  ws.mergeCells('A6:E14');
-  ws.mergeCells('F6:J14');
-  ws.getCell('A6').border=gridBorder('A6:E14');
-  ws.getCell('F6').border=gridBorder('F6:J14');
+  mc('A6:E6', '저압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
+  mc('F6:J6', '고압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
+  ws.mergeCells('A7:E15');
+  ws.mergeCells('F7:J15');
+  ws.getCell('A7').border=gridBorder('A7:E15');
+  ws.getCell('F7').border=gridBorder('F7:J15');
   if(refImageBuffers){
     const imgIdFront=wb.addImage({buffer:refImageBuffers[0], extension:'jpeg'});
     const imgIdBack=wb.addImage({buffer:refImageBuffers[1], extension:'jpeg'});
-    ws.addImage(imgIdFront, excelPhotoAnchorBlock(0,5,4,13));
-    ws.addImage(imgIdBack, excelPhotoAnchorBlock(5,5,9,13));
+    ws.addImage(imgIdFront, excelPhotoAnchorBlock(0,6,4,14));
+    ws.addImage(imgIdBack, excelPhotoAnchorBlock(5,6,9,14));
   }
 
-  const rowOffsets={조명용:16, 일반용:27, 동력용:38};
+  const rowOffsets={조명용:17, 일반용:28, 동력용:39};
   data.types.forEach(t=>{
     const base=rowOffsets[t.type];
     mc(`A${base}:J${base}`, `${t.type} (${t.용량})`, F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
@@ -3794,9 +3805,10 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   }
 
   mc('A1:R1', '4. 비상발전기 점검 및 가동일지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  ws.getRow(1).height=50.05;
   // 2행은 원본 참고파일처럼 내용 없는 여백행(2026-07-22 사용자 요청) — 이하 전부 원래보다 1행씩 밀림.
-  ws.getRow(2).height=30;
+  // 2026-07-22 사용자가 원본 참고파일 1~3행 높이를 재조정(1행 50.05, 2행 10)해 그대로 반영.
+  ws.getRow(2).height=10;
   mc('A3:R3', '□ '+tunnel, F(16,true), LEFT, undefined, false);
   ws.getRow(3).height=30;
 
@@ -4003,13 +4015,16 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
   }
 
   mc('A1:J1', '5. 운영관리 사진대지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
-  mc('A2:J2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
-  ws.getRow(2).height=30;
+  ws.getRow(1).height=50.05;
+  ws.getRow(2).height=10;
+  mc('A3:J3', '□ '+tunnel, F(16,true), LEFT, undefined, false);
+  ws.getRow(3).height=30;
+  // 2026-07-22 사용자가 원본 참고파일 1~3행을 편집(1행 큰 제목+2행 여백행+3행 부제 구조로
+  // 통일) — 사진박스·라벨박스가 전부 구 위치에서 +1행씩 밀림.
 
   const photoTasks=[]; // {url, c1,r1,c2,r2}(0-based, addImage 앵커용)
   for(let band=0; band<3; band++){
-    const imgStart=3+band*15, imgEnd=imgStart+12;
+    const imgStart=4+band*15, imgEnd=imgStart+12;
     const lbl1=imgEnd+1, lbl2=imgEnd+2;
     // 원본 템플릿 실측 행높이(사진행 13.1×13, 라벨행 25.1×2) 그대로 재현 — 명시적으로 지정하지
     // 않으면 기본 행높이(~15pt)라 표 전체가 페이지 상단에 몰리는 문제가 생긴다(발전기점검 보고서에서
@@ -4228,9 +4243,10 @@ function buildPowerReportSheet(wb, data, tunnel, chartBuf){
   ws.mergeCells('A1:D1');
   const titleCell=ws.getCell('A1');
   titleCell.value='6. 전력데이터 분석'; titleCell.font={name:'HY헤드라인M', size:20}; titleCell.alignment=LEFT;
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  ws.getRow(1).height=50.05;
 
-  ws.getRow(2).height=30; // 원본 템플릿에서 2행은 그냥 빈 공간행
+  // 2026-07-22 사용자가 원본 참고파일 1~3행 높이를 재조정(1행 50.05, 2행 10)해 그대로 반영.
+  ws.getRow(2).height=10; // 원본 템플릿에서 2행은 그냥 빈 공간행
 
   ws.mergeCells('A3:D3');
   const subCell=ws.getCell('A3');
@@ -4361,10 +4377,12 @@ function buildTaskReportSheet(wb, rows, tunnel){
 
   ws.mergeCells('A1:E1');
   const titleCell=ws.getCell('A1');
-  titleCell.value='7. 월간 업무처리사항'; titleCell.font=EXCEL_TITLE_FONT;
+  titleCell.value='7. 월간 업무처리사항'; titleCell.font={name:'HY헤드라인M', size:20};
   titleCell.alignment={vertical:'middle'};
-  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
-  ws.getRow(2).height=20;
+  ws.getRow(1).height=50.05;
+  // 2026-07-22 사용자가 원본 참고파일 1~3행을 편집(다른 보고서와 동일하게 1행 20pt/50.05,
+  // 2행 여백 10, 3행 헤더 16pt bold/30로 통일) — 그대로 반영.
+  ws.getRow(2).height=10;
 
   // 표 영역(헤더 3행 + 데이터 totalRows행) 절대 경계 기준 바깥=thin·안쪽=hair 자동 계산
   // (buildMonthlyReportSheet()의 reportGridBorder()와 동일 원리 — 병합 셀이 없는 단순 표라
@@ -4378,10 +4396,10 @@ function buildTaskReportSheet(wb, rows, tunnel){
   }
   const headerLabels=['날짜','업무내용','조치사항','업체명','비고'];
   const headerRow=ws.getRow(3);
-  headerRow.height=40;
+  headerRow.height=30;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=EXCEL_BODY_FONT;
+    cell.value=h; cell.font=Object.assign({}, EXCEL_BODY_FONT, {size:16, bold:true});
     cell.alignment={vertical:'middle', horizontal:'center'};
     cell.border=taskGridBorder(3,3,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
   });
