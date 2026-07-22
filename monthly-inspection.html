@@ -3762,8 +3762,8 @@ function exportTransformerInspectionReport(){
 // attachGeneratorChildren()이 이미 붙여둔 r._fuel(단일 객체)·r._chk(20개 배열)를 그대로 쓴다(2026-07-22,
 // 원본 템플릿을 ExcelJS로 셀 덤프해 서식·병합·테두리 실측 후 재현 — 발전기운전/유류사용량 표는 원본이
 // 값 1건을 2행 병합으로 세로로 길게 그렸지만 실제로는 레코드 1건뿐이라 헤더 1행+데이터 1행으로 압축).
-function buildGeneratorReportSheet(wb, r, tunnel){
-  const ws=wb.addWorksheet('발전기점검표',{
+function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
+  const ws=wb.addWorksheet(sheetName||'발전기점검표',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait},
@@ -3911,13 +3911,27 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   mc('A29:R29', notes[5]||'', F(13), LEFT_INDENT, undefined, BOX_BOTTOM);
   return ws;
 }
-function buildOneGeneratorReport(tunnel, year, month){
+// 발전기는 보통 월 1회 운전/점검하지만, 그 이상 운전한 달은 날짜별로 레코드가 여러 건
+// 쌓인다(2026-07-22 사용자 확인) — 예전엔 .find()로 첫 건만 뽑아 나머지가 조용히 누락됐다.
+// 해당 터널·연월의 레코드를 전부(가동일자 오름차순) 반환해 호출부에서 날짜별로 시트를 나눈다.
+function generatorRecordsForMonth(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
-  const r=(TAB_STATE.generator.records||[]).find(x=>x['터널명']===tunnel && (x['가동일자']||'').startsWith(ymStr));
-  if(!r) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return (TAB_STATE.generator.records||[])
+    .filter(x=>x['터널명']===tunnel && (x['가동일자']||'').startsWith(ymStr))
+    .sort((a,b)=>(a['가동일자']||'').localeCompare(b['가동일자']||''));
+}
+// 레코드가 2건 이상이면 시트명에 "_MM월DD일"을 붙여 구분, 1건뿐이면 기존처럼 기본 시트명 유지.
+function generatorSheetName(r, multiple){
+  if(!multiple) return undefined;
+  const m=/^\d{4}-(\d{2})-(\d{2})/.exec(r['가동일자']||'');
+  return m ? `발전기점검표_${m[1]}월${m[2]}일` : undefined;
+}
+function buildOneGeneratorReport(tunnel, year, month){
+  const recs=generatorRecordsForMonth(tunnel, year, month);
+  if(!recs.length) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
   return loadExcelLib().then(()=>{
     const wb=new ExcelJS.Workbook();
-    buildGeneratorReportSheet(wb, r, tunnel);
+    recs.forEach(r=>buildGeneratorReportSheet(wb, r, tunnel, generatorSheetName(r, recs.length>1)));
     return wb.xlsx.writeBuffer();
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
@@ -4633,13 +4647,14 @@ async function buildOneUnifiedReport(tunnel, year, month){
     hasData=true;
   });
 
-  // 4. 발전기점검표
+  // 4. 발전기점검표 — 월 2회 이상 운전한 달은 날짜별로 시트를 나눈다(generatorSheetName 참고)
   splitTunnels.forEach((dt, i)=>{
-    const r=(TAB_STATE.generator.records||[]).find(x=>x['터널명']===dt && (x['가동일자']||'').startsWith(ymStr));
-    if(!r) return;
-    const ws=buildGeneratorReportSheet(wb, r, dt);
-    if(suffixes[i]) ws.name=ws.name+suffixes[i];
-    hasData=true;
+    const recs=generatorRecordsForMonth(dt, year, month);
+    recs.forEach(r=>{
+      const ws=buildGeneratorReportSheet(wb, r, dt, generatorSheetName(r, recs.length>1));
+      if(suffixes[i]) ws.name=ws.name+suffixes[i];
+      hasData=true;
+    });
   });
 
   // 5. 점검사진대지
