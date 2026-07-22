@@ -1548,7 +1548,7 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
-      ${extraColCandidates(tabDef).length?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+      ${(tabId!=='generator' && extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
         <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
         <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
       </div>`:''}
@@ -2669,11 +2669,14 @@ async function deleteGeneratorRecord(pageId){
 }
 
 // ── 엑셀 생성 (work-portal 공통 라이브러리 패턴 재사용) ──
-var EXCEL_LIB_LOADING=null;
+var EXCEL_LIB_LOADING=null; // ExcelJS 로딩 프로미스(zip 필요 여부와 무관하게 1회만)
+var JSZIP_LIB_LOADING=null; // JSZip 로딩 프로미스 — ExcelJS와 별도 캐시 필수
+// 이전엔 needsZip 값과 무관하게 EXCEL_LIB_LOADING 하나로 캐시해서, needsZip:false로 먼저 호출된
+// 뒤(예: 발전기점검 보고서) needsZip:true로 호출하면(예: 점검사진 보고서) 캐시된 프로미스를 그대로
+// 반환해버려 JSZip을 영영 안 불러오는 버그가 있었다("JSZip is not defined", 2026-07-22 실사용
+// 중 발견). ExcelJS/JSZip을 각자 독립 캐시로 분리해 needsZip 조합이 달라져도 항상 필요한 만큼만
+// 로드되게 고쳤다.
 function loadExcelLib(needsZip){
-  const ready = (!needsZip || window.JSZip) && window.ExcelJS;
-  if(ready) return Promise.resolve();
-  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
   function loadScript(src, integrity){
     return new Promise((resolve, reject)=>{
       const s=document.createElement('script');
@@ -2683,15 +2686,22 @@ function loadExcelLib(needsZip){
       document.head.appendChild(s);
     });
   }
-  EXCEL_LIB_LOADING=Promise.all([
-    window.ExcelJS ? Promise.resolve() : loadScript(
+  if(!window.ExcelJS && !EXCEL_LIB_LOADING){
+    EXCEL_LIB_LOADING=loadScript(
       'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
-      'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'),
-    (needsZip && !window.JSZip) ? loadScript(
+      'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+    ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  }
+  if(needsZip && !window.JSZip && !JSZIP_LIB_LOADING){
+    JSZIP_LIB_LOADING=loadScript(
       'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
-      'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG') : Promise.resolve()
-  ]).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
-  return EXCEL_LIB_LOADING;
+      'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG'
+    ).catch(e=>{ JSZIP_LIB_LOADING=null; throw e; });
+  }
+  return Promise.all([
+    window.ExcelJS ? Promise.resolve() : EXCEL_LIB_LOADING,
+    (needsZip && !window.JSZip) ? JSZIP_LIB_LOADING : Promise.resolve()
+  ]);
 }
 const EXCEL_COMPANY_NAME='수자원기술(주)';
 const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
@@ -3707,10 +3717,11 @@ function buildGeneratorReportSheet(wb, r, tunnel){
 
   // 표 영역 경계 3개(발전기운전/유류사용량/점검사항) — buildElecReportSheet()의 gridBorder(range)
   // 패턴 그대로: 각 mc() 호출 범위를 이 영역들과 비교해 절대 바깥 경계만 thin, 안쪽은 hair로 자동 계산.
+  // 2행이 원본처럼 빈 여백행이라 이하 전부 원래보다 1행씩 밀려있다(2026-07-22 사용자 요청).
   const BORDER_REGIONS=[
-    {r1:5, r2:7, c1:1, c2:18},   // 발전기운전(제목+헤더+데이터)
-    {r1:8, r2:10, c1:1, c2:18},  // 유류사용량(제목+헤더+데이터)
-    {r1:11, r2:22, c1:1, c2:18}  // 점검사항(제목+열헤더+10행)
+    {r1:6, r2:8, c1:1, c2:18},   // 발전기운전(제목+헤더+데이터)
+    {r1:9, r2:11, c1:1, c2:18},  // 유류사용량(제목+헤더+데이터)
+    {r1:12, r2:23, c1:1, c2:18}  // 점검사항(제목+열헤더+10행)
   ];
   function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
   function rangeBounds(range){
@@ -3744,68 +3755,69 @@ function buildGeneratorReportSheet(wb, r, tunnel){
 
   mc('A1:R1', '3. 비상발전기 점검 및 가동일지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
-  mc('A2:R2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
+  // 2행은 원본 참고파일처럼 내용 없는 여백행(2026-07-22 사용자 요청) — 이하 전부 원래보다 1행씩 밀림.
   ws.getRow(2).height=30;
+  mc('A3:R3', '□ '+tunnel, F(16,true), LEFT, undefined, false);
+  ws.getRow(3).height=30;
 
-  ws.getRow(3).height=22; ws.getRow(4).height=22;
-  mc('A3:B3', '가동일자:', F(13), LEFT);
-  mc('C3:H3', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
-  mc('A4:B4', '점검자:', F(13), LEFT);
-  mc('C4:D4', (r['점검자']||'').split('').join(' '), F(13), LEFT, undefined, false);
+  // 3~28행이던 본문 전체(현재는 4~29행)를 높이 30·글자크기 13으로 통일 — 표가 인쇄 페이지
+  // 위아래로 꽉 차 보이도록(2026-07-22 사용자 요청, 발전기점검 보고서가 28행뿐이라 elec/변압기
+  // 온도(47행)보다 기본 높이로는 페이지 상단에만 작게 몰려 보였던 문제의 후속 보정).
+  ws.getRow(4).height=30; ws.getRow(5).height=30;
+  mc('A4:B4', '가동일자:', F(13), LEFT);
+  mc('C4:H4', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
+  mc('A5:B5', '점검자:', F(13), LEFT);
+  mc('C5:D5', (r['점검자']||'').split('').join(' '), F(13), LEFT, undefined, false);
 
-  // 행 높이를 명시적으로 지정하지 않으면 기본 높이(약 15pt)로 나와 표 전체가 인쇄 페이지 상단에만
-  // 작게 몰리고 아래쪽이 빈 채로 남는다(2026-07-22 사용자 피드백 — 항목 수가 적은 표라 elec/변압기
-  // 온도 보고서처럼 47행이 아니라 28행뿐이라 두드러짐). fitToHeight:1이 이 늘어난 높이를 페이지
-  // 안에 맞게 다시 비율 축소해주므로, 표가 페이지 위아래로 꽉 차 보이게 된다.
-  ws.getRow(5).height=26;
-  mc('A5:R5', '발 전 기 운 전', F(13,true), CENTER);
-  ws.getRow(6).height=32;
-  mc('A6:C6', '가동시간', F(11), CENTER_WRAP);
-  mc('D6:E6', '전압(V)', F(11), CENTER_WRAP);
-  mc('F6:G6', '전류(A)', F(11), CENTER_WRAP);
-  mc('H6:I6', '전력(kW)', F(11), CENTER_WRAP);
-  mc('J6:K6', '주파수(Hz)', F(11), CENTER_WRAP);
-  mc('L6:M6', '역률(%)', F(11), CENTER_WRAP);
-  mc('N6:O6', '가동시간\n(min)', F(11), CENTER_WRAP);
-  mc('P6:R6', '비 고', F(11), CENTER_WRAP);
-  ws.getRow(7).height=28;
-  mc('A7:C7', r['가동시간']||'', F(13), CENTER);
-  mc('D7:E7', r['전압(V)']!=null?r['전압(V)']:null, F(13), CENTER);
-  mc('F7:G7', r['전류(A)']!=null?r['전류(A)']:null, F(13), CENTER);
-  mc('H7:I7', r['전력(kW)']!=null?r['전력(kW)']:null, F(13), CENTER);
-  mc('J7:K7', r['주파수(Hz)']!=null?r['주파수(Hz)']:null, F(13), CENTER);
-  mc('L7:M7', r['역률(%)']!=null?r['역률(%)']:null, F(13), CENTER);
-  mc('N7:O7', r['가동시간(min)']!=null?r['가동시간(min)']:null, F(13), CENTER);
-  mc('P7:R7', r['비고']||'', F(13), CENTER_SHRINK);
+  ws.getRow(6).height=30;
+  mc('A6:R6', '발 전 기 운 전', F(13,true), CENTER);
+  ws.getRow(7).height=30;
+  mc('A7:C7', '가동시간', F(13), CENTER_WRAP);
+  mc('D7:E7', '전압(V)', F(13), CENTER_WRAP);
+  mc('F7:G7', '전류(A)', F(13), CENTER_WRAP);
+  mc('H7:I7', '전력(kW)', F(13), CENTER_WRAP);
+  mc('J7:K7', '주파수(Hz)', F(13), CENTER_WRAP);
+  mc('L7:M7', '역률(%)', F(13), CENTER_WRAP);
+  mc('N7:O7', '가동시간\n(min)', F(13), CENTER_WRAP);
+  mc('P7:R7', '비 고', F(13), CENTER_WRAP);
+  ws.getRow(8).height=30;
+  mc('A8:C8', r['가동시간']||'', F(13), CENTER);
+  mc('D8:E8', r['전압(V)']!=null?r['전압(V)']:null, F(13), CENTER);
+  mc('F8:G8', r['전류(A)']!=null?r['전류(A)']:null, F(13), CENTER);
+  mc('H8:I8', r['전력(kW)']!=null?r['전력(kW)']:null, F(13), CENTER);
+  mc('J8:K8', r['주파수(Hz)']!=null?r['주파수(Hz)']:null, F(13), CENTER);
+  mc('L8:M8', r['역률(%)']!=null?r['역률(%)']:null, F(13), CENTER);
+  mc('N8:O8', r['가동시간(min)']!=null?r['가동시간(min)']:null, F(13), CENTER);
+  mc('P8:R8', r['비고']||'', F(13), CENTER_SHRINK);
 
-  ws.getRow(8).height=26;
-  mc('A8:R8', '유 류 사 용 량', F(13,true), CENTER);
-  ws.getRow(9).height=26;
-  mc('A9:C9', '용량(L)', F(11), CENTER_WRAP);
-  mc('D9:E9', '종류', F(11), CENTER_WRAP);
-  mc('F9:I9', '전일재고량(L)', F(11), CENTER_WRAP);
-  mc('J9:L9', '입고량(L)', F(11), CENTER_WRAP);
-  mc('M9:O9', '사용량(L)', F(11), CENTER_WRAP);
-  mc('P9:R9', '금일재고량(L)', F(11), CENTER_WRAP);
-  ws.getRow(10).height=28;
+  ws.getRow(9).height=30;
+  mc('A9:R9', '유 류 사 용 량', F(13,true), CENTER);
+  ws.getRow(10).height=30;
+  mc('A10:C10', '용량(L)', F(13), CENTER_WRAP);
+  mc('D10:E10', '종류', F(13), CENTER_WRAP);
+  mc('F10:I10', '전일재고량(L)', F(13), CENTER_WRAP);
+  mc('J10:L10', '입고량(L)', F(13), CENTER_WRAP);
+  mc('M10:O10', '사용량(L)', F(13), CENTER_WRAP);
+  mc('P10:R10', '금일재고량(L)', F(13), CENTER_WRAP);
+  ws.getRow(11).height=30;
   const fuel=r._fuel||{};
-  mc('A10:C10', fuel.용량!=null?fuel.용량:null, F(13), CENTER, '#,##0');
-  mc('D10:E10', fuel.종류||'', F(13), CENTER);
-  mc('F10:I10', fuel.전일재고량!=null?fuel.전일재고량:null, F(13), CENTER, '#,##0');
-  mc('J10:L10', fuel.입고량!=null?fuel.입고량:null, F(13), CENTER, '#,##0');
-  mc('M10:O10', fuel.사용량!=null?fuel.사용량:null, F(13), CENTER, '#,##0');
-  mc('P10:R10', fuel.금일재고량!=null?fuel.금일재고량:null, F(13), CENTER, '#,##0');
+  mc('A11:C11', fuel.용량!=null?fuel.용량:null, F(13), CENTER, '#,##0');
+  mc('D11:E11', fuel.종류||'', F(13), CENTER);
+  mc('F11:I11', fuel.전일재고량!=null?fuel.전일재고량:null, F(13), CENTER, '#,##0');
+  mc('J11:L11', fuel.입고량!=null?fuel.입고량:null, F(13), CENTER, '#,##0');
+  mc('M11:O11', fuel.사용량!=null?fuel.사용량:null, F(13), CENTER, '#,##0');
+  mc('P11:R11', fuel.금일재고량!=null?fuel.금일재고량:null, F(13), CENTER, '#,##0');
 
-  ws.getRow(11).height=26;
-  mc('A11:R11', '점 검 사 항', F(13,true), CENTER);
-  ws.getRow(12).height=26;
-  mc('A12:G12', '일 반 점 검 사 항', F(11), CENTER_WRAP);
-  mc('H12:J12', '결 과', F(11), CENTER_WRAP);
-  mc('K12:P12', '운 전 중 점 검 사 항', F(11), CENTER_WRAP);
-  mc('Q12:R12', '결 과', F(11), CENTER_WRAP);
+  ws.getRow(12).height=30;
+  mc('A12:R12', '점 검 사 항', F(13,true), CENTER);
+  ws.getRow(13).height=30;
+  mc('A13:G13', '일 반 점 검 사 항', F(13), CENTER_WRAP);
+  mc('H13:J13', '결 과', F(13), CENTER_WRAP);
+  mc('K13:P13', '운 전 중 점 검 사 항', F(13), CENTER_WRAP);
+  mc('Q13:R13', '결 과', F(13), CENTER_WRAP);
   GENERATOR_REPORT_ROWS.forEach((item, i)=>{
-    const rn=13+i;
-    ws.getRow(rn).height=28;
+    const rn=14+i;
+    ws.getRow(rn).height=30;
     const gen1=generatorChkLookup(r, {점검구분:'일반점검사항', 점검내용:item.일반});
     const gen2=generatorChkLookup(r, {점검구분:'운전중점검사항', 점검내용:item.운전중});
     mc(`A${rn}:G${rn}`, item.일반, F(13), LEFT_WRAP);
@@ -3821,10 +3833,10 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
   const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
-  for(let i=0;i<6;i++) ws.getRow(23+i).height=28;
-  mc('A23:R23', notes[0]||'', F(11), LEFT, undefined, BOX_TOP);
-  for(let i=1;i<5;i++) mc(`A${23+i}:R${23+i}`, notes[i]||'', F(11), LEFT, undefined, BOX_LR);
-  mc('A28:R28', notes[5]||'', F(11), LEFT, undefined, BOX_BOTTOM);
+  for(let i=0;i<6;i++) ws.getRow(24+i).height=30;
+  mc('A24:R24', notes[0]||'', F(13), LEFT, undefined, BOX_TOP);
+  for(let i=1;i<5;i++) mc(`A${24+i}:R${24+i}`, notes[i]||'', F(13), LEFT, undefined, BOX_LR);
+  mc('A29:R29', notes[5]||'', F(13), LEFT, undefined, BOX_BOTTOM);
 }
 function buildOneGeneratorReport(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
