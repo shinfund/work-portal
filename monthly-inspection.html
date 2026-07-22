@@ -3543,9 +3543,9 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   ws.getRow(2).height=30;
 
   mc('A3:B3', '측정일자:', F(13), LABEL_ALIGN);
-  mc('C3:E3', excelParseDate(data.측정일자), F(13), VALUE_ALIGN, 'yyyy-mm-dd');
+  mc('C3:E3', excelParseDate(data.측정일자), F(13), VALUE_ALIGN, 'yyyy"년" m"월" d"일" aaa"요일"');
   mc('A4:B4', '점검자:', F(13), LABEL_ALIGN);
-  mc('C4:D4', data.점검자, F(13), VALUE_ALIGN);
+  mc('C4:D4', (data.점검자||'').split('').join(' '), F(13), VALUE_ALIGN);
 
   mc('A5:E5', '저압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
   mc('F5:J5', '고압측', F(11,true), CENTER_WRAP, undefined, SECTION_FILL);
