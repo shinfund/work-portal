@@ -350,7 +350,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">월간점검결과-안전관리(작업중)</div>
+    <div class="logo-title">월간점검결과-안전관리</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -2282,7 +2282,11 @@ function openAddModal(tabId, recordId){
   if(tabId==='generator') html+=buildGeneratorFormExtra(r);
   if(tabId==='transformer') html+=buildTransformerRefHtml();
   document.getElementById('addModalFields').innerHTML=html;
-  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator' || tabId==='transformer');
+  // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
+  // 이미 넓게 확장돼 있었음. monthly(캐스케이드셀렉트 3개+장문 점검내용)와 task(장문 업무내용·
+  // 조치사항)도 필드 수·입력폭이 비슷해 좁은 440px에서는 답답해 보인다는 피드백으로 함께 확장
+  // (2026-07-22). photo/power는 필드 6개뿐이고 값도 짧아 440px 그대로 유지.
+  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator' || tabId==='transformer' || tabId==='monthly' || tabId==='task');
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
