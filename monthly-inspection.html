@@ -2975,12 +2975,12 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const colWidths=[10,14,46,10,13,10];
   ws.columns=colWidths.map(w=>({width:w}));
 
-  // 큰 제목("1. 월간점검결과표")은 원본 템플릿처럼 첫 시트에만 넣고, 2·3번째 시트는 이어지는
+  // 큰 제목("1. 월간 점검결과표")은 원본 템플릿처럼 첫 시트에만 넣고, 2·3번째 시트는 이어지는
   // 표라 생략한다(2026-07-21 사용자 요청) — 행 구조(부제=2행, 헤더=3행)는 시트마다 동일하게 유지.
   if(showTitle){
     ws.mergeCells('A1:F1');
     const titleCell=ws.getCell('A1');
-    titleCell.value='1. 월간점검결과표'; titleCell.font=EXCEL_TITLE_FONT;
+    titleCell.value='1. 월간 점검결과표'; titleCell.font=EXCEL_TITLE_FONT;
     titleCell.alignment={vertical:'middle', horizontal:'left'};
     ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   }
@@ -3291,7 +3291,7 @@ function buildElecReportSheet(wb, r, tunnel){
     return cell;
   }
 
-  mc('A2:J2', '□ 전기설비 점검결과 기록표', F14(14,true), LEFT, undefined, false);
+  mc('A2:J2', '□ 전기설비 점검결과기록표', F14(14,true), LEFT, undefined, false);
   mc('A4:J4', `설비명(상호) : ${tunnel}`, F14(12,true), LEFT, undefined, false);
   mc('A6:F6', ' 1. 기본사항', F14(10), LEFT, undefined, false);
 
@@ -3560,7 +3560,7 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
     return cell;
   }
 
-  mc('A1:J1', '2. 변압기 온도 측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
+  mc('A1:J1', '2. 변압기 온도측정표', {name:'HY헤드라인M', size:20}, VALUE_ALIGN);
   ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   mc('A2:J2', '□ '+tunnel, F(16,true), VALUE_ALIGN);
   ws.getRow(2).height=30;
@@ -3743,12 +3743,19 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   mc('A2:R2', '□ '+tunnel, F(16,true), LEFT, undefined, false);
   ws.getRow(2).height=30;
 
+  ws.getRow(3).height=22; ws.getRow(4).height=22;
   mc('A3:B3', '가동일자:', F(13), LEFT);
-  mc('C3:E3', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
+  mc('C3:H3', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
   mc('A4:B4', '점검자:', F(13), LEFT);
   mc('C4:D4', (r['점검자']||'').split('').join(' '), F(13), LEFT, undefined, false);
 
+  // 행 높이를 명시적으로 지정하지 않으면 기본 높이(약 15pt)로 나와 표 전체가 인쇄 페이지 상단에만
+  // 작게 몰리고 아래쪽이 빈 채로 남는다(2026-07-22 사용자 피드백 — 항목 수가 적은 표라 elec/변압기
+  // 온도 보고서처럼 47행이 아니라 28행뿐이라 두드러짐). fitToHeight:1이 이 늘어난 높이를 페이지
+  // 안에 맞게 다시 비율 축소해주므로, 표가 페이지 위아래로 꽉 차 보이게 된다.
+  ws.getRow(5).height=26;
   mc('A5:R5', '발 전 기 운 전', F(13,true), CENTER);
+  ws.getRow(6).height=32;
   mc('A6:C6', '가동시간', F(11), CENTER_WRAP);
   mc('D6:E6', '전압(V)', F(11), CENTER_WRAP);
   mc('F6:G6', '전류(A)', F(11), CENTER_WRAP);
@@ -3757,6 +3764,7 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   mc('L6:M6', '역률(%)', F(11), CENTER_WRAP);
   mc('N6:O6', '가동시간\n(min)', F(11), CENTER_WRAP);
   mc('P6:R6', '비 고', F(11), CENTER_WRAP);
+  ws.getRow(7).height=28;
   mc('A7:C7', r['가동시간']||'', F(13), CENTER);
   mc('D7:E7', r['전압(V)']!=null?r['전압(V)']:null, F(13), CENTER);
   mc('F7:G7', r['전류(A)']!=null?r['전류(A)']:null, F(13), CENTER);
@@ -3766,13 +3774,16 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   mc('N7:O7', r['가동시간(min)']!=null?r['가동시간(min)']:null, F(13), CENTER);
   mc('P7:R7', r['비고']||'', F(13), CENTER_SHRINK);
 
+  ws.getRow(8).height=26;
   mc('A8:R8', '유 류 사 용 량', F(13,true), CENTER);
+  ws.getRow(9).height=26;
   mc('A9:C9', '용량(L)', F(11), CENTER_WRAP);
   mc('D9:E9', '종류', F(11), CENTER_WRAP);
   mc('F9:I9', '전일재고량(L)', F(11), CENTER_WRAP);
   mc('J9:L9', '입고량(L)', F(11), CENTER_WRAP);
   mc('M9:O9', '사용량(L)', F(11), CENTER_WRAP);
   mc('P9:R9', '금일재고량(L)', F(11), CENTER_WRAP);
+  ws.getRow(10).height=28;
   const fuel=r._fuel||{};
   mc('A10:C10', fuel.용량!=null?fuel.용량:null, F(13), CENTER, '#,##0');
   mc('D10:E10', fuel.종류||'', F(13), CENTER);
@@ -3781,13 +3792,16 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   mc('M10:O10', fuel.사용량!=null?fuel.사용량:null, F(13), CENTER, '#,##0');
   mc('P10:R10', fuel.금일재고량!=null?fuel.금일재고량:null, F(13), CENTER, '#,##0');
 
+  ws.getRow(11).height=26;
   mc('A11:R11', '점 검 사 항', F(13,true), CENTER);
+  ws.getRow(12).height=26;
   mc('A12:G12', '일 반 점 검 사 항', F(11), CENTER_WRAP);
   mc('H12:J12', '결 과', F(11), CENTER_WRAP);
   mc('K12:P12', '운 전 중 점 검 사 항', F(11), CENTER_WRAP);
   mc('Q12:R12', '결 과', F(11), CENTER_WRAP);
   GENERATOR_REPORT_ROWS.forEach((item, i)=>{
     const rn=13+i;
+    ws.getRow(rn).height=28;
     const gen1=generatorChkLookup(r, {점검구분:'일반점검사항', 점검내용:item.일반});
     const gen2=generatorChkLookup(r, {점검구분:'운전중점검사항', 점검내용:item.운전중});
     mc(`A${rn}:G${rn}`, item.일반, F(13), LEFT_WRAP);
@@ -3803,6 +3817,7 @@ function buildGeneratorReportSheet(wb, r, tunnel){
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
   const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
+  for(let i=0;i<6;i++) ws.getRow(23+i).height=28;
   mc('A23:R23', notes[0]||'', F(11), LEFT, undefined, BOX_TOP);
   for(let i=1;i<5;i++) mc(`A${23+i}:R${23+i}`, notes[i]||'', F(11), LEFT, undefined, BOX_LR);
   mc('A28:R28', notes[5]||'', F(11), LEFT, undefined, BOX_BOTTOM);
