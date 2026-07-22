@@ -579,6 +579,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_task">엑셀 생성</span>
       </button>
+      <button class="tb-action-btn tb-report" id="reportBtn_task" onclick="exportTaskInspectionReport()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span id="reportLbl_task">보고서 생성</span>
+      </button>
     </div>
     <div class="detail-count" id="count-task"></div>
     <div class="tbl-wrap">
@@ -4290,6 +4294,145 @@ function exportPowerInspectionReport(){
     const tunnel=tunnels[idx++];
     lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
     buildOnePowerReport(tunnel, year, month)
+      .then(()=>setTimeout(next,400))
+      .catch(e=>{
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
+        console.error(e);
+        setTimeout(next,400);
+      });
+  }
+  next();
+}
+
+// ── 업무처리 "보고서 생성" (원본 엑셀 템플릿의 "업무처리사항" 시트를 재현) ──
+// 노션 업무처리DB는 터널명(청하터널/흥해터널/남정5터널, 주·부 구분 없음)·날짜·업무내용·조치사항·
+// 업체명·비고로 구성된 단순 목록형 — elec/generator처럼 부모-자식 구조나 병합 스팬 계산이 필요
+// 없는 가장 단순한 "동적 표" 패턴(2026-07-22, 월간점검 탭과 동일 뼈대). 원본 템플릿은 표를
+// 항상 23행(A4:E26, 인쇄 1페이지)까지 테두리로 채워둬서 그 달 기록이 적어도 표 박스가 페이지
+// 아래까지 비어 보이지 않게 해뒀다 — 실제 기록이 23건을 넘으면 그만큼 자연히 더 늘어난다.
+const TASK_REPORT_MIN_ROWS=23;
+function buildTaskReportRows(tunnel, year, month){
+  const ymStr=`${year}-${String(month).padStart(2,'0')}`;
+  return (TAB_STATE.task.records||[])
+    .filter(r=>r['터널명']===tunnel && (r['날짜']||'').startsWith(ymStr))
+    .slice()
+    .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''))
+    .map(r=>({날짜:r['날짜'], 업무내용:r['업무내용']||'', 조치사항:r['조치사항']||'', 업체명:r['업체명']||'', 비고:r['비고']||''}));
+}
+// 조치사항(C열, 폭 52) 텍스트 길이 기준으로 줄 수를 근사 추정해 행 높이를 늘린다 — 원본 템플릿도
+// 긴 텍스트 행만 40.1→64.95로 커져 있었다(정확한 렌더링 줄바꿈 계산은 불가능하므로 근사치,
+// xlsx-report-export 스킬 "보고서 행높이 자동계산" 참고).
+function taskReportRowHeight(text){
+  const w=excelStrWidth(text);
+  const lines=w ? Math.max(1, Math.ceil(w/50)) : 1;
+  return Math.max(40, lines*18+16);
+}
+function buildTaskReportSheet(wb, rows, tunnel){
+  const totalRows=Math.max(rows.length, TASK_REPORT_MIN_ROWS);
+  const ws=wb.addWorksheet('업무처리사항',{
+    views:[{state:'frozen', ySplit:3, showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'3:3'},
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+  });
+  ws.columns=[15,34,52,18,15].map(w=>({width:w}));
+
+  ws.mergeCells('A1:E1');
+  const titleCell=ws.getCell('A1');
+  titleCell.value='6. 월간 업무처리사항'; titleCell.font=EXCEL_TITLE_FONT;
+  titleCell.alignment={vertical:'middle'};
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
+  ws.getRow(2).height=20;
+
+  // 표 영역(헤더 3행 + 데이터 totalRows행) 절대 경계 기준 바깥=thin·안쪽=hair 자동 계산
+  // (buildMonthlyReportSheet()의 reportGridBorder()와 동일 원리 — 병합 셀이 없는 단순 표라
+  // 물리 행 좌표만으로 판정 가능).
+  const REGION={r1:3, r2:3+totalRows, c1:1, c2:5};
+  function taskGridBorder(r1,r2,c1,c2){
+    return {
+      top:{style: r1===REGION.r1 ? 'thin':'hair'}, bottom:{style: r2===REGION.r2 ? 'thin':'hair'},
+      left:{style: c1===REGION.c1 ? 'thin':'hair'}, right:{style: c2===REGION.c2 ? 'thin':'hair'}
+    };
+  }
+  const headerLabels=['날짜','업무내용','조치사항','업체명','비고'];
+  const headerRow=ws.getRow(3);
+  headerRow.height=40;
+  headerLabels.forEach((h,i)=>{
+    const cell=headerRow.getCell(i+1);
+    cell.value=h; cell.font=EXCEL_BODY_FONT;
+    cell.alignment={vertical:'middle', horizontal:'center'};
+    cell.border=taskGridBorder(3,3,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
+  });
+
+  for(let i=0;i<totalRows;i++){
+    const r=rows[i]||null;
+    const rn=4+i;
+    const row=ws.getRow(rn);
+    row.height = r ? taskReportRowHeight(r.조치사항) : 40;
+    for(let ci=0; ci<5; ci++){
+      const cell=row.getCell(ci+1);
+      cell.font=EXCEL_BODY_FONT;
+      cell.border=taskGridBorder(rn,rn,ci+1,ci+1);
+      cell.alignment = ci===0 ? {vertical:'middle', horizontal:'center'}
+        : ci===2 ? {vertical:'middle', horizontal:'left', wrapText:true}
+        : ci===1 ? {vertical:'middle', horizontal:'left'}
+        : {vertical:'middle', horizontal:'center'};
+    }
+    if(r){
+      const dateCell=row.getCell(1);
+      const d=excelParseDate(r.날짜);
+      if(d){ dateCell.value=d; dateCell.numFmt='mm-dd-yy'; } else { dateCell.value=r.날짜; }
+      row.getCell(2).value=r.업무내용;
+      row.getCell(3).value=r.조치사항;
+      row.getCell(4).value=r.업체명;
+      row.getCell(5).value=r.비고;
+    }
+    row.commit();
+  }
+}
+function buildOneTaskReport(tunnel, year, month){
+  const rows=buildTaskReportRows(tunnel, year, month);
+  if(!rows.length) return Promise.reject(new Error('해당 터널·연월에 데이터가 없습니다.'));
+  return loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    buildTaskReportSheet(wb, rows, tunnel);
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 업무처리사항_${tunnel}.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+  });
+}
+function exportTaskInspectionReport(){
+  const btn=document.getElementById('reportBtn_task');
+  const lbl=document.getElementById('reportLbl_task');
+  const f=_tabFilters['task'];
+  let year,month;
+  if(f.year!=='ALL' && f.month!=='ALL'){
+    year=parseInt(f.year,10); month=parseInt(f.month,10);
+  } else {
+    const dates=(TAB_STATE.task.records||[]).map(r=>r['날짜']).filter(Boolean).sort();
+    if(!dates.length){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+    const latest=dates[dates.length-1];
+    year=parseInt(latest.slice(0,4),10); month=parseInt(latest.slice(5,7),10);
+  }
+  const tunnelField=tabTunnelField(getTabDef('task'));
+  const allTunnels=(tunnelField&&tunnelField.options)||[];
+  const tunnels=f.tunnel ? [f.tunnel] : allTunnels;
+  if(!tunnels.length){ alert('터널 정보를 확인할 수 없습니다.'); return; }
+  btn.disabled=true;
+  let idx=0;
+  function next(){
+    if(idx>=tunnels.length){
+      lbl.textContent='완료!';
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      return;
+    }
+    const tunnel=tunnels[idx++];
+    lbl.textContent = tunnels.length>1 ? `생성 중... (${idx}/${tunnels.length})` : '생성 중...';
+    buildOneTaskReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
         alert(`${tunnel} 보고서 생성 실패: `+e.message);
