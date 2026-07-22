@@ -1761,20 +1761,29 @@ function renderGeneratorFlatTable(){
   if(countEl) countEl.textContent=`총 ${flat.length}건`;
   tbody.innerHTML=flat.length ? rowsHtml : `<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'데이터가 없습니다.','🔍')}</td></tr>`;
 }
+// 연/월/터널 드롭다운 필터(_tabFilters[tabId])만 적용 — 검색창 텍스트는 화면 표시 전용이라
+// 제외(renderTabTable에서 별도로 얹음). "엑셀 생성"/개별 export 함수도 전부 이 헬퍼를 거쳐야
+// 화면에 선택해둔 연/월/터널과 다운로드 파일 내용이 어긋나지 않는다(2026-07-22 버그 수정 —
+// 이전엔 exportTabExcel/exportElecExcel/exportGeneratorExcel이 TAB_STATE[tabId].records를
+// 필터 없이 그대로 써서, 터널을 골라놓고 엑셀 생성을 눌러도 전체 터널 데이터가 나갔음).
+function filteredTabRecords(tabId){
+  const tabDef=getTabDef(tabId);
+  const flt=_tabFilters[tabId];
+  let recs=TAB_STATE[tabId].records;
+  if(flt.year!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').startsWith(flt.year));
+  if(flt.month!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').slice(5,7)===flt.month);
+  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  return recs;
+}
 function renderTabTable(tabId){
   if(tabId==='elec' && _elecView!=='base'){ renderElecFlatTable(); return; }
   if(tabId==='generator' && _generatorView!=='base'){ renderGeneratorFlatTable(); return; }
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields) return;
   buildTabFilterDd(tabId);
-  const st=TAB_STATE[tabId];
-  const flt=_tabFilters[tabId];
   const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
   const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
-  let recs=st.records;
-  if(flt.year!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').startsWith(flt.year));
-  if(flt.month!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').slice(5,7)===flt.month);
-  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  let recs=filteredTabRecords(tabId);
   if(q){
     recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
   }
@@ -2939,7 +2948,8 @@ function exportTabExcel(tabId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
   const fields=dataFields(tabDef);
-  const rows=TAB_STATE[tabId].records.map(r=>{
+  const tunnel=_tabFilters[tabId].tunnel;
+  const rows=filteredTabRecords(tabId).map(r=>{
     const row={};
     fields.forEach(f=>{
       if(f.type==='number') row[f.key]=Number(r[f.key])||0;
@@ -2956,7 +2966,8 @@ function exportTabExcel(tabId){
   }));
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
-    sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label, fnamePrefix:'월간점검결과_'+tabDef.label,
+    sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label,
+    fnamePrefix:'월간점검결과_'+tabDef.label+(tunnel?'_'+tunnel:''),
     columns, rows
   });
 }
@@ -3189,10 +3200,12 @@ function exportMonthlyInspectionReport(){
 function exportElecExcel(){
   const tabDef=getTabDef('elec');
   const baseFields=dataFields(tabDef);
+  const filteredRecs=filteredTabRecords('elec');
+  const tunnel=_tabFilters['elec'].tunnel;
   // 유효전력량(kWh)/무효전력량(kVar)/최대전력(kW)/배율/역률(%)/점검담당자/점검확인자/종합의견은
   // elec1(부모) 필드가 아니라 elec2/elec3 자식에 공통 반복 저장된 값이라(2026-07-21 실스키마 확인)
   // 기본정보 시트에는 대표값(_acb[0]/_chk[0])을 별도 컬럼으로 덧붙인다.
-  const baseRows=TAB_STATE['elec'].records.map(r=>{
+  const baseRows=filteredRecs.map(r=>{
     const row={};
     baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
     const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
@@ -3217,7 +3230,7 @@ function exportElecExcel(){
     {key:'종합의견', header:'종합의견'}
   ]);
 
-  const acbRows=elecAcbFlatRows(TAB_STATE['elec'].records).map(x=>({
+  const acbRows=elecAcbFlatRows(filteredRecs).map(x=>({
     터널명:x.터널명||'', 점검일자:x.점검일자||'', 용도:x.용도||'', 위상:x.위상||'',
     전압:Number(x.전압)||0, 전류:Number(x.전류)||0, 누설전류:Number(x.누설전류)||0
   }));
@@ -3228,7 +3241,7 @@ function exportElecExcel(){
     {key:'누설전류', header:'누설전류(mA)', numFmt:'#,##0.##'}
   ];
 
-  const chkRows=elecChkFlatRows(TAB_STATE['elec'].records).map(x=>({
+  const chkRows=elecChkFlatRows(filteredRecs).map(x=>({
     터널명:x.터널명||'', 점검일자:x.점검일자||'', 설비구분:x.설비구분||'', 설비항목:x.설비항목||'',
     판정:x.판정||'', 개수:Number(x.개수)||0, 증:Number(x.증)||0, 감:Number(x.감)||0, 부적합:Number(x.부적합)||0
   }));
@@ -3240,7 +3253,8 @@ function exportElecExcel(){
   ];
 
   buildExcelReport({
-    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성', fnamePrefix:'월간점검결과_전기설비기록',
+    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
+    fnamePrefix:'월간점검결과_전기설비기록'+(tunnel?'_'+tunnel:''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 전기설비기록(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'ACB상세', title:'월간점검결과 - 전기설비기록(ACB 상세)', columns:acbColumns, rows:acbRows},
@@ -4709,14 +4723,16 @@ function exportUnifiedReport(){
 function exportGeneratorExcel(){
   const tabDef=getTabDef('generator');
   const baseFields=dataFields(tabDef);
-  const baseRows=TAB_STATE['generator'].records.map(r=>{
+  const filteredRecs=filteredTabRecords('generator');
+  const tunnel=_tabFilters['generator'].tunnel;
+  const baseRows=filteredRecs.map(r=>{
     const row={};
     baseFields.forEach(f=>{ row[f.key] = f.type==='number' ? (Number(r[f.key])||0) : (r[f.key]||''); });
     return row;
   });
   const baseColumns=baseFields.map(f=>({key:f.key, header:f.key, numFmt: f.type==='number'?'#,##0.##':undefined}));
 
-  const fuelRows=generatorFuelFlatRows(TAB_STATE['generator'].records).map(x=>({
+  const fuelRows=generatorFuelFlatRows(filteredRecs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 종류:x.종류||'',
     용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
     사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
@@ -4728,7 +4744,7 @@ function exportGeneratorExcel(){
     {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
   ];
 
-  const chkRows=generatorChkFlatRows(TAB_STATE['generator'].records).map(x=>({
+  const chkRows=generatorChkFlatRows(filteredRecs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 점검구분:x.점검구분||'', 점검내용:x.점검내용||'',
     결과:x.결과||'', 특이사항:x.특이사항||''
   }));
@@ -4739,7 +4755,8 @@ function exportGeneratorExcel(){
   ];
 
   buildExcelReport({
-    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성', fnamePrefix:'월간점검결과_발전기점검',
+    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성',
+    fnamePrefix:'월간점검결과_발전기점검'+(tunnel?'_'+tunnel:''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
