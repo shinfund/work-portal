@@ -3783,6 +3783,12 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
   // (LEFT_WRAP)은 전부 표 안(테두리 있음)이라 그대로 유지, 특이사항 박스는 LEFT_INDENT 사용.
   const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
   const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
+  // 병합 셀이 "텍스트:" 라벨(가동일자:/점검자: 등)인 경우 전용 서식 — 엑셀 "가로: 균등분할
+  // (들여쓰기)" 옵션(2026-07-23 사용자 요청). 원본 참고파일 A4/A5 실측: distributed+wrapText,
+  // indent 필드는 없음(변압기온도 탭의 LABEL_ALIGN과 정확히 동일값) — indent:1은 "테두리 있는
+  // 좌측정렬 셀" 전용 규칙(위 LEFT_WRAP/LEFT_INDENT 주석 참고)이라 이 라벨엔 해당 없음. 이런
+  // "텍스트:" 라벨 패턴이 다른 보고서에도 나오면 이 상수를 그대로 재사용할 것.
+  const LABEL_DISTRIBUTED={vertical:'middle', horizontal:'distributed', wrapText:true};
 
   // 표 영역 경계 3개(발전기운전/유류사용량/점검사항) — buildElecReportSheet()의 gridBorder(range)
   // 패턴 그대로: 각 mc() 호출 범위를 이 영역들과 비교해 절대 바깥 경계만 thin, 안쪽은 hair로 자동 계산.
@@ -3834,9 +3840,9 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
   // 위아래로 꽉 차 보이도록(2026-07-22 사용자 요청, 발전기점검 보고서가 28행뿐이라 elec/변압기
   // 온도(47행)보다 기본 높이로는 페이지 상단에만 작게 몰려 보였던 문제의 후속 보정).
   ws.getRow(4).height=30; ws.getRow(5).height=30;
-  mc('A4:B4', '가동일자:', F(13), LEFT);
+  mc('A4:B4', '가동일자:', F(13), LABEL_DISTRIBUTED);
   mc('C4:H4', excelParseDate(r['가동일자']), F(13), LEFT, 'yyyy"년" m"월" d"일" aaa"요일"', false);
-  mc('A5:B5', '점검자:', F(13), LEFT);
+  mc('A5:B5', '점검자:', F(13), LABEL_DISTRIBUTED);
   mc('C5:D5', (r['점검자']||'').split('').join(' '), F(13), LEFT, undefined, false);
 
   ws.getRow(6).height=30;
