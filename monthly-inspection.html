@@ -2941,6 +2941,33 @@ function excelBatchPromises(items, worker, batchSize){
   }
   return next();
 }
+// 다운로드 파일명 규칙(2026-07-23 사용자 요청, "엑셀 생성"·"보고서 생성"(개별/통합) 전부 통일):
+// "{연}년 {월}월 {탭 보고서명}[보고서]_{터널명}_{생성시각yyyyMMddHHmm}". 탭별 보고서명은 이미
+// 각 buildOneXReport()가 쓰던 이름을 그대로 재사용 — 엑셀생성은 그 이름 그대로, 보고서생성은
+// "보고서"만 뒤에 붙인다(예: 전기설비기록표 → 엑셀생성 "...전기설비기록표_...", 보고서생성
+// "...전기설비기록표보고서_...").
+const TAB_REPORT_BASENAME={
+  monthly:'월간점검결과표', elec:'전기설비기록표', transformer:'변압기온도측정표',
+  generator:'발전기점검표', photo:'점검사진대지', power:'전력사용량', task:'업무처리사항'
+};
+function excelFileTimestamp(){
+  const now=new Date(); const p2=n=>String(n).padStart(2,'0');
+  return now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes());
+}
+// "엑셀 생성"은 보고서 생성과 달리 연/월을 직접 고르지 않으므로, 현재 연/월 필터가 특정 값으로
+// 좁혀져 있으면 그 값을, "전체"면 로드된 데이터 중 가장 최근 날짜를 파일명용 연/월로 쓴다
+// (각 exportXInspectionReport()가 보고서 생성에 쓰는 것과 동일한 결정 규칙, 파일명 계산 전용으로
+// 별도 헬퍼화 — 데이터가 아예 없으면 null을 돌려줘 호출부가 연/월 없이 파일명을 만들게 한다).
+function resolveTabYearMonth(tabId, dateKey){
+  const f=_tabFilters[tabId]||{};
+  if(f.year && f.year!=='ALL' && f.month && f.month!=='ALL'){
+    return {year:parseInt(f.year,10), month:parseInt(f.month,10)};
+  }
+  const dates=(TAB_STATE[tabId].records||[]).map(r=>r[dateKey]).filter(Boolean).sort();
+  if(!dates.length) return null;
+  const latest=dates[dates.length-1];
+  return {year:parseInt(latest.slice(0,4),10), month:parseInt(latest.slice(5,7),10)};
+}
 // opts.sheets가 있으면 시트를 여러 개(전기설비기록·발전기점검처럼 보기 갯수만큼) 만들고, 없으면
 // 기존처럼 opts.sheetName/title/columns/rows로 단일 시트를 만든다(다른 탭들과 호환).
 // 시트별 orientation을 명시하지 않으면 excelAutoOrientation()이 열 너비 합으로 자동 판정한다.
@@ -3064,10 +3091,12 @@ function exportTabExcel(tabId){
     photo: f.type==='file'||undefined,
     width: f.type==='file'?18:undefined
   }));
+  const ym=resolveTabYearMonth(tabId, tabDef.dateKey);
+  const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label,
-    fnamePrefix:'월간점검결과_'+tabDef.label+(tunnel?'_'+tunnel:''),
+    fnamePrefix:ymPrefix+(TAB_REPORT_BASENAME[tabId]||tabDef.label)+(tunnel?'_'+tunnel:''),
     columns, rows
   });
 }
@@ -3256,7 +3285,7 @@ function buildOneMonthlyReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과표_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과표보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3357,9 +3386,11 @@ function exportElecExcel(){
     {key:'감', header:'감소', numFmt:'#,##0'}, {key:'부적합', header:'부적합', numFmt:'#,##0'}
   ];
 
+  const ym=resolveTabYearMonth('elec', tabDef.dateKey);
+  const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
     btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
-    fnamePrefix:'월간점검결과_전기설비기록'+(tunnel?'_'+tunnel:''),
+    fnamePrefix:ymPrefix+TAB_REPORT_BASENAME.elec+(tunnel?'_'+tunnel:''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 전기설비기록(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'ACB상세', title:'월간점검결과 - 전기설비기록(ACB 상세)', columns:acbColumns, rows:acbRows},
@@ -3610,7 +3641,7 @@ function buildOneElecReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전기설비기록표_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전기설비기록표보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3818,7 +3849,7 @@ function buildOneTransformerReport(tunnel, year, month){
     return wb.xlsx.writeBuffer();
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 변압기온도측정표_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 변압기온도측정표보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4047,7 +4078,7 @@ function buildOneGeneratorReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 발전기점검표_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 발전기점검표보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4208,7 +4239,7 @@ function buildOnePhotoReport(tunnel, year, month){
     return buildPhotoReportSheet(wb, data, tunnel).then(()=>wb.xlsx.writeBuffer());
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검사진대지_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검사진대지보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4442,7 +4473,7 @@ function buildOnePowerReport(tunnel, year, month){
     return wb.xlsx.writeBuffer();
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전력사용량_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전력사용량보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4609,7 +4640,7 @@ function buildOneTaskReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 업무처리사항_${tunnel}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 업무처리사항보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4827,7 +4858,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
   const buf=await wb.xlsx.writeBuffer();
   const blob=await excelUnlockAspectRatio(buf);
   const url=URL.createObjectURL(blob);
-  const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과_통합보고서_${tunnel}.xlsx`;
+  const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과보고서_${tunnel}_${excelFileTimestamp()}.xlsx`;
   const a=document.createElement('a'); a.href=url; a.download=fname;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4906,9 +4937,11 @@ function exportGeneratorExcel(){
     {key:'결과', header:'결과'}, {key:'특이사항', header:'특이사항', wrap:true}
   ];
 
+  const ym=resolveTabYearMonth('generator', tabDef.dateKey);
+  const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
     btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성',
-    fnamePrefix:'월간점검결과_발전기점검'+(tunnel?'_'+tunnel:''),
+    fnamePrefix:ymPrefix+TAB_REPORT_BASENAME.generator+(tunnel?'_'+tunnel:''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
