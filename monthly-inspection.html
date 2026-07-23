@@ -1087,7 +1087,16 @@ const TAB_DEFS=[
       {key:'점검일자', type:'date', required:true},
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
-        optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
+        optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요',
+        // 구분="기타"/"태양광발전설비"는 보고서 양식에서 구분 컬럼만 쓰고 설비명이 없어 공란
+        // 저장 대상이다(GUBUN_NO_EQUIPMENT 참고). 드롭다운 빈옵션 문구·서브 안내문구 둘 다
+        // "입력하지 마세요"로 명시해야 사용자가 "구분을 안 골랐나?"로 오해하지 않는다(2026-07-23
+        // 사용자 요청 — 다른 탭의 "먼저 OO을 선택하세요"류 문구가 실제로는 값이 있는데도 그대로
+        // 떠서 헷갈렸던 사례의 재발 방지).
+        emptyHintFn:dep=>GUBUN_NO_EQUIPMENT.includes(dep['구분']) ? '설비명 없음 — 입력하지 마세요' : '먼저 구분을 선택하세요',
+        hintFn:dep=>GUBUN_NO_EQUIPMENT.includes(dep['구분'])
+          ? '이 구분은 설비명이 없습니다 — 공란으로 저장되니 입력하지 마세요.'
+          : '구분 선택에 따라 표준 목록이 좁혀집니다.'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 월간점검결과표'] : [],
         emptyHint:'먼저 터널명을 선택하세요'},
@@ -1984,7 +1993,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      <div class="modal-hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
+      <div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -2066,12 +2075,24 @@ function refreshCascadeSelect(tabId, contentIdx, initialValue){
     curVal=''; // 새 의존값에 해당하는 후보가 아예 없으면(예: 남정5터널은 발전/태양광 스펙 없음) 이전 터널의 값을 지움
   }
   const isCustom = !!curVal && !opts.includes(curVal);
-  sel.innerHTML = `<option value="">${opts.length?'선택':(f.emptyHint||'선택')}</option>`
+  // emptyHintFn — 옵션이 0개인 이유가 "아직 의존값을 안 골라서"가 아니라 "이 의존값 조합엔 원래
+  // 후보가 없어서"인 경우 문구를 다르게 보여줘야 할 때 씀(예: 월간점검 설비명이 구분="기타"/
+  // "태양광발전설비"일 때 "먼저 구분을 선택하세요"가 아니라 "이 구분은 설비명이 없습니다"로,
+  // 2026-07-23). 없으면 기존 f.emptyHint 고정 문구 유지.
+  const emptyOptText = opts.length ? '선택' : (f.emptyHintFn ? f.emptyHintFn(depValues) : (f.emptyHint||'선택'));
+  sel.innerHTML = `<option value="">${esc(emptyOptText)}</option>`
     + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
     + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
   if(!isCustom && opts.includes(curVal)) sel.value=curVal;
   if(ci){
     if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
+  }
+  // 의존값에 따라 안내 문구 자체를 바꿔야 하는 필드용(예: 월간점검 설비명이 구분="기타"/"태양광
+  // 발전설비"일 때 "입력하지 마세요"로 바뀌는 경우, 2026-07-23) — hintFn 없으면 기존 고정 문구 유지.
+  const hintEl=document.getElementById('ff_'+contentIdx+'_hint');
+  if(hintEl){
+    hintEl.textContent = f.hintFn ? f.hintFn(depValues)
+      : ((f.dependsOn||[]).length ? f.dependsOn.join('·')+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.');
   }
 }
 // cascadeTrigger 필드의 onchange에서 호출 — 해당 탭의 캐스케이딩 select 전부를 재계산
