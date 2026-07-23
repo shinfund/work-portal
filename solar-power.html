@@ -1833,7 +1833,9 @@ function buildExcelReport(opts){
     const url=URL.createObjectURL(blob);
     const now=new Date();
     const p2=n=>String(n).padStart(2,'0');
-    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes())+'.xlsx';
+    // 2026-07-23 사용자 요청 — fnamePrefix에 날짜가 없는 파일명은 접미사를 생성시각(시/분)까지
+    // 넣지 않고 생성일(연월일)까지만 표기.
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+'.xlsx';
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);

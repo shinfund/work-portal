@@ -2942,18 +2942,15 @@ function excelBatchPromises(items, worker, batchSize){
   return next();
 }
 // 다운로드 파일명 규칙(2026-07-23 사용자 요청, "엑셀 생성"·"보고서 생성"(개별/통합) 전부 통일):
-// "{연}년 {월}월 {탭 보고서명}[보고서]_{터널명}_{생성시각yyyyMMddHHmm}". 탭별 보고서명은 이미
-// 각 buildOneXReport()가 쓰던 이름을 그대로 재사용 — 엑셀생성은 그 이름 그대로, 보고서생성은
-// "보고서"만 뒤에 붙인다(예: 전기설비기록표 → 엑셀생성 "...전기설비기록표_...", 보고서생성
-// "...전기설비기록표보고서_...").
+// "{연}년 {월}월 {탭 보고서명}[보고서]_{터널명}". 탭별 보고서명은 이미 각 buildOneXReport()가
+// 쓰던 이름을 그대로 재사용 — 엑셀생성은 그 이름 그대로, 보고서생성은 "보고서"만 뒤에 붙인다
+// (예: 전기설비기록표 → 엑셀생성 "...전기설비기록표_...", 보고서생성 "...전기설비기록표보고서_...").
+// 파일명 접두사에 이미 연/월 날짜가 들어있어 생성시각 접미사는 넣지 않는다(2026-07-23 후속 요청 —
+// 처음엔 버전 구분용으로 yyyyMMddHHmm을 붙였었지만 날짜가 이미 있는데 또 붙이면 중복이라 삭제).
 const TAB_REPORT_BASENAME={
   monthly:'월간점검결과표', elec:'전기설비기록표', transformer:'변압기온도측정표',
   generator:'발전기점검표', photo:'점검사진대지', power:'전력사용량', task:'업무처리사항'
 };
-function excelFileTimestamp(){
-  const now=new Date(); const p2=n=>String(n).padStart(2,'0');
-  return now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes());
-}
 // 다운로드 파일명 전용 터널명 축약(2026-07-23 사용자 요청, 파일명이 길다는 피드백) — 시트/보고서
 // 내부 표시 텍스트("□ 청하터널(주)" 등)는 그대로 두고 파일명에서만 "터널" 글자를 뺀다.
 // 청하터널(주)→청하(주), 청하터널(부)→청하(부), 흥해터널→흥해, 남정5터널→남정5.
@@ -3060,9 +3057,10 @@ function buildExcelReport(opts){
     });
   }).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const now=new Date();
-    const p2=n=>String(n).padStart(2,'0');
-    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+p2(now.getHours())+p2(now.getMinutes())+'.xlsx';
+    // 2026-07-23 사용자 요청 — fnamePrefix에 이미 "{연}년 {월}월"이 들어있어(exportTabExcel/
+    // exportElecExcel/exportGeneratorExcel에서 ymPrefix로 항상 붙임) 생성시각 접미사는 중복 정보라
+    // 제거. 파일명에 날짜가 없는 다른 앱(비품대장 등)의 접미사 규칙과는 다름(그쪽은 yyyyMMdd만 유지).
+    const fname=opts.fnamePrefix+'.xlsx';
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3291,7 +3289,7 @@ function buildOneMonthlyReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과표보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3647,7 +3645,7 @@ function buildOneElecReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전기설비기록표보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전기설비기록표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3855,7 +3853,7 @@ function buildOneTransformerReport(tunnel, year, month){
     return wb.xlsx.writeBuffer();
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 변압기온도측정표보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 변압기온도측정표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4084,7 +4082,7 @@ function buildOneGeneratorReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 발전기점검표보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 발전기점검표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4245,7 +4243,7 @@ function buildOnePhotoReport(tunnel, year, month){
     return buildPhotoReportSheet(wb, data, tunnel).then(()=>wb.xlsx.writeBuffer());
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검사진대지보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검사진대지보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4479,7 +4477,7 @@ function buildOnePowerReport(tunnel, year, month){
     return wb.xlsx.writeBuffer();
   }).then(buf=>excelUnlockAspectRatio(buf)).then(blob=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전력사용량보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 전력사용량보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4646,7 +4644,7 @@ function buildOneTaskReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 업무처리사항보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 업무처리사항보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -4864,7 +4862,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
   const buf=await wb.xlsx.writeBuffer();
   const blob=await excelUnlockAspectRatio(buf);
   const url=URL.createObjectURL(blob);
-  const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과보고서_${tunnelFnameAbbr(tunnel)}_${excelFileTimestamp()}.xlsx`;
+  const fname=`${year}년 ${String(month).padStart(2,'0')}월 월간점검결과보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
   const a=document.createElement('a'); a.href=url; a.download=fname;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 4000);

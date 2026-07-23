@@ -3847,7 +3847,9 @@ function buildExcelReport(opts){
   }).then(function(blob){
     var url = URL.createObjectURL(blob);
     var now = new Date();
-    var fname = opts.fnamePrefix+'_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+fmt(now.getHours())+fmt(now.getMinutes())+'.xlsx';
+    // 2026-07-23 사용자 요청 — fnamePrefix에 날짜가 없는 파일명은 접미사를 생성시각(시/분)까지
+    // 넣지 않고 생성일(연월일)까지만 표기.
+    var fname = opts.fnamePrefix+'_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+'.xlsx';
     var a = document.createElement('a');
     a.href = url; a.download = fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
