@@ -2923,7 +2923,7 @@ function buildExcelReport(opts){
       const ws=wb.addWorksheet(sheetOpts.sheetName,{
         views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
         pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
-        headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+        headerFooter:{oddHeader:'',oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'}
       });
       ws.columns=colWidths.map(w=>({width:w}));
       const titleRow=ws.getRow(1);
@@ -3081,7 +3081,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     // 1.5cm로 바뀌어서(사용자 지정 신규 기본 여백) 더 이상 별도 덮어쓸 필요 없음.
     // 시트 1개=인쇄 1페이지(3개 시트로 분리했으니 세로도 1페이지에 강제로 맞춘다, 2026-07-21 사용자 요청)
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   const colWidths=[10,14,46,10,13,10];
   ws.columns=colWidths.map(w=>({width:w}));
@@ -3353,7 +3353,7 @@ function buildElecReportSheet(wb, r, tunnel){
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait}, // 좌측 1.5cm는 2026-07-22부터 portrait 기본값 자체에 포함됨
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   // 2026-07-21 사용자 피드백으로 원본 템플릿 실측 너비보다 A/B/D/E/F/H/N(+대칭인 J/K/L) 열을 넓힘
   // (짧은 라벨은 문제없지만 "수전전압/용량"·"설비현황"·"부적합\n수량"·"유효전력량(kW)"처럼 긴
@@ -3647,7 +3647,7 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const ws=wb.addWorksheet('변압기온도측정표',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   ws.columns=Array(10).fill(0).map(()=>({width:8.6}));
 
@@ -3832,7 +3832,7 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   // 원본 템플릿 실측 너비(A~R 18열, 전부 5.57)를 그대로 재현 — 병합 폭이 넉넉해 13pt 텍스트가
   // wrapText 없이도 대부분 한 줄에 들어간다(예: "배터리 단자의 고정, 청결상태"가 7열 병합에 들어감).
@@ -4075,7 +4075,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
   const ws=wb.addWorksheet('점검사진대지',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   ws.columns=Array(10).fill(0).map(()=>({width:7.86}));
 
@@ -4320,7 +4320,7 @@ function buildPowerReportSheet(wb, data, tunnel, chartBuf){
   const ws=wb.addWorksheet('전력사용량표',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   ws.columns=Array(4).fill(0).map(()=>({width:32.79})); // 원본 템플릿 실측 너비 그대로
 
@@ -4478,7 +4478,7 @@ function buildTaskReportSheet(wb, rows, tunnel){
   const ws=wb.addWorksheet('업무처리사항',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
   ws.columns=[15.64,44.64,44.64,17.64,14.64].map(w=>({width:w}));
 

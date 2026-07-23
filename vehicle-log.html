@@ -2089,7 +2089,7 @@ function buildExcelReport(opts){
     const ws=wb.addWorksheet(opts.sheetName,{
       views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
       pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
-      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+      headerFooter:{oddHeader:'',oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'}
     });
     const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
     ws.columns=colWidths.map(w=>({width:w}));
@@ -2242,7 +2242,7 @@ function buildOneVehicleReport(carNo,year,month){
     const ws=wb.addWorksheet(`${yy}년${month}월`,{
       views:[{showGridLines:false}],
       pageSetup:{paperSize:9,orientation:'portrait',fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,margins:EXCEL_PAGE_PRESETS.portrait},
-      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:'&C&"맑은 고딕"&9&P / &N'}
+      headerFooter:{oddHeader:'',oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'}
     });
     const headerLabels=['일자','운전자','용무','출발지','경유지','도착지','운행(km)','운행누계(km)','비고'];
     const rowKeys=[null,'driver','purpose','from','via','to','dist','cum','note'];

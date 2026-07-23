@@ -2115,7 +2115,7 @@ function buildExcelReport(opts){
     const ws=wb.addWorksheet(opts.sheetName, {
       views:[{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
       pageSetup:{ paperSize:9, orientation:orientation, fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, verticalCentered:false, margins:EXCEL_PAGE_PRESETS[orientation], printTitlesRow:'2:2' },
-      headerFooter:{ oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T', oddFooter:'&C&"맑은 고딕"&9&P / &N' }
+      headerFooter:{ oddHeader:'', oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T' }
     });
     const colWidths=columns.map(col=>{
       if(col.width) return col.width;
