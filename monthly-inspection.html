@@ -1034,12 +1034,25 @@ const TUNNEL_ELEC_SPEC={
   '청하터널(주)':{수전:'22,900 V / 800 kW', 발전:'380 V / 900 kW', 태양광:'80 kW', 배율:'480'},
   '청하터널(부)':{수전:'22,900 V / 700 kW', 발전:'380 V / 750 kW', 태양광:'36 kW', 배율:'480'},
   '흥해터널':{수전:'22,900 V / 1,000 kW', 발전:'380 V / 1,250 kW', 태양광:'66 kW', 배율:'720'},
-  '남정5터널':{수전:'22,900 V / 1,100 kW', 발전:null, 태양광:null, 배율:'960'}
+  // 남정5터널 발전/태양광은 2026-07-14 확인 당시 null로 남겨뒀었는데(당시 "스펙 없음"으로 오판),
+  // 2026-07-23 재확인 결과 실제 노션 레코드 6건 중 3건에 값이 있었음(표기만 제각각: "380 v / 1,250 kw"/
+  // "380v / 1250kw"/"380V/1250kw", 태양광은 3건 전부 "70kw"로 일치) — 다른 터널과 동일한 표기 규칙으로
+  // 표준화해 채움.
+  '남정5터널':{수전:'22,900 V / 1,100 kW', 발전:'380 V / 1,250 kW', 태양광:'70 kW', 배율:'960'}
 };
 function elecSpecOptions(tunnel, field){
   const v=(TUNNEL_ELEC_SPEC[tunnel]||{})[field];
   return v ? [v] : [];
 }
+// 전기설비기록2(ACB)DB 역률(%) 실데이터 SELECT DISTINCT 결과(2026-07-23 확인, 243건 중 6개 값이
+// 대부분): 99(99건)/100(36)/98(36)/87(36)/91(9)/86(9) — 오름차순 카탈로그로 노출. 1·0.97(각 9건)은
+// 퍼센트를 소수로 잘못 입력한 것으로 보이는 값이라 카탈로그엔 넣지 않음(기존 데이터는 수정하지 않았고,
+// 그 값으로 수정 모드를 열면 "직접입력"으로 정상 표시됨).
+const ELEC_PF_OPTIONS=[86,87,91,98,99,100];
+// 점검담당자/점검확인자 카탈로그(elec3 실데이터 기준 고정 인원) — buildElecFormExtra 렌더와
+// syncElecTunnelDefaults() 자동입력 양쪽에서 공유.
+const ELEC_DAMDANG_OPTIONS=['김동록','신종섭','김태선','공우식'];
+const ELEC_HWAKIN_OPTIONS=['조성섭,강유리','조성섭,배병현'];
 
 // 변압기온도DB 터널×변압기종류별 고정 용량(노션 실데이터 기준, 2026-07-16 확인) — 조합당 값 1개로 고정
 const TUNNEL_TRANSFORMER_CAPACITY={
@@ -1087,7 +1100,7 @@ const TAB_DEFS=[
     // "공통값" 섹션(자식 upsert 시 반복 저장)으로 이동. [[project_monthly_inspection_app]]
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'제목', dateKey:'점검일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncElecTunnelDefaults()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 전기설비점검결과기록표'] : [],
         emptyHint:'먼저 터널명을 선택하세요'},
@@ -2098,7 +2111,13 @@ function buildElecFormExtra(r){
       <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
       <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="number" step="0.01" value="${acb0&&acb0.최대전력!=null?acb0.최대전력:''}"/></div>
       <div class="modal-field"><label class="modal-label">배율</label><input class="modal-input" id="ec_baeyul" type="number" step="1" value="${acb0&&acb0.배율!=null?acb0.배율:''}"/></div>
-      <div class="modal-field"><label class="modal-label">역률(%)</label><input class="modal-input" id="ec_yeokryul" type="number" step="0.01" value="${acb0&&acb0.역률!=null?acb0.역률:''}"/></div>
+      <div class="modal-field"><label class="modal-label">역률(%)</label>
+        <select class="modal-select" id="ec_yeokryul" onchange="onSelectChange(this,'ec_yeokryulc')">
+          <option value="">선택</option><option value="__custom__"${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?' selected':''}>직접입력</option>
+          ${ELEC_PF_OPTIONS.map(o=>`<option value="${o}"${acb0&&acb0.역률===o?' selected':''}>${o}</option>`).join('')}
+        </select>
+        <input id="ec_yeokryulc" class="modal-input" type="number" step="0.01" placeholder="직접 입력" style="display:${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?'':'none'};margin-top:6px" value="${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?esc(acb0.역률):''}"/>
+      </div>
     </div>`;
   // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
@@ -2130,20 +2149,56 @@ function buildElecFormExtra(r){
       <div class="modal-field"><label class="modal-label">점검담당자</label>
         <select class="modal-select" id="ec_damdang" onchange="onSelectChange(this,'ec_damdangc')">
           <option value="">선택</option><option value="__custom__">직접입력</option>
-          ${['김동록','신종섭','김태선','공우식'].map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검담당자===o?' selected':''}>${esc(o)}</option>`).join('')}
+          ${ELEC_DAMDANG_OPTIONS.map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검담당자===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <input id="ec_damdangc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검담당자&&!['김동록','신종섭','김태선','공우식'].includes(chk0.점검담당자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검담당자&&!['김동록','신종섭','김태선','공우식'].includes(chk0.점검담당자)?esc(chk0.점검담당자):''}"/>
+        <input id="ec_damdangc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검담당자&&!ELEC_DAMDANG_OPTIONS.includes(chk0.점검담당자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검담당자&&!ELEC_DAMDANG_OPTIONS.includes(chk0.점검담당자)?esc(chk0.점검담당자):''}"/>
       </div>
       <div class="modal-field"><label class="modal-label">점검확인자</label>
         <select class="modal-select" id="ec_hwakin" onchange="onSelectChange(this,'ec_hwakinc')">
           <option value="">선택</option><option value="__custom__">직접입력</option>
-          ${['조성섭,강유리','조성섭,배병현'].map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검확인자===o?' selected':''}>${esc(o)}</option>`).join('')}
+          ${ELEC_HWAKIN_OPTIONS.map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검확인자===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!['조성섭,강유리','조성섭,배병현'].includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!['조성섭,강유리','조성섭,배병현'].includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
+        <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
       </div>
       <div class="modal-field"><label class="modal-label">종합의견</label><input class="modal-input" id="ec_jonghap" type="text" value="${esc(chk0?chk0.종합의견:'적합함')}"/></div>
     </div>`;
   return acbHtml+acbCommonHtml+chkHtml+chkCommonHtml;
+}
+// 전기설비기록 탭 전용 — 특정 터널의 가장 최근 레코드(점검일자 내림차순으로 이미 정렬된 TAB_STATE
+// 기준 첫 매치) — 점검담당자/점검확인자 기본값 채움에 재사용(generatorLatestForTunnel과 동일 패턴).
+function elecLatestForTunnel(tunnel){
+  if(!tunnel) return null;
+  return TAB_STATE['elec'].records.find(r=>r['터널명']===tunnel) || null;
+}
+// select+직접입력 쌍 하나를 지정값으로 맞춘다 — 카탈로그에 있으면 select만, 없으면 __custom__ 선택 +
+// 직접입력 칸에 값 표시(buildFieldHtml의 select/cascade-select 렌더와 동일한 표시 규칙).
+function setSelectOrCustom(selId, customId, value, options){
+  const sel=document.getElementById(selId), ci=document.getElementById(customId);
+  if(!sel || !value) return;
+  if(options.includes(value)){
+    sel.value=value;
+    if(ci){ ci.style.display='none'; ci.value=''; }
+  } else {
+    sel.value='__custom__';
+    if(ci){ ci.style.display=''; ci.value=value; }
+  }
+}
+// 전기설비기록 탭 전용 — 터널명 select(ff_0) 변경 시 배율(터널별 고정 스펙)·점검담당자·점검확인자를
+// 자동으로 채운다(TAB_DEFS 터널명 필드의 extraOnChange 훅으로 연결됨, 2026-07-23 사용자 요청).
+// 수전/발전전압·태양광용량·제목은 uiType:cascade-select라 refreshAllCascadeSelects()가 이미 처리한다.
+function syncElecTunnelDefaults(){
+  const tunnelSel=document.getElementById('ff_0');
+  if(!tunnelSel) return;
+  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_0c')?.value||'') : tunnelSel.value;
+  const spec=TUNNEL_ELEC_SPEC[t];
+  const baeyulEl=document.getElementById('ec_baeyul');
+  if(spec && spec.배율!=null && baeyulEl) baeyulEl.value=spec.배율;
+  const latest=elecLatestForTunnel(t);
+  const chk0=latest && latest._chk && latest._chk[0];
+  if(chk0){
+    setSelectOrCustom('ec_damdang','ec_damdangc', chk0.점검담당자, ELEC_DAMDANG_OPTIONS);
+    setSelectOrCustom('ec_hwakin','ec_hwakinc', chk0.점검확인자, ELEC_HWAKIN_OPTIONS);
+  }
 }
 // 발전기점검 탭 전용 — 특정 터널의 가장 최근 레코드(가동일자 내림차순으로 이미 정렬된 TAB_STATE 기준
 // 첫 매치) — 유류/운전값/체크리스트 기본값 채움에 공용으로 재사용
@@ -2460,7 +2515,9 @@ async function submitElecForm(){
     무효전력량:document.getElementById('ec_muhyo')?.value,
     최대전력:document.getElementById('ec_choidae')?.value,
     배율:document.getElementById('ec_baeyul')?.value,
-    역률:document.getElementById('ec_yeokryul')?.value
+    // 2026-07-23 역률(%)을 카탈로그 드롭다운(select+직접입력)으로 전환 — 다른 필드처럼 raw .value가
+    // 아니라 commonSelectValue()로 읽어야 "__custom__" 선택 시 실제 입력값을 가져온다.
+    역률:commonSelectValue('ec_yeokryul')
   };
   function commonSelectValue(id){
     const sel=document.getElementById(id);
