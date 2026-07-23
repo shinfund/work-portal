@@ -4390,12 +4390,16 @@ function buildTaskReportRows(tunnel, year, month){
     .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''))
     .map(r=>({날짜:r['날짜'], 업무내용:r['업무내용']||'', 조치사항:r['조치사항']||'', 업체명:r['업체명']||'', 비고:r['비고']||''}));
 }
-// 조치사항(C열, 폭 52) 텍스트 길이 기준으로 줄 수를 근사 추정해 행 높이를 늘린다 — 원본 템플릿도
-// 긴 텍스트 행만 40.1→64.95로 커져 있었다(정확한 렌더링 줄바꿈 계산은 불가능하므로 근사치,
+// 업무내용(B열)·조치사항(C열, 각 폭 44.64, 2026-07-23부터 둘 다 자동줄바꿈) 텍스트 길이 기준으로
+// 줄 수를 근사 추정해 더 긴 쪽 기준으로 행 높이를 늘린다 — 원본 템플릿도 긴 텍스트 행만
+// 40.1→64.95로 커져 있었다(정확한 렌더링 줄바꿈 계산은 불가능하므로 근사치,
 // xlsx-report-export 스킬 "보고서 행높이 자동계산" 참고).
-function taskReportRowHeight(text){
+function taskReportLines(text){
   const w=excelStrWidth(text);
-  const lines=w ? Math.max(1, Math.ceil(w/50)) : 1;
+  return w ? Math.max(1, Math.ceil(w/43)) : 1;
+}
+function taskReportRowHeight(업무내용, 조치사항){
+  const lines=Math.max(taskReportLines(업무내용), taskReportLines(조치사항));
   return Math.max(40.1, lines*18+16);
 }
 function buildTaskReportSheet(wb, rows, tunnel){
@@ -4405,7 +4409,7 @@ function buildTaskReportSheet(wb, rows, tunnel){
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
-  ws.columns=[15,34,52,18,15].map(w=>({width:w}));
+  ws.columns=[15.64,44.64,44.64,17.64,14.64].map(w=>({width:w}));
 
   ws.mergeCells('A1:E1');
   const titleCell=ws.getCell('A1');
@@ -4434,6 +4438,10 @@ function buildTaskReportSheet(wb, rows, tunnel){
       left:{style: c1===REGION.c1 ? 'thin':'hair'}, right:{style: c2===REGION.c2 ? 'thin':'hair'}
     };
   }
+  // 2026-07-23 사용자가 원본 참고파일 4행 헤더 배경색을 확인 요청 — 실측 결과 theme0 tint -5%
+  // (buildPowerReportSheet()의 SECTION_FILL과 동일 계열), 기존에 쓰던 EXCEL_HEADER_FILL(파랑
+  // FFDAE9F8)과는 다른 값이라 이 시트 전용으로 근사값(FFF2F2F2)을 로컬 정의해 교체.
+  const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}};
   const headerLabels=['날짜','업무내용','조치사항','업체명','비고'];
   const headerRow=ws.getRow(4);
   headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -4441,22 +4449,29 @@ function buildTaskReportSheet(wb, rows, tunnel){
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=EXCEL_BODY_FONT;
     cell.alignment={vertical:'middle', horizontal:'center'};
-    cell.border=taskGridBorder(4,4,i+1,i+1); cell.fill=EXCEL_HEADER_FILL;
+    cell.border=taskGridBorder(4,4,i+1,i+1); cell.fill=SECTION_FILL;
   });
+
+  // 2026-07-23 열별 정렬 방식을 원본 참고파일 실측대로 재지정: 날짜·업체명=셀에 맞춤(shrinkToFit),
+  // 업무내용·조치사항=자동 줄바꿈(wrapText), 비고=자동 줄바꿈(wrapText, 가운데정렬 유지).
+  const TASK_COL_ALIGN=[
+    {vertical:'middle', horizontal:'center', shrinkToFit:true}, // 날짜
+    {vertical:'middle', horizontal:'left', wrapText:true},      // 업무내용
+    {vertical:'middle', horizontal:'left', wrapText:true},      // 조치사항
+    {vertical:'middle', horizontal:'center', shrinkToFit:true}, // 업체명
+    {vertical:'middle', horizontal:'center', wrapText:true}     // 비고
+  ];
 
   for(let i=0;i<totalRows;i++){
     const r=rows[i]||null;
     const rn=5+i;
     const row=ws.getRow(rn);
-    row.height = r ? taskReportRowHeight(r.조치사항) : 40.1;
+    row.height = r ? taskReportRowHeight(r.업무내용, r.조치사항) : 40.1;
     for(let ci=0; ci<5; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
       cell.border=taskGridBorder(rn,rn,ci+1,ci+1);
-      cell.alignment = ci===0 ? {vertical:'middle', horizontal:'center'}
-        : ci===2 ? {vertical:'middle', horizontal:'left', wrapText:true, indent:1}
-        : ci===1 ? {vertical:'middle', horizontal:'left', indent:1}
-        : {vertical:'middle', horizontal:'center'};
+      cell.alignment=TASK_COL_ALIGN[ci];
     }
     if(r){
       const dateCell=row.getCell(1);
