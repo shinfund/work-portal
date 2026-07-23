@@ -4454,12 +4454,15 @@ function buildTaskReportSheet(wb, rows, tunnel){
 
   // 2026-07-23 열별 정렬 방식을 원본 참고파일 실측대로 재지정: 날짜·업체명=셀에 맞춤(shrinkToFit),
   // 업무내용·조치사항=자동 줄바꿈(wrapText), 비고=자동 줄바꿈(wrapText, 가운데정렬 유지).
+  // 고정 서식지("보고서 생성")는 horizontal:'left'에 반드시 indent:1을 함께 써야 한다(테두리에
+  // 텍스트가 바로 붙어 답답해 보이는 문제, xlsx-report-export 스킬 "고정 서식지 좌측정렬" 절 —
+  // 발전기점검·업무처리 두 번 이미 놓친 실수라 다시 빠뜨리지 않도록 주석으로 명시).
   const TASK_COL_ALIGN=[
-    {vertical:'middle', horizontal:'center', shrinkToFit:true}, // 날짜
-    {vertical:'middle', horizontal:'left', wrapText:true},      // 업무내용
-    {vertical:'middle', horizontal:'left', wrapText:true},      // 조치사항
-    {vertical:'middle', horizontal:'center', shrinkToFit:true}, // 업체명
-    {vertical:'middle', horizontal:'center', wrapText:true}     // 비고
+    {vertical:'middle', horizontal:'center', shrinkToFit:true},          // 날짜
+    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},     // 업무내용
+    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},     // 조치사항
+    {vertical:'middle', horizontal:'center', shrinkToFit:true},          // 업체명
+    {vertical:'middle', horizontal:'center', wrapText:true}              // 비고
   ];
 
   for(let i=0;i<totalRows;i++){
