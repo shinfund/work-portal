@@ -654,6 +654,13 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
+function titleWithMonth(dateStr, suffix){
+  if(!dateStr) return null;
+  const y=dateStr.slice(0,4), m=parseInt(dateStr.slice(5,7),10);
+  if(!y || !m) return null;
+  return `${y}년 ${m}월 ${suffix}`;
+}
 
 // ── 모달 드래그 이동 ──
 function makeModalDraggable(box, handle){
@@ -1084,7 +1091,7 @@ const TAB_DEFS=[
     id:'monthly', label:'월간점검', dbId:DB_IDS.monthly, titleKey:'제목', dateKey:'점검일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'점검일자', type:'date', required:true},
+      {key:'점검일자', type:'date', required:true, cascadeTrigger:true},
       {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
         optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요',
@@ -1097,8 +1104,8 @@ const TAB_DEFS=[
         hintFn:dep=>GUBUN_NO_EQUIPMENT.includes(dep['구분'])
           ? '이 구분은 설비명이 없습니다 — 공란으로 저장되니 입력하지 마세요.'
           : '구분 선택에 따라 표준 목록이 좁혀집니다.'},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 월간점검결과표'] : [],
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['점검일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['점검일자'],'월간점검결과표'); return t?[t]:[]; },
         emptyHint:'먼저 터널명을 선택하세요'},
       {key:'점검내용', type:'text', required:true, uiType:'cascade-select', dependsOn:['구분','설비명'],
         optionsFn:dep=>getChecklistOptions(dep['구분'], dep['설비명']), emptyHint:'먼저 구분·설비명을 선택하세요'},
@@ -1118,10 +1125,10 @@ const TAB_DEFS=[
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'제목', dateKey:'점검일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncElecTunnelDefaults()'},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 전기설비점검결과기록표'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'점검일자', type:'date', required:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['점검일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['점검일자'],'전기설비점검결과기록표'); return t?[t]:[]; },
+        emptyHint:'먼저 점검일자를 선택하세요'},
+      {key:'점검일자', type:'date', required:true, cascadeTrigger:true},
       {key:'점검종별', type:'select', options:['월간'], defaultValue:'월간'},
       {key:'점검횟수', type:'text', uiType:'cascade-select', optionsFn:()=>['1회'], emptyHint:'선택'},
       {key:'수전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
@@ -1137,10 +1144,10 @@ const TAB_DEFS=[
     id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'제목', dateKey:'측정일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 변압기온도측정표'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'측정일자', type:'date', required:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['측정일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['측정일자'],'변압기온도측정표'); return t?[t]:[]; },
+        emptyHint:'먼저 측정일자를 선택하세요'},
+      {key:'측정일자', type:'date', required:true, cascadeTrigger:true},
       {key:'점검자', type:'select', options:['김동록','신종섭','김태선','공우식']},
       {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
       {key:'용량', type:'text', uiType:'cascade-select', dependsOn:['터널명','변압기종류'],
@@ -1159,10 +1166,10 @@ const TAB_DEFS=[
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncGeneratorTunnelDefaults()'},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 발전기운전'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
-      {key:'가동일자', type:'date', required:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['가동일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['가동일자'],'발전기운전'); return t?[t]:[]; },
+        emptyHint:'먼저 가동일자를 선택하세요'},
+      {key:'가동일자', type:'date', required:true, cascadeTrigger:true},
       {key:'점검자', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>generatorInspectorOptions(dep['터널명']), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'가동시간', type:'text'},
@@ -1180,10 +1187,10 @@ const TAB_DEFS=[
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'일자', type:'date', required:true},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 점검사진'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
+        emptyHint:'먼저 일자를 선택하세요'},
       {key:'번호', type:'number', uiType:'fixed-select', options:['1','2','3','4','5','6'], required:true, cascadeTrigger:true},
       {key:'사진설명', type:'text', uiType:'cascade-select', dependsOn:['터널명','번호'],
         optionsFn:dep=>photoDescOptions(dep['터널명'], dep['번호']),
@@ -1196,10 +1203,10 @@ const TAB_DEFS=[
     id:'power', label:'전력사용량', dbId:DB_IDS.power, titleKey:'제목', dateKey:'일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'일자', type:'date', required:true},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 전력사용량'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'전력사용량'); return t?[t]:[]; },
+        emptyHint:'먼저 일자를 선택하세요'},
       {key:'MAIN(kWh)', type:'number'},
       {key:'조명용(kWh)', type:'number'},
       {key:'비고', type:'text'}
@@ -1210,10 +1217,10 @@ const TAB_DEFS=[
     id:'task', label:'업무처리', dbId:DB_IDS.task, titleKey:'제목', dateKey:'날짜',
     fields:[
       {key:'터널명', type:'select', options:['청하터널','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'날짜', type:'date', required:true},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 업무처리사항'] : [],
-        emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'날짜', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['날짜'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['날짜'],'업무처리사항'); return t?[t]:[]; },
+        emptyHint:'먼저 날짜를 선택하세요'},
       {key:'업무내용', type:'text', required:true},
       {key:'조치사항', type:'text'},
       {key:'업체명', type:'text'},
@@ -2035,7 +2042,11 @@ function buildFieldHtml(f, idx, curVal, tabId){
     </div>`;
   }
   if(f.type==='date'){
-    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"/></div>`;
+    const onchangeParts=[];
+    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
+    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    const onchangeAttr = onchangeParts.length ? ` onchange="${onchangeParts.join(';')}"` : '';
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/></div>`;
   }
   if(f.type==='number'){
     return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="number" step="0.01" value="${curVal!=null&&curVal!==''?esc(curVal):''}"/></div>`;
@@ -2589,7 +2600,7 @@ async function submitElecForm(){
         const existing=elecAcbLookup(r, t, ph);
         childTasks.push(()=>{
           const props={
-            '제목':buildPropValue('title', values['터널명']+' 측정값'),
+            '제목':buildPropValue('title', titleWithMonth(values['점검일자'],'측정값')||'측정값'),
             '용도':buildPropValue('select', t),
             '위상':buildPropValue('select', ph.label),
             '점검일자':buildPropValue('date', values['점검일자']),
@@ -2619,7 +2630,7 @@ async function submitElecForm(){
       const existing=elecChkLookup(r, c);
       childTasks.push(()=>{
         const props={
-          '제목':buildPropValue('title', values['터널명']+' 점검내역'),
+          '제목':buildPropValue('title', titleWithMonth(values['점검일자'],'점검내역')||'점검내역'),
           '설비구분':buildPropValue('select', c.설비구분),
           '설비항목':buildPropValue('text', c.설비항목),
           '점검일자':buildPropValue('date', values['점검일자']),
@@ -2715,7 +2726,7 @@ async function submitGeneratorForm(){
       };
       const p = existingFuel
         ? notionFetch('/v1/pages/'+existingFuel.id, 'PATCH', {properties:props})
-        : (props['제목']=buildPropValue('title', values['터널명']+' 유류사용량'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator2}, properties:props}));
+        : (props['제목']=buildPropValue('title', titleWithMonth(values['가동일자'],'유류사용량')||'유류사용량'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator2}, properties:props}));
       return p.then(v=>{ progress(); return v; });
     });
 
@@ -2734,7 +2745,7 @@ async function submitGeneratorForm(){
         };
         const p = existing
           ? notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
-          : (props['점검내용']=buildPropValue('text', c.점검내용), props['제목']=buildPropValue('title', values['터널명']+' 점검사항'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator3}, properties:props}));
+          : (props['점검내용']=buildPropValue('text', c.점검내용), props['제목']=buildPropValue('title', titleWithMonth(values['가동일자'],'점검사항')||'점검사항'), props['발전기점검1DB']={relation:[{id:parentId}]}, notionFetch('/v1/pages', 'POST', {parent:{database_id:DB_IDS.generator3}, properties:props}));
         return p.then(v=>{ progress(); return v; });
       });
     }
