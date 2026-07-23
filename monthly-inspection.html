@@ -939,12 +939,20 @@ function photoDescOptions(tunnel, num){
   });
   return Array.from(seen);
 }
+// 구분="기타"/"태양광발전설비"는 보고서 양식(REPORT_CHECKLIST_ORDER, 월간점검 "보고서 생성")에서
+// 구분+설비명을 한 셀로 합쳐 "기타"/"태양광발전설비"만 표시하고 별도 설비명이 없다 — 그런데 신규등록
+// 폼은 MONTHLY_CHECKLIST에 남아있던 설비명:'발전기'(1개뿐이라 자동선택됨)를 그대로 보여줘 실제로는
+// 존재하지 않는 설비명이 저장되고 있었다(2026-07-23 사용자 제보, 신규등록 스크린샷으로 확인). 이 두
+// 구분은 설비명 옵션 자체를 비워 공란으로 저장되게 한다 — 점검내용도 구분만으로 매칭.
+const GUBUN_NO_EQUIPMENT=['기타','태양광발전설비'];
 function getChecklistOptions(gubun, seolbi){
-  if(!gubun || !seolbi) return [];
+  if(!gubun) return [];
+  if(GUBUN_NO_EQUIPMENT.includes(gubun)) return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun).map(c=>c.점검내용);
+  if(!seolbi) return [];
   return MONTHLY_CHECKLIST.filter(c=>c.구분===gubun && c.설비명===seolbi).map(c=>c.점검내용);
 }
 function getEquipmentOptions(gubun){
-  if(!gubun) return [];
+  if(!gubun || GUBUN_NO_EQUIPMENT.includes(gubun)) return [];
   return [...new Set(MONTHLY_CHECKLIST.filter(c=>c.구분===gubun).map(c=>c.설비명))];
 }
 
