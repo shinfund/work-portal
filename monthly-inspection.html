@@ -471,7 +471,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-transformer">
-          <th>터널명</th><th>측정일자</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th>
+          <th>터널명</th><th>제목</th><th>측정일자</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th>
         </tr></thead>
         <tbody id="tbody-transformer"></tbody>
       </table>
@@ -1104,15 +1104,18 @@ const TAB_DEFS=[
     listCols:['터널명','점검일자','제목','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수']
   },
   {
-    id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'측정지점', dateKey:'측정일자',
+    id:'transformer', label:'변압기온도', dbId:DB_IDS.transformer, titleKey:'제목', dateKey:'측정일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['터널명'],
+        optionsFn:dep=>dep['터널명'] ? [dep['터널명']+' 변압기온도측정표'] : [],
+        emptyHint:'먼저 터널명을 선택하세요'},
       {key:'측정일자', type:'date', required:true},
       {key:'점검자', type:'select', options:['김동록','신종섭','김태선','공우식']},
       {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
       {key:'용량', type:'text', uiType:'cascade-select', dependsOn:['터널명','변압기종류'],
         optionsFn:dep=>transformerCapacityOptions(dep['터널명'], dep['변압기종류']), emptyHint:'먼저 터널명·변압기종류를 선택하세요'},
-      {key:'측정지점', type:'title', required:true, uiType:'cascade-select', dependsOn:['변압기종류'], cascadeTrigger:true,
+      {key:'측정지점', type:'text', required:true, uiType:'cascade-select', dependsOn:['변압기종류'], cascadeTrigger:true,
         optionsFn:dep=>dep['변압기종류'] ? Array.from({length:15},(_,i)=>dep['변압기종류']+' #'+(i+1)) : [],
         emptyHint:'먼저 변압기종류를 선택하세요'},
       {key:'지점번호', type:'number', uiType:'cascade-select', dependsOn:['측정지점'],
@@ -1120,7 +1123,7 @@ const TAB_DEFS=[
       {key:'온도(℃)', type:'number'},
       {key:'비고', type:'select', options:['양호','불량','점검요']}
     ],
-    listCols:['터널명','측정일자','점검자','변압기종류','용량','측정지점','지점번호','온도(℃)','비고']
+    listCols:['터널명','제목','측정일자','점검자','변압기종류','용량','측정지점','지점번호','온도(℃)','비고']
   },
   {
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
