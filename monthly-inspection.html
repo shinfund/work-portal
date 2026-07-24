@@ -4361,9 +4361,13 @@ function renderPowerChartImage(data){
           x:{title:{display:true, text:'일', font:{size:24, weight:'700'}, color:'#000000'},
             ticks:{font:{size:20, weight:'700'}, color:'#000000'},
             grid:{color:'#9aa1ac', lineWidth:1.5}, border:{color:'#000000', width:2}},
+          // beginAtZero 없음(2026-07-24 제거) — 데이터 변동폭이 좁고 값 자체가 큰 터널(예: 1,200~1,800
+          // 범위)은 축이 0부터 시작하면 실제 그래프가 상단에만 짜부라져 보임(흥해터널처럼 변동폭이
+          // 넓어 0~2500 전체를 자연스럽게 채우는 경우와 대비됨, 사용자 스크린샷 비교로 확인). Chart.js
+          // 기본 자동 스케일(데이터 범위 기준 "nice" min/max)에 맡기는 편이 터널마다 변동을 더 잘 보여줌.
           y:{title:{display:true, text:'kWh', font:{size:24, weight:'700'}, color:'#000000'},
             ticks:{font:{size:20, weight:'700'}, color:'#000000'},
-            grid:{color:'#9aa1ac', lineWidth:1.5}, border:{color:'#000000', width:2}, beginAtZero:true}
+            grid:{color:'#9aa1ac', lineWidth:1.5}, border:{color:'#000000', width:2}}
         }
       },
       plugins:[{
