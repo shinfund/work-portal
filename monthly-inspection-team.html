@@ -431,7 +431,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-repair">
-          <th>터널명</th><th>발생일자</th><th>제목</th><th>이상발생내역</th><th>조치일자</th><th>조치내역</th><th>작업자</th>
+          <th>터널명</th><th>발생일</th><th>제목</th><th>이상발생내역</th><th>조치일</th><th>조치내역</th><th>작업자</th>
         </tr></thead>
         <tbody id="tbody-repair"></tbody>
       </table>
@@ -664,19 +664,19 @@ const TAB_DEFS=[
     listCols:['터널명','날짜','제목','구분','점검내용','점검방법','점검결과','비고','특이사항']
   },
   {
-    id:'repair', label:'고장수리', dbId:DB_IDS.repair, titleKey:'제목', dateKey:'발생일자',
+    id:'repair', label:'고장수리', dbId:DB_IDS.repair, titleKey:'제목', dateKey:'발생일',
     fields:[
       {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true},
-      {key:'발생일자', type:'date', required:true, cascadeTrigger:true},
-      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['발생일자'],
-        optionsFn:dep=>{ const t=titleWithMonth(dep['발생일자'],'고장수리실적'); return t?[t]:[]; },
-        emptyHint:'먼저 발생일자를 선택하세요'},
+      {key:'발생일', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['발생일'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['발생일'],'고장수리실적'); return t?[t]:[]; },
+        emptyHint:'먼저 발생일을 선택하세요'},
       {key:'이상발생내역', type:'text', required:true},
-      {key:'조치일자', type:'date'},
+      {key:'조치일', type:'date'},
       {key:'조치내역', type:'text'},
       {key:'작업자', type:'text', uiType:'cascade-select', optionsFn:()=>REPAIR_WORKER_OPTIONS, emptyHint:'선택 또는 직접입력'}
     ],
-    listCols:['터널명','발생일자','제목','이상발생내역','조치일자','조치내역','작업자']
+    listCols:['터널명','발생일','제목','이상발생내역','조치일','조치내역','작업자']
   },
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
@@ -2078,26 +2078,26 @@ function exportElecInspReport(){
 function buildRepairReportRows(year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   // 원본 템플릿 실측(2026-07-24) — 전월 발생·해당 월 조치완료 건도 포함된다(예: 5월 발생·6월
-  // 조치 건이 6월 보고서에 실림). 발생일자 또는 조치일자 둘 중 하나라도 해당 월이면 포함.
+  // 조치 건이 6월 보고서에 실림). 발생일 또는 조치일 둘 중 하나라도 해당 월이면 포함.
   const recs=(TAB_STATE.repair.records||[])
-    .filter(r=>(r['발생일자']||'').startsWith(ymStr) || (r['조치일자']||'').startsWith(ymStr));
+    .filter(r=>(r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr));
   // 노션 원본에 "예정"→"완료"로 갱신하면서 새 레코드를 추가한(기존 레코드 수정이 아니라) 사례가
-  // 있어(터널명+발생일자+이상발생내역이 같은 건), 보고서에는 더 진행된(조치내역이 채워진) 쪽만
+  // 있어(터널명+발생일+이상발생내역이 같은 건), 보고서에는 더 진행된(조치내역이 채워진) 쪽만
   // 대표로 싣는다 — 원본 데이터 자체는 건드리지 않음, 화면용 대표 선정만.
   const byKey={};
   recs.forEach(r=>{
-    const key=(r['터널명']||'')+'|'+(r['발생일자']||'')+'|'+(r['이상발생내역']||'');
+    const key=(r['터널명']||'')+'|'+(r['발생일']||'')+'|'+(r['이상발생내역']||'');
     const prev=byKey[key];
     if(!prev || (!prev['조치내역'] && r['조치내역'])) byKey[key]=r;
   });
   return Object.values(byKey)
-    .sort((a,b)=>(a['발생일자']||'').localeCompare(b['발생일자']||''))
-    .map(r=>({터널명:r['터널명']||'', 발생일자:r['발생일자'], 이상발생내역:r['이상발생내역']||'', 조치일자:r['조치일자'], 조치내역:r['조치내역']||'', 작업자:r['작업자']||''}));
+    .sort((a,b)=>(a['발생일']||'').localeCompare(b['발생일']||''))
+    .map(r=>({터널명:r['터널명']||'', 발생일:r['발생일'], 이상발생내역:r['이상발생내역']||'', 조치일:r['조치일'], 조치내역:r['조치내역']||'', 작업자:r['작업자']||''}));
 }
 function buildRepairReportSheet(wb, rows){
   // 2026-07-24 15:45 최종 템플릿 실측값으로 갱신(기존 [14,13,42,13,32,16]).
   const REPAIR_COL_WIDTHS=[13.640625,10.640625,42.640625,10.640625,34.640625,16.640625];
-  const REPAIR_COLS_META=[{key:'터널명'},{key:'발생일자'},{key:'이상발생내역',wrap:true},{key:'조치일자'},{key:'조치내역',wrap:true},{key:'작업자'}];
+  const REPAIR_COLS_META=[{key:'터널명'},{key:'발생일'},{key:'이상발생내역',wrap:true},{key:'조치일'},{key:'조치내역',wrap:true},{key:'작업자'}];
   // 템플릿 실측(2026-07-24, 고장수리실적 시트): 실제 데이터가 6건뿐이어도 표 테두리는 항상
   // 21행(5~25행)까지 그려진다 — 빈 줄도 나중에 손으로 채워 넣을 수 있게 테두리를 미리 그어둔
   // 고정 서식지 방식. 데이터가 21건을 넘으면 그 이상은 자연히 늘어난다(Math.max이므로 하한선만 고정).
@@ -2133,7 +2133,7 @@ function buildRepairReportSheet(wb, rows){
       left:{style: c1===REGION.c1?'thin':'hair'}, right:{style: c2===REGION.c2?'thin':'hair'}
     };
   }
-  const headerLabels=['터널명','발생일자','이상발생내역','조치일자','조치내역','작업자'];
+  const headerLabels=['터널명','발생일','이상발생내역','조치일','조치내역','작업자'];
   const headerRow=ws.getRow(4);
   headerRow.height=40; // 템플릿 실측 — 헤더·데이터·빈 행 전부 40 균일(EXCEL_ROW_HEIGHTS.header=30과 다름)
   headerLabels.forEach((h,i)=>{
@@ -2163,11 +2163,11 @@ function buildRepairReportSheet(wb, rows){
     }
     if(r){
       row.getCell(1).value=r.터널명;
-      const d1=excelParseDate(r.발생일자);
-      if(d1){ row.getCell(2).value=d1; row.getCell(2).numFmt='m"/"d;@'; } else row.getCell(2).value=r.발생일자;
+      const d1=excelParseDate(r.발생일);
+      if(d1){ row.getCell(2).value=d1; row.getCell(2).numFmt='m"/"d;@'; } else row.getCell(2).value=r.발생일;
       row.getCell(3).value=r.이상발생내역;
-      const d2=excelParseDate(r.조치일자);
-      if(d2){ row.getCell(4).value=d2; row.getCell(4).numFmt='m"/"d;@'; } else row.getCell(4).value=r.조치일자;
+      const d2=excelParseDate(r.조치일);
+      if(d2){ row.getCell(4).value=d2; row.getCell(4).numFmt='m"/"d;@'; } else row.getCell(4).value=r.조치일;
       row.getCell(5).value=r.조치내역;
       row.getCell(6).value=r.작업자;
     }
@@ -2177,7 +2177,7 @@ function buildRepairReportSheet(wb, rows){
 function exportRepairReport(){
   const btn=document.getElementById('reportBtn_repair');
   const lbl=document.getElementById('reportLbl_repair');
-  const ym=resolveTabYearMonth('repair', '발생일자');
+  const ym=resolveTabYearMonth('repair', '발생일');
   if(!ym){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
   const rows=buildRepairReportRows(ym.year, ym.month);
   if(!rows.length){ alert('해당 연월에 데이터가 없습니다.'); return; }
