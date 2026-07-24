@@ -402,7 +402,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-elecinsp">
-          <th>터널명</th><th>날짜</th><th>제목</th><th>구분</th><th>점검내용</th><th>점검방법</th><th>점검결과</th><th>비고</th>
+          <th>터널명</th><th>날짜</th><th>제목</th><th>구분</th><th>점검내용</th><th>점검방법</th><th>점검결과</th><th>비고</th><th>특이사항</th>
         </tr></thead>
         <tbody id="tbody-elecinsp"></tbody>
       </table>
@@ -661,7 +661,7 @@ const TAB_DEFS=[
       {key:'비고', type:'text'},
       {key:'특이사항', type:'text'}
     ],
-    listCols:['터널명','날짜','제목','구분','점검내용','점검방법','점검결과','비고']
+    listCols:['터널명','날짜','제목','구분','점검내용','점검방법','점검결과','비고','특이사항']
   },
   {
     id:'repair', label:'고장수리', dbId:DB_IDS.repair, titleKey:'제목', dateKey:'발생일자',
@@ -686,7 +686,22 @@ const TAB_DEFS=[
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
         emptyHint:'먼저 일자를 선택하세요'},
-      {key:'번호', type:'number', required:true},
+      // 번호는 안전관리 앱처럼 터널당 고정 후보(1~6)가 있는 게 아니라 그 달 전체를 통틀어
+      // 이어지는 일련번호라(2026-07-24 실측: 매월 정확히 1~42, 중복·결번 없음) 고정 드롭다운
+      // 후보 목록 자체가 성립하지 않는다 — 대신 일자(월) 기준 "현재 등록된 최대번호+1"을
+      // cascade-select로 자동 제안하고, 직접입력으로 언제든 덮어쓸 수 있게 한다.
+      {key:'번호', type:'number', required:true, uiType:'cascade-select', dependsOn:['일자'],
+        optionsFn:dep=>{
+          const d=dep['일자']; if(!d) return [];
+          const ym=d.slice(0,7);
+          const nums=(TAB_STATE.photo.records||[])
+            .filter(r=>(r['일자']||'').startsWith(ym))
+            .map(r=>parseInt(r['번호'],10)).filter(n=>!isNaN(n));
+          return [String(nums.length ? Math.max(...nums)+1 : 1)];
+        },
+        emptyHint:'먼저 일자를 선택하세요'},
+      // 사진설명은 노션 실데이터 기준 252건 중 서로 다른 값이 50개(2026-07-24 확인)로, 사진마다
+      // 내용이 제각각이라 고정 드롭다운 후보로 묶을 만큼 반복되지 않는다 — 직접입력 유지가 적합.
       {key:'사진설명', type:'text'},
       {key:'점검사진', type:'file'}
     ],
@@ -1977,7 +1992,7 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
   if(!blocks.length) return false;
   const ws=wb.addWorksheet(group.name,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+group.name}
   });
   ws.columns=[12,42,10,10,14].map(w=>({width:w}));
@@ -2049,7 +2064,7 @@ function buildRepairReportRows(year, month){
 function buildRepairReportSheet(wb, rows){
   const ws=wb.addWorksheet('고장수리실적',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
   });
   ws.columns=[14,13,42,13,32,16].map(w=>({width:w}));
@@ -2061,7 +2076,11 @@ function buildRepairReportSheet(wb, rows){
   ws.getRow(2).height=10; ws.getRow(3).height=10;
 
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}};
-  const totalRows=Math.max(rows.length, 1);
+  // 템플릿 실측(2026-07-24, 고장수리실적 시트): 실제 데이터가 6건뿐이어도 표 테두리는 항상
+  // 21행(5~25행)까지 그려진다 — 빈 줄도 나중에 손으로 채워 넣을 수 있게 테두리를 미리 그어둔
+  // 고정 서식지 방식. 데이터가 21건을 넘으면 그 이상은 자연히 늘어난다(Math.max이므로 하한선만 고정).
+  const REPAIR_TABLE_MIN_ROWS=21;
+  const totalRows=Math.max(rows.length, REPAIR_TABLE_MIN_ROWS);
   const REGION={r1:4, r2:4+totalRows, c1:1, c2:6};
   function gb(r1,r2,c1,c2){
     return {
@@ -2071,7 +2090,7 @@ function buildRepairReportSheet(wb, rows){
   }
   const headerLabels=['터널명','발생일자','이상발생내역','조치일자','조치내역','작업자'];
   const headerRow=ws.getRow(4);
-  headerRow.height=EXCEL_ROW_HEIGHTS.header;
+  headerRow.height=40; // 템플릿 실측 — 헤더·데이터·빈 행 전부 40 균일(EXCEL_ROW_HEIGHTS.header=30과 다름)
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=EXCEL_BODY_FONT;
@@ -2092,7 +2111,7 @@ function buildRepairReportSheet(wb, rows){
     const r=rows[i]||null;
     const rn=5+i;
     const row=ws.getRow(rn);
-    row.height = r ? excelWrapAwareRowHeight(r, REPAIR_COLS_META, REPAIR_COL_WIDTHS, EXCEL_BODY_FONT.size, 30) : 30;
+    row.height = r ? excelWrapAwareRowHeight(r, REPAIR_COLS_META, REPAIR_COL_WIDTHS, EXCEL_BODY_FONT.size, 40) : 40; // 템플릿 기본행높이 40(위 headerRow와 동일 근거)
     for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
@@ -2151,7 +2170,7 @@ function buildPhotoTeamReportRows(year, month){
 function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const ws=wb.addWorksheet('사진'+sheetIdx,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
   });
   // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
@@ -2188,14 +2207,15 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
     if(range.indexOf(':')>=0) ws.mergeCells(range);
     return cell;
   }
-  let top=1;
-  if(showTitle){
-    mc('A1:J1', '3. 운영관리 사진대지', {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
-    ws.getRow(1).height=50.05;
-    top=2;
-  }
-  ws.getRow(top).height=10;
-  const gridStart=top+1;
+  // 템플릿 실측(2026-07-24, 사진1·사진2 시트 대조): 제목 유무와 무관하게 1~3행은 항상
+  // 같은 높이로 예약돼 있다(1행=50.05 제목행 자리, 2행=10 여백, 3행=30 여백) — 이전 구현은
+  // 제목이 없는 시트(사진2 이후)에서 이 3행 구조를 만들지 않고 바로 1행짜리 여백만 두는 바람에
+  // 그리드 시작행이 템플릿보다 위로 당겨져 있었다(제목 없는 시트에서 1~2행 누락).
+  mc('A1:J1', showTitle?'3. 운영관리 사진대지':null, {name:'HY헤드라인M', size:20}, LEFT, undefined, false);
+  ws.getRow(1).height=50.05;
+  ws.getRow(2).height=10;
+  ws.getRow(3).height=30;
+  const gridStart=4;
 
   const photoTasks=[];
   for(let band=0; band<3; band++){
@@ -2270,7 +2290,7 @@ const TEAM_TOC_ITEMS=['1. 터널전기시설 점검표', '2. 고장수리실적'
 function buildTeamCoverReportSheet(wb, year, month){
   const ws=wb.addWorksheet('표지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:EXCEL_PAGE_PRESETS.portrait}
   });
   ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -2298,7 +2318,7 @@ function buildTeamCoverReportSheet(wb, year, month){
 function buildTeamDailyLogDividerSheet(wb, year, month){
   const ws=wb.addWorksheet('일지간지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
   });
   ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -2352,7 +2372,7 @@ async function buildOneTeamUnifiedReport(year, month){
     const sheetCount=Math.ceil(photoRows.length/6);
     for(let s=0; s<sheetCount; s++){
       const sheetRows=photoRows.slice(s*6, s*6+6);
-      await buildPhotoTeamReportSheet(wb, sheetRows, s+1, false);
+      await buildPhotoTeamReportSheet(wb, sheetRows, s+1, s===0);
     }
     hasData=true;
   }
