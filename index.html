@@ -217,7 +217,7 @@ body{
 .tb-tabs::-webkit-scrollbar{display:none}
 .tb-tab{
   position:relative;
-  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
   height:24px;padding:0 7px;border-radius:6px;
   font-size:12.5px;font-weight:500;color:var(--nav-tab-text);
   cursor:pointer;max-width:170px;
@@ -232,7 +232,7 @@ body{
 .tb-tab.on{background:var(--bg);color:var(--txt2);font-weight:600;}
 .tb-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tb-x{
-  margin-left:1px;width:15px;height:15px;border-radius:4px;flex-shrink:0;
+  width:15px;height:15px;border-radius:4px;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
   font-size:13px;line-height:1;color:var(--nav-tab-x-text);
 }
@@ -279,19 +279,6 @@ body{
 .topbar-weather{display:flex;align-items:center;gap:4px;}
 .topbar-weather-icon{font-size:15px;line-height:1;}
 .weather-loading{color:var(--nav-pill-text);font-size:12px;opacity:.75;}
-
-/* 경로(브레드크럼) 바 — Notion처럼 탭 바 아래, 콘텐츠 위에 위치 */
-.tb-breadcrumb{
-  height:28px;flex-shrink:0;padding:0 16px;
-  display:flex;align-items:center;gap:6px;
-  font-size:12px;color:var(--txt3);
-  background:var(--bg);border-bottom:1px solid var(--border2);
-}
-.tb-breadcrumb.hidden{display:none;}
-.tb-crumb-link{cursor:pointer;transition:color .12s;}
-.tb-crumb-link:hover{color:var(--sky600);}
-.tb-crumb-sep{color:var(--border);}
-.tb-crumb-cur{color:var(--txt2);font-weight:600;}
 
 /* 아이콘 위 마우스오버 툴팁 (Notion 스타일) */
 .tip{position:relative;}
@@ -654,9 +641,6 @@ body{
     </div>
   </div>
 
-  <!-- 경로(브레드크럼) 바 -->
-  <div class="tb-breadcrumb hidden" id="tb-breadcrumb"></div>
-
   <!-- 콘텐츠 영역 -->
   <div class="content-area">
 
@@ -988,7 +972,6 @@ function go(id, opts) {
 
   const page = PAGES[id] || { mName: id };
   document.getElementById('m-page-name').textContent = page.mName;
-  renderBreadcrumb(id);
 
   if (id !== 'home' && !_loaded[id]) {
     // 캐시버스터: 브라우저가 iframe 리소스를 새로고침해도 재검증하지 않는 경우가 있어
@@ -1037,25 +1020,6 @@ function closeTab(id) {
   } else {
     renderTabs();
   }
-}
-
-// ── 경로(브레드크럼) 렌더링 — Notion처럼 탭바 아래에 위치, 홈에서는 숨김 ──
-function renderBreadcrumb(id) {
-  const el = document.getElementById('tb-breadcrumb');
-  if (!el) return;
-  if (id === 'home') {
-    el.classList.add('hidden');
-    el.innerHTML = '';
-    return;
-  }
-  const name = APPS[id] ? APPS[id].name : id;
-  el.innerHTML =
-    `<span class="tb-crumb-link" onclick="go('home')">홈</span>` +
-    `<span class="tb-crumb-sep">/</span>` +
-    `<span class="tb-crumb-link" onclick="go('home')">업무 앱</span>` +
-    `<span class="tb-crumb-sep">/</span>` +
-    `<span class="tb-crumb-cur">${name}</span>`;
-  el.classList.remove('hidden');
 }
 
 // ── 탭 렌더링 (텍스트만 표시, 아이콘 없음) ─────────────────
