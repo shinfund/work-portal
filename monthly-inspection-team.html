@@ -1986,8 +1986,23 @@ const EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT = (29.7/2.54 - EXCEL_PAGE_PRESETS.portr
 // "보고서 생성"(고정 서식지) 전체 공용 — 실제로 그릴 콘텐츠 높이(포인트)를 인쇄 가능 높이와
 // 비교해 "1페이지에 꽉 차게" 배율을 구한다(2026-07-24, 사용자 요청 — 보고서 시트는 전부 고정값
 // 대신 자동 계산으로 통일). 100%를 넘지 않게, 약간의 여유를 두고 98%를 상한으로 잡는다.
-function excelDynamicScale(contentHeightPt){
-  return Math.max(40, Math.min(98, Math.floor(EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100)));
+// **중요(2026-07-24 버그 수정)**: 세로(높이) 기준으로만 배율을 계산하면 가로(열 너비 합)가
+// 그 배율에서 한 페이지 너비를 넘는 시트가 생긴다 — 넘치는 열이 "2페이지"로 잘려 넘어가 보였는데
+// 실제로는 세로가 아니라 가로 방향으로 페이지가 나뉜 것이었다(오른쪽 열 2~3개가 다음 페이지에
+// 나타남). colWidths를 넘기면 가로 기준 배율도 함께 계산해서 더 작은(더 보수적인) 쪽을 쓴다 —
+// Excel 열너비 1단위 ≈ 7px ≈ 5.25pt(기본 폰트 Calibri 11 기준 근사, MDW=7).
+function excelDynamicScale(contentHeightPt, colWidths, margins){
+  margins = margins || EXCEL_PAGE_PRESETS.portrait;
+  let scale = EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100;
+  if(colWidths && colWidths.length){
+    const printableWidthPt = (21/2.54 - margins.left - margins.right) * 72; // A4 가로(21cm) 기준
+    const contentWidthPt = colWidths.reduce((a,b)=>a+b, 0) * 5.25;
+    scale = Math.min(scale, printableWidthPt/contentWidthPt*100);
+  }
+  // 안전 여유 7% — 폰트 렌더링/셀 패딩 등 pt 단위 근사 계산이 완벽히 못 잡아내는 오차를 감안한
+  // 버퍼(2026-07-24, 표지 시트에서 계산값 83%가 실제로는 2페이지로 넘어가고 템플릿 실측 76%만
+  // 안전하게 1페이지에 맞았던 사례로 도입 — 딱 맞아떨어지는 경계값 대신 항상 여유를 둔다).
+  return Math.max(40, Math.min(98, Math.floor(scale*0.93)));
 }
 // 터널 블록 하나(부제+헤더+데이터+특이사항 5행)의 실제 인쇄 높이(포인트) 예측 —
 // drawElecInspTunnelBlock()이 실제로 그리는 행 높이 계산과 동일한 로직이어야 한다.
@@ -2009,11 +2024,14 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
   // (1행=50.05 제목행 자리, 2행=10 여백) — 사진대지 시트에서 이미 확인한 것과 동일한 패턴.
   const titleHeightPt = 60.05; // 제목행(50.05)+간격행(10), 제목 유무 무관하게 항상 고정
   const contentHeightPt = titleHeightPt + blocks.reduce((sum,b)=>sum+elecInspBlockHeightPt(b.rows), 0);
-  const scale=excelDynamicScale(contentHeightPt);
+  const scale=excelDynamicScale(contentHeightPt, ELECINSP_COL_WIDTHS);
+  // 머리글은 시트탭 이름(축약형 group.name)이 아니라 "터널" 붙은 정식 명칭으로 표기
+  // (2026-07-24 사용자 요청 — "남정1,2"가 아니라 "남정1,2터널").
+  const headerTunnelLabel=group.tunnels.join('·');
   const ws=wb.addWorksheet(group.name,{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+group.name, oddFooter:''}
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+headerTunnelLabel, oddFooter:''}
   });
   ws.columns=ELECINSP_COL_WIDTHS.map(w=>({width:w}));
   ws.mergeCells('A1:E1');
@@ -2202,7 +2220,7 @@ const PHOTO_CONTENT_HEIGHT_PT = 50.05+10+30 + 3*(13*13.1 + 2*25.1); // 제목행
 function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const ws=wb.addWorksheet('사진'+sheetIdx,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(PHOTO_CONTENT_HEIGHT_PT), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(PHOTO_CONTENT_HEIGHT_PT, TEAM_PHOTO_COL_WIDTHS), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀', oddFooter:''}
   });
   // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
@@ -2213,7 +2231,6 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const LEFT={vertical:'middle', horizontal:'left'};
   const LEFT_INDENT={vertical:'middle', horizontal:'left'};
   const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true};
-  const IMG_BORDER={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
   function rangeBounds(range){
     const parts=range.split(':');
     const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
@@ -2248,6 +2265,11 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   ws.getRow(2).height=10;
   ws.getRow(3).height=30;
   const gridStart=4;
+  // 밴드(사진 2장씩 3줄)마다 따로 테두리 영역을 잡으면 사진칸·라벨칸마다 제각각 thin 박스가
+  // 생겨 6칸이 서로 다른 상자처럼 보인다(2026-07-24 사용자 지적) — 다른 보고서와 동일하게
+  // 시트 전체(사진+라벨 전 영역)를 하나의 영역으로 잡아 바깥 전체만 thin, 안쪽은 전부 hair로.
+  const lastBandLbl2=gridStart+2*15+12+2;
+  const REGION={r1:gridStart, r2:lastBandLbl2, c1:1, c2:10};
 
   const photoTasks=[];
   for(let band=0; band<3; band++){
@@ -2260,15 +2282,14 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
       const r=sheetRows[idx];
       const c1=side===0?1:6, c2=side===0?5:10;
       const cL=colLetter(c1), cR=colLetter(c2), cNo=cL, cLbl=colLetter(c1+1), cVal1=colLetter(c1+2), cVal2=cR;
-      mc(`${cL}${imgStart}:${cR}${imgEnd}`, null, F(11), CENTER, undefined, IMG_BORDER);
+      mc(`${cL}${imgStart}:${cR}${imgEnd}`, null, F(11), CENTER, undefined, gridBorder(`${cL}${imgStart}:${cR}${imgEnd}`, REGION));
       const url=r ? (r['점검사진']||[])[0]?.url : '';
       if(url) photoTasks.push({url, c1:c1-1, r1:imgStart-1, c2:c2-1, r2:imgEnd-1});
-      const region={r1:lbl1, r2:lbl2, c1, c2};
-      mc(`${cNo}${lbl1}:${cNo}${lbl2}`, r?('#'+r['번호']):null, F(10), CENTER, undefined, gridBorder(`${cNo}${lbl1}:${cNo}${lbl2}`, region));
-      mc(`${cLbl}${lbl1}`, '일      자', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl1}`, region));
-      mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, r?excelParseDate(r['일자']):null, F(10), LEFT_INDENT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, region));
-      mc(`${cLbl}${lbl2}`, '사진설명', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl2}`, region));
-      mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, r?r['사진설명']:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, region));
+      mc(`${cNo}${lbl1}:${cNo}${lbl2}`, r?('#'+r['번호']):null, F(10), CENTER, undefined, gridBorder(`${cNo}${lbl1}:${cNo}${lbl2}`, REGION));
+      mc(`${cLbl}${lbl1}`, '일      자', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl1}`, REGION));
+      mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, r?excelParseDate(r['일자']):null, F(10), LEFT_INDENT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, REGION));
+      mc(`${cLbl}${lbl2}`, '사진설명', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl2}`, REGION));
+      mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, r?r['사진설명']:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, REGION));
     }
   }
   return Promise.all(photoTasks.map(t=>
@@ -2324,11 +2345,13 @@ const TEAM_TOC_ITEMS=['1. 터널전기시설 점검표', '2. 고장수리실적'
 // (2026-07-24, 사용자 요청 — PC마다 해상도가 달라 고정 배율은 인쇄 시 틀어질 위험이 있고,
 // 계산식이면 나중에 행 구성이 바뀌어도 값이 자동으로 따라온다).
 const TEAM_COVER_CONTENT_HEIGHT_PT = 27*34.1;
+const TEAM_COVER_COL_WIDTHS = Array(13).fill(8.86);
 function buildTeamCoverReportSheet(wb, year, month){
+  // 표지·일지간지만 왼쪽 여백이 2cm(다른 시트는 1.5cm) — 2026-07-24 15:45 최종 템플릿 실측.
+  const coverMargins=Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)});
   const ws=wb.addWorksheet('표지',{
     views:[{showGridLines:false, zoomScale:90}],
-    // 표지·일지간지만 왼쪽 여백이 2cm(다른 시트는 1.5cm) — 2026-07-24 15:45 최종 템플릿 실측.
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_COVER_CONTENT_HEIGHT_PT), margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)})}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_COVER_CONTENT_HEIGHT_PT, TEAM_COVER_COL_WIDTHS, coverMargins), margins:coverMargins}
   });
   ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -2354,10 +2377,12 @@ function buildTeamCoverReportSheet(wb, year, month){
   });
 }
 const TEAM_DIVIDER_CONTENT_HEIGHT_PT = 50.15+20.15+11*30+30+11*30; // 제목행+여백행+본문(3~13,14,15~25)
+const TEAM_DIVIDER_COL_WIDTHS = [17.57,19.79,32.07,16,14];
 function buildTeamDailyLogDividerSheet(wb, year, month){
+  const dividerMargins=Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)});
   const ws=wb.addWorksheet('일지간지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_DIVIDER_CONTENT_HEIGHT_PT), margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)}), printArea:'A1:E25'}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_DIVIDER_CONTENT_HEIGHT_PT, TEAM_DIVIDER_COL_WIDTHS, dividerMargins), margins:dividerMargins, printArea:'A1:E25'}
   });
   ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
   const TITLE={vertical:'middle', horizontal:'left'};
