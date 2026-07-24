@@ -2046,7 +2046,7 @@ function exportElecInspReport(){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${ym.year}년 ${ym.month}월 터널전기시설점검표_점검팀.xlsx`;
+    const fname=`${ym.year}년 ${String(ym.month).padStart(2,'0')}월 터널전기시설점검표_점검팀.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -2433,7 +2433,7 @@ function exportTeamUnifiedReport(){
   btn.disabled=true; lbl.textContent='생성 중...';
   buildOneTeamUnifiedReport(ym.year, ym.month).then(({blob, year, month})=>{
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${month}월 점검결과보고서_점검팀.xlsx`;
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검결과보고서_점검팀.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
