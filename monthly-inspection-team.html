@@ -2164,10 +2164,10 @@ function buildRepairReportSheet(wb, rows){
     if(r){
       row.getCell(1).value=r.터널명;
       const d1=excelParseDate(r.발생일자);
-      if(d1){ row.getCell(2).value=d1; row.getCell(2).numFmt='yyyy-mm-dd'; } else row.getCell(2).value=r.발생일자;
+      if(d1){ row.getCell(2).value=d1; row.getCell(2).numFmt='m"/"d;@'; } else row.getCell(2).value=r.발생일자;
       row.getCell(3).value=r.이상발생내역;
       const d2=excelParseDate(r.조치일자);
-      if(d2){ row.getCell(4).value=d2; row.getCell(4).numFmt='yyyy-mm-dd'; } else row.getCell(4).value=r.조치일자;
+      if(d2){ row.getCell(4).value=d2; row.getCell(4).numFmt='m"/"d;@'; } else row.getCell(4).value=r.조치일자;
       row.getCell(5).value=r.조치내역;
       row.getCell(6).value=r.작업자;
     }
