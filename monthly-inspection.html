@@ -4866,7 +4866,7 @@ async function buildOneUnifiedReport(tunnel, year, month){
   const buf=await wb.xlsx.writeBuffer();
   const blob=await excelUnlockAspectRatio(buf);
   const url=URL.createObjectURL(blob);
-  const fname=`${year}년 점검결과보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
+  const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검결과보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
   const a=document.createElement('a'); a.href=url; a.download=fname;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url), 4000);
