@@ -1815,15 +1815,20 @@ function colLetter(n){ let s=''; while(n>0){ const m=(n-1)%26; s=String.fromChar
 // 전기시설점검 — 원본 템플릿 실측 시트 순서(흥해/청하/남정1,2+남정3/남정4+남정6/남정5/남정7+남정8/
 // 남정9+강구1/강구2+강구3, 8개 시트). 남정4·남정9처럼 짝이 불규칙한 것도 템플릿 그대로 하드코딩
 // (규칙성이 없어 자동 계산 불가, [[project_monthly_inspection_team_app]] 참고).
+// scale: 템플릿 실측 인쇄배율(openpyxl page_setup.scale, 2026-07-24) — ExcelJS의 fitToWidth/
+// fitToHeight 자동맞춤은 시트마다 계산 방식이 달라(fitToHeight:1은 키 큰 시트에서 좌우 여백이
+// 과도해지고, fitToHeight:0은 반대로 1페이지에 다 안 들어가고 2페이지로 잘려 넘어감) 두 증상이
+// 번갈아 재발했다. 자동맞춤 대신 템플릿이 실제로 쓰는 고정 배율값을 그대로 가져다 쓰는 게
+// 유일하게 항상 1페이지에 맞아떨어지는 방법 — 시트 높이(터널 1개 vs 2개)에 따라 값이 다르다.
 const ELECINSP_SHEET_GROUPS=[
-  {name:'흥해', tunnels:['흥해터널']},
-  {name:'청하', tunnels:['청하터널']},
-  {name:'남정1,2+남정3', tunnels:['남정1·2터널','남정3터널']},
-  {name:'남정4+남정6', tunnels:['남정4터널','남정6터널']},
-  {name:'남정5', tunnels:['남정5터널']},
-  {name:'남정7+남정8', tunnels:['남정7터널','남정8터널']},
-  {name:'남정9+강구1', tunnels:['남정9터널','강구1터널']},
-  {name:'강구2+강구3', tunnels:['강구2터널','강구3터널']}
+  {name:'흥해', tunnels:['흥해터널'], scale:80},
+  {name:'청하', tunnels:['청하터널'], scale:80},
+  {name:'남정1,2+남정3', tunnels:['남정1·2터널','남정3터널'], scale:80},
+  {name:'남정4+남정6', tunnels:['남정4터널','남정6터널'], scale:64},
+  {name:'남정5', tunnels:['남정5터널'], scale:80},
+  {name:'남정7+남정8', tunnels:['남정7터널','남정8터널'], scale:77},
+  {name:'남정9+강구1', tunnels:['남정9터널','강구1터널'], scale:80},
+  {name:'강구2+강구3', tunnels:['강구2터널','강구3터널'], scale:80}
 ];
 const ELECINSP_GUBUN_ORDER=['자동제어','조명설비','방재설비','관리동설비','터널진입차단설비'];
 function elecInspTunnelRecs(tunnel, year, month){
@@ -1992,7 +1997,10 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
   if(!blocks.length) return false;
   const ws=wb.addWorksheet(group.name,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    // fitToWidth/fitToHeight 자동맞춤 대신 템플릿 실측 고정배율(group.scale)을 그대로 쓴다 —
+    // fitToHeight:1은 키 큰 시트(터널 2개)에서 좌우 여백이 과도해지고, fitToHeight:0은 반대로
+    // 1페이지에 안 들어가고 2페이지로 잘려 넘어가는 문제가 있었다(2026-07-24).
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:group.scale, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+group.name}
   });
   ws.columns=[12,42,10,10,14].map(w=>({width:w}));
@@ -2064,7 +2072,7 @@ function buildRepairReportRows(year, month){
 function buildRepairReportSheet(wb, rows){
   const ws=wb.addWorksheet('고장수리실적',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:60, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
   });
   ws.columns=[14,13,42,13,32,16].map(w=>({width:w}));
@@ -2170,7 +2178,7 @@ function buildPhotoTeamReportRows(year, month){
 function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const ws=wb.addWorksheet('사진'+sheetIdx,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:99, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
   });
   // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
@@ -2290,7 +2298,7 @@ const TEAM_TOC_ITEMS=['1. 터널전기시설 점검표', '2. 고장수리실적'
 function buildTeamCoverReportSheet(wb, year, month){
   const ws=wb.addWorksheet('표지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:EXCEL_PAGE_PRESETS.portrait}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:76, margins:EXCEL_PAGE_PRESETS.portrait}
   });
   ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -2318,7 +2326,7 @@ function buildTeamCoverReportSheet(wb, year, month){
 function buildTeamDailyLogDividerSheet(wb, year, month){
   const ws=wb.addWorksheet('일지간지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:83, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
   });
   ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
   const TITLE={vertical:'middle', horizontal:'left'};
