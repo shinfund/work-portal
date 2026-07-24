@@ -564,11 +564,11 @@ body{
     <div class="sb-item" id="sbn-monthly" onclick="go('monthly')">
       <span>월간점검결과-안전관리</span>
     </div>
+    <div class="sb-item" id="sbn-monthlyTeam" onclick="go('monthlyTeam')">
+      <span>월간점검결과-점검팀 (작업중)</span>
+    </div>
 
     <div class="sb-sec">추가 예정</div>
-    <div class="sb-item sb-disabled">
-      <span>월간점검결과-점검팀</span>
-    </div>
     <div class="sb-item sb-disabled">
       <span>시설물현황</span>
     </div>
@@ -835,6 +835,17 @@ body{
       </div>
     </div>
 
+    <!-- ▸ 월간점검결과-점검팀 iframe -->
+    <div class="panel" id="panel-monthlyTeam">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-monthlyTeam">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">월간점검결과-점검팀 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-monthlyTeam" class="app-iframe" title="월간점검결과-점검팀"></iframe>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -902,7 +913,8 @@ const APPS = {
   overtime: { name:'연장근무', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' },
   equip:    { name:'비품대장', file:'asset-register.html' },
-  monthly:  { name:'월간점검결과-안전관리', file:'monthly-inspection.html' }
+  monthly:  { name:'월간점검결과-안전관리', file:'monthly-inspection.html' },
+  monthlyTeam: { name:'월간점검결과-점검팀', file:'monthly-inspection-team.html' }
 };
 const PAGES = {
   home:     { mName:'홈' },
@@ -911,7 +923,8 @@ const PAGES = {
   overtime: { mName:'연장근무' },
   solar:    { mName:'태양광발전량' },
   equip:    { mName:'비품대장' },
-  monthly:  { mName:'월간점검결과-안전관리' }
+  monthly:  { mName:'월간점검결과-안전관리' },
+  monthlyTeam: { mName:'월간점검결과-점검팀' }
 };
 
 let _cur = 'home';

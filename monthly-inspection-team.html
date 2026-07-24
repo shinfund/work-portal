@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>월간점검결과-점검팀</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M6 8h12M6 12h12M6 16h8' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* work-portal 공통 색상 팔레트(하자보수현황·태양광발전량 앱과 수치 동일) */
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --bg:#F5F8FF;--card:#FFFFFF;--border:#7B9DC0;--border2:#A3C0DE;
+  --txt:#1A2535;--txt2:#3D4F68;--txt3:#33475C;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#0C447C;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#185FA5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#191919;--card:#242424;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#8FCBFF;
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER ── */
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
+.header-left{display:flex;align-items:center;gap:10px;min-width:0;flex-shrink:1}
+/* 로그인 전(⚠ 로그인 필요 안내) 등 last-update 문구가 길어지는 상태에서 header-right가 넓어지면
+   header-left가 좁아지는데, 기존엔 줄바꿈되어 44px 고정 header 높이를 넘어 위로 잘려 보이는 문제가
+   있었다 — nowrap+ellipsis로 잘림 없이 말줄임 처리 */
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;flex-shrink:0}
+.header-btns{display:flex;gap:6px;flex-shrink:0}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV (7개 탭 — 좁은 화면에서는 가로 스크롤) ── */
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab.active{color:var(--sky600)}
+.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
+/* ── MAIN ── */
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
+.panel{display:none}.panel.active{display:block}
+
+/* ── DD (목록방식 드롭다운, 3-9 표준) ── */
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active::after{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu.open{display:block}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
+
+/* ── SECTION CARD ── */
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.detail-sc{background:transparent;border:none;box-shadow:none}
+.detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
+.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+
+/* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 (연/월 등 dd-btn과 동일 색상 체계) ── */
+.view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.view-toggle-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
+.view-toggle-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:#0C447C}
+
+/* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:16px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-report{background:#534AB7}
+.tb-action-btn.tb-report:hover{background:#443a94}
+.tb-action-btn.tb-unified{background:#B45309}
+.tb-action-btn.tb-unified:hover{background:#94400a}
+
+/* ── 뱃지(터널명 등) ── */
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
+.tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.tunnel-c2{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+.tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.tunnel-c4{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
+html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .tunnel-c2{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .tunnel-c4{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+/* 월간점검 탭 — 구분(6종) 뱃지 */
+.gubun-c0{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.gubun-c1{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
+.gubun-c2{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.gubun-c3{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
+.gubun-c4{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.gubun-c5{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
+html[data-theme="dark"] .gubun-c0{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .gubun-c1{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
+html[data-theme="dark"] .gubun-c2{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .gubun-c3{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+html[data-theme="dark"] .gubun-c4{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .gubun-c5{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+/* 월간점검 탭 — 점검결과(양호/불량/점검요/-) 뱃지 */
+.result-good{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
+.result-bad{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.result-warn{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.result-none{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
+html[data-theme="dark"] .result-good{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .result-bad{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .result-warn{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+html[data-theme="dark"] .result-none{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+/* ── MODAL ── */
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
+.add-modal-box{max-width:600px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+/* 상세조회 키/값 표 — key 컬럼을 table-cell로 만들어 가장 긴 라벨 글자 길이에 맞춰 자동 너비 산정
+   (전기설비기록처럼 라벨이 긴 탭에서 flex 고정폭 128px로는 줄바꿈이 심하게 발생하던 문제 해결) */
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px;display:table;width:100%}
+.detail-info-row{display:table-row}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{display:table-cell;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);border-bottom:1px solid var(--border2);vertical-align:top;line-height:1.5}
+.detail-info-val{display:table-cell;font-size:13px;color:var(--txt);line-height:1.6;padding:10px 14px;word-break:break-all;border-bottom:1px solid var(--border2);vertical-align:top;width:100%}
+.detail-info-row:last-child .detail-info-key,.detail-info-row:last-child .detail-info-val{border-bottom:none}
+.photo-section{padding:10px 0;border-top:1px solid var(--border2)}
+.photo-label{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+/* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
+.modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
+.modal-progress-bar{height:100%;width:0%;background:var(--sky);transition:width .25s ease}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+/* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
+.form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
+.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.form-group-grid .modal-field{margin-bottom:0}
+.form-group-grid .modal-label{font-size:11.5px}
+/* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력 */
+.elec-grid-input{width:72px;padding:4px 6px;font-size:16px}
+.elec-grid-select{width:64px;padding:4px 4px;font-size:16px}
+/* 전기설비기록·발전기점검처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
+.add-modal-box.wide-modal{max-width:820px}
+.detail-modal-box.wide-modal{max-width:820px}
+
+.theme-opts{display:flex;gap:12px;}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
+.theme-opt.on{border-color:var(--sky);}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
+.theme-swatch-light{background:#F8FAFC;}
+.theme-swatch-dark{background:#191919;}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
+  .form-group-grid{grid-template-columns:1fr}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+
+<!-- MODAL: 설정(로그인 안내+테마) -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        설정
+      </div>
+      <div class="modal-field">
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
+      </div>
+      <div class="theme-opts">
+        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
+        </div>
+        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 신규등록/수정 (필드는 탭별로 동적 생성) -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+      <div id="addModalFields"></div>
+      <div class="modal-progress-wrap" id="addModalProgressWrap" style="display:none"><div class="modal-progress-bar" id="addModalProgressBar"></div></div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: 상세조회(수정/삭제) -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">상세</h3>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">닫기</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-title">월간점검결과-점검팀</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadTabData(_activePanel)">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+  </div>
+</div>
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-elecinsp" role="tab" aria-selected="true" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+  <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')">고장수리</button>
+  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ▸ 전기시설점검 -->
+  <div class="panel active" id="panel-elecinsp">
+    <div class="filter-row">
+      <div id="filterDd-elecinsp" style="display:contents"></div>
+      <input class="search-box" id="search-elecinsp" placeholder="🔍 제목·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('elecinsp')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('elecinsp')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_elecinsp" onclick="exportTabExcel('elecinsp')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_elecinsp">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-elecinsp"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="thead-elecinsp">
+          <th>터널명</th><th>날짜</th><th>제목</th><th>구분</th><th>점검내용</th><th>점검방법</th><th>점검결과</th><th>비고</th>
+        </tr></thead>
+        <tbody id="tbody-elecinsp"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ▸ 고장수리 -->
+  <div class="panel" id="panel-repair">
+    <div class="filter-row">
+      <div id="filterDd-repair" style="display:contents"></div>
+      <input class="search-box" id="search-repair" placeholder="🔍 제목·이상발생내역·조치내역·작업자 검색..." aria-label="검색" oninput="renderTabTable('repair')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('repair')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_repair" onclick="exportTabExcel('repair')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_repair">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="detail-count" id="count-repair"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="thead-repair">
+          <th>터널명</th><th>발생일자</th><th>제목</th><th>이상발생내역</th><th>조치일자</th><th>조치내역</th><th>작업자</th>
+        </tr></thead>
+        <tbody id="tbody-repair"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ▸ 점검사진 -->
+  <div class="panel" id="panel-photo">
+    <div class="filter-row">
+      <div id="filterDd-photo" style="display:contents"></div>
+      <input class="search-box" id="search-photo" placeholder="🔍 제목·사진설명 검색..." aria-label="검색" oninput="renderTabTable('photo')"/>
+      <button class="tb-action-btn tb-add" onclick="openAddModal('photo')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        신규등록
+      </button>
+      <button class="tb-action-btn tb-excel" id="excelBtn_photo" onclick="exportTabExcel('photo')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelLbl_photo">엑셀 생성</span>
+      </button>
+    </div>
+    <div class="modal-hint" style="margin-bottom:8px">※ 번호는 해당 월 사진대지 전체에서 이어지는 일련번호입니다(터널별로 다시 시작하지 않음).</div>
+    <div class="detail-count" id="count-photo"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="thead-photo">
+          <th>터널명</th><th>일자</th><th>제목</th><th class="r">번호</th><th>사진설명</th><th>점검사진</th>
+        </tr></thead>
+        <tbody id="tbody-photo"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+<script>
+// ── Worker/DB 연동 정보 (고정값 — 접근 제어는 로그인 토큰으로) ──
+const WORKER_URL='https://notion-proxy.shinfund.workers.dev';
+const DB_IDS={
+  elecinsp: '23c03f3d-396b-46dc-8737-e0a6c7fdae70', // 전기시설점검DB
+  repair:   '22c4ad18-8a82-457b-ba8b-f74b1d6174cd', // 고장수리DB
+  photo:    '83a945c6-79fe-4f2b-87e6-2ceef9557d0a'  // 점검사진DB
+};
+let CFG={workerUrl:WORKER_URL,authToken:'',authExpires:0};
+(()=>{
+  try{
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+  }catch(e){}
+})();
+function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+
+// ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 모달 재오픈 ──
+(()=>{
+  const _fetch=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    init=init||{};
+    const urlStr=typeof input==='string'?input:(input&&input.url)||'';
+    if(urlStr.indexOf(WORKER_URL)===0){
+      const headers=new Headers(init.headers||{});
+      if(CFG.authToken) headers.set('Authorization','Bearer '+CFG.authToken);
+      init=Object.assign({},init,{headers});
+    }
+    return _fetch(input,init).then(res=>{
+      if(res.status===401&&urlStr.indexOf(WORKER_URL)===0){
+        CFG.authToken='';CFG.authExpires=0;
+        try{localStorage.removeItem('wp_authToken');localStorage.removeItem('wp_authExpires');}catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
+
+function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
+function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
+function titleWithMonth(dateStr, suffix){
+  if(!dateStr) return null;
+  const y=dateStr.slice(0,4), m=parseInt(dateStr.slice(5,7),10);
+  if(!y || !m) return null;
+  return `${y}년 ${m}월 ${suffix}`;
+}
+// ── 모달 드래그 이동 ──
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.width=rect.width+'px'; /* width:100%가 fixed 전환 시 뷰포트 기준으로 재계산되며 좁은 화면에서 모달이 순간 넓어져
+      헤더 우측의 닫기 버튼이 손가락/커서 아래에서 옆으로 밀려나 탭이 무산되는 문제 방지 */
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+
+// ── 설정 모달 ──
+function updateLoginStatusHint(){
+  const h=document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent=isAuthed()?'로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')':'로그인이 필요합니다';
+}
+function openCfgModal(){
+  updateLoginStatusHint();
+  syncThemeOptUI();
+  const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+}
+function openLoginModal(){
+  const lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const m=document.getElementById('cfgModal');if(m){m.classList.remove('modal-open');document.body.style.overflow='';}
+  resetModalDragPos('cfgModal');
+}
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
+window.addEventListener('storage',e=>{
+  if(e.key==='wp_authToken'){
+    CFG.authToken=e.newValue||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()) loadTabData(_activePanel);
+  }
+});
+
+// ══════════════════════════════════════════════════════
+// ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-24 notion-fetch로 실스키마 확인 후 하드코딩) ──
+// ══════════════════════════════════════════════════════
+const TUNNEL_OPTIONS_ELEC=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+const TUNNEL_OPTIONS_STD=['흥해터널','청하터널(주·부)','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+// 전기시설점검 "점검내용" 캐스케이드 — 구분별 표준 점검항목 후보(원본 엑셀 템플릿 실측, 터널별로
+// 실제 적용 항목 수는 다르지만(예: 남정3터널은 자탐설비 항목이 없음) 구분당 전체 후보를 모아
+// 두고 필요한 것만 골라 쓰는 방식 — 터널별 정확한 부분집합은 앱에서 강제하지 않는다.
+const TEAM_CHECKLIST_BY_GUBUN={
+  '자동제어':['RTU','DLP','MMI'],
+  '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등','실내 조명등 및 공동구 조명'],
+  '방재설비':['자탐설비 외관상태 점검','자탐설비 시스템 안정성 확인','중계기 발신기 경종 표시등 외관 점검','비상콘센트 전원투입 상태','옥외 수배전반 소화기 외관 상태'],
+  '관리동설비':['화재수신기'],
+  '터널진입차단설비':['현장제어반 및 차단막 프레임 등 외관','전원공급 및 차단기 투입상태','전원 및 제어케이블 외관 및 단자 결선','관리동, 상황실, 현장제어반 동작상태','차단막 원단 파손 및 음향, 경광등 상태']
+};
+function teamChecklistOptions(gubun){ return TEAM_CHECKLIST_BY_GUBUN[gubun] || []; }
+// 전기시설점검 탭 — 구분(5종) 뱃지 색상 매핑(gubun-c0~c4 클래스는 CSS에 이미 정의됨)
+function gubunSlug(v){
+  const map={'자동제어':'gubun-c1','조명설비':'gubun-c4','방재설비':'gubun-c0','관리동설비':'gubun-c5','터널진입차단설비':'gubun-c2'};
+  return map[v] || 'gubun-c3';
+}
+
+const TAB_DEFS=[
+  {
+    id:'elecinsp', label:'전기시설점검', dbId:DB_IDS.elecinsp, titleKey:'제목', dateKey:'날짜',
+    fields:[
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_ELEC, required:true, cascadeTrigger:true},
+      {key:'날짜', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['날짜'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['날짜'],'전기시설점검표'); return t?[t]:[]; },
+        emptyHint:'먼저 날짜를 선택하세요'},
+      {key:'구분', type:'select', options:['자동제어','조명설비','방재설비','관리동설비','터널진입차단설비'], cascadeTrigger:true, badgeFn:gubunSlug},
+      {key:'점검내용', type:'text', required:true, uiType:'cascade-select', dependsOn:['구분'],
+        optionsFn:dep=>teamChecklistOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
+      {key:'점검방법', type:'select', options:['목시','스캔','조작']},
+      {key:'점검결과', type:'select', options:['양호','불량','점검요','-'], defaultValue:'양호', badgeFn:resultSlug},
+      {key:'비고', type:'text'}
+    ],
+    listCols:['터널명','날짜','제목','구분','점검내용','점검방법','점검결과','비고']
+  },
+  {
+    id:'repair', label:'고장수리', dbId:DB_IDS.repair, titleKey:'제목', dateKey:'발생일자',
+    fields:[
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true},
+      {key:'발생일자', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['발생일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['발생일자'],'고장수리실적'); return t?[t]:[]; },
+        emptyHint:'먼저 발생일자를 선택하세요'},
+      {key:'이상발생내역', type:'text', required:true},
+      {key:'조치일자', type:'date'},
+      {key:'조치내역', type:'text'},
+      {key:'작업자', type:'text'}
+    ],
+    listCols:['터널명','발생일자','제목','이상발생내역','조치일자','조치내역','작업자']
+  },
+  {
+    id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
+    fields:[
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true},
+      {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
+        optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
+        emptyHint:'먼저 일자를 선택하세요'},
+      {key:'번호', type:'number', required:true},
+      {key:'사진설명', type:'text'},
+      {key:'점검사진', type:'file'}
+    ],
+    listCols:['터널명','일자','제목','번호','사진설명','점검사진']
+  }
+];
+function getTabDef(id){ return TAB_DEFS.find(t=>t.id===id); }
+function dataFields(tabDef){ return tabDef.fields.filter(f=>f.key); } // header:true 그룹 라벨 항목 제외
+
+const TAB_STATE={};
+TAB_DEFS.forEach(t=>{ TAB_STATE[t.id]={records:[], loaded:false, loading:false}; });
+// ── Notion 값 추출 헬퍼 ──
+function getText(p){
+  if(!p) return '';
+  if(p.type==='title') return (p.title||[]).map(t=>t.plain_text||'').join('')||'';
+  if(p.type==='rich_text') return (p.rich_text||[]).map(t=>t.plain_text||'').join('')||'';
+  if(p.type==='select') return p.select?.name||'';
+  if(p.type==='number') return String(p.number??'');
+  return '';
+}
+function getNum(p){
+  if(!p) return 0;
+  if(p.type==='number') return Number(p.number)||0;
+  return parseFloat(getText(p))||0;
+}
+function getDateStr(p){
+  if(!p) return '';
+  if(p.type==='date') return p.date?.start ? p.date.start.slice(0,10) : '';
+  return getText(p).trim().slice(0,10);
+}
+function buildPropValue(type, rawValue){
+  const empty=(rawValue===undefined||rawValue===null||String(rawValue).trim()==='');
+  if(type==='title') return empty?{title:[]}:{title:[{text:{content:String(rawValue)}}]};
+  if(type==='text') return empty?{rich_text:[]}:{rich_text:[{text:{content:String(rawValue)}}]};
+  if(type==='select') return empty?{select:null}:{select:{name:String(rawValue)}};
+  if(type==='date') return empty?{date:null}:{date:{start:String(rawValue)}};
+  if(type==='number') return empty?{number:null}:{number:parseFloat(rawValue)||0};
+  if(type==='file') return {files:(rawValue||[]).map(f=>({name:f.name||'사진',type:'external',external:{url:f.url}}))};
+  return null;
+}
+function getFiles(p){
+  if(!p || p.type!=='files') return [];
+  return (p.files||[]).map(f=>({name:f.name||'', url:(f.external&&f.external.url)||(f.file&&f.file.url)||''})).filter(f=>f.url);
+}
+function parseRecord(tabDef, page){
+  const props=page.properties||{};
+  const rec={id:page.id};
+  dataFields(tabDef).forEach(f=>{
+    const p=props[f.key];
+    if(f.type==='number') rec[f.key]=getNum(p);
+    else if(f.type==='date') rec[f.key]=getDateStr(p);
+    else if(f.type==='file') rec[f.key]=getFiles(p);
+    else rec[f.key]=getText(p).trim();
+  });
+  return rec;
+}
+
+// ── Notion 조회(페이지네이션 포함) ──
+function fetchNotion(dbId, body){
+  return fetch(CFG.workerUrl+'/v1/databases/'+dbId+'/query',{
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
+}
+async function fetchAllPages(dbId, body){
+  let pages=[], cursor=null, guard=0;
+  do{
+    const reqBody=cursor ? Object.assign({},body,{start_cursor:cursor}) : body;
+    const data=await fetchNotion(dbId, reqBody);
+    pages=pages.concat(data.results||[]);
+    cursor = data.has_more ? data.next_cursor : null;
+    guard++;
+  } while(cursor && guard<50);
+  return pages;
+}
+function notionFetch(path, method, body){
+  return fetch(CFG.workerUrl+path,{ method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
+}
+// 다건 Notion 쓰기(전기설비기록 41개 자식 등)를 동시에 몇 개씩 묶어서 처리 — 완전 순차(느림)와 완전 동시(429 위험) 사이 절충
+function runWithConcurrency(tasks, limit){
+  return new Promise((resolve, reject)=>{
+    const results=new Array(tasks.length);
+    let idx=0, active=0, doneCount=0, failed=false;
+    function pump(){
+      if(failed) return;
+      while(active<limit && idx<tasks.length){
+        const cur=idx++;
+        active++;
+        tasks[cur]().then(v=>{
+          results[cur]=v; active--; doneCount++;
+          if(doneCount===tasks.length) resolve(results);
+          else pump();
+        }).catch(e=>{ failed=true; reject(e); });
+      }
+    }
+    if(!tasks.length) resolve(results);
+    else pump();
+  });
+}
+
+// ── 탭 데이터 로드 ──
+async function loadTabData(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields) return;
+  if(!isAuthed()){ openLoginModal(); return; }
+  const st=TAB_STATE[tabId];
+  if(st.loading) return;
+  st.loading=true;
+  setSyncing(true);
+  try{
+    const body={page_size:100};
+    if(tabDef.dateKey) body.sorts=[{property:tabDef.dateKey, direction:'descending'}];
+    const pages=await fetchAllPages(tabDef.dbId, body);
+    st.records=pages.map(p=>parseRecord(tabDef,p));
+    st.loaded=true;
+    applyLatestFilterDefault(tabId);
+    renderTabTable(tabId);
+    updateLastUpdate();
+  }catch(e){
+    toast('데이터 로드 실패: '+e.message);
+    console.error(e);
+  }finally{
+    st.loading=false;
+    setSyncing(false);
+  }
+}
+function setSyncing(on){
+  const btn=document.getElementById('syncBtn');
+  const icon=document.getElementById('syncIcon');
+  const lbl=document.getElementById('syncLabel');
+  if(btn) btn.disabled=on;
+  if(icon) icon.classList.toggle('spinning',on);
+  if(lbl) lbl.textContent=on?'불러오는 중...':'새로고침';
+}
+function updateLastUpdate(){
+  const lu=document.getElementById('lastUpdate');
+  if(!lu) return;
+  const now=new Date();
+  const p2=n=>String(n).padStart(2,'0');
+  lu.textContent='마지막 업데이트: '+p2(now.getMonth()+1)+'.'+p2(now.getDate())+'. '+(now.getHours()<12?'오전':'오후')+' '+p2(now.getHours()%12||12)+':'+p2(now.getMinutes());
+}
+
+// ── 목록 렌더 ──
+// ── 탭별 연/월/터널 드롭다운(목록방식, 3-9 표준) — 검색창 왼쪽에 표시 ──
+function toggleDd(menuId,btnId){
+  const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
+  else { menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId,btnId){
+  document.getElementById(menuId)?.classList.remove('open');
+  document.getElementById(btnId)?.classList.remove('active');
+}
+document.addEventListener('click',e=>{
+  document.querySelectorAll('.dd-menu.open').forEach(menu=>{
+    const wrap=menu.closest('.dd-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      menu.classList.remove('open');
+      wrap.querySelector('.dd-btn')?.classList.remove('active');
+    }
+  });
+});
+const _tabFilters={};
+const _tabFilterUserPicked={};
+TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+// 목록에 기본 표시되지 않는 컬럼(ACB 상세 등)을 사용자가 선택해서 추가로 켜볼 수 있게 하는 상태 — 탭별로 localStorage에 저장
+const _tabExtraCols={};
+TAB_DEFS.forEach(t=>{
+  try{ _tabExtraCols[t.id]=JSON.parse(localStorage.getItem('mi_extracols_'+t.id)||'[]'); }
+  catch(e){ _tabExtraCols[t.id]=[]; }
+});
+function extraColCandidates(tabDef){
+  return dataFields(tabDef).filter(f=>!tabDef.listCols.includes(f.key) && f.type!=='file');
+}
+// ACB 필드처럼 그룹(조명용/일반용/동력용)이 있으면 "전압 R-S" 같은 짧은 label만으론 구분이 안 되므로 그룹명을 붙인다
+function fieldDisplayLabel(f){
+  return f.group ? f.group+' '+(f.label||f.key) : (f.label||f.key);
+}
+function toggleExtraCol(tabId, key, checked){
+  const list=_tabExtraCols[tabId]||(_tabExtraCols[tabId]=[]);
+  const i=list.indexOf(key);
+  if(checked && i<0) list.push(key);
+  else if(!checked && i>=0) list.splice(i,1);
+  localStorage.setItem('mi_extracols_'+tabId, JSON.stringify(list));
+  syncExtraHeaderCols(tabId);
+  renderTabTable(tabId);
+  const lbl=document.getElementById('colToggleLabel-'+tabId);
+  if(lbl) lbl.textContent = list.length ? `확인자 +${list.length}` : '확인자';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!list.length);
+}
+function syncExtraHeaderCols(tabId){
+  const tabDef=getTabDef(tabId);
+  const row=document.getElementById('thead-'+tabId);
+  if(!tabDef || !row) return;
+  row.querySelectorAll('th[data-extra]').forEach(th=>th.remove());
+  (_tabExtraCols[tabId]||[]).forEach(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    if(!f) return;
+    const th=document.createElement('th');
+    th.dataset.extra='1';
+    if(f.type==='number') th.className='r';
+    th.textContent=fieldDisplayLabel(f);
+    row.appendChild(th);
+  });
+}
+function buildColToggleDd(tabId){
+  const tabDef=getTabDef(tabId);
+  const candidates=extraColCandidates(tabDef);
+  const wrap=document.getElementById('colToggleWrap-'+tabId);
+  if(!wrap) return; // 추가로 보여줄 컬럼이 없는 탭은 buildTabFilterDd에서 애초에 렌더링하지 않음
+  const menu=document.getElementById('colToggleMenu-'+tabId);
+  const selected=_tabExtraCols[tabId]||[];
+  if(!menu.dataset.built){
+    menu.dataset.built='1';
+    menu.innerHTML=candidates.map(f=>`
+      <label class="dd-opt" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" value="${esc(f.key)}" ${selected.includes(f.key)?'checked':''} onchange="toggleExtraCol('${tabId}','${esc(f.key)}',this.checked)"/>
+        ${esc(fieldDisplayLabel(f))}
+      </label>`).join('');
+  }
+  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `확인자 +${selected.length}` : '확인자';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!selected.length);
+  syncExtraHeaderCols(tabId);
+}
+// 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
+// (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
+function applyLatestFilterDefault(tabId){
+  if(_tabFilterUserPicked[tabId]) return;
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.dateKey) return;
+  const dates=TAB_STATE[tabId].records.map(r=>r[tabDef.dateKey]).filter(Boolean).sort();
+  if(!dates.length) return;
+  const latest=dates[dates.length-1];
+  _tabFilters[tabId].year=latest.slice(0,4);
+  _tabFilters[tabId].month=latest.slice(5,7);
+}
+function tabTunnelField(tabDef){ return dataFields(tabDef).find(f=>f.key==='터널명'); }
+function buildTabFilterDd(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields || !tabDef.dateKey) return;
+  const wrap=document.getElementById('filterDd-'+tabId);
+  if(!wrap) return;
+  const f=_tabFilters[tabId];
+  const tunnelField=tabTunnelField(tabDef);
+  if(!wrap.dataset.built){
+    wrap.dataset.built='1';
+    wrap.innerHTML=`
+      <div class="dd-wrap" id="ddYearWrap-${tabId}">
+        <button class="dd-btn" id="ddYearBtn-${tabId}" type="button" onclick="toggleDd('ddYearMenu-${tabId}','ddYearBtn-${tabId}')" aria-haspopup="listbox" aria-label="연도 선택"><span id="ddYearLabel-${tabId}">전체 연도</span></button>
+        <div class="dd-menu" id="ddYearMenu-${tabId}"></div>
+      </div>
+      <div class="dd-wrap" id="ddMonthWrap-${tabId}">
+        <button class="dd-btn" id="ddMonthBtn-${tabId}" type="button" onclick="toggleDd('ddMonthMenu-${tabId}','ddMonthBtn-${tabId}')" aria-haspopup="listbox" aria-label="월 선택"><span id="ddMonthLabel-${tabId}">전체 월</span></button>
+        <div class="dd-menu" id="ddMonthMenu-${tabId}"></div>
+      </div>
+      ${tunnelField?`<div class="dd-wrap" id="ddTunnelWrap-${tabId}">
+        <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
+        <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
+      </div>`:''}
+      ${(extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
+        <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
+      </div>`:''}
+    `;
+  }
+  buildColToggleDd(tabId);
+  // 연도 옵션 — 로드된 레코드의 실제 연도들
+  const years=[...new Set(TAB_STATE[tabId].records.map(r=>(r[tabDef.dateKey]||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  const yearMenu=document.getElementById('ddYearMenu-'+tabId);
+  if(yearMenu){
+    const opts=[{val:'ALL',label:'전체 연도'}].concat(years.map(y=>({val:y,label:y+'년'})));
+    yearMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.year===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+    document.getElementById('ddYearLabel-'+tabId).textContent = f.year==='ALL'?'전체 연도':f.year+'년';
+    document.getElementById('ddYearBtn-'+tabId)?.classList.toggle('active', f.year!=='ALL');
+    if(!yearMenu._bound){
+      yearMenu._bound=true;
+      yearMenu.addEventListener('click',e=>{
+        const opt=e.target.closest('.dd-opt'); if(!opt) return;
+        f.year=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
+      });
+    }
+  }
+  // 월 옵션
+  const monthMenu=document.getElementById('ddMonthMenu-'+tabId);
+  if(monthMenu){
+    const opts=[{val:'ALL',label:'전체 월'}]; for(let m=1;m<=12;m++) opts.push({val:String(m).padStart(2,'0'),label:m+'월'});
+    monthMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.month===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+    document.getElementById('ddMonthLabel-'+tabId).textContent = f.month==='ALL'?'전체 월':parseInt(f.month,10)+'월';
+    document.getElementById('ddMonthBtn-'+tabId)?.classList.toggle('active', f.month!=='ALL');
+    if(!monthMenu._bound){
+      monthMenu._bound=true;
+      monthMenu.addEventListener('click',e=>{
+        const opt=e.target.closest('.dd-opt'); if(!opt) return;
+        f.month=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
+      });
+    }
+  }
+  // 터널 옵션 — 노션 select 옵션 전체를 항상 표시(로드된 데이터에 없는 값도 노출)
+  if(tunnelField){
+    const tunnelMenu=document.getElementById('ddTunnelMenu-'+tabId);
+    if(tunnelMenu){
+      const opts=[{val:'',label:'전체 터널'}].concat((tunnelField.options||[]).map(t=>({val:t,label:t})));
+      tunnelMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.tunnel===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+      document.getElementById('ddTunnelLabel-'+tabId).textContent = f.tunnel||'전체 터널';
+      document.getElementById('ddTunnelBtn-'+tabId)?.classList.toggle('active', !!f.tunnel);
+      if(!tunnelMenu._bound){
+        tunnelMenu._bound=true;
+        tunnelMenu.addEventListener('click',e=>{
+          const opt=e.target.closest('.dd-opt'); if(!opt) return;
+          f.tunnel=opt.dataset.val; closeDd('ddTunnelMenu-'+tabId,'ddTunnelBtn-'+tabId); renderTabTable(tabId);
+        });
+      }
+    }
+  }
+}
+function filteredTabRecords(tabId){
+  const tabDef=getTabDef(tabId);
+  const flt=_tabFilters[tabId];
+  let recs=TAB_STATE[tabId].records;
+  if(flt.year!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').startsWith(flt.year));
+  if(flt.month!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').slice(5,7)===flt.month);
+  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  return recs;
+}
+function renderTabTable(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields) return;
+  buildTabFilterDd(tabId);
+  const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
+  const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
+  let recs=filteredTabRecords(tabId);
+  if(q){
+    recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
+  }
+  const countEl=document.getElementById('count-'+tabId);
+  if(countEl) countEl.textContent=`총 ${recs.length}건`;
+  const tbody=document.getElementById('tbody-'+tabId);
+  if(!tbody) return;
+  if(!recs.length){
+    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length;
+    tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
+}
+function buildCellHtml(f, r){
+  const key=f.key;
+  if(key==='터널명') return `<td><span class="type-badge ${tunnelSlug(r[key])}">${esc(r[key]||'-')}</span></td>`;
+  if(f.badgeFn) return `<td><span class="type-badge ${f.badgeFn(r[key])}">${esc(r[key]||'-')}</span></td>`;
+  if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
+  if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
+  if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
+  return `<td>${esc(r[key]||'-')}</td>`;
+}
+function buildRow(tabDef, r){
+  const cells=tabDef.listCols.map(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    return f ? buildCellHtml(f, r) : '<td>-</td>';
+  }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    return f ? buildCellHtml(f, r) : '';
+  }).join('');
+  return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
+}
+const TUNNEL_COLOR_MAP={
+  '흥해터널':'tunnel-c0', '청하터널':'tunnel-c1', '청하터널(주·부)':'tunnel-c1',
+  '남정1·2터널':'tunnel-c2', '남정3터널':'tunnel-c3', '남정4터널':'tunnel-c4',
+  '남정5터널':'tunnel-c0', '남정6터널':'tunnel-c1', '남정7터널':'tunnel-c2',
+  '남정8터널':'tunnel-c3', '남정9터널':'tunnel-c4', '강구1터널':'tunnel-c0',
+  '강구2터널':'tunnel-c1', '강구3터널':'tunnel-c2'
+};
+function tunnelSlug(t){
+  if(!t) return 'tunnel-c4';
+  return TUNNEL_COLOR_MAP[t] || 'tunnel-c4';
+}
+function resultSlug(v){
+  if(v==='양호') return 'result-good';
+  if(v==='불량') return 'result-bad';
+  if(v==='점검요') return 'result-warn';
+  return 'result-none';
+}
+function buildPhotoThumbs(files, maxShow){
+  if(!files || !files.length) return '<span style="color:var(--txt3)">-</span>';
+  const shown=files.slice(0,maxShow||4);
+  const html=shown.map(f=>
+    `<a href="${esc(f.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">`
+    +`<img src="${esc(f.url)}" alt="사진" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);margin:1px;display:inline-block;vertical-align:middle" onerror="this.style.display='none'">`
+    +`</a>`
+  ).join('');
+  const more = files.length>shown.length ? `<span style="font-size:11px;color:var(--txt3);margin-left:4px">+${files.length-shown.length}</span>` : '';
+  return html+more;
+}
+function buildPhotoSection(label, files){
+  files=files||[];
+  const inner = files.length
+    ? files.map(f=>{
+        const url=f.url||'';
+        return '<div class="photo-wrap" style="margin-bottom:8px"><a href="'+esc(url)+'" target="_blank" rel="noopener">'
+          +'<img class="photo-img loading" src="'+esc(url)+'" alt="'+esc(label)+'"'
+          +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +'></a>'
+          +'<div class="photo-spinner"></div>'
+          +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(url)+'" target="_blank">링크로 직접 열기 →</a></div>'
+          +'</div>';
+      }).join('')
+    : '<div style="padding:18px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
+  return '<div class="photo-section"><div class="photo-label">'+esc(label)+'</div>'+inner+'</div>';
+}
+function emptyState(desc, icon){
+  icon=icon||'📋';
+  return `<div class="empty"><div class="empty-icon">${icon}</div>
+    <div class="empty-title">데이터 없음</div>
+    <div class="empty-desc">${esc(desc)}</div></div>`;
+}
+// ── 상세 모달 ──
+function openDetailModal(tabId, recordId){
+  const tabDef=getTabDef(tabId);
+  const r=TAB_STATE[tabId].records.find(x=>x.id===recordId);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent=tabDef.label+' 상세';
+  const fields=dataFields(tabDef);
+  const rows=fields.filter(f=>f.type!=='file').map(f=>{
+    let val;
+    if(f.type==='date') val=esc(fmtDate(r[f.key]));
+    else if(f.type==='number') val=fmtWon(r[f.key]);
+    else val=esc(r[f.key]||'-');
+    return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
+  }).join('');
+  const photoHtml=fields.filter(f=>f.type==='file').map(f=>buildPhotoSection(f.key, r[f.key])).join('');
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>'
+    + photoHtml;
+  document.getElementById('detailModalActions').innerHTML=
+    `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openAddModal('${tabId}','${recordId}')">수정</button>`+
+    `<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${tabId}','${recordId}')">삭제</button>`;
+  document.getElementById('detailModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function closeDetailModal(e){
+  if(e&&e.target!==e.currentTarget) return;
+  document.getElementById('detailModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('detailModal');
+}
+// ── 신규등록/수정 모달 (필드 동적 생성) ──
+var EDIT_TAB=null, EDIT_PAGE_ID=null;
+var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
+function buildFieldHtml(f, idx, curVal, tabId){
+  const id='ff_'+idx;
+  const req=f.required?'<span class="modal-required">*</span>':'';
+  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  if(f.uiType==='cascade-select'){
+    // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
+    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
+    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+        <option value="">${esc(f.emptyHint||'선택')}</option>
+      </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      <div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
+    </div>`;
+  }
+  if(f.uiType==='fixed-select'){
+    // 후보가 고정된 소수의 값(예: 1~6번)뿐이라 직접입력 없이 select만 제공 — cascade-select와 달리
+    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상이 아니다.
+    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${String(curVal)===String(o)?' selected':''}>${esc(o)}</option>`).join('');
+    const onchangeParts=[];
+    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
+    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
+        <option value="">선택</option>
+        ${opts}
+      </select>
+    </div>`;
+  }
+  if(f.type==='file'){
+    return `<div class="modal-field">${label}
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('${id}_input').click()">사진 선택</button>
+        <span class="modal-hint" id="${id}_status" style="margin:0"></span>
+      </div>
+      <input type="file" id="${id}_input" accept="image/*" multiple style="display:none" onchange="uploadInspectionPhoto(this,'${id}')"/>
+      <div id="${id}_list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>`;
+  }
+  if(f.type==='select'){
+    const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
+    const isCustom = curVal && !(f.options||[]).includes(curVal);
+    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
+    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
+    return `<div class="modal-field">${label}
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+        <option value="">선택</option>
+        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+        ${opts}
+      </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+    </div>`;
+  }
+  if(f.type==='date'){
+    const onchangeParts=[];
+    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
+    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    const onchangeAttr = onchangeParts.length ? ` onchange="${onchangeParts.join(';')}"` : '';
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/></div>`;
+  }
+  if(f.type==='number'){
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="number" step="0.01" value="${curVal!=null&&curVal!==''?esc(curVal):''}"/></div>`;
+  }
+  return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" value="${esc(curVal||'')}"/></div>`;
+}
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+// 캐스케이딩 select 공용 엔진 — dependsOn 필드들의 현재값을 optionsFn에 넘겨 옵션을 재계산.
+// (월간점검 구분+설비명→점검내용, 변압기온도 변압기종류→측정지점, 전력사용량 터널명→제목 등 재사용)
+function refreshCascadeSelect(tabId, contentIdx, initialValue){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  const f=tabDef.fields[contentIdx];
+  if(!f || f.uiType!=='cascade-select') return;
+  const sel=document.getElementById('ff_'+contentIdx);
+  if(!sel) return;
+  const ci=document.getElementById('ff_'+contentIdx+'c');
+  const depValues={};
+  (f.dependsOn||[]).forEach(depKey=>{
+    const depIdx=tabDef.fields.findIndex(x=>x.key===depKey);
+    depValues[depKey]=depIdx>=0 ? getFieldValue(tabDef.fields[depIdx], depIdx) : '';
+  });
+  const opts=f.optionsFn(depValues);
+  const isDependencyRefresh = initialValue===undefined; // cascadeTrigger 필드 변경으로 재계산되는 호출인지(신규/수정 최초 로드는 항상 initialValue를 명시적으로 넘김)
+  let curVal = initialValue!==undefined ? initialValue : (sel.value==='__custom__' ? (ci?ci.value:'') : sel.value);
+  curVal = (curVal===undefined||curVal===null) ? '' : String(curVal); // number 타입 필드(배율 등) 수정 시 r[key]가 숫자로 들어와도 옵션 문자열과 비교되도록 통일
+  if(opts.length===1){
+    // 의존 필드(터널명 등) 변경으로 재계산되는 시점엔 이전 값이 새 터널과 무관하므로 새 후보로 스냅.
+    // 최초 신규 입력 로드 때는 값이 비어있을 때만 자동 채움. 수정 모드 최초 로드는 저장된 값을 그대로 보존.
+    if(isDependencyRefresh ? curVal!==opts[0] : !curVal) curVal=opts[0];
+  } else if(isDependencyRefresh && opts.length===0 && curVal){
+    curVal=''; // 새 의존값에 해당하는 후보가 아예 없으면(예: 남정5터널은 발전/태양광 스펙 없음) 이전 터널의 값을 지움
+  }
+  const isCustom = !!curVal && !opts.includes(curVal);
+  // emptyHintFn — 옵션이 0개인 이유가 "아직 의존값을 안 골라서"가 아니라 "이 의존값 조합엔 원래
+  // 후보가 없어서"인 경우 문구를 다르게 보여줘야 할 때 씀(예: 월간점검 설비명이 구분="기타"/
+  // "태양광발전설비"일 때 "먼저 구분을 선택하세요"가 아니라 "이 구분은 설비명이 없습니다"로,
+  // 2026-07-23). 없으면 기존 f.emptyHint 고정 문구 유지.
+  const emptyOptText = opts.length ? '선택' : (f.emptyHintFn ? f.emptyHintFn(depValues) : (f.emptyHint||'선택'));
+  sel.innerHTML = `<option value="">${esc(emptyOptText)}</option>`
+    + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
+    + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
+  if(!isCustom && opts.includes(curVal)) sel.value=curVal;
+  if(ci){
+    if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
+  }
+  // 의존값에 따라 안내 문구 자체를 바꿔야 하는 필드용(예: 월간점검 설비명이 구분="기타"/"태양광
+  // 발전설비"일 때 "입력하지 마세요"로 바뀌는 경우, 2026-07-23) — hintFn 없으면 기존 고정 문구 유지.
+  const hintEl=document.getElementById('ff_'+contentIdx+'_hint');
+  if(hintEl){
+    hintEl.textContent = f.hintFn ? f.hintFn(depValues)
+      : ((f.dependsOn||[]).length ? f.dependsOn.join('·')+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.');
+  }
+}
+// cascadeTrigger 필드의 onchange에서 호출 — 해당 탭의 캐스케이딩 select 전부를 재계산
+function refreshAllCascadeSelects(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  tabDef.fields.forEach((f,idx)=>{ if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx); });
+}
+function getFieldValue(f, idx){
+  const id='ff_'+idx;
+  if(f.type==='file'){
+    return _photoFiles;
+  }
+  if(f.type==='select' || f.uiType==='cascade-select' || f.uiType==='fixed-select'){
+    const sel=document.getElementById(id);
+    if(!sel) return '';
+    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
+    return sel.value;
+  }
+  return (document.getElementById(id)?.value||'').trim();
+}
+// 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바 제어
+function hideAddModalProgress(){
+  const wrap=document.getElementById('addModalProgressWrap');
+  if(wrap) wrap.style.display='none';
+}
+function showAddModalProgress(){
+  const wrap=document.getElementById('addModalProgressWrap'), bar=document.getElementById('addModalProgressBar');
+  if(wrap) wrap.style.display='';
+  if(bar) bar.style.width='0%';
+}
+function updateAddModalProgress(done, total){
+  const bar=document.getElementById('addModalProgressBar');
+  if(bar) bar.style.width=Math.min(100, Math.round(done/total*100))+'%';
+}
+function openAddModal(tabId, recordId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
+  if(!isAuthed()){ toast('로그인이 필요합니다.'); openCfgModal(); return; }
+  hideAddModalProgress();
+  EDIT_TAB=tabId; EDIT_PAGE_ID=recordId||null;
+  const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
+  document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
+  document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
+  let html='';
+  let groupOpen=false;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header){
+      if(groupOpen) html+='</div>';
+      html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
+      groupOpen=true;
+      return;
+    }
+    const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
+    html+=buildFieldHtml(f, idx, curVal, tabId);
+  });
+  if(groupOpen) html+='</div>';
+  document.getElementById('addModalFields').innerHTML=html;
+  document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elecinsp' || tabId==='repair');
+  document.getElementById('addModal').classList.add('modal-open');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+  const fileIdx=tabDef.fields.findIndex(f=>f.type==='file');
+  if(fileIdx>=0){
+    _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
+    renderPhotoFileList('ff_'+fileIdx);
+  }
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
+  });
+}
+function closeAddModal(e){
+  if(e&&e.target!==e.currentTarget) return;
+  document.getElementById('addModal').classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+  hideAddModalProgress();
+  EDIT_TAB=null; EDIT_PAGE_ID=null;
+  _photoFiles=[];
+}
+// ── 점검사진 업로드 (overtime-work 앱 다중 첨부파일 패턴 재사용, R2 monthly-inspection 폴더) ──
+function uploadInspectionPhoto(input, fieldId){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  const statusEl=document.getElementById(fieldId+'_status');
+  if(!isAuthed()){
+    if(statusEl){ statusEl.textContent='⚠ 로그인 필요'; statusEl.style.color='var(--coral)'; }
+    return;
+  }
+  let remaining=files.length;
+  if(statusEl){ statusEl.textContent='업로드 중... (0/'+files.length+')'; statusEl.style.color=''; }
+  // 선택한 순서대로 결과 슬롯을 미리 잡아두고, 전부 완료된 뒤 순서대로 _photoFiles에 반영한다
+  // (병렬 업로드라 네트워크 응답 순서가 선택 순서와 다를 수 있어, push를 개별 완료 시점에 하면 표시 순서가 어긋남)
+  const results=new Array(files.length).fill(null);
+  let done=0;
+  files.forEach((file,i)=>{
+    const formData=new FormData();
+    formData.append('file', file);
+    formData.append('app', 'monthly-inspection-team');
+    fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(data=>{
+        results[i]={ url:data.url, name:file.name };
+      })
+      .catch(e=>{
+        toast('사진 업로드 실패: '+e.message);
+        console.error(e);
+      })
+      .finally(()=>{
+        done++;
+        if(statusEl) statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
+        if(done===files.length){
+          results.forEach(r=>{ if(r) _photoFiles.push(r); });
+          if(statusEl){ statusEl.textContent=_photoFiles.length?('총 '+_photoFiles.length+'장 첨부됨'):'첨부파일 없음'; statusEl.style.color=''; }
+          renderPhotoFileList(fieldId);
+        }
+      });
+  });
+  input.value='';
+}
+function renderPhotoFileList(fieldId){
+  const wrap=document.getElementById(fieldId+'_list');
+  const statusEl=document.getElementById(fieldId+'_status');
+  if(statusEl) statusEl.textContent=_photoFiles.length?('총 '+_photoFiles.length+'장 첨부됨'):'첨부파일 없음';
+  if(!wrap) return;
+  wrap.innerHTML=_photoFiles.map((f,i)=>
+    `<div style="position:relative">
+      <img src="${esc(f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
+    </div>`
+  ).join('');
+}
+function removePhotoFile(idx, fieldId){
+  _photoFiles.splice(idx,1);
+  renderPhotoFileList(fieldId);
+}
+function submitAddForm(){
+  const tabDef=getTabDef(EDIT_TAB);
+  if(!tabDef) return;
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    const isEmpty=Array.isArray(v) ? v.length===0 : !v;
+    if(f.required && isEmpty && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const properties={};
+  tabDef.fields.forEach(f=>{
+    if(f.header) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) properties[f.key]=val;
+  });
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  const isEdit=!!EDIT_PAGE_ID;
+  btn.disabled=true; lbl.textContent=isEdit?'수정 중...':'등록 중...';
+
+  const reqUrl=isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
+  const reqBody=isEdit ? JSON.stringify({properties}) : JSON.stringify({parent:{database_id:tabDef.dbId},properties});
+
+  fetch(reqUrl,{ method:isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      closeAddModal();
+      loadTabData(EDIT_TAB||tabDef.id);
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message);
+      console.error(e);
+    });
+}
+function deleteRecord(tabId, pageId){
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!confirm('이 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId,{
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
+  }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ closeDetailModal(); loadTabData(tabId); toast('삭제되었습니다.'); })
+    .catch(e=>{
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadTabData(tabId); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+// ── 엑셀 생성 (work-portal 공통 라이브러리 패턴 재사용) ──
+var EXCEL_LIB_LOADING=null; // ExcelJS 로딩 프로미스(zip 필요 여부와 무관하게 1회만)
+var JSZIP_LIB_LOADING=null; // JSZip 로딩 프로미스 — ExcelJS와 별도 캐시 필수
+// 이전엔 needsZip 값과 무관하게 EXCEL_LIB_LOADING 하나로 캐시해서, needsZip:false로 먼저 호출된
+// 뒤(예: 발전기점검 보고서) needsZip:true로 호출하면(예: 점검사진 보고서) 캐시된 프로미스를 그대로
+// 반환해버려 JSZip을 영영 안 불러오는 버그가 있었다("JSZip is not defined", 2026-07-22 실사용
+// 중 발견). ExcelJS/JSZip을 각자 독립 캐시로 분리해 needsZip 조합이 달라져도 항상 필요한 만큼만
+// 로드되게 고쳤다.
+function loadExcelLib(needsZip){
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  if(!window.ExcelJS && !EXCEL_LIB_LOADING){
+    EXCEL_LIB_LOADING=loadScript(
+      'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+      'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+    ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  }
+  if(needsZip && !window.JSZip && !JSZIP_LIB_LOADING){
+    JSZIP_LIB_LOADING=loadScript(
+      'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+      'sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG'
+    ).catch(e=>{ JSZIP_LIB_LOADING=null; throw e; });
+  }
+  return Promise.all([
+    window.ExcelJS ? Promise.resolve() : EXCEL_LIB_LOADING,
+    (needsZip && !window.JSZip) ? JSZIP_LIB_LOADING : Promise.resolve()
+  ]);
+}
+const EXCEL_COMPANY_NAME='수자원기술(주)';
+const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
+const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
+const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
+const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
+// 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
+// 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨(고정 서식지의
+// buildElecReportSheet()가 쓰는 표 영역 경계 기준 gridBorder()와는 별개의 단순 버전).
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
+function excelCm2in(cm){ return cm/2.54; }
+const EXCEL_PAGE_PRESETS={
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+};
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min, max, padding){
+  min=min||8; max=max||40; padding=padding||5;
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+// 인쇄 방향 자동 판정 — 열 너비(excelAutoWidth로 이미 계산된 문자 단위) 합으로 판단한다.
+// fitToPage:1(가로 1페이지에 맞춤)이 항상 걸려 있어 어느 쪽이든 인쇄는 되지만, 열이 많고 넓을수록
+// 세로(A4 가용폭 약 19cm)보다 가로(약 26.7cm, 세로 대비 약 1.4배)가 축소율이 적어 더 읽기 좋다.
+// opts.orientation을 명시하면 이 자동판정을 덮어쓴다(강제 지정이 필요한 특수 케이스용).
+function excelAutoOrientation(colWidths){
+  const total=colWidths.reduce((s,w)=>s+w,0);
+  return total>100 ? 'landscape' : 'portrait';
+}
+// ── 엑셀 사진 임베드 (하자보수현황 앱 buildExcelReport()와 동일 로직 이식, 2026-07-21) ──
+const EXCEL_PHOTO_INSET_EMU=19050;
+function excelFetchImage(url){
+  if(!url || !/^https?:\/\//i.test(url)) return Promise.resolve(null);
+  // cache:'no-store' — 다른 origin에서 캐시된 CORS 헤더 없는 응답이 재사용돼 fetch가 실패하는
+  // 사례가 있어 항상 네트워크에서 새로 받는다(xlsx-report-export 스킬 참고).
+  return fetch(url, {cache:'no-store'}).then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const contentType=r.headers.get('content-type');
+    return r.arrayBuffer().then(buf=>{
+      const ext=/png/i.test(contentType||url)?'png':/gif/i.test(contentType||url)?'gif':(/jpe?g/i.test(contentType||url)?'jpeg':null);
+      if(!ext){ console.warn('지원하지 않는 이미지 형식:', url, contentType); return null; }
+      return {buffer:buf, extension:ext};
+    });
+  }).catch(e=>{ console.warn('사진 로드 실패:', url, e.message); return null; });
+}
+// 사진 셀 앵커 — 열/행 폭을 직접 계산하지 않고 "다음 열/행의 시작점에서 인셋만큼 음수 오프셋으로
+// 당겨" 지정한다(EMU/폰트 근사식 의존 버그를 피하는 방식, scripts/lib/xlsx_report_lib.mjs와 동일).
+function excelPhotoAnchor(col, rn0){
+  return {
+    tl:{nativeCol:col, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:rn0, nativeRowOff:EXCEL_PHOTO_INSET_EMU},
+    br:{nativeCol:col+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:rn0+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU},
+    editAs:'twoCell'
+  };
+}
+// 여러 칸에 걸친 병합 범위(예: 참고사진 박스) 전체를 채우는 앵커 — excelPhotoAnchor(1칸 전용)의
+// 일반화 버전, col0/row0(0-based, 병합 시작칸)~col1/row1(0-based, 병합 끝칸) 그대로 받는다.
+function excelPhotoAnchorBlock(col0, row0, col1, row1){
+  return {
+    tl:{nativeCol:col0, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:row0, nativeRowOff:EXCEL_PHOTO_INSET_EMU},
+    br:{nativeCol:col1+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:row1+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU},
+    editAs:'twoCell'
+  };
+}
+// exceljs는 삽입 이미지의 "가로 세로 비율 고정"을 항상 1로 하드코딩해서 옵션이 없음 —
+// 저장된 xlsx의 drawing XML을 직접 열어 0으로 바꿔준다.
+function excelUnlockAspectRatio(buffer){
+  return JSZip.loadAsync(buffer).then(zip=>{
+    const files=Object.keys(zip.files).filter(f=>/^xl\/drawings\/drawing\d+\.xml$/.test(f));
+    return Promise.all(files.map(f=>
+      zip.file(f).async('string').then(xml=>{ zip.file(f, xml.replace(/noChangeAspect="1"/g,'noChangeAspect="0"')); })
+    )).then(()=>zip.generateAsync({type:'blob'}));
+  });
+}
+// 동시 fetch 과다로 인한 지연/차단을 막기 위해 N개씩 배치 처리
+function excelBatchPromises(items, worker, batchSize){
+  batchSize=batchSize||6;
+  let idx=0;
+  function next(){
+    if(idx>=items.length) return Promise.resolve();
+    const batch=items.slice(idx, idx+batchSize);
+    idx+=batchSize;
+    return Promise.all(batch.map(worker)).then(next);
+  }
+  return next();
+}
+// 다운로드 파일명 규칙(2026-07-23 사용자 요청, "엑셀 생성"·"보고서 생성"(개별/통합) 전부 통일):
+// "{연}년 {월}월 {탭 보고서명}[보고서]_{터널명}". 탭별 보고서명은 이미 각 buildOneXReport()가
+// 쓰던 이름을 그대로 재사용 — 엑셀생성은 그 이름 그대로, 보고서생성은 "보고서"만 뒤에 붙인다
+// (예: 전기설비기록표 → 엑셀생성 "...전기설비기록표_...", 보고서생성 "...전기설비기록표보고서_...").
+// 파일명 접두사에 이미 연/월 날짜가 들어있어 생성시각 접미사는 넣지 않는다(2026-07-23 후속 요청 —
+// 처음엔 버전 구분용으로 yyyyMMddHHmm을 붙였었지만 날짜가 이미 있는데 또 붙이면 중복이라 삭제).
+const TAB_REPORT_BASENAME={
+  elecinsp:'전기시설점검표', repair:'고장수리실적', photo:'점검사진대지'
+};
+// 다운로드 파일명 전용 터널명 축약(2026-07-23 사용자 요청, 파일명이 길다는 피드백) — 시트/보고서
+// 내부 표시 텍스트("□ 청하터널(주)" 등)는 그대로 두고 파일명에서만 "터널" 글자를 뺀다.
+// 청하터널(주)→청하(주), 청하터널(부)→청하(부), 흥해터널→흥해, 남정5터널→남정5.
+function tunnelFnameAbbr(tunnel){
+  return (tunnel||'').replace('터널','');
+}
+// "엑셀 생성"은 보고서 생성과 달리 연/월을 직접 고르지 않으므로, 현재 연/월 필터가 특정 값으로
+// 좁혀져 있으면 그 값을, "전체"면 로드된 데이터 중 가장 최근 날짜를 파일명용 연/월로 쓴다
+// (각 exportXInspectionReport()가 보고서 생성에 쓰는 것과 동일한 결정 규칙, 파일명 계산 전용으로
+// 별도 헬퍼화 — 데이터가 아예 없으면 null을 돌려줘 호출부가 연/월 없이 파일명을 만들게 한다).
+function resolveTabYearMonth(tabId, dateKey){
+  const f=_tabFilters[tabId]||{};
+  if(f.year && f.year!=='ALL' && f.month && f.month!=='ALL'){
+    return {year:parseInt(f.year,10), month:parseInt(f.month,10)};
+  }
+  const dates=(TAB_STATE[tabId].records||[]).map(r=>r[dateKey]).filter(Boolean).sort();
+  if(!dates.length) return null;
+  const latest=dates[dates.length-1];
+  return {year:parseInt(latest.slice(0,4),10), month:parseInt(latest.slice(5,7),10)};
+}
+function exportTabExcel(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
+  const fields=dataFields(tabDef);
+  const tunnel=_tabFilters[tabId].tunnel;
+  const rows=filteredTabRecords(tabId).map(r=>{
+    const row={};
+    fields.forEach(f=>{
+      if(f.type==='number') row[f.key]=Number(r[f.key])||0;
+      else if(f.type==='file') row[f.key+'_URL']=(r[f.key]||[])[0]?.url||'';
+      else row[f.key]=r[f.key]||'';
+    });
+    return row;
+  });
+  const columns=fields.map(f=>({
+    key:f.key, header:f.key,
+    numFmt: f.type==='number'?'#,##0.##':undefined,
+    photo: f.type==='file'||undefined,
+    width: f.type==='file'?18:undefined
+  }));
+  const ym=resolveTabYearMonth(tabId, tabDef.dateKey);
+  const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
+  buildExcelReport({
+    btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
+    sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label,
+    fnamePrefix:ymPrefix+(TAB_REPORT_BASENAME[tabId]||tabDef.label)+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
+    columns, rows
+  });
+}
+
+// ── 하단 탭 전환 ──
+const PANEL_IDS=TAB_DEFS.map(t=>t.id);
+let _activePanel=PANEL_IDS[0];
+function switchPanel(id){
+  if(id===_activePanel) return;
+  _activePanel=id;
+  PANEL_IDS.forEach(p=>{
+    document.getElementById('panel-'+p)?.classList.toggle('active', p===id);
+    const btn=document.getElementById('nav-'+p);
+    if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
+  });
+  requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  const tabDef=getTabDef(id);
+  if(tabDef && tabDef.fields && !TAB_STATE[id].loaded && isAuthed()) loadTabData(id);
+}
+
+// ── 초기화 ──
+if(isAuthed()){ loadTabData('elecinsp'); }
+else { openLoginModal(); }
+</script>
+</div>
+</body>
+</html>
