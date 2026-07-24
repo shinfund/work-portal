@@ -2843,6 +2843,10 @@ const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
+// 점검사진 대지 시트 A~J 컬럼폭 — 점검팀 템플릿(사진1 시트) 실측값(2026-07-24). 번호(A/F)=좁게,
+// 라벨(B/G)=중간, 값(C~E/H~J, 3칸 병합)=넓게. 이전엔 10칸 균등폭(7.86)이었으나 점검팀 앱을
+// 템플릿 실측값으로 먼저 고치면서, 같은 사진대지 양식을 쓰는 이 앱에도 동일하게 맞춤.
+const PHOTO_REPORT_COL_WIDTHS=[4.640625,7.85546875,10.140625,10.140625,10.140625,4.640625,7.85546875,10.140625,10.140625,10.140625];
 const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
 // 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
 // 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨(고정 서식지의
@@ -4152,7 +4156,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel}
   });
-  ws.columns=Array(10).fill(0).map(()=>({width:7.86}));
+  ws.columns=PHOTO_REPORT_COL_WIDTHS.map(w=>({width:w}));
 
   const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};

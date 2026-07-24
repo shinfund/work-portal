@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>월간점검결과-점검팀 (작업중)</title>
+<title>월간점검결과-점검팀</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M6 8h12M6 12h12M6 16h8' stroke='%23fff' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
@@ -350,7 +350,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">월간점검결과-점검팀 (작업중)</div>
+    <div class="logo-title">월간점검결과-점검팀</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -392,6 +392,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <button class="tb-action-btn tb-report" id="reportBtn_elecinsp" onclick="exportElecInspReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_elecinsp">보고서 생성</span>
+      </button>
+      <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportTeamUnifiedReport()" title="표지+전기시설점검표+고장수리실적+점검사진대지+간지를 한 파일로 묶어 생성">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-elecinsp"></div>
@@ -654,7 +658,8 @@ const TAB_DEFS=[
         optionsFn:dep=>teamChecklistOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요'},
       {key:'점검방법', type:'select', options:['목시','스캔','조작']},
       {key:'점검결과', type:'select', options:['양호','불량','점검요','-'], defaultValue:'양호', badgeFn:resultSlug},
-      {key:'비고', type:'text'}
+      {key:'비고', type:'text'},
+      {key:'특이사항', type:'text'}
     ],
     listCols:['터널명','날짜','제목','구분','점검내용','점검방법','점검결과','비고']
   },
@@ -1417,10 +1422,27 @@ function submitAddForm(){
 
   fetch(reqUrl,{ method:isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
     .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(()=>{
+    .then(page=>{
       btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
       closeAddModal();
-      loadTabData(EDIT_TAB||tabDef.id);
+      // 전기시설점검DB처럼 레코드가 수천 건인 탭은 등록/수정마다 loadTabData()로 전체를 다시
+      // 불러오면 수십 초가 걸린다(2026-07-24 확인) — 응답으로 받은 레코드 하나만 로컬 상태에
+      // 반영해 재렌더링하고, 전체 재동기화는 새로고침 버튼에 맡긴다.
+      const targetTab=EDIT_TAB||tabDef.id;
+      const targetTabDef=getTabDef(targetTab);
+      const rec=parseRecord(targetTabDef, page);
+      const arr=TAB_STATE[targetTab].records;
+      const idx=arr.findIndex(r=>r.id===rec.id);
+      if(idx>=0) arr[idx]=rec;
+      else{
+        const dateKey=targetTabDef.dateKey;
+        const val=dateKey?(rec[dateKey]||''):'';
+        const pos=dateKey ? arr.findIndex(r=>(r[dateKey]||'')<val) : -1;
+        if(pos===-1) arr.push(rec); else arr.splice(pos,0,rec);
+      }
+      applyLatestFilterDefault(targetTab);
+      renderTabTable(targetTab);
+      updateLastUpdate();
       toast(isEdit?'수정되었습니다.':'등록되었습니다.');
     })
     .catch(e=>{
@@ -1435,9 +1457,26 @@ function deleteRecord(tabId, pageId){
   fetch(CFG.workerUrl+'/v1/pages/'+pageId,{
     method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true})
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(()=>{ closeDetailModal(); loadTabData(tabId); toast('삭제되었습니다.'); })
+    .then(()=>{
+      // 전체 재조회 대신 삭제된 레코드만 로컬 상태에서 제거(등록/수정과 동일한 이유 —
+      // 전기시설점검DB처럼 레코드가 많은 탭에서 매번 전체 재조회하면 느리다)
+      closeDetailModal();
+      const arr=TAB_STATE[tabId].records;
+      const idx=arr.findIndex(r=>r.id===pageId);
+      if(idx>=0) arr.splice(idx,1);
+      renderTabTable(tabId);
+      toast('삭제되었습니다.');
+    })
     .catch(e=>{
-      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadTabData(tabId); toast('이미 삭제된 기록입니다.'); return; }
+      if((e.message||'').indexOf('archived')>-1){
+        closeDetailModal();
+        const arr=TAB_STATE[tabId].records;
+        const idx=arr.findIndex(r=>r.id===pageId);
+        if(idx>=0) arr.splice(idx,1);
+        renderTabTable(tabId);
+        toast('이미 삭제된 기록입니다.');
+        return;
+      }
       alert('삭제 실패: '+e.message); console.error(e);
     });
 }
@@ -1509,6 +1548,24 @@ function excelAutoWidth(strings, min, max, padding){
   let w=min;
   strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
   return Math.min(w, max);
+}
+// wrapText 컬럼의 실제 줄바꿈 줄 수를 열너비 기준으로 근사 추정(exceljs는 렌더링을
+// 하지 않아 정확한 줄 수를 알 수 없음 — 자동열폭 계산과 같은 근본적 한계, 보수적으로 추정)
+function excelEstimateWrappedLines(text, colWidthChars){
+  const w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  let maxLines=1;
+  columns.forEach((col,i)=>{
+    if(!col.wrap) return;
+    const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]);
+    if(lines>maxLines) maxLines=lines;
+  });
+  const lineHeightPt=fontSize*1.4;
+  const neededHeight=maxLines*lineHeightPt+6;
+  return Math.max(baseHeight, neededHeight);
 }
 function excelParseDate(s){
   const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
@@ -1650,7 +1707,7 @@ function buildExcelReport(opts){
       rows.forEach((r,i)=>{
         const rn=3+i;
         const row=ws.getRow(rn);
-        row.height=rowHeightForData;
+        row.height = photoColumns.length ? rowHeightForData : excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, rowHeightForData);
         columns.forEach((col,ci)=>{
           const cell=row.getCell(ci+1);
           cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
@@ -1721,6 +1778,8 @@ function exportTabExcel(tabId){
     key:f.key, header:f.key,
     numFmt: f.type==='number'?'#,##0.##':undefined,
     photo: f.type==='file'||undefined,
+    wrap: f.type==='text'||undefined,
+    align: f.type==='text'?'left':undefined,
     width: f.type==='file'?18:undefined
   }));
   const ym=resolveTabYearMonth(tabId, tabDef.dateKey);
@@ -1728,7 +1787,7 @@ function exportTabExcel(tabId){
   buildExcelReport({
     btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label,
-    fnamePrefix:ymPrefix+(TAB_REPORT_BASENAME[tabId]||tabDef.label)+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
+    fnamePrefix:ymPrefix+(TAB_REPORT_BASENAME[tabId]||tabDef.label)+'_점검팀'+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
     columns, rows
   });
 }
@@ -1788,19 +1847,35 @@ function elecInspGubunSpans(rows){
   }
   return spans;
 }
+// 시트 컬럼폭(구분/점검내용/점검방법/점검결과/비고) — buildElecInspReportSheet의 ws.columns와 동일한
+// 값을 행높이 자동계산(excelWrapAwareRowHeight)에도 그대로 써야 해서 상수로 분리.
+const ELECINSP_COL_WIDTHS=[12,42,10,10,14];
+// 점검사진 대지 시트 A~J 컬럼폭 — 템플릿(사진1 시트) 실측값(2026-07-24). 번호(A/F)=좁게,
+// 라벨(B/G)=중간, 값(C~E/H~J, 3칸 병합)=넓게. 이전엔 10칸 균등폭(7.86)이었으나 템플릿과
+// 실제 인쇄 레이아웃이 달라서 실측값으로 교체.
+const TEAM_PHOTO_COL_WIDTHS=[4.640625,7.85546875,10.140625,10.140625,10.140625,4.640625,7.85546875,10.140625,10.140625,10.140625];
+// 특이사항 여백 박스 높이(행 수) — 템플릿 실측(2026-07-24): 라벨행 1 + 필기 여백행 4, 총 5행.
+const ELECINSP_NOTE_ROWS=5;
 // 터널 표 블록(부제+헤더+데이터+특이사항)을 시트의 startRow부터 그려 넣고, 다음 블록이 시작할
-// 행(특이사항 아래 여백 포함)을 반환 — 남정1,2+남정3처럼 시트 하나에 터널 2개가 쌓이는 구조용.
+// 행(특이사항 여백 박스 뒤 빈 줄 포함)을 반환 — 남정1,2+남정3처럼 시트 하나에 터널 2개가 쌓이는 구조용.
 function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}};
   // 방문일자 목록은 대표행(rows, 중복 제거됨)이 아니라 원본 레코드(recs) 전체 기준 — 그 달에 실제
   // 방문한 모든 날짜를 보여줘야 하므로.
   const days=[...new Set(recs.map(r=>parseInt((r['날짜']||'').slice(8,10),10)).filter(Boolean))].sort((a,b)=>a-b);
   const subRow=startRow;
-  ws.mergeCells(`A${subRow}:E${subRow}`);
-  const subCell=ws.getCell(`A${subRow}`);
-  subCell.value=`□ ${tunnel}` + (days.length ? `   일자 : ${year}년 ${month}월 ${days.join(',')}일` : '');
-  subCell.font={name:'맑은 고딕', size:16, bold:true};
-  subCell.alignment={vertical:'middle', horizontal:'left'};
+  // 터널명과 일자는 템플릿에서 서식이 다르다(터널명 16pt bold 좌측정렬 / 일자 13pt 일반 우측정렬) —
+  // 하나의 병합 셀에 같은 서식으로 합쳐 넣지 않고 A:B(터널명) / C:E(일자)로 분리.
+  ws.mergeCells(`A${subRow}:B${subRow}`);
+  const nameCell=ws.getCell(`A${subRow}`);
+  nameCell.value=`□ ${tunnel}`;
+  nameCell.font={name:'맑은 고딕', size:16, bold:true};
+  nameCell.alignment={vertical:'middle', horizontal:'left'};
+  ws.mergeCells(`C${subRow}:E${subRow}`);
+  const dateCell=ws.getCell(`C${subRow}`);
+  dateCell.value = days.length ? `일자 : ${year}년 ${month}월 ${days.join(',')}일` : '';
+  dateCell.font={name:'맑은 고딕', size:13, bold:false};
+  dateCell.alignment={vertical:'middle', horizontal:'right'};
   ws.getRow(subRow).height=30;
 
   const headerRow=subRow+1;
@@ -1808,7 +1883,11 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const hRow=ws.getRow(headerRow);
   hRow.height=EXCEL_ROW_HEIGHTS.header;
   const dataCount=Math.max(rows.length,1);
-  const REGION={r1:headerRow, r2:headerRow+dataCount, c1:1, c2:5};
+  const noteRow=headerRow+1+dataCount;
+  const noteEndRow=noteRow+ELECINSP_NOTE_ROWS-1;
+  // 외곽 thin 박스가 헤더~데이터~특이사항 여백까지 하나로 이어진다(템플릿 실측) — 데이터 마지막 행의
+  // 아래쪽은 hair(내부선)이고, 박스를 닫는 thin은 특이사항 박스의 마지막 행에서만 나온다.
+  const REGION={r1:headerRow, r2:noteEndRow, c1:1, c2:5};
   function gb(r1,r2,c1,c2){
     return {
       top:{style: r1===REGION.r1?'thin':'hair'}, bottom:{style: r2===REGION.r2?'thin':'hair'},
@@ -1828,6 +1907,9 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
     if(span.end>span.start) ws.mergeCells(`A${rn1}:A${rn2}`);
     ws.getCell(`A${rn1}`).border=gb(rn1,rn2,1,1);
   });
+  // 템플릿은 모든 데이터 컬럼이 wrapText:true(구분·점검내용·비고처럼 길어질 수 있는 칸이 잘리지
+  // 않도록) — 글자 수가 많아 줄바꿈되는 행은 excelWrapAwareRowHeight로 행높이를 자동 계산한다.
+  const ELECINSP_COLS_META=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'비고',wrap:true}];
   rows.forEach((r,i)=>{
     const rn=headerRow+1+i;
     const row=ws.getRow(rn);
@@ -1836,30 +1918,56 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
       cell.font=EXCEL_BODY_FONT;
       if(ci>=1) cell.border=gb(rn,rn,ci+1,ci+1);
       cell.alignment = ci===1
-        ? {vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1}
-        : ci===0
-          ? {vertical:'middle', horizontal:'center', wrapText:true}
-          : {vertical:'middle', horizontal:'center', shrinkToFit:true};
+        ? {vertical:'middle', horizontal:'left', wrapText:true, indent:1}
+        : {vertical:'middle', horizontal:'center', wrapText:true};
     }
     row.getCell(1).value=r['구분'];
     row.getCell(2).value=r['점검내용'];
     row.getCell(3).value=r['점검방법'];
     row.getCell(4).value=r['점검결과'];
     row.getCell(5).value=r['비고'];
-    row.height=EXCEL_ROW_HEIGHTS.data;
+    row.height=excelWrapAwareRowHeight(r, ELECINSP_COLS_META, ELECINSP_COL_WIDTHS, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
     row.commit();
   });
   if(!rows.length){ ws.getRow(headerRow+1).height=EXCEL_ROW_HEIGHTS.data; }
 
-  const noteRow=headerRow+1+dataCount;
-  ws.mergeCells(`A${noteRow}:E${noteRow}`);
-  const noteCell=ws.getCell(`A${noteRow}`);
-  noteCell.value='※ 특이사항'; noteCell.font=EXCEL_BODY_FONT;
-  noteCell.alignment={vertical:'middle', horizontal:'left', indent:1};
-  noteCell.border={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
-  ws.getRow(noteRow).height=EXCEL_ROW_HEIGHTS.data;
+  // 특이사항: 템플릿은 라벨 1행 + 필기용 빈 여백 4행을 하나의 박스로 묶는다(좌우만 thin, 내부 구분선
+  // 없음, 마지막 행에서만 bottom thin으로 박스를 닫음) — 이전 구현처럼 1행짜리 완결 박스가 아니다.
+  // 노션 전기시설점검DB에는 레코드별 "특이사항" 텍스트 필드가 있다 — 그 달에 실제 입력된 값이
+  // 있으면 라벨 다음 줄(2번째 행)에 실어서 보여준다(2026-07-24, 이전엔 항상 빈 필기박스였음).
+  const noteText=[...new Set(recs.map(r=>(r['특이사항']||'').trim()).filter(Boolean))].join(' / ');
+  // 주의: ExcelJS의 mergeCells()는 병합범위 안의 모든 셀 테두리를 마스터(맨 왼쪽) 셀의 테두리로
+  // 덮어써버린다(실측 확인, 2026-07-24) — 그래서 좌우 테두리만 다르게 주는 이 특이사항 박스는
+  // 병합으로는 만들 수 없다. 대신 5행을 병합하지 않고 A열에만 값을 넣어 텍스트가 옆 빈 셀(B~E)
+  // 위로 자연스럽게 겹쳐 흐르게(overflow) 한다 — 화면/인쇄 모두 병합한 것과 동일하게 보인다.
+  for(let i=0;i<ELECINSP_NOTE_ROWS;i++){
+    const rn=noteRow+i;
+    const isLast=i===ELECINSP_NOTE_ROWS-1;
+    const row=ws.getRow(rn);
+    row.height=EXCEL_ROW_HEIGHTS.data;
+    for(let ci=0; ci<5; ci++){
+      const cell=row.getCell(ci+1);
+      cell.font=EXCEL_BODY_FONT;
+      cell.border={
+        left: ci===0?{style:'thin'}:undefined,
+        right: ci===4?{style:'thin'}:undefined,
+        bottom: isLast?{style:'thin'}:undefined
+      };
+    }
+    if(i===0){
+      const labelCell=row.getCell(1);
+      labelCell.value='※ 특이사항';
+      labelCell.alignment={vertical:'middle', horizontal:'left', indent:1};
+    }
+    if(i===1 && noteText){
+      const noteValCell=row.getCell(1);
+      noteValCell.value=noteText;
+      noteValCell.alignment={vertical:'middle', horizontal:'left', indent:1};
+    }
+    row.commit();
+  }
 
-  return noteRow+6; // 특이사항 아래 여백 5행 + 다음 블록 시작행
+  return noteEndRow+2; // 특이사항 박스 뒤 빈 줄 1행 + 다음 블록 시작행
 }
 function buildElecInspReportSheet(wb, group, year, month, showTitle){
   const blocks=group.tunnels.map(t=>{
@@ -1905,7 +2013,7 @@ function exportElecInspReport(){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${ym.year}년 점검결과표보고서_점검팀.xlsx`;
+    const fname=`${ym.year}년 ${ym.month}월 터널전기시설점검표_점검팀.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -1978,11 +2086,13 @@ function buildRepairReportSheet(wb, rows){
     {vertical:'middle', horizontal:'left', wrapText:true, indent:1},
     {vertical:'middle', horizontal:'center', shrinkToFit:true}
   ];
+  const REPAIR_COL_WIDTHS=[14,13,42,13,32,16];
+  const REPAIR_COLS_META=[{key:'터널명'},{key:'발생일자'},{key:'이상발생내역',wrap:true},{key:'조치일자'},{key:'조치내역',wrap:true},{key:'작업자'}];
   for(let i=0;i<totalRows;i++){
     const r=rows[i]||null;
     const rn=5+i;
     const row=ws.getRow(rn);
-    row.height = r ? Math.max(30, Math.ceil(excelStrWidth(r.이상발생내역)/40)*18+16, Math.ceil(excelStrWidth(r.조치내역)/40)*18+16) : 30;
+    row.height = r ? excelWrapAwareRowHeight(r, REPAIR_COLS_META, REPAIR_COL_WIDTHS, EXCEL_BODY_FONT.size, 30) : 30;
     for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
@@ -2044,7 +2154,9 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
   });
-  ws.columns=Array(10).fill(0).map(()=>({width:7.86}));
+  // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
+  // 번호(A/F)는 좁게, 라벨(B/G)은 중간, 값(C~E/H~J, 3칸 병합)은 넓게.
+  ws.columns=TEAM_PHOTO_COL_WIDTHS.map(w=>({width:w}));
   const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
   const LEFT={vertical:'middle', horizontal:'left'};
@@ -2147,6 +2259,132 @@ async function exportPhotoTeamReport(){
     console.error(e);
     lbl.textContent='보고서 생성'; btn.disabled=false;
   }
+}
+
+// ── 표지·일지간지 + "통합 보고서 생성" (원본 엑셀 템플릿 전체를 한 파일로 재현) ──
+// 안전관리 앱과 달리 점검팀은 터널별로 나누지 않고 이미 한 번의 보고서 생성이 전체 터널을
+// 다 훑는 구조라(전기시설점검=8개 그룹시트, 고장수리=단일표, 점검사진=번호 순 전체) 안전관리처럼
+// 터널마다 반복 호출할 필요가 없다 — 연/월 하나만 정하면 통합 보고서 1개가 바로 완성된다.
+// 표지·일지간지 2개 시트는 노션 DB가 없다(템플릿 실측 — 연월만으로 완성되는 고정 서식).
+const TEAM_TOC_ITEMS=['1. 터널전기시설 점검표', '2. 고장수리실적', '3. 운영관리 사진대지', '4. 터널시설점검일지'];
+function buildTeamCoverReportSheet(wb, year, month){
+  const ws=wb.addWorksheet('표지',{
+    views:[{showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait}
+  });
+  ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
+  const TITLE={vertical:'middle', horizontal:'left'};
+  const CENTER={vertical:'middle', horizontal:'center'};
+
+  for(let r=1; r<=27; r++) ws.getRow(r).height=34.1;
+
+  ws.mergeCells('A1:M1');
+  const titleCell=ws.getCell('A1');
+  titleCell.value='라. 점검팀'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
+
+  ws.mergeCells('A9:M9');
+  const dateCell=ws.getCell('A9');
+  dateCell.value=`${year}년 ${month}월`; dateCell.font={name:'HY헤드라인M', size:24}; dateCell.alignment=CENTER;
+
+  ws.mergeCells('G16:H16');
+  const tocTitle=ws.getCell('G16');
+  tocTitle.value='목    차'; tocTitle.font={name:'HY헤드라인M', size:20}; tocTitle.alignment=CENTER;
+
+  TEAM_TOC_ITEMS.forEach((item, i)=>{
+    const cell=ws.getCell(`G${17+i}`);
+    cell.value=item; cell.font={name:'HY헤드라인M', size:20}; cell.alignment=TITLE;
+  });
+}
+function buildTeamDailyLogDividerSheet(wb, year, month){
+  const ws=wb.addWorksheet('일지간지',{
+    views:[{showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
+  });
+  ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
+  const TITLE={vertical:'middle', horizontal:'left'};
+  const CENTER={vertical:'middle', horizontal:'center'};
+
+  ws.getRow(1).height=50.15;
+  const titleCell=ws.getCell('A1');
+  titleCell.value='4. 터널시설점검일지'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
+
+  ws.getRow(2).height=20.15;
+  for(let r=3; r<=13; r++) ws.getRow(r).height=30;
+
+  ws.mergeCells('A14:E14');
+  const lastDay=new Date(year, month, 0).getDate();
+  const periodCell=ws.getCell('A14');
+  periodCell.value=`기간 : ${year}년 ${month}월 1일 ~ ${year}년 ${month}월 ${lastDay}일`;
+  periodCell.font={name:'맑은 고딕', size:20}; periodCell.alignment=CENTER;
+  ws.getRow(14).height=30;
+
+  for(let r=15; r<=25; r++) ws.getRow(r).height=30;
+}
+// 통합 보고서는 전기시설점검 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는
+// 탭(고장수리/점검사진)은 먼저 로드해줘야 한다 — 안 그러면 "해당 월에 데이터가 없어서"가
+// 아니라 "탭을 안 열어봐서" 빠지는 조용한 누락이 생긴다.
+async function ensureTabLoaded(id){
+  if(TAB_STATE[id].loaded) return;
+  await loadTabData(id);
+}
+async function buildOneTeamUnifiedReport(year, month){
+  await loadExcelLib(true);
+  await Promise.all(['elecinsp','repair','photo'].map(ensureTabLoaded));
+
+  const wb=new ExcelJS.Workbook();
+  let hasData=false;
+  buildTeamCoverReportSheet(wb, year, month);
+
+  // 1. 터널전기시설 점검표 — 그룹(시트)당 데이터 있는 터널만 그려진다(buildElecInspReportSheet 내부 처리)
+  let titleShown=false;
+  ELECINSP_SHEET_GROUPS.forEach(g=>{
+    const ok=buildElecInspReportSheet(wb, g, year, month, !titleShown);
+    if(ok){ titleShown=true; hasData=true; }
+  });
+
+  // 2. 고장수리실적
+  const repairRows=buildRepairReportRows(year, month);
+  if(repairRows.length){ buildRepairReportSheet(wb, repairRows); hasData=true; }
+
+  // 3. 운영관리 사진대지 — 6장씩 사진1~N 시트
+  const photoRows=buildPhotoTeamReportRows(year, month);
+  if(photoRows.length){
+    const sheetCount=Math.ceil(photoRows.length/6);
+    for(let s=0; s<sheetCount; s++){
+      const sheetRows=photoRows.slice(s*6, s*6+6);
+      await buildPhotoTeamReportSheet(wb, sheetRows, s+1, false);
+    }
+    hasData=true;
+  }
+
+  // 4. 터널시설점검일지(간지) — 원본처럼 데이터 없이도 항상 포함
+  buildTeamDailyLogDividerSheet(wb, year, month);
+
+  if(!hasData) throw new Error('해당 연월에 생성할 데이터가 없습니다.');
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=await excelUnlockAspectRatio(buf);
+  return {blob, year, month};
+}
+function exportTeamUnifiedReport(){
+  const btn=document.getElementById('unifiedReportBtn');
+  const lbl=document.getElementById('unifiedReportLbl');
+  const ym=resolveTabYearMonth('elecinsp', '날짜');
+  if(!ym){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
+  btn.disabled=true; lbl.textContent='생성 중...';
+  buildOneTeamUnifiedReport(ym.year, ym.month).then(({blob, year, month})=>{
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${month}월 점검결과보고서_점검팀.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent='통합 보고서 생성'; btn.disabled=false; }, 1500);
+  }).catch(e=>{
+    alert('통합 보고서 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent='통합 보고서 생성'; btn.disabled=false;
+  });
 }
 
 // ── 하단 탭 전환 ──
