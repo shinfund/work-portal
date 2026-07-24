@@ -1579,7 +1579,7 @@ function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
     if(lines>maxLines) maxLines=lines;
   });
   const lineHeightPt=fontSize*1.4;
-  const neededHeight=maxLines*lineHeightPt+6;
+  const neededHeight=maxLines*lineHeightPt+16; // 상하 여백(2026-07-24 확대 — 기존 +6은 좁아 보인다는 피드백)
   return Math.max(baseHeight, neededHeight);
 }
 function excelParseDate(s){
@@ -1981,7 +1981,14 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   return noteEndRow+2; // 특이사항 박스 뒤 빈 줄 1행 + 다음 블록 시작행
 }
 // A4 세로 인쇄 가능 높이(포인트) = 용지높이(29.7cm) - 위/아래 여백(EXCEL_PAGE_PRESETS.portrait).
+// 위/아래 여백은 표지·일지간지도 다른 시트와 동일(왼쪽만 다름)이라 이 상수 하나로 전체 공용.
 const EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT = (29.7/2.54 - EXCEL_PAGE_PRESETS.portrait.top - EXCEL_PAGE_PRESETS.portrait.bottom) * 72;
+// "보고서 생성"(고정 서식지) 전체 공용 — 실제로 그릴 콘텐츠 높이(포인트)를 인쇄 가능 높이와
+// 비교해 "1페이지에 꽉 차게" 배율을 구한다(2026-07-24, 사용자 요청 — 보고서 시트는 전부 고정값
+// 대신 자동 계산으로 통일). 100%를 넘지 않게, 약간의 여유를 두고 98%를 상한으로 잡는다.
+function excelDynamicScale(contentHeightPt){
+  return Math.max(40, Math.min(98, Math.floor(EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100)));
+}
 // 터널 블록 하나(부제+헤더+데이터+특이사항 5행)의 실제 인쇄 높이(포인트) 예측 —
 // drawElecInspTunnelBlock()이 실제로 그리는 행 높이 계산과 동일한 로직이어야 한다.
 function elecInspBlockHeightPt(rows){
@@ -1998,16 +2005,11 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
     return {tunnel:t, recs, rows:elecInspTunnelRows(recs)};
   }).filter(b=>b.rows.length);
   if(!blocks.length) return false;
-  // 고정 배율값(템플릿 실측) 대신 실제로 그릴 콘텐츠 높이를 미리 계산해 "1페이지에 꽉 차게"
-  // 배율을 매번 구한다(2026-07-24) — 터널 2개씩 묶은 원본 템플릿 배율을 터널당 1시트 구조에
-  // 그대로 쓰니 결과물이 필요 이상으로 작게 나오는 문제가 있었다(고정값은 원본 콘텐츠 높이에만
-  // 맞는 값이라 콘텐츠 구성이 달라지면 안 맞는다). 100%를 넘지 않게, 그리고 약간의 여유를 두고
-  // 98%를 상한으로 잡는다.
   // 2026-07-24 15:45 최종 템플릿 실측: 제목 유무와 무관하게 1~2행은 항상 같은 높이로 예약된다
   // (1행=50.05 제목행 자리, 2행=10 여백) — 사진대지 시트에서 이미 확인한 것과 동일한 패턴.
   const titleHeightPt = 60.05; // 제목행(50.05)+간격행(10), 제목 유무 무관하게 항상 고정
   const contentHeightPt = titleHeightPt + blocks.reduce((sum,b)=>sum+elecInspBlockHeightPt(b.rows), 0);
-  const scale=Math.max(40, Math.min(98, Math.floor(EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100)));
+  const scale=excelDynamicScale(contentHeightPt);
   const ws=wb.addWorksheet(group.name,{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
@@ -2078,13 +2080,29 @@ function buildRepairReportRows(year, month){
     .map(r=>({터널명:r['터널명']||'', 발생일자:r['발생일자'], 이상발생내역:r['이상발생내역']||'', 조치일자:r['조치일자'], 조치내역:r['조치내역']||'', 작업자:r['작업자']||''}));
 }
 function buildRepairReportSheet(wb, rows){
+  // 2026-07-24 15:45 최종 템플릿 실측값으로 갱신(기존 [14,13,42,13,32,16]).
+  const REPAIR_COL_WIDTHS=[13.640625,10.640625,42.640625,10.640625,34.640625,16.640625];
+  const REPAIR_COLS_META=[{key:'터널명'},{key:'발생일자'},{key:'이상발생내역',wrap:true},{key:'조치일자'},{key:'조치내역',wrap:true},{key:'작업자'}];
+  // 템플릿 실측(2026-07-24, 고장수리실적 시트): 실제 데이터가 6건뿐이어도 표 테두리는 항상
+  // 21행(5~25행)까지 그려진다 — 빈 줄도 나중에 손으로 채워 넣을 수 있게 테두리를 미리 그어둔
+  // 고정 서식지 방식. 데이터가 21건을 넘으면 그 이상은 자연히 늘어난다(Math.max이므로 하한선만 고정).
+  const REPAIR_TABLE_MIN_ROWS=21;
+  const totalRows=Math.max(rows.length, REPAIR_TABLE_MIN_ROWS);
+  // 고장수리는 그 달 접수 건수에 상한이 없는(21행은 빈 줄 하한선일 뿐) 가변 데이터라, 다른
+  // 보고서 시트처럼 "1페이지에 꽉 차게" 배율을 계산해서 억지로 줄이면 접수가 많은 달엔 글자가
+  // 너무 작아진다(2026-07-24, 사용자 지적) — 대신 "엑셀 생성" 버튼과 같은 원리로 가로만 1페이지에
+  // 맞추고 세로는 필요한 만큼 여러 페이지로 자연스럽게 흐르게 둔다.
+  const rowHeights=[];
+  for(let i=0;i<totalRows;i++){
+    const r=rows[i]||null;
+    rowHeights.push(r ? excelWrapAwareRowHeight(r, REPAIR_COLS_META, REPAIR_COL_WIDTHS, EXCEL_BODY_FONT.size, 40) : 40);
+  }
   const ws=wb.addWorksheet('고장수리실적',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:60, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀', oddFooter:''}
   });
-  // 2026-07-24 15:45 최종 템플릿 실측값으로 갱신(기존 [14,13,42,13,32,16]).
-  ws.columns=[13.640625,10.640625,42.640625,10.640625,34.640625,16.640625].map(w=>({width:w}));
+  ws.columns=REPAIR_COL_WIDTHS.map(w=>({width:w}));
   ws.mergeCells('A1:F1');
   const titleCell=ws.getCell('A1');
   titleCell.value='2. 고장수리실적'; titleCell.font={name:'HY헤드라인M', size:20};
@@ -2093,11 +2111,6 @@ function buildRepairReportSheet(wb, rows){
   ws.getRow(2).height=10; ws.getRow(3).height=10;
 
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}};
-  // 템플릿 실측(2026-07-24, 고장수리실적 시트): 실제 데이터가 6건뿐이어도 표 테두리는 항상
-  // 21행(5~25행)까지 그려진다 — 빈 줄도 나중에 손으로 채워 넣을 수 있게 테두리를 미리 그어둔
-  // 고정 서식지 방식. 데이터가 21건을 넘으면 그 이상은 자연히 늘어난다(Math.max이므로 하한선만 고정).
-  const REPAIR_TABLE_MIN_ROWS=21;
-  const totalRows=Math.max(rows.length, REPAIR_TABLE_MIN_ROWS);
   const REGION={r1:4, r2:4+totalRows, c1:1, c2:6};
   function gb(r1,r2,c1,c2){
     return {
@@ -2122,13 +2135,11 @@ function buildRepairReportSheet(wb, rows){
     {vertical:'middle', horizontal:'left', wrapText:true},
     {vertical:'middle', horizontal:'center', shrinkToFit:true}
   ];
-  const REPAIR_COL_WIDTHS=[13.640625,10.640625,42.640625,10.640625,34.640625,16.640625];
-  const REPAIR_COLS_META=[{key:'터널명'},{key:'발생일자'},{key:'이상발생내역',wrap:true},{key:'조치일자'},{key:'조치내역',wrap:true},{key:'작업자'}];
   for(let i=0;i<totalRows;i++){
     const r=rows[i]||null;
     const rn=5+i;
     const row=ws.getRow(rn);
-    row.height = r ? excelWrapAwareRowHeight(r, REPAIR_COLS_META, REPAIR_COL_WIDTHS, EXCEL_BODY_FONT.size, 40) : 40; // 템플릿 기본행높이 40(위 headerRow와 동일 근거)
+    row.height=rowHeights[i];
     for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
@@ -2184,10 +2195,14 @@ function buildPhotoTeamReportRows(year, month){
     .slice()
     .sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
 }
+// 사진대지 시트는 실제 사진 장수와 무관하게 항상 3줄×2장(6칸) 고정 그리드라 콘텐츠 높이가
+// 절대 변하지 않는다 — 그래도 고정 배율 대신 다른 보고서 시트와 동일하게 계산식으로 구한다
+// (2026-07-24, 사용자 요청 — 시트 구조가 나중에 바뀌어도 값이 안 어긋나게).
+const PHOTO_CONTENT_HEIGHT_PT = 50.05+10+30 + 3*(13*13.1 + 2*25.1); // 제목행+여백2행 + 3밴드(사진13행+라벨2행)
 function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const ws=wb.addWorksheet('사진'+sheetIdx,{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:97, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(PHOTO_CONTENT_HEIGHT_PT), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀', oddFooter:''}
   });
   // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
@@ -2304,11 +2319,16 @@ async function exportPhotoTeamReport(){
 // 터널마다 반복 호출할 필요가 없다 — 연/월 하나만 정하면 통합 보고서 1개가 바로 완성된다.
 // 표지·일지간지 2개 시트는 노션 DB가 없다(템플릿 실측 — 연월만으로 완성되는 고정 서식).
 const TEAM_TOC_ITEMS=['1. 터널전기시설 점검표', '2. 고장수리실적', '3. 운영관리 사진대지', '4. 터널시설점검일지'];
+// 표지·일지간지는 연/월 텍스트만 바뀔 뿐 행 구조(줄 수·행높이)는 항상 고정이라 콘텐츠 높이가
+// 절대 안 변한다 — 그래도 고정 배율 대신 다른 보고서 시트와 동일하게 계산식으로 구한다
+// (2026-07-24, 사용자 요청 — PC마다 해상도가 달라 고정 배율은 인쇄 시 틀어질 위험이 있고,
+// 계산식이면 나중에 행 구성이 바뀌어도 값이 자동으로 따라온다).
+const TEAM_COVER_CONTENT_HEIGHT_PT = 27*34.1;
 function buildTeamCoverReportSheet(wb, year, month){
   const ws=wb.addWorksheet('표지',{
     views:[{showGridLines:false, zoomScale:90}],
     // 표지·일지간지만 왼쪽 여백이 2cm(다른 시트는 1.5cm) — 2026-07-24 15:45 최종 템플릿 실측.
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:76, margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)})}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_COVER_CONTENT_HEIGHT_PT), margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)})}
   });
   ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -2333,10 +2353,11 @@ function buildTeamCoverReportSheet(wb, year, month){
     cell.value=item; cell.font={name:'HY헤드라인M', size:20}; cell.alignment=TITLE;
   });
 }
+const TEAM_DIVIDER_CONTENT_HEIGHT_PT = 50.15+20.15+11*30+30+11*30; // 제목행+여백행+본문(3~13,14,15~25)
 function buildTeamDailyLogDividerSheet(wb, year, month){
   const ws=wb.addWorksheet('일지간지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:83, margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)}), printArea:'A1:E25'}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TEAM_DIVIDER_CONTENT_HEIGHT_PT), margins:Object.assign({}, EXCEL_PAGE_PRESETS.portrait, {left:excelCm2in(2)}), printArea:'A1:E25'}
   });
   ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
   const TITLE={vertical:'middle', horizontal:'left'};
