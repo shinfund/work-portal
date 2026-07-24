@@ -2864,29 +2864,6 @@ const EXCEL_PAGE_PRESETS={
   landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
   portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
 };
-// A4 세로 인쇄 가능 높이(포인트) = 용지높이(29.7cm) - 위/아래 여백(EXCEL_PAGE_PRESETS.portrait).
-const EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT = (29.7/2.54 - EXCEL_PAGE_PRESETS.portrait.top - EXCEL_PAGE_PRESETS.portrait.bottom) * 72;
-// "보고서 생성"(고정 서식지, 병합 셀 있는 시트) 전용 — 실제로 그릴 콘텐츠 높이(포인트)를 인쇄
-// 가능 높이와 비교해 "1페이지에 꽉 차게" 배율을 구한다(2026-07-24, monthly-inspection-team 앱과
-// 동일 원칙 이식). PC/프린터마다 다른 고정 배율값 대신 매번 계산하며, 100%를 넘지 않게 98%를
-// 상한으로 둔다. **주의**: 병합 없는 순수 표(고장수리·업무처리처럼 데이터 건수에 상한이 없는
-// 시트)에는 쓰지 말 것 — 그런 시트는 fitToWidth:1,fitToHeight:0(가로만 맞추고 세로는 여러
-// 페이지로 흘림)이 맞다. 구분 기준: 병합 셀이 있는 고정 양식=이 함수, 병합 없는 격자표=fitToHeight:0.
-// **중요(2026-07-24 버그 수정)**: 세로(높이)만 계산하면 가로(열너비 합)가 그 배율에서 한
-// 페이지 너비를 넘는 시트가 생겨 오른쪽 열이 다음 페이지로 잘려 넘어간다 — colWidths를 넘기면
-// 가로 기준 배율도 계산해서 더 작은(보수적인) 쪽을 쓴다. Excel 열너비 1단위 ≈ 7px ≈ 5.25pt.
-function excelDynamicScale(contentHeightPt, colWidths, margins){
-  margins = margins || EXCEL_PAGE_PRESETS.portrait;
-  let scale = EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100;
-  if(colWidths && colWidths.length){
-    const printableWidthPt = (21/2.54 - margins.left - margins.right) * 72;
-    const contentWidthPt = colWidths.reduce((a,b)=>a+b, 0) * 5.25;
-    scale = Math.min(scale, printableWidthPt/contentWidthPt*100);
-  }
-  // 안전 여유 7% — pt 단위 근사 계산이 못 잡는 렌더링 오차 버퍼(2026-07-24, monthly-inspection-team
-  // 앱 표지 시트에서 계산값 83%가 실제론 2페이지로 넘어가고 76%만 안전했던 사례로 도입).
-  return Math.max(40, Math.min(98, Math.floor(scale*0.93)));
-}
 function excelCharWeight(ch){
   const code=ch.codePointAt(0);
   const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
@@ -2898,24 +2875,6 @@ function excelAutoWidth(strings, min, max, padding){
   let w=min;
   strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
   return Math.min(w, max);
-}
-// wrapText 컬럼의 실제 줄바꿈 줄 수를 열너비 기준으로 근사 추정(exceljs는 렌더링을
-// 하지 않아 정확한 줄 수를 알 수 없음 — 자동열폭 계산과 같은 근본적 한계, 보수적으로 추정)
-function excelEstimateWrappedLines(text, colWidthChars){
-  const w=excelStrWidth(text);
-  if(w===0) return 1;
-  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
-}
-function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
-  let maxLines=1;
-  columns.forEach((col,i)=>{
-    if(!col.wrap) return;
-    const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]);
-    if(lines>maxLines) maxLines=lines;
-  });
-  const lineHeightPt=fontSize*1.4;
-  const neededHeight=maxLines*lineHeightPt+16; // 상하 여백(2026-07-24, 좁아 보인다는 피드백 반영)
-  return Math.max(baseHeight, neededHeight);
 }
 function excelParseDate(s){
   const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
@@ -3061,7 +3020,7 @@ function buildExcelReport(opts){
       rows.forEach((r,i)=>{
         const rn=3+i;
         const row=ws.getRow(rn);
-        row.height = photoColumns.length ? rowHeightForData : excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, rowHeightForData);
+        row.height=rowHeightForData;
         columns.forEach((col,ci)=>{
           const cell=row.getCell(ci+1);
           cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
@@ -3138,8 +3097,6 @@ function exportTabExcel(tabId){
     key:f.key, header:f.key,
     numFmt: f.type==='number'?'#,##0.##':undefined,
     photo: f.type==='file'||undefined,
-    wrap: f.type==='text'||undefined,
-    align: f.type==='text'?'left':undefined,
     width: f.type==='file'?18:undefined
   }));
   const ym=resolveTabYearMonth(tabId, tabDef.dateKey);
@@ -3195,18 +3152,15 @@ const REPORT_SHEET_GROUPS=[
   {name:'월간점검표3', gubuns:['직무고시']}
 ];
 function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
-  // 병합 셀이 있는 고정양식(구분·설비명 세로병합)이고 데이터가 고정 카탈로그 기반이라 항목 수에
-  // 상한이 있다 — 실제로 그릴 콘텐츠 높이를 미리 계산해 "1페이지에 꽉 차게" 배율을 구한다
-  // (2026-07-24, PC마다 해상도가 다른 고정 배율 대신 계산식으로 통일).
-  const contentHeightPt=(showTitle?60.05:10)+30+EXCEL_ROW_HEIGHTS.header+rows.length*EXCEL_ROW_HEIGHTS.data;
-  const colWidths=[10,14,46,10,13,10];
   const ws=wb.addWorksheet(sheetName,{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
     // 좌측 여백 1.5cm(제본 여백)는 2026-07-22부터 EXCEL_PAGE_PRESETS.portrait 기본값 자체가
     // 1.5cm로 바뀌어서(사용자 지정 신규 기본 여백) 더 이상 별도 덮어쓸 필요 없음.
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(contentHeightPt, colWidths), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
+    // 시트 1개=인쇄 1페이지(3개 시트로 분리했으니 세로도 1페이지에 강제로 맞춘다, 2026-07-21 사용자 요청)
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
+  const colWidths=[10,14,46,10,13,10];
   ws.columns=colWidths.map(w=>({width:w}));
 
   // 큰 제목("1. 월간 점검결과표")은 원본 템플릿처럼 첫 시트에만 넣고, 2·3번째 시트는 이어지는
@@ -3472,16 +3426,11 @@ const ELEC_REPORT_HIGHVOLT=[
   '수배전반','계전기류','차단기류','전력용콘덴서','보호설비','부하설비','접지시설','기타설비'
 ];
 const ELEC_REPORT_ACB_PHASE_LABEL={R:'R-S', S:'S-T', T:'T-R'};
-// 라벨·값이 A1:R47 고정 칸에 박힌 정적 서식지라(데이터는 값만 채울 뿐 행 구조는 항상 동일)
-// 콘텐츠 높이가 고정이다 — 실측(2026-07-24, 브라우저에서 실제 워크북을 만들어 각 행의 높이를
-// 합산, 명시적 높이가 없는 행은 Excel 기본값 15pt로 계산) = 760.35pt.
-const ELEC_REPORT_CONTENT_HEIGHT_PT = 760.35;
-const ELEC_REPORT_COL_WIDTHS=[5.5,7.2,3.3,3.5,3.5,5.3,3.8,12.5,3.3,3.5,3.5,5.3,3.8,11,3.8,3.8,3.8,3.8];
 function buildElecReportSheet(wb, r, tunnel){
   const acb0=(r._acb&&r._acb[0])||null, chk0=(r._chk&&r._chk[0])||null;
   const ws=wb.addWorksheet('전기설비기록표',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(ELEC_REPORT_CONTENT_HEIGHT_PT, ELEC_REPORT_COL_WIDTHS), horizontalCentered:true,
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait}, // 좌측 1.5cm는 2026-07-22부터 portrait 기본값 자체에 포함됨
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
@@ -3489,7 +3438,7 @@ function buildElecReportSheet(wb, r, tunnel){
   // (짧은 라벨은 문제없지만 "수전전압/용량"·"설비현황"·"부적합\n수량"·"유효전력량(kW)"처럼 긴
   // 라벨이 8pt에서도 잘려 보였음). fitToWidth:1이 인쇄 시 자동으로 배율을 맞추므로 폭을 늘려도
   // 1페이지 제약은 깨지지 않는다.
-  ws.columns=ELEC_REPORT_COL_WIDTHS.map(w=>({width:w}));
+  ws.columns=[5.5,7.2,3.3,3.5,3.5,5.3,3.8,12.5,3.3,3.5,3.5,5.3,3.8,11,3.8,3.8,3.8,3.8].map(w=>({width:w}));
 
   const F14=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
@@ -3773,13 +3722,10 @@ function buildTransformerReportData(tunnel, year, month){
     }))
   };
 }
-// 고정 서식지(변압기종류 3종×15지점 항상 동일 칸수) — 콘텐츠 높이 실측(2026-07-24, 브라우저에서
-// 실제 워크북 생성해 각 행 높이 합산, 명시값 없는 행은 Excel 기본값 15pt) = 945.05pt.
-const TRANSFORMER_REPORT_CONTENT_HEIGHT_PT = 945.05;
 function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const ws=wb.addWorksheet('변압기온도측정표',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(TRANSFORMER_REPORT_CONTENT_HEIGHT_PT, Array(10).fill(8.6)), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=Array(10).fill(0).map(()=>({width:8.6}));
@@ -3960,13 +3906,10 @@ function exportTransformerInspectionReport(){
 // attachGeneratorChildren()이 이미 붙여둔 r._fuel(단일 객체)·r._chk(20개 배열)를 그대로 쓴다(2026-07-22,
 // 원본 템플릿을 ExcelJS로 셀 덤프해 서식·병합·테두리 실측 후 재현 — 발전기운전/유류사용량 표는 원본이
 // 값 1건을 2행 병합으로 세로로 길게 그렸지만 실제로는 레코드 1건뿐이라 헤더 1행+데이터 1행으로 압축).
-// 고정 서식지(방문 1건=시트 1개, 칸 구조 항상 동일) — 콘텐츠 높이 실측(2026-07-24, 위 변압기와
-// 동일 방식) = 1345.05pt.
-const GENERATOR_REPORT_CONTENT_HEIGHT_PT = 1345.05;
 function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
   const ws=wb.addWorksheet(sheetName||'발전기점검표',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(GENERATOR_REPORT_CONTENT_HEIGHT_PT, Array(18).fill(5.57)), horizontalCentered:true,
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
@@ -4207,13 +4150,10 @@ function buildPhotoReportData(tunnel, year, month){
   });
   return byNo;
 }
-// 항상 6칸(2열×3행) 고정 그리드라 실제 사진 장수와 무관하게 콘텐츠 높이가 고정 — 실측(2026-07-24,
-// 위 변압기와 동일 방식) = 931.55pt.
-const PHOTO_REPORT_CONTENT_HEIGHT_PT = 931.55;
 function buildPhotoReportSheet(wb, photosByNo, tunnel){
   const ws=wb.addWorksheet('점검사진대지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(PHOTO_REPORT_CONTENT_HEIGHT_PT, PHOTO_REPORT_COL_WIDTHS), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=PHOTO_REPORT_COL_WIDTHS.map(w=>({width:w}));
@@ -4455,13 +4395,10 @@ function renderPowerChartImage(data){
     });
   });
 }
-// 헤더+차트 블록은 고정이고 데이터행만 그 달 일수(28~31일)만큼 늘어난다 — 실측(2026-07-24,
-// 30일/31일 각각 워크북을 만들어 대조: 1409.65pt/1419.75pt, 하루당 10.1pt) 기준 선형식.
-function powerReportContentHeightPt(daysInMonth){ return 1106.65 + daysInMonth*10.1; }
 function buildPowerReportSheet(wb, data, tunnel, chartBuf){
   const ws=wb.addWorksheet('전력사용량표',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(powerReportContentHeightPt(data.daysInMonth), Array(4).fill(32.79)), horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=Array(4).fill(0).map(()=>({width:32.79})); // 원본 템플릿 실측 너비 그대로
@@ -4617,12 +4554,9 @@ function taskReportRowHeight(업무내용, 조치사항){
 }
 function buildTaskReportSheet(wb, rows, tunnel){
   const totalRows=Math.max(rows.length, TASK_REPORT_MIN_ROWS);
-  // 병합 없는 단순 격자표라 그 달 기록 건수에 상한이 없다 — 다른 고정양식(병합 있는 시트)처럼
-  // "1페이지에 꽉 차게" 배율을 계산하면 기록이 많은 달엔 글자가 너무 작아진다(2026-07-24, 사용자
-  // 지적). 가로만 1페이지에 맞추고 세로는 필요한 만큼 여러 페이지로 자연스럽게 흐르게 둔다.
   const ws=wb.addWorksheet('업무처리사항',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=[15.64,44.64,44.64,17.64,14.64].map(w=>({width:w}));
@@ -4783,12 +4717,10 @@ const UNIFIED_TOC_ITEMS=[
   '4. 비상발전기 점검 및 가동일지', '5. 운영관리 사진대지', '6. 전력데이터 분석',
   '7. 월간 업무처리사항', '8. 일일점검일지'
 ];
-// 표지·간지는 터널명/연월 텍스트만 바뀌고 행 구조는 항상 고정 — 콘텐츠 높이도 고정.
-const COVER_REPORT_CONTENT_HEIGHT_PT = 27*34.1;
 function buildCoverReportSheet(wb, tunnel, year, month){
   const ws=wb.addWorksheet('표지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(COVER_REPORT_CONTENT_HEIGHT_PT, Array(13).fill(8.86)), margins:EXCEL_PAGE_PRESETS.portrait}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait}
   });
   ws.columns=Array(13).fill(0).map(()=>({width:8.86}));
   const TITLE={vertical:'middle', horizontal:'left'};
@@ -4814,11 +4746,10 @@ function buildCoverReportSheet(wb, tunnel, year, month){
     cell.value=item; cell.font={name:'HY헤드라인M', size:20}; cell.alignment=TITLE;
   });
 }
-const DIVIDER_REPORT_CONTENT_HEIGHT_PT = 50.15+20.15+11*30+30+11*30;
 function buildDailyLogDividerSheet(wb, tunnel, year, month){
   const ws=wb.addWorksheet('일일점검일지(간지)',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:excelDynamicScale(DIVIDER_REPORT_CONTENT_HEIGHT_PT, [17.57,19.79,32.07,16,14]), margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, margins:EXCEL_PAGE_PRESETS.portrait, printArea:'A1:E25'}
   });
   ws.columns=[17.57,19.79,32.07,16,14].map(w=>({width:w}));
   const TITLE={vertical:'middle', horizontal:'left'};
