@@ -1929,7 +1929,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
       cell.font=EXCEL_BODY_FONT;
       if(ci>=1) cell.border=gb(rn,rn,ci+1,ci+1);
       cell.alignment = ci===1
-        ? {vertical:'middle', horizontal:'left', wrapText:true}
+        ? {vertical:'middle', horizontal:'left', wrapText:true, indent:1}
         : {vertical:'middle', horizontal:'center', wrapText:true};
     }
     row.getCell(1).value=r['구분'];
@@ -1968,12 +1968,12 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
     if(i===0){
       const labelCell=row.getCell(1);
       labelCell.value='※ 특이사항';
-      labelCell.alignment={vertical:'middle', horizontal:'left'};
+      labelCell.alignment={vertical:'middle', horizontal:'left', indent:1};
     }
     if(i===1 && noteText){
       const noteValCell=row.getCell(1);
       noteValCell.value=noteText;
-      noteValCell.alignment={vertical:'middle', horizontal:'left'};
+      noteValCell.alignment={vertical:'middle', horizontal:'left', indent:1};
     }
     row.commit();
   }
@@ -2145,9 +2145,9 @@ function buildRepairReportSheet(wb, rows){
   const COL_ALIGN=[
     {vertical:'middle', horizontal:'center', shrinkToFit:true},
     {vertical:'middle', horizontal:'center', shrinkToFit:true},
-    {vertical:'middle', horizontal:'left', wrapText:true},
+    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},
     {vertical:'middle', horizontal:'center', shrinkToFit:true},
-    {vertical:'middle', horizontal:'left', wrapText:true},
+    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},
     {vertical:'middle', horizontal:'center', shrinkToFit:true}
   ];
   for(let i=0;i<totalRows;i++){
@@ -2223,8 +2223,8 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const F=(size,bold)=>({name:'맑은 고딕', size:size, bold:!!bold});
   const CENTER={vertical:'middle', horizontal:'center'};
   const LEFT={vertical:'middle', horizontal:'left'};
-  const LEFT_INDENT={vertical:'middle', horizontal:'left'};
-  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true};
+  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
+  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1};
   function rangeBounds(range){
     const parts=range.split(':');
     const m1=/^([A-Z]+)(\d+)$/.exec(parts[0]);
