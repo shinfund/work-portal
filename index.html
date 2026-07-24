@@ -229,7 +229,7 @@ body{
   background:var(--nav-border2);
 }
 .tb-tab:hover{background:var(--nav-tab-hover-bg);color:var(--nav-text);}
-.tb-tab.on{background:var(--bg);color:var(--txt2);font-weight:600;}
+.tb-tab.on{background:var(--nav-item-on-bg);color:var(--nav-text);font-weight:600;}
 .tb-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .tb-x{
   width:15px;height:15px;border-radius:4px;flex-shrink:0;
@@ -237,8 +237,8 @@ body{
   font-size:13px;line-height:1;color:var(--nav-tab-x-text);
 }
 .tb-x:hover{background:var(--nav-tab-x-hover-bg);color:var(--nav-text);}
-.tb-tab.on .tb-x{color:var(--txt3);}
-.tb-tab.on .tb-x:hover{background:var(--border2);color:var(--txt2);}
+.tb-tab.on .tb-x{color:var(--nav-text-dim);}
+.tb-tab.on .tb-x:hover{background:var(--nav-tab-x-hover-bg);color:var(--nav-text);}
 
 .tb-add-wrap{position:relative;flex-shrink:0;}
 .tb-add-btn{
