@@ -3260,7 +3260,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
       // 줄바꿈+"셀에 맞춤" 혼합이었다가 자동 줄바꿈으로 통일), 점검내용 열은 "셀에 맞춤"(shrinkToFit)
       // 유지, 나머지 열도 셀에 맞춤.
       cell.alignment = ci===2
-        ? {vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1}
+        ? {vertical:'middle', horizontal:'left', shrinkToFit:true}
         : ci===0
           ? {vertical:'middle', horizontal:'center', wrapText:true}
           : {vertical:'middle', horizontal:'center', shrinkToFit:true};
@@ -3445,11 +3445,10 @@ function buildElecReportSheet(wb, r, tunnel){
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
   const LEFT={vertical:'middle', horizontal:'left'};
-  // 좌측 정렬 + indent:1 — 테두리(BOX_TOP/LR/BOTTOM 등)가 있는 셀에서만 쓴다. 제목·소제목·
-  // 안내문처럼 테두리 없는 좌측정렬 텍스트에는 적용하지 않음(2026-07-22 사용자 요청으로
-  // 범위 한정 — 처음엔 LEFT 상수 자체에 indent를 넣었다가, 테두리 없는 셀까지 여백이 생겨
-  // 되돌림). 종합의견 박스(A33:R41)에만 사용.
-  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
+  // LEFT_INDENT: 과거엔 indent:1을 썼으나(2026-07-22), 긴 문자열이 좁아진 폭 때문에
+  // 자동줄바꿈이 잦아진다는 이유로 2026-07-24 최종적으로 indent 완전 제거 — 이제 LEFT와
+  // 동일값. 모든 "보고서 생성" 좌측정렬 텍스트는 indent 없이 다른 컬럼과 같은 기본 여백만 쓴다.
+  const LEFT_INDENT={vertical:'middle', horizontal:'left'};
   // 병합 범위의 마스터(좌상단) 셀에만 값·스타일을 쓰고 mergeCells()를 호출 — mergeCells()는 비마스터
   // 셀 스타일을 전부 버리므로(2026-07-21 확인된 ExcelJS 제약) 항상 이 순서를 지킨다.
   // border: 생략하면 표 영역(아래 BORDER_REGIONS) 기준 자동 계산 — 그 영역의 절대 바깥 경계에
@@ -3734,8 +3733,8 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const CENTER={vertical:'middle', horizontal:'center'};
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const LABEL_ALIGN={vertical:'middle', horizontal:'distributed', wrapText:true};
-  // 제목·부제·측정일자·점검자 값 전부 테두리 없는 안내문/정보줄이라 indent 없이 사용
-  // (2026-07-22 사용자 요청 — indent:1은 테두리 있는 셀에만 한정).
+  // 제목·부제·측정일자·점검자 값 전부 indent 없이 사용(2026-07-24 최종 확정 — 모든
+  // "보고서 생성" 좌측정렬 텍스트는 indent:1 미적용, 아래 LEFT_WRAP/LEFT_INDENT 참고).
   const VALUE_ALIGN={vertical:'middle', horizontal:'left', wrapText:true};
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}}; // 원본 템플릿 실측(theme0 tint -5%) 근사값
 
@@ -3922,15 +3921,14 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
   const CENTER_WRAP={vertical:'middle', horizontal:'center', wrapText:true};
   const CENTER_SHRINK={vertical:'middle', horizontal:'center', shrinkToFit:true};
   const LEFT={vertical:'middle', horizontal:'left'};
-  // 좌측 정렬 + indent:1 — 테두리가 있는 셀에만 한정(2026-07-22 사용자 요청, 제목·부제·
-  // 가동일자/점검자 정보줄처럼 테두리 없는 곳은 LEFT를 그대로 씀). 점검사항 데이터 열
-  // (LEFT_WRAP)은 전부 표 안(테두리 있음)이라 그대로 유지, 특이사항 박스는 LEFT_INDENT 사용.
-  const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true, indent:1};
-  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
+  // 좌측정렬 텍스트는 전부 indent 없이 사용(2026-07-24 최종 확정 — LEFT/LEFT_WRAP/LEFT_INDENT
+  // 전부 동일값). 긴 문자열이 indent:1만큼 좁아진 폭 때문에 자동줄바꿈이 잦아진다는 이유로
+  // 모든 "보고서 생성" 좌측정렬 텍스트에서 indent를 제거하기로 확정됨.
+  const LEFT_WRAP={vertical:'middle', horizontal:'left', wrapText:true};
+  const LEFT_INDENT={vertical:'middle', horizontal:'left'};
   // 병합 셀이 "텍스트:" 라벨(가동일자:/점검자: 등)인 경우 전용 서식 — 엑셀 "가로: 균등분할
   // (들여쓰기)" 옵션(2026-07-23 사용자 요청). 원본 참고파일 A4/A5 실측: distributed+wrapText,
-  // indent 필드는 없음(변압기온도 탭의 LABEL_ALIGN과 정확히 동일값) — indent:1은 "테두리 있는
-  // 좌측정렬 셀" 전용 규칙(위 LEFT_WRAP/LEFT_INDENT 주석 참고)이라 이 라벨엔 해당 없음. 이런
+  // indent 필드는 없음(변압기온도 탭의 LABEL_ALIGN과 정확히 동일값). 이런
   // "텍스트:" 라벨 패턴이 다른 보고서에도 나오면 이 상수를 그대로 재사용할 것.
   const LABEL_DISTRIBUTED={vertical:'middle', horizontal:'distributed', wrapText:true};
 
@@ -4164,8 +4162,8 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
   // 테두리 있는 라벨박스(일자 값) 전용 — 제목·부제(테두리 없음)에는 LEFT를 그대로 씀
   // (2026-07-22 사용자 요청, indent는 테두리 있는 셀에만 한정). 사진설명(LEFT_SHRINK)은
   // 항상 라벨박스 안(테두리 있음)이라 그대로 유지.
-  const LEFT_INDENT={vertical:'middle', horizontal:'left', indent:1};
-  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true, indent:1};
+  const LEFT_INDENT={vertical:'middle', horizontal:'left'};
+  const LEFT_SHRINK={vertical:'middle', horizontal:'left', shrinkToFit:true};
   const IMG_BORDER={top:{style:'thin'}, bottom:{style:'thin'}, left:{style:'thin'}, right:{style:'thin'}};
 
   function colNum(letters){ let n=0; for(let i=0;i<letters.length;i++) n=n*26+(letters.charCodeAt(i)-64); return n; }
@@ -4604,13 +4602,13 @@ function buildTaskReportSheet(wb, rows, tunnel){
 
   // 2026-07-23 열별 정렬 방식을 원본 참고파일 실측대로 재지정: 날짜·업체명=셀에 맞춤(shrinkToFit),
   // 업무내용·조치사항=자동 줄바꿈(wrapText), 비고=자동 줄바꿈(wrapText, 가운데정렬 유지).
-  // 고정 서식지("보고서 생성")는 horizontal:'left'에 반드시 indent:1을 함께 써야 한다(테두리에
-  // 텍스트가 바로 붙어 답답해 보이는 문제, xlsx-report-export 스킬 "고정 서식지 좌측정렬" 절 —
-  // 발전기점검·업무처리 두 번 이미 놓친 실수라 다시 빠뜨리지 않도록 주석으로 명시).
+  // 고정 서식지("보고서 생성")의 horizontal:'left'는 indent 없이 쓴다(2026-07-24 최종 확정 —
+  // 긴 문자열이 좁아진 폭 때문에 자동줄바꿈이 잦아진다는 이유로 indent:1 완전 폐지,
+  // xlsx-report-export 스킬 "고정 서식지 좌측정렬" 절 참고).
   const TASK_COL_ALIGN=[
     {vertical:'middle', horizontal:'center', shrinkToFit:true},          // 날짜
-    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},     // 업무내용
-    {vertical:'middle', horizontal:'left', wrapText:true, indent:1},     // 조치사항
+    {vertical:'middle', horizontal:'left', wrapText:true},     // 업무내용
+    {vertical:'middle', horizontal:'left', wrapText:true},     // 조치사항
     {vertical:'middle', horizontal:'center', shrinkToFit:true},          // 업체명
     {vertical:'middle', horizontal:'center', wrapText:true}              // 비고
   ];
