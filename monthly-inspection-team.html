@@ -1699,7 +1699,7 @@ function buildExcelReport(opts){
       const ws=wb.addWorksheet(sheetOpts.sheetName,{
         views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
         pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
-        headerFooter:{oddHeader:'',oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'}
+        headerFooter:{oddHeader:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:''}
       });
       ws.columns=colWidths.map(w=>({width:w}));
       const titleRow=ws.getRow(1);
@@ -2006,7 +2006,7 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
   const ws=wb.addWorksheet(group.name,{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+group.name}
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+group.name, oddFooter:''}
   });
   ws.columns=[12,42,10,10,14].map(w=>({width:w}));
   let row=1;
@@ -2078,7 +2078,7 @@ function buildRepairReportSheet(wb, rows){
   const ws=wb.addWorksheet('고장수리실적',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:60, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
-    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀', oddFooter:''}
   });
   ws.columns=[14,13,42,13,32,16].map(w=>({width:w}));
   ws.mergeCells('A1:F1');
@@ -2184,7 +2184,7 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
   const ws=wb.addWorksheet('사진'+sheetIdx,{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:false, scale:99, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'', oddFooter:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀'}
+    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' 점검팀', oddFooter:''}
   });
   // 열 너비는 균등폭이 아니라 템플릿 실측값(2026-07-24, 사진1 시트 A~J 컬럼폭) 그대로 —
   // 번호(A/F)는 좁게, 라벨(B/G)은 중간, 값(C~E/H~J, 3칸 병합)은 넓게.
