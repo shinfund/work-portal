@@ -1559,7 +1559,10 @@ async function loadData(opts){
       try{
         const now=new Date();
         const thisMonthDist=recordsForYM(now.getFullYear(), now.getMonth()+1).reduce((s,r)=>s+(r.dist||0),0);
-        localStorage.setItem('portal_summary_vehicle', JSON.stringify({thisMonthDist, updatedAt:Date.now()}));
+        const byMonth={};
+        ALL_RECORDS.forEach(r=>{ if(!r.date) return; const ym=r.date.slice(0,7); byMonth[ym]=(byMonth[ym]||0)+(r.dist||0); });
+        const trend=Object.keys(byMonth).sort().slice(-6).map(k=>byMonth[k]);
+        localStorage.setItem('portal_summary_vehicle', JSON.stringify({thisMonthDist, trend, updatedAt:Date.now()}));
       }catch(e){}
       if(!_userPickedMonth){
         const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();

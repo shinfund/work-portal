@@ -269,20 +269,15 @@ body{
 .tb-add-empty{padding:10px;font-size:12px;color:var(--txt3);text-align:center;white-space:nowrap;}
 
 .tb-spacer{flex:1;min-width:8px;}
-.topbar-clock{
-  font-size:12px;font-weight:700;color:var(--nav-pill-text);
-  background:var(--nav-pill-bg);border-radius:6px;padding:3px 10px;
-}
 .topbar-info{
   display:flex;align-items:center;gap:7px;flex-shrink:0;
   background:var(--nav-pill-bg);border-radius:6px;padding:3px 12px;
   font-size:12px;font-weight:600;color:var(--nav-pill-text);
 }
+.topbar-auth-exp.warn{color:var(--amber);animation:authExpBlink 1.4s ease-in-out infinite;}
+@keyframes authExpBlink{0%,100%{opacity:1;}50%{opacity:.4;}}
 .topbar-info-sep{color:var(--nav-pill-sep);font-weight:300;}
-.topbar-auth-exp.warn{color:var(--amber);}
-.topbar-weather{display:flex;align-items:center;gap:4px;}
-.topbar-weather-icon{font-size:15px;line-height:1;}
-.weather-loading{color:var(--nav-pill-text);font-size:12px;opacity:.75;}
+.topbar-master-badge{color:var(--teal600);font-weight:700;}
 
 /* 아이콘 위 마우스오버 툴팁 (Notion 스타일) */
 .tip{position:relative;}
@@ -333,11 +328,6 @@ body{
 .home-inner::-webkit-scrollbar{width:5px}
 .home-inner::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
 
-.greeting-box{margin-bottom:16px;}
-.greeting-date{font-size:12.5px;color:var(--txt3);font-weight:500;margin-bottom:4px;}
-.greeting-title{font-size:19px;font-weight:700;color:var(--txt);line-height:1.3;}
-.greeting-sub{font-size:12.5px;color:var(--txt2);margin-top:4px;}
-
 /* 앱 카드 */
 .app-grid{
   display:grid;
@@ -362,6 +352,13 @@ body{
 .ac-kpi.empty{font-size:12px;font-weight:500;color:var(--txt3);}
 .ac-desc{font-size:12px;color:var(--txt2);line-height:1.55;}
 .ac-arrow{font-size:12px;color:var(--sky600);font-weight:700;margin-top:auto;}
+
+.ac-viz{display:flex;align-items:center;gap:6px;min-height:16px;}
+.ac-meter{flex:1;height:6px;border-radius:99px;background:var(--teal50);overflow:hidden;}
+.ac-meter-fill{height:100%;border-radius:99px;background:var(--teal);}
+.ac-spark{width:56px;height:20px;flex-shrink:0;overflow:visible;}
+.ac-spark path{fill:none;stroke:var(--sky);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ac-delta{font-size:11px;font-weight:700;color:var(--txt2);}
 
 .sec-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
 
@@ -625,16 +622,10 @@ body{
     </div>
 
     <div class="tb-spacer"></div>
-    <div class="topbar-info">
-      <span id="topbar-auth-exp" class="topbar-auth-exp" style="display:none"></span>
-      <span class="topbar-info-sep" id="topbar-auth-exp-sep" style="display:none">|</span>
-      <span id="topbar-date">--</span>
-      <span class="topbar-info-sep">|</span>
-      <span class="topbar-weather" id="topbar-weather">
-        <span class="weather-loading">날씨 로딩중</span>
-      </span>
-      <span class="topbar-info-sep">|</span>
-      <span id="topbar-clock">--:--</span>
+    <div class="topbar-info" id="topbar-info" style="display:none">
+      <span id="topbar-auth-exp" class="topbar-auth-exp"></span>
+      <span class="topbar-info-sep" id="topbar-master-sep" style="display:none">|</span>
+      <span id="topbar-master-badge" class="topbar-master-badge" style="display:none">🔓 관리자모드</span>
     </div>
   </div>
 
@@ -646,18 +637,13 @@ body{
       <div class="home-inner">
         <div id="kpi-preload-zone" style="position:absolute;width:0;height:0;overflow:hidden;visibility:hidden;top:-9999px;left:-9999px"></div>
 
-        <div class="greeting-box">
-          <div class="greeting-date" id="home-date"></div>
-          <div class="greeting-title">통합업무포털에 오신 것을 환영합니다</div>
-          <div class="greeting-sub">좌측 메뉴(PC) 또는 상단 메뉴 버튼(모바일)에서 업무 앱을 선택하세요.</div>
-        </div>
-
         <div class="sec-hd"><span>업무 앱 바로가기</span></div>
         <div class="app-grid">
           <div class="app-card" onclick="go('solar')">
             <div>
               <div class="ac-name">태양광발전량</div>
               <div class="ac-kpi" id="kpi-solar">—</div>
+              <div class="ac-viz" id="viz-solar"></div>
               <div class="ac-desc">터널별 일별 태양광 발전량·전기요금 기록 및 현황 조회.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -666,6 +652,7 @@ body{
             <div>
               <div class="ac-name">하자보수현황</div>
               <div class="ac-kpi" id="kpi-defect">—</div>
+              <div class="ac-viz" id="viz-defect"></div>
               <div class="ac-desc">하자 접수·처리·완료 현황 조회 및 등록.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -674,6 +661,7 @@ body{
             <div>
               <div class="ac-name">차량운행일지</div>
               <div class="ac-kpi" id="kpi-vehicle">—</div>
+              <div class="ac-viz" id="viz-vehicle"></div>
               <div class="ac-desc">차량 운행 이력 기록 및 조회.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -682,6 +670,7 @@ body{
             <div>
               <div class="ac-name">비품대장</div>
               <div class="ac-kpi" id="kpi-equip">—</div>
+              <div class="ac-viz" id="viz-equip"></div>
               <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -690,6 +679,7 @@ body{
             <div>
               <div class="ac-name">연장근무</div>
               <div class="ac-kpi" id="kpi-overtime">—</div>
+              <div class="ac-viz" id="viz-overtime"></div>
               <div class="ac-desc">당직·비상대기·비상출동 지급액 월별 현황.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -698,6 +688,7 @@ body{
             <div>
               <div class="ac-name">월간점검결과-안전관리</div>
               <div class="ac-kpi" id="kpi-monthly">—</div>
+              <div class="ac-viz" id="viz-monthly"></div>
               <div class="ac-desc">터널별 정기점검·설비기록·안전관리 현황 조회 및 등록.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -706,6 +697,7 @@ body{
             <div>
               <div class="ac-name">월간점검결과-점검팀</div>
               <div class="ac-kpi" id="kpi-monthlyTeam">—</div>
+              <div class="ac-viz" id="viz-monthlyTeam"></div>
               <div class="ac-desc">터널별 전기시설점검·고장수리·점검사진 현황 조회 및 등록.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
@@ -718,7 +710,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리 6개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리·월간점검결과-점검팀 7개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -819,6 +811,7 @@ body{
       <div class="modal-tabs">
         <div class="modal-tab on" id="cfgtab-btn-dbid" onclick="switchCfgTab('dbid')">로그인</div>
         <div class="modal-tab" id="cfgtab-btn-theme" onclick="switchCfgTab('theme')">화면모드</div>
+        <div class="modal-tab" id="cfgtab-btn-master" onclick="switchCfgTab('master')">관리자모드</div>
       </div>
 
       <div class="modal-tab-panel on" id="cfgtab-dbid">
@@ -827,7 +820,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리 6개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리·월간점검결과-점검팀 7개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -848,6 +841,23 @@ body{
           </div>
         </div>
         <div class="mh" style="margin-top:12px"><strong>다크</strong>는 사이드바·상단 탭 바는 물론 홈 화면 콘텐츠까지 전체가 어둡게 전환됩니다. <strong>라이트</strong>는 사이드바·헤더만 밝은 톤으로 바뀌고 콘텐츠는 원래 색상을 유지합니다. 선택 즉시 적용됩니다.</div>
+
+        <div class="modal-btns">
+          <button class="btn-cancel" onclick="closeCfg()">닫기</button>
+        </div>
+      </div>
+
+      <div class="modal-tab-panel" id="cfgtab-master">
+        <div class="mf">
+          <label class="ml">관리자 모드</label>
+          <div class="mh" id="masterStatusHint" style="margin-top:0"></div>
+          <div style="display:flex;gap:8px;margin-top:8px" id="masterUnlockRow">
+            <input id="masterPw" class="mi" type="password" placeholder="관리자 비밀번호" style="flex:1" onkeydown="if(event.key==='Enter')unlockMaster()"/>
+            <button class="btn-save" style="white-space:nowrap" onclick="unlockMaster()">잠금해제</button>
+          </div>
+          <button class="btn-cancel" id="masterLockBtn" style="display:none;margin-top:8px" onclick="lockMaster()">관리자 모드 끄기</button>
+        </div>
+        <div class="mh">여기서 한 번 잠금해제하면 연장근무 등 관리자 모드가 필요한 업무 앱 전체에 함께 적용됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="closeCfg()">닫기</button>
@@ -1052,7 +1062,7 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리 6개 앱 공용 토큰) ──────
+// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리·월간점검결과-점검팀 7개 앱 공용 토큰) ──────
 const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 let AUTH_TOKEN = '';
 let AUTH_EXPIRES = 0;
@@ -1068,22 +1078,37 @@ function updateLoginStatusHint(){
   if (!h) return;
   h.textContent = isAuthed() ? '로그인 상태 (만료: ' + new Date(AUTH_EXPIRES).toLocaleString('ko-KR') + ')' : '로그인이 필요합니다';
 }
-// 상단 우측 날짜 앞에 공용 비밀번호(로그인) 만료 일시 표시 — 24시간 이내로 남으면 강조색
-function updateTopbarAuthExpiry(){
+// 상단 우측에 로그인(인증만료)·관리자모드 상태를 함께 표시 — 각 앱 설정창을 열지 않아도 한눈에 확인 가능
+// 인증만료는 24시간 이내로 남으면 강조색+깜빡임
+function updateTopbarStatus(){
   document.getElementById('guide-card')?.style.setProperty('display', isAuthed() ? 'none' : '');
+  const wrap = document.getElementById('topbar-info');
   const el = document.getElementById('topbar-auth-exp');
-  const sep = document.getElementById('topbar-auth-exp-sep');
-  if (!el || !sep) return;
-  if (!isAuthed()) { el.style.display = 'none'; sep.style.display = 'none'; return; }
-  const d = new Date(AUTH_EXPIRES);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mi = String(d.getMinutes()).padStart(2, '0');
-  el.textContent = `인증만료 ${mm}/${dd} ${hh}:${mi}`;
-  el.classList.toggle('warn', (AUTH_EXPIRES - Date.now()) < 24 * 60 * 60 * 1000);
-  el.style.display = '';
-  sep.style.display = '';
+  const mSep = document.getElementById('topbar-master-sep');
+  const mBadge = document.getElementById('topbar-master-badge');
+  if (!el || !wrap) return;
+
+  const authed = isAuthed();
+  if (authed) {
+    const d = new Date(AUTH_EXPIRES);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    const isSoon = (AUTH_EXPIRES - Date.now()) < 24 * 60 * 60 * 1000;
+    el.textContent = `${isSoon ? '⚠ ' : ''}인증만료 ${mm}/${dd} ${hh}:${mi}`;
+    el.title = isSoon ? '로그인이 곧 만료됩니다 — 사이드바 하단 설정에서 다시 로그인해주세요.' : '';
+    el.classList.toggle('warn', isSoon);
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+
+  const master = isMaster();
+  if (mSep) mSep.style.display = (authed && master) ? '' : 'none';
+  if (mBadge) mBadge.style.display = master ? '' : 'none';
+
+  wrap.style.display = (authed || master) ? '' : 'none';
 }
 function doLogin(){
   const pEl = document.getElementById('c-pw');
@@ -1101,7 +1126,7 @@ function doLogin(){
       } catch(e) {}
       closeCfg();
       showToast('로그인되었습니다.');
-      updateTopbarAuthExpiry();
+      updateTopbarStatus();
       reloadLoadedApps();
     })
     .catch(() => showToast('로그인 요청 실패 — 네트워크를 확인하세요.'));
@@ -1110,7 +1135,7 @@ function doLogout(){
   AUTH_TOKEN = ''; AUTH_EXPIRES = 0;
   try { localStorage.removeItem('wp_authToken'); localStorage.removeItem('wp_authExpires'); } catch(e) {}
   updateLoginStatusHint();
-  updateTopbarAuthExpiry();
+  updateTopbarStatus();
   showToast('로그아웃되었습니다.');
   reloadLoadedApps();
 }
@@ -1120,7 +1145,7 @@ window.addEventListener('storage', e => {
     AUTH_TOKEN = e.newValue || '';
     AUTH_EXPIRES = parseInt(localStorage.getItem('wp_authExpires') || '0', 10) || 0;
     updateLoginStatusHint();
-    updateTopbarAuthExpiry();
+    updateTopbarStatus();
     renderHomeKpi();
     reloadLoadedApps();
   } else if (e.key === 'theme' && e.newValue) {
@@ -1194,6 +1219,7 @@ function openCfg() {
   updateLoginStatusHint();
   switchCfgTab('dbid');
   syncThemeOptUI();
+  updateMasterStatusHint();
   document.getElementById('cfgModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -1205,12 +1231,68 @@ function closeCfg(e) {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCfg(); });
 
-// ── 설정창 탭 전환 (로그인 / 화면모드) ──────────────────────
+// ── 설정창 탭 전환 (로그인 / 화면모드 / 관리자모드) ──────────────────
 function switchCfgTab(tab) {
   document.getElementById('cfgtab-btn-dbid')?.classList.toggle('on', tab === 'dbid');
   document.getElementById('cfgtab-btn-theme')?.classList.toggle('on', tab === 'theme');
+  document.getElementById('cfgtab-btn-master')?.classList.toggle('on', tab === 'master');
   document.getElementById('cfgtab-dbid')?.classList.toggle('on', tab === 'dbid');
   document.getElementById('cfgtab-theme')?.classList.toggle('on', tab === 'theme');
+  document.getElementById('cfgtab-master')?.classList.toggle('on', tab === 'master');
+}
+
+// ── 관리자 모드 (연장근무 등 개별 앱의 신규등록·수정·삭제 게이트 — 포털 사이드바에서 전체 앱 공통 관리) ──
+// 비밀번호는 SHA-256 해시로만 코드에 남는다(평문은 코드 어디에도 없음). 개별 앱(overtime-work.html 등)과 동일한 해시를 공유한다.
+const MASTER_PASSWORD_HASH = '981f1cf8823cf90d8618203b33393cf9aa520977989e118e5b985823081dbd2a';
+const MASTER_TTL_MS = 7 * 24 * 3600 * 1000; // 7일
+async function sha256HexLocal(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function isMaster() {
+  try {
+    const exp = parseInt(localStorage.getItem('wp_masterExpires') || '0', 10) || 0;
+    return localStorage.getItem('wp_masterUnlocked') === '1' && Date.now() < exp;
+  } catch (e) { return false; }
+}
+async function unlockMaster() {
+  const pwEl = document.getElementById('masterPw');
+  const pw = (pwEl && pwEl.value) || '';
+  if (!pw) return;
+  const h = await sha256HexLocal(pw);
+  if (h === MASTER_PASSWORD_HASH) {
+    try {
+      localStorage.setItem('wp_masterUnlocked', '1');
+      localStorage.setItem('wp_masterExpires', String(Date.now() + MASTER_TTL_MS));
+    } catch (e) {}
+    if (pwEl) pwEl.value = '';
+    updateMasterStatusHint();
+    updateTopbarStatus();
+    showToast('관리자 모드가 활성화되었습니다.');
+  } else {
+    showToast('비밀번호가 올바르지 않습니다.');
+  }
+}
+function lockMaster() {
+  try { localStorage.removeItem('wp_masterUnlocked'); localStorage.removeItem('wp_masterExpires'); } catch (e) {}
+  updateMasterStatusHint();
+  updateTopbarStatus();
+  showToast('관리자 모드가 해제되었습니다.');
+}
+function updateMasterStatusHint() {
+  const h = document.getElementById('masterStatusHint');
+  const row = document.getElementById('masterUnlockRow');
+  const lockBtn = document.getElementById('masterLockBtn');
+  if (!h) return;
+  if (isMaster()) {
+    h.textContent = '✓ 관리자 모드 활성화됨 (7일간 유지)';
+    if (row) row.style.display = 'none';
+    if (lockBtn) lockBtn.style.display = '';
+  } else {
+    h.textContent = '신규등록·수정·삭제 등 관리자 전용 기능을 사용하려면 관리자 비밀번호를 입력하세요.';
+    if (row) row.style.display = 'flex';
+    if (lockBtn) lockBtn.style.display = 'none';
+  }
 }
 
 // ── 화면모드 (라이트: 사이드바·헤더만 / 다크: 전체 콘텐츠 포함) ──
@@ -1224,25 +1306,9 @@ function setNavTheme(theme) {
   localStorage.setItem('theme', theme);
   syncThemeOptUI();
 }
-// ── 시계 / 날짜 ──────────────────────────────────────────
-const DAYS = ['일','월','화','수','목','금','토'];
+// ── 인증만료 표시 갱신 ──────────────────────────
 function tick() {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
-  const m = String(now.getMinutes()).padStart(2,'0');
-  const el = document.getElementById('topbar-clock');
-  if (el) el.textContent = h + ':' + m;
-
-  const de = document.getElementById('home-date');
-  if (de) {
-    de.textContent = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
-  }
-  // topbar 날짜
-  const td = document.getElementById('topbar-date');
-  if (td) {
-    td.textContent = `${now.getMonth()+1}월 ${now.getDate()}일 (${DAYS[now.getDay()]})`;
-  }
-  updateTopbarAuthExpiry();
+  updateTopbarStatus();
 }
 tick();
 setInterval(tick, 10000);
@@ -1257,42 +1323,81 @@ function isAppConfigured() {
   return isAuthed();
 }
 function emptyKpiLabel() { return isAppConfigured() ? '앱을 열면 표시됩니다' : '설정 필요'; }
+// 카드 KPI 아래 미니 시각화 — ratio가 있으면 미터(진행률 바), trend(월별 추이 배열)가 있으면
+// 스파크라인+전월대비 delta. 가짜 목표치를 지어내지 않기 위해 절대값 지표는 항상 스파크라인+delta로만 표시.
+function renderCardViz(key, s) {
+  const el = document.getElementById('viz-' + key);
+  if (!el) return;
+  if (!s) { el.innerHTML = ''; return; }
+  if (typeof s.ratio === 'number') {
+    const pct = Math.round(Math.max(0, Math.min(1, s.ratio)) * 100);
+    el.innerHTML = `<div class="ac-meter" title="정상·완료 비율 ${pct}%"><div class="ac-meter-fill" style="width:${pct}%"></div></div><span class="ac-delta">${pct}%</span>`;
+    return;
+  }
+  if (Array.isArray(s.trend) && s.trend.length >= 2) {
+    const pts = s.trend;
+    const max = Math.max.apply(null, pts.concat([1]));
+    const w = 56, h = 18, n = pts.length;
+    const stepX = n > 1 ? w / (n - 1) : 0;
+    const path = pts.map((v, i) => `${i === 0 ? 'M' : 'L'}${(i * stepX).toFixed(1)},${(h - (v / max) * h).toFixed(1)}`).join(' ');
+    const last = pts[pts.length - 1], prev = pts[pts.length - 2];
+    const deltaPct = prev > 0 ? Math.round(((last - prev) / prev) * 100) : null;
+    const arrow = deltaPct === null ? '' : deltaPct > 0 ? '▲' : deltaPct < 0 ? '▼' : '–';
+    const deltaTxt = deltaPct === null ? '' : `<span class="ac-delta">${arrow} ${Math.abs(deltaPct)}%</span>`;
+    el.innerHTML = `<svg class="ac-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${path}"/></svg>${deltaTxt}`;
+    return;
+  }
+  el.innerHTML = '';
+}
 function renderHomeKpi() {
   const dEl = document.getElementById('kpi-defect');
   if (dEl) {
     const s = readPortalSummary('defect');
     if (s) { dEl.textContent = `미해결 ${s.unresolved}건`; dEl.className = 'ac-kpi' + (s.unresolved > 0 ? ' warn' : ''); }
     else { dEl.textContent = emptyKpiLabel(); dEl.className = 'ac-kpi empty'; }
+    renderCardViz('defect', s);
   }
   const vEl = document.getElementById('kpi-vehicle');
   if (vEl) {
     const s = readPortalSummary('vehicle');
     if (s) { vEl.textContent = `이달 ${fmtWonHome(s.thisMonthDist)}km`; vEl.className = 'ac-kpi'; }
     else { vEl.textContent = emptyKpiLabel(); vEl.className = 'ac-kpi empty'; }
+    renderCardViz('vehicle', s);
   }
   const oEl = document.getElementById('kpi-overtime');
   if (oEl) {
     const s = readPortalSummary('overtime');
     if (s) { oEl.textContent = `이달 ${fmtWonHome(s.thisMonthPay)}원`; oEl.className = 'ac-kpi'; }
     else { oEl.textContent = emptyKpiLabel(); oEl.className = 'ac-kpi empty'; }
+    renderCardViz('overtime', s);
   }
   const sEl = document.getElementById('kpi-solar');
   if (sEl) {
     const s = readPortalSummary('solar');
     if (s) { sEl.textContent = `이달 ${fmtWonHome(s.thisMonthGen)}kWh`; sEl.className = 'ac-kpi'; }
     else { sEl.textContent = emptyKpiLabel(); sEl.className = 'ac-kpi empty'; }
+    renderCardViz('solar', s);
   }
   const eEl = document.getElementById('kpi-equip');
   if (eEl) {
     const s = readPortalSummary('equip');
     if (s) { eEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; eEl.className = 'ac-kpi'; }
     else { eEl.textContent = emptyKpiLabel(); eEl.className = 'ac-kpi empty'; }
+    renderCardViz('equip', s);
   }
   const mEl = document.getElementById('kpi-monthly');
   if (mEl) {
     const s = readPortalSummary('monthly');
     if (s) { mEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; mEl.className = 'ac-kpi'; }
     else { mEl.textContent = emptyKpiLabel(); mEl.className = 'ac-kpi empty'; }
+    renderCardViz('monthly', s);
+  }
+  const mtEl = document.getElementById('kpi-monthlyTeam');
+  if (mtEl) {
+    const s = readPortalSummary('monthlyTeam');
+    if (s) { mtEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; mtEl.className = 'ac-kpi'; }
+    else { mtEl.textContent = emptyKpiLabel(); mtEl.className = 'ac-kpi empty'; }
+    renderCardViz('monthlyTeam', s);
   }
 }
 renderHomeKpi();
@@ -1320,44 +1425,6 @@ function preloadHomeKpis() {
   });
 }
 preloadHomeKpis();
-
-// ── 날씨 로딩 (wttr.in, API 키 불필요) ──────────────────────
-const WEATHER_CODE = {
-  113:'☀️',116:'⛅',119:'☁️',122:'🌫️',
-  143:'🌫️',176:'🌦️',179:'🌨️',182:'🌧️',185:'🌧️',
-  200:'⛈️',227:'🌨️',230:'❄️',248:'🌫️',260:'🌫️',
-  263:'🌦️',266:'🌧️',281:'🌧️',284:'🌧️',293:'🌧️',
-  296:'🌧️',299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',
-  311:'🌧️',314:'🌧️',317:'🌨️',320:'🌨️',323:'🌨️',
-  326:'🌨️',329:'❄️',332:'❄️',335:'❄️',338:'❄️',
-  350:'🌧️',353:'🌦️',356:'🌧️',359:'🌧️',362:'🌨️',
-  365:'🌨️',368:'🌨️',371:'❄️',374:'🌧️',377:'🌧️',
-  386:'⛈️',389:'⛈️',392:'⛈️',395:'⛈️'
-};
-function loadWeather() {
-  const el = document.getElementById('topbar-weather');
-  if (!el) return;
-  // wttr.in 위치 파라미터 생략 시 접속 IP 기반 자동 위치 감지 → 권한 팝업 없음
-  fetch('https://wttr.in/?format=j1')
-    .then(r => r.json())
-    .then(data => {
-      const cur = data.current_condition[0];
-      const code = parseInt(cur.weatherCode);
-      const icon = WEATHER_CODE[code] || '🌡️';
-      const desc = cur.lang_ko?.[0]?.value || cur.weatherDesc[0].value;
-      el.textContent = '';
-      const iconEl = document.createElement('span');
-      iconEl.className = 'topbar-weather-icon';
-      iconEl.textContent = icon;
-      const tempEl = document.createElement('span');
-      tempEl.textContent = cur.temp_C + '°C';
-      el.append(iconEl, tempEl);
-      el.title = desc;
-    })
-    .catch(() => { el.innerHTML = '<span style="color:var(--txt3)">날씨 오류</span>'; });
-}
-loadWeather();
-setInterval(loadWeather, 1800000); // 30분마다 갱신
 
 // ── 모바일 사이드바 드로어(하단 탭 대신 좌측 슬라이드 메뉴) ─────────
 function toggleMobileSidebar() {

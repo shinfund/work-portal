@@ -309,12 +309,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="modal-field" style="margin-top:18px;padding-top:16px;border-top:1.5px solid var(--border)">
         <label class="modal-label">관리자 모드</label>
         <div class="modal-hint" id="masterStatusHint" style="margin-top:0"></div>
-        <div style="display:flex;gap:8px;margin-top:8px" id="masterUnlockRow">
-          <input id="masterPw" class="modal-input" type="password" placeholder="관리자 비밀번호" style="flex:1" onkeydown="if(event.key==='Enter')unlockMaster()"/>
-          <button class="modal-cancel" style="min-height:40px;white-space:nowrap" onclick="unlockMaster()">잠금해제</button>
-        </div>
-        <button class="modal-cancel" id="masterLockBtn" style="display:none;margin-top:8px" onclick="lockMaster()">관리자 모드 끄기</button>
-        <div class="modal-hint">신규등록·수정·삭제는 관리자 모드에서만 가능합니다.</div>
+        <div class="modal-hint">관리자 모드 잠금해제는 포털 좌측 사이드바 하단의 <strong>설정 → 관리자모드</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다. 신규등록·수정·삭제는 관리자 모드에서만 가능합니다.</div>
       </div>
 
       <div class="modal-btns">
@@ -636,58 +631,17 @@ loadAuthFromStorage();
 function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
 
 // ── 관리자 모드 (신규등록·수정·삭제는 관리자만 — 2026-07-10 도입) ──
-// 비밀번호는 SHA-256 해시로만 코드에 남는다(평문은 코드 어디에도 없음).
-// 비밀번호를 바꾸려면 원하는 문자열의 SHA-256 해시를 계산해 아래 상수만 교체하면 된다.
-const MASTER_PASSWORD_HASH='981f1cf8823cf90d8618203b33393cf9aa520977989e118e5b985823081dbd2a';
-const MASTER_TTL_MS=7*24*3600*1000; // 7일
-async function sha256HexLocal(text){
-  const buf=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
-}
+// 잠금해제는 포털 사이드바 설정(index.html)에서 처리하고, 이 앱은 공유 localStorage 값만 읽는다(2026-07-25 중앙화).
 function isMaster(){
   try{
-    const exp=parseInt(localStorage.getItem('ot_masterExpires')||'0',10)||0;
-    return localStorage.getItem('ot_masterUnlocked')==='1' && Date.now()<exp;
+    const exp=parseInt(localStorage.getItem('wp_masterExpires')||'0',10)||0;
+    return localStorage.getItem('wp_masterUnlocked')==='1' && Date.now()<exp;
   }catch(e){ return false; }
-}
-async function unlockMaster(){
-  const pwEl=document.getElementById('masterPw');
-  const pw=(pwEl&&pwEl.value)||'';
-  if(!pw) return;
-  const h=await sha256HexLocal(pw);
-  if(h===MASTER_PASSWORD_HASH){
-    try{
-      localStorage.setItem('ot_masterUnlocked','1');
-      localStorage.setItem('ot_masterExpires', String(Date.now()+MASTER_TTL_MS));
-    }catch(e){}
-    if(pwEl) pwEl.value='';
-    updateMasterStatusHint();
-    applyMasterUI();
-    toast('관리자 모드가 활성화되었습니다.');
-  } else {
-    toast('비밀번호가 올바르지 않습니다.');
-  }
-}
-function lockMaster(){
-  try{ localStorage.removeItem('ot_masterUnlocked'); localStorage.removeItem('ot_masterExpires'); }catch(e){}
-  updateMasterStatusHint();
-  applyMasterUI();
-  toast('관리자 모드가 해제되었습니다.');
 }
 function updateMasterStatusHint(){
   const h=document.getElementById('masterStatusHint');
-  const row=document.getElementById('masterUnlockRow');
-  const lockBtn=document.getElementById('masterLockBtn');
   if(!h) return;
-  if(isMaster()){
-    h.textContent='✓ 관리자 모드 활성화됨 (7일간 유지)';
-    if(row) row.style.display='none';
-    if(lockBtn) lockBtn.style.display='';
-  } else {
-    h.textContent='신규등록·수정·삭제를 사용하려면 관리자 비밀번호를 입력하세요.';
-    if(row) row.style.display='flex';
-    if(lockBtn) lockBtn.style.display='none';
-  }
+  h.textContent = isMaster() ? '✓ 관리자 모드 활성화됨 (7일간 유지)' : '신규등록·수정·삭제를 사용하려면 관리자 모드 잠금해제가 필요합니다.';
 }
 function applyMasterUI(){
   const addBtn=document.getElementById('addBtn');
@@ -829,6 +783,10 @@ window.addEventListener('storage',e=>{
     updateLoginStatusHint();
     if(isAuthed()){ ALL_RECORDS=[]; loadData(); }
     else { ALL_RECORDS=DEMO_DATA; renderAll(); }
+  }
+  if(e.key==='wp_masterUnlocked'||e.key==='wp_masterExpires'){
+    updateMasterStatusHint();
+    applyMasterUI();
   }
 });
 
@@ -1303,7 +1261,10 @@ async function loadData(opts){
         const now=new Date();
         const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
         const thisMonthPay=ALL_RECORDS.filter(r=>r.date&&r.date.slice(0,7)===ym).reduce((s,r)=>s+getPayAmt(r),0);
-        localStorage.setItem('portal_summary_overtime', JSON.stringify({thisMonthPay, updatedAt:Date.now()}));
+        const byMonth={};
+        ALL_RECORDS.forEach(r=>{ if(!r.date) return; const rym=r.date.slice(0,7); byMonth[rym]=(byMonth[rym]||0)+getPayAmt(r); });
+        const trend=Object.keys(byMonth).sort().slice(-6).map(k=>byMonth[k]);
+        localStorage.setItem('portal_summary_overtime', JSON.stringify({thisMonthPay, trend, updatedAt:Date.now()}));
       }catch(e){}
       // 사용자가 수동으로 월을 선택하지 않은 경우 → 항상 최신 월로 이동
       if(!_userPickedMonth){

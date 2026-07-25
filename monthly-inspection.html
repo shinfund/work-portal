@@ -1473,7 +1473,9 @@ async function loadTabData(tabId){
       // (월간점검은 매달 특정 시점에 몰아서 기록되는 경우가 많음), 비품대장 카드와 동일하게
       // 전체 누적 건수로 표시(2026-07-22).
       try{
-        localStorage.setItem('portal_summary_monthly', JSON.stringify({totalCount:st.records.length, updatedAt:Date.now()}));
+        const bad=st.records.filter(r=>r['점검결과']==='불량').length;
+        const ratio=st.records.length>0 ? (st.records.length-bad)/st.records.length : 1;
+        localStorage.setItem('portal_summary_monthly', JSON.stringify({totalCount:st.records.length, ratio, updatedAt:Date.now()}));
       }catch(e){}
     }
     applyLatestFilterDefault(tabId);

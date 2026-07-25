@@ -818,6 +818,13 @@ async function loadTabData(tabId){
     st.records=pages.map(p=>parseRecord(tabDef,p));
     st.loaded=true;
     st.loadFailed=false;
+    if(tabId==='elecinsp'){
+      try{
+        const bad=st.records.filter(r=>r['점검결과']==='불량').length;
+        const ratio=st.records.length>0 ? (st.records.length-bad)/st.records.length : 1;
+        localStorage.setItem('portal_summary_monthlyTeam', JSON.stringify({totalCount:st.records.length, ratio, updatedAt:Date.now()}));
+      }catch(e){}
+    }
     applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
     updateLastUpdate();

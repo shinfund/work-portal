@@ -1174,7 +1174,10 @@ function loadData(){
           ensureTunnelColors(); ensureCategoryColors();
           try{
             var totalAmount=ALL_DATA.reduce(function(s,r){ return s+(parseFloat(r['금액'])||0); },0);
-            localStorage.setItem('portal_summary_equip', JSON.stringify({ totalCount:ALL_DATA.length, totalAmount:totalAmount, updatedAt:Date.now() }));
+            var byMonth={};
+            ALL_DATA.forEach(function(r){ var d=r['구매일']; if(!d) return; var ym=d.slice(0,7); byMonth[ym]=(byMonth[ym]||0)+1; });
+            var trend=Object.keys(byMonth).sort().slice(-6).map(function(k){ return byMonth[k]; });
+            localStorage.setItem('portal_summary_equip', JSON.stringify({ totalCount:ALL_DATA.length, totalAmount:totalAmount, trend:trend, updatedAt:Date.now() }));
           }catch(e){}
           renderAll();
           var now=new Date();

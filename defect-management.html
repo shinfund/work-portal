@@ -1467,7 +1467,8 @@ function loadData(){
             _tunnelColorsDirty = true;
             try{
               var _c=countStatus(ALL_DATA);
-              localStorage.setItem('portal_summary_defect', JSON.stringify({unresolved:_c.prog+_c.poor, total:ALL_DATA.length, updatedAt:Date.now()}));
+              var _ratio=ALL_DATA.length>0 ? _c.done/ALL_DATA.length : 1;
+              localStorage.setItem('portal_summary_defect', JSON.stringify({unresolved:_c.prog+_c.poor, total:ALL_DATA.length, ratio:_ratio, updatedAt:Date.now()}));
             }catch(e){}
             buildStatusFilter();
             buildTunnelFilter();
