@@ -140,6 +140,11 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .tb-action-btn.tb-report:hover{background:#443a94}
 .tb-action-btn.tb-unified{background:#B45309}
 .tb-action-btn.tb-unified:hover{background:#94400a}
+.tb-action-btn.tb-delete{background:#8A8F98}
+.tb-action-btn.tb-delete:hover{background:#71767e}
+.tb-action-btn.tb-delete.on{background:#B23A2E}
+.tb-action-btn.tb-delete.on:hover{background:#962f25}
+.tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── 뱃지(터널명 등) ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
@@ -390,6 +395,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
+      <button class="tb-action-btn tb-delete" id="delToggleBtn_elecinsp" onclick="toggleDeleteMode('elecinsp')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="delToggleLbl_elecinsp">삭제 편집</span>
+      </button>
+      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elecinsp" onclick="deleteSelectedRows('elecinsp')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="detail-count" id="count-elecinsp"></div>
     <div class="tbl-wrap">
@@ -419,6 +429,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_repair">보고서 생성</span>
       </button>
+      <button class="tb-action-btn tb-delete" id="delToggleBtn_repair" onclick="toggleDeleteMode('repair')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="delToggleLbl_repair">삭제 편집</span>
+      </button>
+      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="detail-count" id="count-repair"></div>
     <div class="tbl-wrap">
@@ -448,6 +463,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_photo">보고서 생성</span>
       </button>
+      <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="delToggleLbl_photo">삭제 편집</span>
+      </button>
+      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px">※ 번호는 해당 월 사진대지 전체에서 이어지는 일련번호입니다(터널별로 다시 시작하지 않음).</div>
     <div class="detail-count" id="count-photo"></div>
@@ -982,26 +1002,33 @@ function filteredTabRecords(tabId){
   if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
   return recs;
 }
+function getVisibleRecords(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return [];
+  const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
+  const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
+  let recs=filteredTabRecords(tabId);
+  if(q) recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
+  return recs;
+}
 function renderTabTable(tabId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields) return;
   buildTabFilterDd(tabId);
   const q=(document.getElementById('search-'+tabId)?.value||'').trim().toLowerCase();
-  const textFields=dataFields(tabDef).filter(f=>f.type==='text'||f.type==='title'||f.type==='select').map(f=>f.key);
-  let recs=filteredTabRecords(tabId);
-  if(q){
-    recs=recs.filter(r=>textFields.some(k=>String(r[k]||'').toLowerCase().includes(q)));
-  }
+  const recs=getVisibleRecords(tabId);
   const countEl=document.getElementById('count-'+tabId);
   if(countEl) countEl.textContent=`총 ${recs.length}건`;
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
+  const delMode=!!DELETE_MODE[tabId];
   if(!recs.length){
-    const colCount=tabDef.listCols.length;
+    const colCount=tabDef.listCols.length+(delMode?1:0);
     tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
     return;
   }
   tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
+  if(delMode) syncSelectAllCheckbox(tabId, recs);
 }
 function buildCellHtml(f, r){
   const key=f.key;
@@ -1017,7 +1044,100 @@ function buildRow(tabDef, r){
     const f=dataFields(tabDef).find(x=>x.key===key);
     return f ? buildCellHtml(f, r) : '<td>-</td>';
   }).join('');
-  return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
+  const delMode=!!DELETE_MODE[tabDef.id];
+  const checked=(DELETE_SELECTED[tabDef.id]&&DELETE_SELECTED[tabDef.id].has(r.id));
+  const checkCell=delMode
+    ? `<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${checked?'checked':''} onchange="toggleRowSelect('${tabDef.id}','${r.id}',this.checked)"/></td>`
+    : '';
+  return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${checkCell}${cells}</tr>`;
+}
+// ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) — 전기시설점검·고장수리·점검사진 3개 탭 공용 ──
+const DELETE_MODE={};
+const DELETE_SELECTED={};
+function toggleDeleteMode(tabId){
+  DELETE_MODE[tabId]=!DELETE_MODE[tabId];
+  DELETE_SELECTED[tabId]=new Set();
+  updateDeleteToolbarUI(tabId);
+  updateDeleteHeaderCheckbox(tabId);
+  renderTabTable(tabId);
+}
+function updateDeleteToolbarUI(tabId){
+  const toggleBtn=document.getElementById('delToggleBtn_'+tabId);
+  const toggleLbl=document.getElementById('delToggleLbl_'+tabId);
+  const confirmBtn=document.getElementById('delConfirmBtn_'+tabId);
+  const on=!!DELETE_MODE[tabId];
+  if(toggleBtn) toggleBtn.classList.toggle('on', on);
+  if(toggleLbl) toggleLbl.textContent=on?'삭제 편집 취소':'삭제 편집';
+  if(confirmBtn) confirmBtn.style.display=on?'':'none';
+  updateDeleteConfirmLabel(tabId);
+}
+function updateDeleteConfirmLabel(tabId){
+  const confirmBtn=document.getElementById('delConfirmBtn_'+tabId);
+  if(!confirmBtn) return;
+  const n=(DELETE_SELECTED[tabId]||new Set()).size;
+  confirmBtn.textContent=n>0?`선택 삭제 (${n})`:'선택 삭제';
+  confirmBtn.disabled=n===0;
+}
+function updateDeleteHeaderCheckbox(tabId){
+  const thead=document.getElementById('thead-'+tabId);
+  if(!thead) return;
+  let th=thead.querySelector('.del-col-th');
+  if(DELETE_MODE[tabId]){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th';
+      th.style.width='36px';
+      th.innerHTML=`<input type="checkbox" id="delAll_${tabId}" onchange="toggleSelectAllRows('${tabId}',this.checked)"/>`;
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){
+    th.remove();
+  }
+}
+function syncSelectAllCheckbox(tabId, recs){
+  const all=document.getElementById('delAll_'+tabId);
+  if(!all) return;
+  const set=DELETE_SELECTED[tabId]||new Set();
+  all.checked=recs.length>0 && recs.every(r=>set.has(r.id));
+  all.indeterminate=!all.checked && recs.some(r=>set.has(r.id));
+}
+function toggleSelectAllRows(tabId, checked){
+  const recs=getVisibleRecords(tabId);
+  const set=DELETE_SELECTED[tabId]||(DELETE_SELECTED[tabId]=new Set());
+  recs.forEach(r=>{ if(checked) set.add(r.id); else set.delete(r.id); });
+  renderTabTable(tabId);
+  updateDeleteConfirmLabel(tabId);
+}
+function toggleRowSelect(tabId, id, checked){
+  const set=DELETE_SELECTED[tabId]||(DELETE_SELECTED[tabId]=new Set());
+  if(checked) set.add(id); else set.delete(id);
+  updateDeleteConfirmLabel(tabId);
+  syncSelectAllCheckbox(tabId, getVisibleRecords(tabId));
+}
+async function deleteSelectedRows(tabId){
+  const set=DELETE_SELECTED[tabId];
+  if(!set || !set.size) return;
+  if(!confirm(set.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  const ids=[...set];
+  const confirmBtn=document.getElementById('delConfirmBtn_'+tabId);
+  if(confirmBtn) confirmBtn.disabled=true;
+  let done=0;
+  const tasks=ids.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true}).then(()=>{
+    done++;
+    if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+ids.length+')';
+  }));
+  try{
+    await runWithConcurrency(tasks, 6);
+    const arr=TAB_STATE[tabId].records;
+    ids.forEach(id=>{ const idx=arr.findIndex(r=>r.id===id); if(idx>=0) arr.splice(idx,1); });
+    toast(ids.length+'건 삭제되었습니다.');
+    toggleDeleteMode(tabId);
+  }catch(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateDeleteConfirmLabel(tabId);
+    console.error(e);
+  }
 }
 const TUNNEL_COLOR_MAP={
   '흥해터널':'tunnel-c0', '청하터널':'tunnel-c1', '청하터널(주·부)':'tunnel-c1',
