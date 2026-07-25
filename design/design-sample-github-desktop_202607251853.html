@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>디자인 샘플 — GitHub Desktop 스타일</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  /* GitHub Desktop 실제 소스(app/styles/_variables.scss :root 기본값, primer-support classic 팔레트) 기준 */
+  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
+  --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
+  --accent:#0366D6;--accent-bg:rgba(3,102,214,.1);
+  --green:#22863A;--green-bg:rgba(34,134,58,.1);
+  --amber:#B08800;--amber-bg:rgba(176,136,0,.12);
+  --coral:#CB2431;--coral-bg:rgba(203,36,49,.1);
+  --nav-bg:#181B20;--nav-border:#2A2F38;--nav-border2:#22262E;
+  --nav-text:#F0F2F5;--nav-text-dim:#9AA3B0;--nav-item-hover:#22262E;--nav-item-on:#262B34;
+  --topbar-bg:#181B20;--topbar-border:#2A2F38;--topbar-seg-hover:#22262E;
+  --r8:8px;--r12:12px;--r16:16px;
+  --shadow:none;
+  --sidebar-w:220px;--header-h:56px;
+}
+html[data-theme="dark"]{
+  /* GitHub Desktop 실제 소스(app/styles/themes/_dark.scss, primer-support classic 팔레트) 기준 */
+  --bg:#24292E;--card:#1C2024;--border:#141414;--border2:#2F363D;
+  --txt:#F6F8FA;--txt2:#D1D5DA;--txt3:#959DA5;
+  --accent:#2E8FFF;--accent-bg:rgba(46,143,255,.15);
+  --green:#28A745;--green-bg:rgba(40,167,69,.16);
+  --amber:#DBAB09;--amber-bg:rgba(219,171,9,.16);
+  --coral:#D73A49;--coral-bg:rgba(215,58,73,.16);
+  --nav-bg:#1C2024;--nav-border:#141414;--nav-border2:#2F363D;
+  --nav-text:#F6F8FA;--nav-text-dim:#959DA5;--nav-item-hover:#2F363D;--nav-item-on:rgba(46,143,255,.15);
+  --topbar-bg:#1C2024;--topbar-border:#141414;--topbar-seg-hover:#2F363D;
+  --shadow:none;
+}
+html[data-theme="light"]{
+  --nav-bg:#F7F9FC;--nav-border:#D8DEE6;--nav-border2:#E7EBF1;
+  --nav-text:#0D1117;--nav-text-dim:#6B7686;--nav-item-hover:#EEF2F7;--nav-item-on:#E8F0FE;
+  --topbar-bg:#F7F9FC;--topbar-border:#D8DEE6;--topbar-seg-hover:#EEF2F7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;}
+body{
+  font-family:'Noto Sans KR',-apple-system,sans-serif;
+  background:var(--bg);color:var(--txt);
+  font-size:15px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;
+  display:flex;height:100dvh;overflow:hidden;
+  transition:background .15s,color .15s;
+}
+
+/* ═══ 안내 배너 ═══ */
+.note-banner{
+  position:fixed;top:10px;left:50%;transform:translateX(-50%);
+  background:var(--card);border:1px solid var(--border);border-radius:999px;
+  padding:8px 18px;font-size:12.5px;font-weight:600;color:var(--txt2);
+  box-shadow:var(--shadow);z-index:2000;display:flex;align-items:center;gap:10px;
+}
+.note-banner button{
+  border:none;background:var(--accent);color:#fff;font-weight:700;font-size:12px;
+  padding:5px 12px;border-radius:999px;cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.note-banner button svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+.btn-solid svg,.btn-outline svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+/* ═══ 모바일 오버레이 ═══ */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400;}
+.sb-overlay.show{display:block;}
+
+/* ═══ 사이드바 ═══ */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--nav-bg);border-right:1px solid var(--nav-border);height:100dvh;display:flex;flex-direction:column;}
+.sb-brand{height:var(--header-h);flex-shrink:0;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--nav-border2);}
+.sb-brand-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(155deg,#7FB4FF 0%,#3B7CE8 55%,#1E4FA8 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(47,111,228,.35);}
+.sb-brand-icon svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.sb-brand-title{font-size:14px;font-weight:700;color:var(--nav-text);letter-spacing:-.01em;}
+
+.sb-filter{margin:12px 14px 8px;position:relative;}
+.sb-filter input{
+  width:100%;background:var(--nav-item-hover);border:1px solid var(--nav-border);border-radius:7px;
+  padding:7px 10px 7px 30px;font-size:12.5px;color:var(--nav-text);font-family:inherit;outline:none;
+}
+.sb-filter input::placeholder{color:var(--nav-text-dim);}
+.sb-filter svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;stroke:var(--nav-text-dim);fill:none;stroke-width:2;}
+
+.sb-sec{font-size:10.5px;font-weight:700;color:var(--nav-text-dim);letter-spacing:.07em;text-transform:uppercase;margin:14px 16px 6px;}
+.sb-nav{flex:1;overflow-y:auto;padding-bottom:8px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;margin:1px 8px;padding:7px 10px;border-radius:7px;
+  color:var(--nav-text-dim);font-size:13.5px;font-weight:500;cursor:pointer;position:relative;
+  transition:background .12s,color .12s;
+  -webkit-tap-highlight-color:transparent;
+}
+.sb-item svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+.sb-item:hover{background:var(--nav-item-hover);color:var(--nav-text);}
+.sb-item.on{background:var(--nav-item-on);color:var(--nav-text);font-weight:700;}
+.sb-item.on::before{content:'';position:absolute;left:-8px;top:20%;bottom:20%;width:3px;background:var(--accent);border-radius:0 3px 3px 0;}
+
+.sb-foot{border-top:1px solid var(--nav-border2);padding:10px 14px;display:flex;align-items:center;gap:9px;}
+.sb-foot-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#5B9BFA,#2F6FE4);display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;}
+.sb-foot-name{font-size:12.5px;font-weight:600;color:var(--nav-text);}
+.sb-foot-role{font-size:11px;color:var(--nav-text-dim);}
+
+/* ═══ 메인 영역 ═══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;height:100dvh;}
+
+/* GitHub Desktop 시그니처: 세그먼트형 상단바 */
+.topbar{height:var(--header-h);flex-shrink:0;background:var(--topbar-bg);border-bottom:1px solid var(--topbar-border);display:flex;align-items:stretch;}
+.mobile-menu-btn{display:none;width:var(--header-h);flex-shrink:0;align-items:center;justify-content:center;background:transparent;border:none;border-right:1px solid var(--topbar-border);color:var(--nav-text);cursor:pointer;}
+.mobile-menu-btn svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2;}
+.tseg{display:flex;align-items:center;gap:10px;padding:0 16px;cursor:pointer;border-right:1px solid var(--topbar-border);transition:background .12s;position:relative;}
+.tseg:hover{background:var(--topbar-seg-hover);}
+.tseg-icon{width:17px;height:17px;stroke:var(--nav-text-dim);fill:none;stroke-width:1.8;flex-shrink:0;}
+.tseg-label{font-size:10.5px;color:var(--nav-text-dim);font-weight:500;line-height:1.3;}
+.tseg-value{font-size:13px;color:var(--nav-text);font-weight:700;line-height:1.3;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.tseg-chev{width:11px;height:11px;stroke:var(--nav-text-dim);fill:none;stroke-width:2;margin-left:2px;flex-shrink:0;}
+.tseg.grow{flex:1;}
+.tseg.sync{gap:10px;}
+.tseg-sync-icon{width:15px;height:15px;stroke:var(--nav-text-dim);fill:none;stroke-width:2;}
+.topbar-right{margin-left:auto;display:flex;align-items:center;padding:0 16px;gap:10px;}
+.tb-theme-btn{
+  width:30px;height:30px;border-radius:7px;border:1px solid var(--topbar-border);background:transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--nav-text-dim);flex-shrink:0;
+}
+.tb-theme-btn:hover{background:var(--topbar-seg-hover);color:var(--nav-text);}
+.tb-theme-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
+
+/* 콘텐츠 */
+.content{flex:1;overflow-y:auto;padding:28px 32px 40px;}
+.content-inner{max-width:1180px;margin:0 auto;}
+
+.hero{margin-bottom:22px;}
+.hero h1{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px;}
+.hero p{font-size:14px;color:var(--txt3);}
+
+.feature-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);padding:18px;box-shadow:var(--shadow);}
+.feature-icon{width:34px;height:34px;border-radius:9px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.feature-icon svg{width:18px;height:18px;stroke:var(--accent);fill:none;stroke-width:1.8;}
+.feature-card b{font-size:13.5px;font-weight:700;display:block;margin-bottom:3px;}
+.feature-card span{font-size:12.5px;color:var(--txt3);}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);padding:16px 18px;box-shadow:var(--shadow);}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.kpi-label{font-size:12px;font-weight:600;color:var(--txt3);}
+.kpi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.kpi-value{font-size:22px;font-weight:800;letter-spacing:-.02em;}
+.kpi-sub{font-size:11.5px;color:var(--txt3);margin-top:2px;}
+
+/* ═══ 개별 앱 목록 화면 ═══ */
+.app-header{margin-bottom:18px;}
+.app-header h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px;}
+.app-header p{font-size:13px;color:var(--txt3);}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.tb-select,.tb-search{
+  height:36px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--txt);
+  font-family:inherit;font-size:13px;padding:0 12px;
+}
+.tb-search{flex:1;min-width:160px;max-width:260px;}
+.tb-spacer{flex:1;}
+.btn-solid,.btn-outline{
+  height:36px;padding:0 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn-solid{border:none;background:var(--accent);color:#fff;}
+.btn-solid:hover{filter:brightness(1.08);}
+.btn-outline{border:1px solid var(--border);background:var(--card);color:var(--txt2);}
+.btn-outline:hover{background:var(--border2);}
+
+.table-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);box-shadow:var(--shadow);overflow:hidden;}
+.table-wrap{overflow-x:auto;}
+table.dt{width:100%;border-collapse:collapse;min-width:600px;}
+table.dt th{text-align:left;font-size:11.5px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:.04em;padding:12px 16px;border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.dt td{padding:12px 16px;font-size:13.5px;border-bottom:1px solid var(--border2);white-space:nowrap;}
+table.dt tbody tr:last-child td{border-bottom:none;}
+table.dt tbody tr:hover td{background:var(--border2);}
+
+/* 뱃지(필 배경) 대신 GitHub Desktop 방식 — 점+텍스트만으로 상태 표시 */
+.status{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;}
+.status::before{content:'';width:7px;height:7px;border-radius:50%;flex-shrink:0;background:currentColor;}
+.status.green{color:var(--green);}
+.status.accent{color:var(--accent);}
+.status.amber{color:var(--amber);}
+.status.coral{color:var(--coral);}
+
+/* ═══ 모바일 반응형 ═══ */
+@media (max-width:860px){
+  .sidebar{position:fixed;left:0;top:0;transform:translateX(-100%);transition:transform .2s;z-index:500;}
+  .sidebar.open{transform:translateX(0);}
+  .mobile-menu-btn{display:flex;}
+  .feature-row{grid-template-columns:1fr;}
+  .kpi-grid{grid-template-columns:1fr 1fr;}
+  .tseg-label{display:none;}
+  .tseg{padding:0 12px;}
+  .content{padding:20px 16px 32px;}
+  .note-banner{left:12px;right:12px;transform:none;font-size:11.5px;}
+}
+</style>
+</head>
+<body>
+
+<div class="note-banner">
+  <span>디자인 샘플 — GitHub Desktop 스타일 오마주 (실제 기능 없음, 사이드바 메뉴 클릭 가능)</span>
+  <button onclick="location.reload()"><svg viewBox="0 0 24 24"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>새로고침</button>
+</div>
+
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-icon">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 3L21 8L12 13L3 8Z"/>
+        <path d="M3 12L12 17L21 12"/>
+        <path d="M3 16L12 21L21 16"/>
+      </svg>
+    </div>
+    <div class="sb-brand-title">통합업무포털</div>
+  </div>
+  <div class="sb-filter">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+    <input placeholder="메뉴 검색..." />
+  </div>
+  <div class="sb-sec">바로가기</div>
+  <div class="sb-nav" id="sbNav">
+    <div class="sb-item on" data-app="home" onclick="selectApp('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <span>홈</span>
+    </div>
+    <div class="sb-item" data-app="asset" onclick="selectApp('asset')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+      <span>비품대장</span>
+    </div>
+    <div class="sb-item" data-app="defect" onclick="selectApp('defect')">
+      <svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v6c0 5-3.6 8.7-9 9.5-5.4-.8-9-4.5-9-9.5v-6z"/></svg>
+      <span>하자보수현황</span>
+    </div>
+    <div class="sb-item" data-app="inspection" onclick="selectApp('inspection')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      <span>월간점검결과-안전관리</span>
+    </div>
+    <div class="sb-item" data-app="solar" onclick="selectApp('solar')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+      <span>태양광발전량</span>
+    </div>
+    <div class="sb-item" data-app="vehicle" onclick="selectApp('vehicle')">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="12" rx="2"/><path d="M6 7V5a2 2 0 012-2h8a2 2 0 012 2v2"/></svg>
+      <span>차량운행일지</span>
+    </div>
+    <div class="sb-item" data-app="overtime" onclick="selectApp('overtime')">
+      <svg viewBox="0 0 24 24"><path d="M12 8v8M8 12h8"/><circle cx="12" cy="12" r="9"/></svg>
+      <span>연장근무</span>
+    </div>
+  </div>
+  <div class="sb-foot">
+    <div class="sb-foot-avatar">신</div>
+    <div>
+      <div class="sb-foot-name">신○○</div>
+      <div class="sb-foot-role">관리자</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <button class="mobile-menu-btn" onclick="openSidebar()" title="메뉴 열기">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="tseg">
+      <svg class="tseg-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      <div>
+        <div class="tseg-label">현재 화면</div>
+        <div class="tseg-value"><span id="tsegCurrent">홈 대시보드</span> <svg class="tseg-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+    </div>
+    <div class="tseg">
+      <svg class="tseg-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <div>
+        <div class="tseg-label">권한 모드</div>
+        <div class="tseg-value">관리자 <svg class="tseg-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></div>
+      </div>
+    </div>
+    <div class="tseg sync grow" style="cursor:default;">
+      <svg class="tseg-sync-icon" viewBox="0 0 24 24"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15 6.7L3 16"/></svg>
+      <div>
+        <div class="tseg-label">마지막 동기화</div>
+        <div class="tseg-value" style="font-weight:600;">3분 전</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="tb-theme-btn" onclick="toggleTheme()" title="다크/라이트 전환">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="content-inner" id="pageRoot"></div>
+  </div>
+</div>
+
+<script>
+/* ═══ 앱별 목록 샘플 데이터 (더미) ═══ */
+const APPS = {
+  home:{ title:'홈 대시보드', kind:'home' },
+  asset:{
+    title:'비품대장', desc:'사무·현장 비품의 보유 현황을 관리합니다.',
+    dateLabel:'등록월', searchPh:'품목명 검색',
+    cols:[
+      {key:'name',label:'품목명'},{key:'spec',label:'규격'},{key:'qty',label:'수량'},
+      {key:'loc',label:'보관위치'},{key:'owner',label:'담당자'},{key:'date',label:'등록일'},
+    ],
+    rows:[
+      {name:'노트북 거치대',spec:'알루미늄 M형',qty:'12',loc:'3층 창고',owner:'김OO',date:'2026-07-02'},
+      {name:'무전기',spec:'디지털 UHF',qty:'6',loc:'현장사무소',owner:'박OO',date:'2026-06-18'},
+      {name:'안전모',spec:'ABS 화이트',qty:'40',loc:'1층 자재실',owner:'이OO',date:'2026-05-27'},
+      {name:'소화기',spec:'분말 3.3kg',qty:'15',loc:'전층 비치',owner:'최OO',date:'2026-04-11'},
+    ],
+  },
+  defect:{
+    title:'하자보수현황', desc:'터널 구간 하자 접수부터 처리까지 추적합니다.',
+    dateLabel:'접수월', searchPh:'하자내용 검색',
+    cols:[
+      {key:'content',label:'하자내용'},{key:'loc',label:'위치'},{key:'date',label:'접수일'},
+      {key:'status',label:'처리상태',pill:v=>v==='완료'?'green':v==='진행중'?'accent':'amber'},
+      {key:'company',label:'처리업체'},
+    ],
+    rows:[
+      {content:'배수로 물끊기 불량',loc:'2공구 입구부',date:'2026-07-20',status:'진행중',company:'대한설비'},
+      {content:'조명 점멸',loc:'3공구 중앙부',date:'2026-07-18',status:'대기',company:'-'},
+      {content:'벽체 균열',loc:'1공구 출구부',date:'2026-07-09',status:'완료',company:'한빛건설'},
+      {content:'드레인 호스 파손',loc:'4공구 갱구',date:'2026-06-30',status:'완료',company:'대한설비'},
+    ],
+  },
+  inspection:{
+    title:'월간점검결과-안전관리', desc:'월간 정기 안전점검 결과를 기록합니다.',
+    dateLabel:'점검월', searchPh:'점검항목 검색',
+    cols:[
+      {key:'date',label:'점검일자'},{key:'item',label:'점검항목'},
+      {key:'result',label:'점검결과',pill:v=>v==='정상'?'green':'coral'},
+      {key:'inspector',label:'점검자'},{key:'note',label:'비고'},
+    ],
+    rows:[
+      {date:'2026-07-22',item:'고압반 절연저항',result:'정상',inspector:'신OO',note:'-'},
+      {date:'2026-07-22',item:'UPS 배터리 전압',result:'이상',inspector:'신OO',note:'교체 필요'},
+      {date:'2026-07-15',item:'비상발전기 시동',result:'정상',inspector:'김OO',note:'-'},
+      {date:'2026-07-08',item:'소방 수신반 상태',result:'정상',inspector:'박OO',note:'-'},
+    ],
+  },
+  solar:{
+    title:'태양광발전량', desc:'일별 태양광 발전 실적을 조회합니다.',
+    dateLabel:'조회월', searchPh:'날짜 검색',
+    cols:[
+      {key:'date',label:'날짜'},{key:'kwh',label:'발전량(kWh)'},{key:'diff',label:'전일대비'},
+      {key:'weather',label:'날씨'},{key:'note',label:'비고'},
+    ],
+    rows:[
+      {date:'2026-07-25',kwh:'128.4',diff:'+6.2%',weather:'맑음',note:'-'},
+      {date:'2026-07-24',kwh:'120.9',diff:'-3.1%',weather:'구름많음',note:'-'},
+      {date:'2026-07-23',kwh:'124.8',diff:'+11.4%',weather:'맑음',note:'-'},
+      {date:'2026-07-22',kwh:'112.0',diff:'-8.6%',weather:'흐림',note:'오전 소나기'},
+    ],
+  },
+  vehicle:{
+    title:'차량운행일지', desc:'업무용 차량의 운행 내역을 관리합니다.',
+    dateLabel:'운행월', searchPh:'차량번호 검색',
+    cols:[
+      {key:'date',label:'운행일자'},{key:'car',label:'차량번호'},{key:'driver',label:'운전자'},
+      {key:'dest',label:'목적지'},{key:'dist',label:'주행거리(km)'},
+    ],
+    rows:[
+      {date:'2026-07-25',car:'12가 3456',driver:'김OO',dest:'포항 현장',dist:'84'},
+      {date:'2026-07-24',car:'34나 5678',driver:'이OO',dest:'영덕 현장',dist:'112'},
+      {date:'2026-07-23',car:'12가 3456',driver:'박OO',dest:'본사',dist:'21'},
+      {date:'2026-07-21',car:'56다 7890',driver:'최OO',dest:'포항 현장',dist:'80'},
+    ],
+  },
+  overtime:{
+    title:'연장근무', desc:'연장근무 신청 및 승인 현황을 관리합니다.',
+    dateLabel:'신청월', searchPh:'신청자 검색',
+    cols:[
+      {key:'apply',label:'신청일'},{key:'name',label:'신청자'},{key:'workday',label:'근무일자'},
+      {key:'reason',label:'사유'},
+      {key:'status',label:'승인상태',pill:v=>v==='승인'?'green':v==='대기'?'amber':'coral'},
+    ],
+    rows:[
+      {apply:'2026-07-24',name:'김OO',workday:'2026-07-26',reason:'월간보고서 마감',status:'대기'},
+      {apply:'2026-07-23',name:'박OO',workday:'2026-07-25',reason:'현장 긴급점검',status:'승인'},
+      {apply:'2026-07-20',name:'이OO',workday:'2026-07-21',reason:'장비 정기교체',status:'승인'},
+      {apply:'2026-07-18',name:'최OO',workday:'2026-07-19',reason:'민원 대응',status:'반려'},
+    ],
+  },
+};
+
+function selectApp(key){
+  document.querySelectorAll('.sb-item').forEach(el=>el.classList.remove('on'));
+  const target = document.querySelector('.sb-item[data-app="'+key+'"]');
+  if(target) target.classList.add('on');
+  document.getElementById('tsegCurrent').textContent = APPS[key].title;
+  renderPage(key);
+  closeSidebar();
+}
+
+function renderPage(key){
+  const app = APPS[key];
+  const root = document.getElementById('pageRoot');
+  root.innerHTML = app.kind === 'home' ? homeTemplate() : listTemplate(app);
+}
+
+function listTemplate(app){
+  const thead = app.cols.map(c=>'<th>'+c.label+'</th>').join('');
+  const rowsHtml = app.rows.map(r=>{
+    const tds = app.cols.map(c=>{
+      const v = r[c.key];
+      return '<td>' + (c.pill ? '<span class="status '+c.pill(v)+'">'+v+'</span>' : v) + '</td>';
+    }).join('');
+    return '<tr>'+tds+'</tr>';
+  }).join('');
+  return ''
+    +'<div class="app-header"><h1>'+app.title+'</h1><p>'+app.desc+'</p></div>'
+    +'<div class="toolbar">'
+    +'  <select class="tb-select"><option>'+app.dateLabel+': 전체</option></select>'
+    +'  <input class="tb-search" placeholder="'+app.searchPh+'" />'
+    +'  <div class="tb-spacer"></div>'
+    +'  <button class="btn-solid">+ 신규등록</button>'
+    +'  <button class="btn-outline"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>엑셀 생성</button>'
+    +'</div>'
+    +'<div class="table-card"><div class="table-wrap"><table class="dt"><thead><tr>'+thead+'</tr></thead><tbody>'+rowsHtml+'</tbody></table></div></div>';
+}
+
+function homeTemplate(){
+  return ''
++'<div class="hero">'
++'  <h1>안녕하세요, 신○○님</h1>'
++'  <p>오늘 처리할 업무와 최근 현황을 한눈에 확인하세요.</p>'
++'</div>'
++'<div class="feature-row">'
++'  <div class="feature-card">'
++'    <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2l9 4.5v6c0 5-3.6 8.7-9 9.5-5.4-.8-9-4.5-9-9.5v-6z"/></svg></div>'
++'    <b>하자보수 3건</b><span>이번 주 신규 등록, 확인이 필요합니다.</span>'
++'  </div>'
++'  <div class="feature-card">'
++'    <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg></div>'
++'    <b>비품대장 정상</b><span>최근 갱신: 오늘 오전 9:12</span>'
++'  </div>'
++'  <div class="feature-card">'
++'    <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></div>'
++'    <b>발전량 128.4 kWh</b><span>어제 대비 +6.2%</span>'
++'  </div>'
++'</div>'
++'<div class="kpi-grid">'
++'  <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">이번 달 점검 완료</span><span class="kpi-dot" style="background:var(--green)"></span></div><div class="kpi-value">24 / 26</div><div class="kpi-sub">92% 진행률</div></div>'
++'  <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">차량 운행</span><span class="kpi-dot" style="background:var(--accent)"></span></div><div class="kpi-value">7건</div><div class="kpi-sub">오늘 등록 2건</div></div>'
++'  <div class="kpi-card"><div class="kpi-top"><span class="kpi-label">연장근무 신청</span><span class="kpi-dot" style="background:#D8A02F"></span></div><div class="kpi-value">5건</div><div class="kpi-sub">승인 대기 2건</div></div>'
++'</div>';
+}
+
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sbOverlay').classList.add('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
+
+(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try{ localStorage.setItem('theme', next); }catch(e){}
+}
+
+renderPage('home');
+</script>
+</body>
+</html>
