@@ -10,8 +10,11 @@
 <style>
 :root{
   --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
-  --teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
@@ -44,6 +47,7 @@ html[data-theme="dark"]{
   --shadow:none;
   --hdr-bg:#24292E;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
   /* sky */
   --sky:#2E8FFF;
   --sky50:rgba(46,143,255,.16);--sky100:rgba(46,143,255,.32);
@@ -53,10 +57,18 @@ html[data-theme="dark"]{
   --teal600:#4FD8AC;
   /* coral (used as plain text-on-tint accent for '증가' state) */
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);
+  /* amber */
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  /* green (reserved, unused by current work types) */
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  /* purple (reserved, unused by current work types) */
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
   /* 근무형태 뱃지 — 다크 톤 */
 }
 html[data-theme="dark"] .type-당직근무{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
 html[data-theme="dark"] .type-비상대기{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
+html[data-theme="dark"] .type-비상출동{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+html[data-theme="dark"] .type-비상근무{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
 html[data-theme="dark"] .type-비상출동{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
 html[data-theme="dark"] .type-비상근무{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
 /* 다크 모드 전용 — 선택된 dd-btn/dd-opt은 --sky800(다크에서 밝은 파스텔블루로 재정의됨)
@@ -170,6 +182,8 @@ tr:hover td{background:var(--sky50)}
 .type-비상대기{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
 .type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
 .type-비상근무{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
+.type-비상근무{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 
 /* ── 상태 뱃지 ── */
 .status-예정{background:#FAEEDA;color:#633806;border:1px solid #E8C875}
@@ -217,7 +231,7 @@ html[data-theme="dark"] .status-반려{background:rgba(216,90,48,.22);color:#F2A
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
-.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r12);overflow:hidden;margin-bottom:14px}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
 .detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
 .detail-info-row:last-child{border-bottom:none}
 .detail-info-row:nth-child(odd){background:var(--card)}
@@ -230,7 +244,7 @@ html[data-theme="dark"] .status-반려{background:rgba(216,90,48,.22);color:#F2A
 .detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
 .detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
 .detail-edit-btn:hover{background:var(--sky100)}
-.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800,var(--coral))}
 .detail-del-btn:hover{background:var(--coral100)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
@@ -432,7 +446,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   </div>
 </div>
 
-<div id="toast" role="status" aria-live="polite"></div>
+<div id="toast"></div>
 
 <div>
 <!-- HEADER -->
@@ -566,7 +580,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 상세내역 -->
   <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
-    <div class="sc">
+    <div class="sc detail-sc">
       <div class="filter-row">
         <div class="dd-wrap" id="detailYearDdWrap">
           <button class="dd-btn" id="detailYearDdBtn" onclick="toggleDetailYearDd()" aria-haspopup="listbox" aria-label="연도 선택">
@@ -884,11 +898,10 @@ function renderDDMonth(){
 }
 // 기본 로드는 최근 DEFAULT_LOAD_MONTHS개월(서버측 날짜 필터)뿐이라, 그 범위보다 이전 연/월을
 // 선택하면 Notion엔 데이터가 있어도 화면엔 "없음"으로 보인다 — 이때만 전체 이력을 보충한다.
-// y: 연도(숫자 — 호출부(pickYear/pickMonth)에서 항상 실제 연도값을 넘기며 'ALL' 문자열은 전달되지 않음)
-// m: 월(1~12|0='전체')
+// y: 연도(숫자|'ALL'), m: 월(1~12|0='전체')
 function needsFullHistory(y,m){
   if(_fullHistoryLoaded) return false;
-  if(m===0) return true;
+  if(y==='ALL'||m===0||m==='ALL') return true;
   const cutoff=new Date(); cutoff.setDate(1); cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
   const cutoffYm=cutoff.getFullYear()*100+(cutoff.getMonth()+1);
   const ym=parseInt(y,10)*100+parseInt(m,10);
@@ -962,25 +975,18 @@ const STATUSES=['예정','진행중','완료','반려'];
 const BANK_DB_ID='2e659c8c-9c0a-806d-a8fe-c5edc5891467'; // 은행계좌번호DB
 let _bankPageIdForSubmit=null; // 신규등록/수정 저장 시 예금주 relation 연결에 사용
 let _bankPageIdForEmployee=null; // 위 pageId가 어느 성명에 대해 조회된 것인지(경쟁 상태 방지용)
-// 은행계좌번호DB에서 예금주=employeeName인 첫 페이지를 조회하는 공통 헬퍼(2026-07-25 —
-// findBankPageId/fetchBankInfo가 동일한 쿼리 body를 각자 작성하던 중복을 통합).
-// !res.ok면 예외를 던지므로 호출부에서 필요에 맞게 처리한다.
-async function queryBankPageByName(employeeName){
-  const res=await fetch(CFG.workerUrl+'/v1/databases/'+BANK_DB_ID+'/query', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ filter:{ property:'예금주', title:{ equals: employeeName } }, page_size:1 })
-  });
-  if(!res.ok) throw new Error('HTTP '+res.status);
-  const data=await res.json();
-  return (data.results && data.results[0]) || null;
-}
 // 화면 표시 없이 pageId만 조회하는 순수 버전 — submitOvertimeForm에서 제출 직전 항상 이걸로
 // 새로 조회해 "성명은 바꿨는데 이전 직원 계좌가 연결되는" 경쟁 상태를 막는다.
 async function findBankPageId(employeeName){
   if(!employeeName) return null;
   try{
-    const page=await queryBankPageByName(employeeName);
-    return page ? page.id : null;
+    const res=await fetch(CFG.workerUrl+'/v1/databases/'+BANK_DB_ID+'/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filter:{ property:'예금주', title:{ equals: employeeName } }, page_size:1 })
+    });
+    if(!res.ok) return null;
+    const data=await res.json();
+    return (data.results && data.results[0]) ? data.results[0].id : null;
   }catch(e){ return null; }
 }
 async function fetchBankInfo(employeeName){
@@ -995,8 +1001,14 @@ async function fetchBankInfo(employeeName){
   }
   if(nameEl){ nameEl.textContent='조회 중...'; bankEl.textContent='-'; accountEl.textContent='-'; }
   try{
-    const page=await queryBankPageByName(employeeName);
+    const res=await fetch(CFG.workerUrl+'/v1/databases/'+BANK_DB_ID+'/query', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filter:{ property:'예금주', title:{ equals: employeeName } }, page_size:1 })
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
     if(_bankPageIdForEmployee!==employeeName) return; // 응답 도착 시점에 다른 직원으로 바뀌었으면 무시(경쟁 상태 방지)
+    const page=(data.results||[])[0];
     if(!page){
       if(nameEl){ nameEl.textContent='연결된 계좌 없음'; bankEl.textContent='-'; accountEl.textContent='-'; }
       return;
@@ -1563,16 +1575,9 @@ function renderSummary(recs){
 const TYPE_COLORS={
   '당직근무':'#0366D6','비상대기':'#1D9E75','비상출동':'#D85A30','비상근무':'#BA7517'
 };
-// 다크모드에서 --sky/--coral만 값이 재정의되므로(:root 대비 --teal·--amber는 다크에서도 동일) 그
-// 두 형태만 별도 매핑(2026-07-25 — 하드코딩된 라이트 값이 다크 차트색과 어긋나던 문제 수정).
-// 이 파일의 기존 다크모드 감지 패턴(syncThemeOptUI 등)과 동일하게 data-theme 속성을 직접 읽는다.
-const TYPE_COLORS_DARK={
-  '당직근무':'#2E8FFF','비상출동':'#F2896A'
-};
 const _SAFE_COLOR_RE=/^#[0-9A-Fa-f]{6}$/;
 function typeColor(t){
-  const isDark=(document.documentElement.getAttribute('data-theme')||'dark')==='dark';
-  const c=(isDark && TYPE_COLORS_DARK[t]) || TYPE_COLORS[t] || '#534AB7';
+  const c=TYPE_COLORS[t]||'#534AB7';
   return _SAFE_COLOR_RE.test(c)?c:'#534AB7'; // 화이트리스트 외 값 방어
 }
 
@@ -1838,7 +1843,6 @@ function closeAddModal(e){
   document.body.style.overflow='';
   resetModalDragPos('addModal');
 }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeAddModal(); });
 function openEditModal(pageId){
   if(!isMaster()){ toast('관리자 모드에서만 사용할 수 있습니다.'); return; }
   const r=ALL_RECORDS.find(x=>x.id===pageId);

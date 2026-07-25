@@ -17,9 +17,6 @@
   --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
   --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
-  /* 다크모드에서도 흰색 글자와 대비를 유지해야 하는 "채워진 배경"(active 드롭다운/토글 등) 전용
-     불변 톤 — --sky800은 다크모드에서 밝은 텍스트용(#C8E1FF)으로 쓰이므로 배경엔 못 쓴다(2026-07-25, C3) */
-  --sky800-solid:#032F62;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
@@ -56,7 +53,6 @@ html[data-theme="dark"]{
   --sky:#2E8FFF;
   --sky50:rgba(46,143,255,.16);--sky100:rgba(46,143,255,.32);
   --sky600:#79B8FF;--sky800:#C8E1FF;
-  --sky800-solid:#0C447C;
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
@@ -97,13 +93,15 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
+.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky800-solid);color:#fff;font-weight:700}
+.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 
 /* ── SECTION CARD ── */
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
@@ -125,32 +123,25 @@ tr:hover td{background:var(--sky50)}
 /* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 (연/월 등 dd-btn과 동일 색상 체계) ── */
 .view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .view-toggle-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
-.view-toggle-btn.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
+.view-toggle-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:#0C447C}
 
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
-.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:16px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.tb-action-btn.tb-add{background:var(--sky600)}
+.tb-action-btn.tb-add{background:#185FA5}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-action-btn.tb-report{background:#534AB7}
 .tb-action-btn.tb-report:hover{background:#443a94}
-/* amber(#BA7517) 그대로 쓰면 흰 글자 대비가 3.7:1로 WCAG AA(4.5:1) 미달이라, 대비가 넉넉한(10:1)
-   더 짙은 amber800을 쓴다(2026-07-25, C1). amber800은 다크모드에서도 값이 바뀌지 않아 안전하다. */
-.tb-action-btn.tb-unified{background:var(--amber800)}
+.tb-action-btn.tb-unified{background:#B45309}
 .tb-action-btn.tb-unified:hover{background:#94400a}
-/* --sky600은 다크모드에서 밝은 텍스트용 색(#79B8FF)으로 바뀌어 흰 글자 배경으로 쓰면 대비가 무너지므로
-   (2.1:1) 다크모드에서만 원래 쓰던 안전한 고정값으로 되돌린다(2026-07-25, C1). */
-html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 
 /* ── 뱃지(터널명 등) ── */
-/* C4(2026-07-25 코드감사, 스킵): 아래 뱃지 색상(tunnel-c0~4/gubun-c0~5/result-*)이 팔레트 변수를
-   전혀 참조하지 않고 전부 리터럴 hex로 하드코딩돼 있음 — 구조적으로 범위가 커서 이번엔 손대지 않음.
-   팔레트 변경 시 이 블록도 함께 확인 필요. */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
 .tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
 .tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
@@ -279,8 +270,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .header-right{flex-direction:column;align-items:flex-end;gap:3px}
   td{padding:10px 10px}
   th{padding:9px 10px}
-  /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
-  .search-box{font-size:16px}
   .form-group-grid{grid-template-columns:1fr}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
@@ -295,7 +284,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div class="modal-backdrop" onclick="closeCfgModal(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-title">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
         설정
       </div>
       <div class="modal-field">
@@ -408,7 +397,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_monthly" onclick="exportMonthlyInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_monthly">개별 보고서 생성</span>
+        <span id="reportLbl_monthly">보고서 생성</span>
       </button>
       <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportUnifiedReport()" title="표지+8개 항목 보고서+간지를 한 파일로 묶어 생성">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -446,7 +435,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_elec" onclick="exportElecInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_elec">개별 보고서 생성</span>
+        <span id="reportLbl_elec">보고서 생성</span>
       </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="elecViewHint">※ 위 [기본정보|ACB 상세|설비현황] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
@@ -476,7 +465,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_transformer" onclick="exportTransformerInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_transformer">개별 보고서 생성</span>
+        <span id="reportLbl_transformer">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-transformer"></div>
@@ -510,7 +499,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_generator" onclick="exportGeneratorInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_generator">개별 보고서 생성</span>
+        <span id="reportLbl_generator">보고서 생성</span>
       </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="generatorViewHint">※ 위 [기본정보|유류현황|점검체크리스트] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
@@ -541,7 +530,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_photo" onclick="exportPhotoInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_photo">개별 보고서 생성</span>
+        <span id="reportLbl_photo">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-photo"></div>
@@ -570,7 +559,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_power" onclick="exportPowerInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_power">개별 보고서 생성</span>
+        <span id="reportLbl_power">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-power"></div>
@@ -599,7 +588,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_task" onclick="exportTaskInspectionReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span id="reportLbl_task">개별 보고서 생성</span>
+        <span id="reportLbl_task">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-task"></div>
@@ -757,19 +746,21 @@ function setAppTheme(theme){
   try{localStorage.setItem('theme',theme);}catch(e){}
   syncThemeOptUI();
 }
-// 테마·로그인 토큰 storage 이벤트를 하나로 통합(2026-07-25, C10 — 기존엔 리스너 2개로 분리 등록돼 있었음)
 window.addEventListener('storage',e=>{
   if(e.key==='theme'&&e.newValue){
     document.documentElement.setAttribute('data-theme',e.newValue);
     syncThemeOptUI();
-  } else if(e.key==='wp_authToken'){
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
+window.addEventListener('storage',e=>{
+  if(e.key==='wp_authToken'){
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
     if(isAuthed()) loadTabData(_activePanel);
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
 
 // ══════════════════════════════════════════════════════
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-13 notion-fetch로 실스키마 확인 후 하드코딩,
@@ -1297,7 +1288,6 @@ function fetchNotion(dbId, body){
     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
   }).then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
 }
-// guard 상한(loadTabData의 page_size:100과 곱하면 최대 조회 건수) — 향후 데이터 누적 대비 150(=15,000건)으로 상향(2026-07-25)
 async function fetchAllPages(dbId, body){
   let pages=[], cursor=null, guard=0;
   do{
@@ -1306,7 +1296,7 @@ async function fetchAllPages(dbId, body){
     pages=pages.concat(data.results||[]);
     cursor = data.has_more ? data.next_cursor : null;
     guard++;
-  } while(cursor && guard<150);
+  } while(cursor && guard<50);
   return pages;
 }
 function notionFetch(path, method, body){
@@ -1621,7 +1611,7 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
-      ${(extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+      ${(tabId!=='generator' && extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
         <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
         <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
       </div>`:''}
@@ -2136,34 +2126,6 @@ function getFieldValue(f, idx){
   }
   return (document.getElementById(id)?.value||'').trim();
 }
-// 전기설비기록 신규등록/수정 — 설비현황 32개 입력 그리드 마크업만 별도 함수로 분리(터널명 변경 시
-// syncElecTunnelDefaults()가 이 그리드를 다시 그려 최근 레코드 값으로 갱신하기 위함, buildGeneratorChkGridHtml과 동일 패턴)
-function buildElecChkGridHtml(chkSrc){
-  let html=`<div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
-  ELEC_CHECKLIST.forEach((c,i)=>{
-    const rec=elecChkLookup(chkSrc, c);
-    const cur=rec?rec.점검결과판정:'○';
-    html+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td>
-      <td><select class="modal-select elec-grid-select" id="chkr_${i}">
-        <option value="○"${cur==='○'?' selected':''}>○</option>
-        <option value="×"${cur==='×'?' selected':''}>×</option>
-        <option value="/"${cur==='/'?' selected':''}>/</option>
-      </select></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkc_${i}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chki_${i}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkd_${i}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkx_${i}" value="${rec&&rec.부적합!=null?rec.부적합:''}"/></td>
-    </tr>`;
-  });
-  html+='</tbody></table></div>';
-  return html;
-}
-// 신규등록 시 "가장 최근 등록 값을 기본값으로 채웠습니다" 안내문 — 터널명 변경으로 기준 레코드가 바뀔 때마다
-// elecChkHintWrap을 다시 그려서 날짜·터널명 문구가 그리드 내용과 어긋나지 않게 한다(buildGeneratorChkHintHtml과 동일 패턴)
-function buildElecChkHintHtml(chkSrc){
-  if(!chkSrc) return '';
-  return `<div class="modal-hint" style="margin:-2px 0 8px">※ 가장 최근 등록(${esc(fmtDate(chkSrc['점검일자']))} · ${esc(chkSrc['터널명']||'')}) 값을 기본값으로 채웠습니다. 실제와 다르면 값을 고친 뒤 등록하세요.</div>`;
-}
 // 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
 function buildElecFormExtra(r){
   let acbHtml='';
@@ -2200,12 +2162,26 @@ function buildElecFormExtra(r){
     </div>`;
   // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
-  // 터널명 select 변경 시(syncElecTunnelDefaults) elecChkGridWrap/elecChkHintWrap을 다시 그려 갱신한다
-  // (buildGeneratorFormExtra/syncGeneratorTunnelDefaults와 동일 패턴, 2026-07-25 버그 수정).
-  const chkSrc = r || elecLatestForTunnel(document.getElementById('ff_0')?.value) || TAB_STATE['elec'].records[0] || null;
+  const chkSrc = r || TAB_STATE['elec'].records[0] || null;
   let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>`;
-  chkHtml+=`<div id="elecChkHintWrap">${!r ? buildElecChkHintHtml(chkSrc) : ''}</div>`;
-  chkHtml+=`<div id="elecChkGridWrap">${buildElecChkGridHtml(chkSrc)}</div>`;
+  if(!r && chkSrc) chkHtml+=`<div class="modal-hint" style="margin:-2px 0 8px">※ 가장 최근 등록(${esc(fmtDate(chkSrc['점검일자']))} · ${esc(chkSrc['터널명']||'')}) 값을 기본값으로 채웠습니다. 실제와 다르면 값을 고친 뒤 등록하세요.</div>`;
+  chkHtml+=`<div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
+  ELEC_CHECKLIST.forEach((c,i)=>{
+    const rec=elecChkLookup(chkSrc, c);
+    const cur=rec?rec.점검결과판정:'○';
+    chkHtml+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td>
+      <td><select class="modal-select elec-grid-select" id="chkr_${i}">
+        <option value="○"${cur==='○'?' selected':''}>○</option>
+        <option value="×"${cur==='×'?' selected':''}>×</option>
+        <option value="/"${cur==='/'?' selected':''}>/</option>
+      </select></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkc_${i}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chki_${i}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkd_${i}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
+      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkx_${i}" value="${rec&&rec.부적합!=null?rec.부적합:''}"/></td>
+    </tr>`;
+  });
+  chkHtml+='</tbody></table></div>';
   // 점검담당자/점검확인자/종합의견도 elec1이 아니라 elec3(설비현황)DB 속성이고 32건 전부 같은 값이
   // 반복 저장되는 구조 — 마찬가지로 입력창 1벌만 두고 저장 시 32건 모두에 복사한다.
   const chk0 = (r && r._chk && r._chk[0]) || null;
@@ -2264,10 +2240,6 @@ function syncElecTunnelDefaults(){
     setSelectOrCustom('ec_damdang','ec_damdangc', chk0.점검담당자, ELEC_DAMDANG_OPTIONS);
     setSelectOrCustom('ec_hwakin','ec_hwakinc', chk0.점검확인자, ELEC_HWAKIN_OPTIONS);
   }
-  const hintWrap=document.getElementById('elecChkHintWrap');
-  if(hintWrap) hintWrap.innerHTML=buildElecChkHintHtml(latest);
-  const chkWrap=document.getElementById('elecChkGridWrap');
-  if(chkWrap) chkWrap.innerHTML=buildElecChkGridHtml(latest);
 }
 // 발전기점검 탭 전용 — 특정 터널의 가장 최근 레코드(가동일자 내림차순으로 이미 정렬된 TAB_STATE 기준
 // 첫 매치) — 유류/운전값/체크리스트 기본값 채움에 공용으로 재사용
@@ -3322,7 +3294,7 @@ function buildOneMonthlyReport(tunnel, year, month){
   }).then(buf=>{
     const blob=new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검결과표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
+    const fname=`${year}년 점검결과표보고서_${tunnelFnameAbbr(tunnel)}.xlsx`;
     const a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
@@ -3350,7 +3322,7 @@ function exportMonthlyInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -3358,7 +3330,7 @@ function exportMonthlyInspectionReport(){
     buildOneMonthlyReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -3705,7 +3677,7 @@ function exportElecInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -3713,7 +3685,7 @@ function exportElecInspectionReport(){
     buildOneElecReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -3913,7 +3885,7 @@ function exportTransformerInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -3921,7 +3893,7 @@ function exportTransformerInspectionReport(){
     buildOneTransformerReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -4082,13 +4054,10 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
   const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
-  // 박스는 고정 6칸(양식 변경 불가) — 7건 이상이면 앞 5건은 각 칸에, 6건째부터는 마지막 칸에 "; "로
-  // 이어붙여 초과분이 누락되지 않게 한다(2026-07-25 버그 수정).
-  const notesDisplay = notes.length>6 ? notes.slice(0,5).concat([notes.slice(5).join('; ')]) : notes;
   for(let i=0;i<6;i++) ws.getRow(24+i).height=30;
-  mc('A24:R24', notesDisplay[0]||'', F(13), LEFT_INDENT, undefined, BOX_TOP);
-  for(let i=1;i<5;i++) mc(`A${24+i}:R${24+i}`, notesDisplay[i]||'', F(13), LEFT_INDENT, undefined, BOX_LR);
-  mc('A29:R29', notesDisplay[5]||'', F(13), LEFT_INDENT, undefined, BOX_BOTTOM);
+  mc('A24:R24', notes[0]||'', F(13), LEFT_INDENT, undefined, BOX_TOP);
+  for(let i=1;i<5;i++) mc(`A${24+i}:R${24+i}`, notes[i]||'', F(13), LEFT_INDENT, undefined, BOX_LR);
+  mc('A29:R29', notes[5]||'', F(13), LEFT_INDENT, undefined, BOX_BOTTOM);
   return ws;
 }
 // 발전기는 보통 월 1회 운전/점검하지만, 그 이상 운전한 달은 날짜별로 레코드가 여러 건
@@ -4144,7 +4113,7 @@ function exportGeneratorInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -4152,7 +4121,7 @@ function exportGeneratorInspectionReport(){
     buildOneGeneratorReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -4305,7 +4274,7 @@ function exportPhotoInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -4313,7 +4282,7 @@ function exportPhotoInspectionReport(){
     buildOnePhotoReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -4543,7 +4512,7 @@ function exportPowerInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -4551,7 +4520,7 @@ function exportPowerInspectionReport(){
     buildOnePowerReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });
@@ -4710,7 +4679,7 @@ function exportTaskInspectionReport(){
   function next(){
     if(idx>=tunnels.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
       return;
     }
     const tunnel=tunnels[idx++];
@@ -4718,7 +4687,7 @@ function exportTaskInspectionReport(){
     buildOneTaskReport(tunnel, year, month)
       .then(()=>setTimeout(next,400))
       .catch(e=>{
-        alert(`${tunnel} 개별 보고서 생성 실패: `+e.message);
+        alert(`${tunnel} 보고서 생성 실패: `+e.message);
         console.error(e);
         setTimeout(next,400);
       });

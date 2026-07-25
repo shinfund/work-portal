@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>차량운행일지</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%237FB4FF'/%3E%3Cstop offset='1' stop-color='%23032F62'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M12 3L21 8L12 13L3 8Z' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 12L12 17L21 12' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 16L12 21L21 16' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M7.1 18.5V12.9C7.1 9 9.6 6.6 12 6.6C14.4 6.6 16.9 9 16.9 12.9V18.5Z' fill='%23fff'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
 <style>
@@ -14,6 +14,9 @@
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
+  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
@@ -54,6 +57,8 @@ html[data-theme="dark"]{
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
   --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
 html[data-theme="dark"] .veh-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
 html[data-theme="dark"] .veh-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
@@ -154,7 +159,7 @@ tr:hover td{background:var(--sky50)}
 /* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .tb-action-btn.tb-add{background:#005CC5}
-.tb-action-btn.tb-add:hover{background:#004A9E}
+.tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-action-btn.tb-report{background:#534AB7}
@@ -221,6 +226,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .sig-slot{flex:1;min-width:120px;text-align:center}
 .sig-slot .modal-label{font-size:12px;margin-bottom:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 
 .theme-opts{display:flex;gap:12px}
@@ -383,7 +389,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
-        <input id="addDist" class="modal-input" type="number" step="0.1" readonly oninput="recomputeDist()" style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <input id="addDist" class="modal-input" type="number" step="0.1" readonly oninput="recomputeDist()" style="background:var(--card2,rgba(127,127,127,.08));cursor:not-allowed"/>
         <div class="modal-hint" id="addDistHint">차량번호와 날짜를 먼저 선택하세요.</div>
       </div>
       <div class="modal-field">
@@ -895,14 +901,13 @@ window.addEventListener('storage',e=>{
 
 // ── 신규추가/수정/삭제 ────────────────────────────────
 var EDIT_PAGE_ID = null;
-function getUniqueField(key){ return [...new Set(ALL_RECORDS.map(r=>r[key]).filter(Boolean))].sort(); }
-function getUniqueCarNos(){ return getUniqueField('carNo'); }
-function getUniqueCarTypes(){ return getUniqueField('carType'); }
-function getUniqueDrivers(){ return getUniqueField('driver'); }
-function getUniqueFrom(){ return getUniqueField('from'); }
-function getUniqueVia(){ return getUniqueField('via'); }
-function getUniqueTo(){ return getUniqueField('to'); }
-function getUniquePurposes(){ return getUniqueField('purpose'); }
+function getUniqueCarNos(){ return [...new Set(ALL_RECORDS.map(r=>r.carNo).filter(Boolean))].sort(); }
+function getUniqueCarTypes(){ return [...new Set(ALL_RECORDS.map(r=>r.carType).filter(Boolean))].sort(); }
+function getUniqueDrivers(){ return [...new Set(ALL_RECORDS.map(r=>r.driver).filter(Boolean))].sort(); }
+function getUniqueFrom(){ return [...new Set(ALL_RECORDS.map(r=>r.from).filter(Boolean))].sort(); }
+function getUniqueVia(){ return [...new Set(ALL_RECORDS.map(r=>r.via).filter(Boolean))].sort(); }
+function getUniqueTo(){ return [...new Set(ALL_RECORDS.map(r=>r.to).filter(Boolean))].sort(); }
+function getUniquePurposes(){ return [...new Set(ALL_RECORDS.map(r=>r.purpose).filter(Boolean))].sort(); }
 function getCarLatestType(carNo){
   if(!carNo) return null;
   const rec=[...ALL_RECORDS].reverse().find(r=>r.carNo===carNo && r.carType);
@@ -926,7 +931,7 @@ function onInputModeChange(){
   const mode=getInputMode();
   const cumEl=document.getElementById('addCumDist');
   const distEl=document.getElementById('addDist');
-  const ro='rgba(127,127,127,.08)';
+  const ro='var(--card2,rgba(127,127,127,.08))';
   if(mode==='cum'){
     cumEl.readOnly=false; cumEl.style.background=''; cumEl.style.cursor='';
     distEl.readOnly=true; distEl.style.background=ro; distEl.style.cursor='not-allowed';
@@ -1519,7 +1524,7 @@ async function loadData(opts){
   const lu=document.getElementById('lastUpdate');
   const syncIcon=document.getElementById('syncIcon');
   const syncLabel=document.getElementById('syncLabel');
-  if(btn){btn.disabled=true;btn.setAttribute('aria-busy','true');}
+  if(btn)btn.disabled=true;
   if(syncIcon)syncIcon.classList.add('spinning');
   if(syncLabel)syncLabel.textContent='불러오는 중...';
   if(lu)lu.textContent='';
@@ -1596,7 +1601,7 @@ async function loadData(opts){
     if(lu){lu.textContent=errMsg;lu.style.color='var(--hdr-error-text)';}
   }finally{
     _isLoading=false;
-    if(btn){btn.disabled=false;btn.setAttribute('aria-busy','false');}
+    if(btn)btn.disabled=false;
     if(syncIcon)syncIcon.classList.remove('spinning');
     if(syncLabel)syncLabel.textContent='새로고침';
   }

@@ -13,10 +13,7 @@
   --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
-  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
-  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
-  --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
-  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray600:#5F5E5A;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
@@ -56,9 +53,6 @@ html[data-theme="dark"]{
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
-  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
-  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
-  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
 html[data-theme="dark"] .tunnel-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
 html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
@@ -87,7 +81,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
 /* ── TOP TAB NAV ── */
-.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(3,102,214,.07)}
 .top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
 .top-tab.active{color:var(--sky600)}
 .top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
@@ -111,7 +105,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
 .dd-btn.active::after{color:#fff}
-.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
@@ -136,7 +130,7 @@ tr:hover td{background:var(--sky50)}
 /* ── FILTER ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
-.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:16px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 /* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -205,7 +199,7 @@ tr:hover td{background:var(--sky50)}
 .detail-info-row:last-child{border-bottom:none}
 .detail-info-row:nth-child(odd){background:var(--card)}
 .detail-info-row:nth-child(even){background:var(--sky50)}
-.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(3,102,214,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
 .detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
 .detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
@@ -251,6 +245,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .header-right{flex-direction:column;align-items:flex-end;gap:3px}
   td{padding:10px 10px}
   th{padding:9px 10px}
+  /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
+  .search-box{font-size:16px}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;max-width:calc(100vw - 32px);white-space:normal;text-align:center;box-sizing:border-box}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -271,12 +267,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <div class="modal-hint" id="loginStatusHint"></div>
         <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
       </div>
-      <div class="theme-opts">
-        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+      <div class="theme-opts" role="radiogroup" aria-label="화면 모드">
+        <div class="theme-opt" id="theme-opt-dark" tabindex="0" role="radio" aria-checked="false" onclick="setAppTheme('dark')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('dark');}">
           <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
           <div class="theme-opt-label">다크</div>
         </div>
-        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+        <div class="theme-opt" id="theme-opt-light" tabindex="0" role="radio" aria-checked="false" onclick="setAppTheme('light')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('light');}">
           <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
           <div class="theme-opt-label">라이트</div>
         </div>
@@ -344,7 +340,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <div class="modal-hint">기본값 = 수량 × 단가(자동 계산). 실제 금액이 다르면 직접 수정하세요.</div>
       </div>
       <div class="modal-field">
-        <label class="modal-label">구매일 <span class="modal-required">*</span></label>
+        <label class="modal-label">구매일 <span class="modal-required" id="addDateRequired" title="신규등록 시 필수">*</span></label>
         <input id="addDate" class="modal-input" type="date"/>
       </div>
       <div class="modal-field">
@@ -630,6 +626,16 @@ function initDraggableModals(){
   });
 }
 
+/* ── 모달 공통 헬퍼(열기/닫기 보일러플레이트 통합, 2026-07-25) ── */
+function openModal(id){
+  var m=document.getElementById(id); if(m){ m.classList.add('modal-open'); document.body.style.overflow='hidden'; }
+}
+function closeModal(id, e){
+  if(e && e.target!==e.currentTarget) return;
+  var m=document.getElementById(id); if(m) m.classList.remove('modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos(id);
+}
 /* ── 설정 모달 ── */
 function updateLoginStatusHint(){
   var h = document.getElementById('loginStatusHint');
@@ -639,7 +645,7 @@ function updateLoginStatusHint(){
 function openCfgModal(){
   updateLoginStatusHint();
   syncThemeOptUI();
-  var m=document.getElementById('cfgModal'); if(m){ m.classList.add('modal-open'); document.body.style.overflow='hidden'; }
+  openModal('cfgModal');
 }
 function openLoginModal(){
   var lu=document.getElementById('lastUpdate');
@@ -647,32 +653,28 @@ function openLoginModal(){
   toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
 }
 function closeCfgModal(e){
-  if(e && e.target!==e.currentTarget) return;
-  var m=document.getElementById('cfgModal'); if(m){ m.classList.remove('modal-open'); document.body.style.overflow=''; }
-  resetModalDragPos('cfgModal');
+  closeModal('cfgModal', e);
 }
 
 /* ── 화면모드(테마) ── */
 function syncThemeOptUI(){
   var cur = document.documentElement.getAttribute('data-theme')||'dark';
   var d=document.getElementById('theme-opt-dark'), l=document.getElementById('theme-opt-light');
-  if(d) d.classList.toggle('on', cur==='dark');
-  if(l) l.classList.toggle('on', cur==='light');
+  if(d){ d.classList.toggle('on', cur==='dark'); d.setAttribute('aria-checked', cur==='dark'?'true':'false'); }
+  if(l){ l.classList.toggle('on', cur==='light'); l.setAttribute('aria-checked', cur==='light'?'true':'false'); }
 }
 function setAppTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
   try{ localStorage.setItem('theme', theme); }catch(e){}
   syncThemeOptUI();
 }
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCfgModal(); });
+/* storage 이벤트 통합(테마 동기화 + 인증 토큰 동기화, 2026-07-25) */
 window.addEventListener('storage', function(e){
   if(e.key==='theme' && e.newValue){
     document.documentElement.setAttribute('data-theme', e.newValue);
     syncThemeOptUI();
-  }
-});
-document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCfgModal(); });
-window.addEventListener('storage', function(e){
-  if(e.key==='wp_authToken'){
+  } else if(e.key==='wp_authToken'){
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
@@ -725,8 +727,8 @@ function recomputeAmount(){
   var qty = parseFloat(document.getElementById('addQty').value);
   var price = parseFloat(document.getElementById('addPrice').value);
   var amtEl = document.getElementById('addAmount');
-  if(!isNaN(qty) && !isNaN(price)) amtEl.value = qty*price;
-  else if(!isNaN(qty)) amtEl.value = 0;
+  if(isNaN(price)) amtEl.value = '';
+  else if(!isNaN(qty)) amtEl.value = qty*price;
   else amtEl.value = '';
 }
 
@@ -791,14 +793,11 @@ function openAddModal(){
   document.getElementById('photoStatus').textContent='파일을 선택하세요';
   document.getElementById('photoStatus').className='photo-upload-status';
   document.getElementById('photoThumb').classList.remove('show');
-  document.getElementById('addModal').classList.add('modal-open');
-  document.body.style.overflow='hidden';
+  var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display='';
+  openModal('addModal');
 }
 function closeAddModal(e){
-  if(e && e.target!==e.currentTarget) return;
-  document.getElementById('addModal').classList.remove('modal-open');
-  document.body.style.overflow='';
-  resetModalDragPos('addModal');
+  closeModal('addModal', e);
 }
 function openEditModal(pageId){
   var r = ALL_DATA.find(function(x){ return x.id===pageId; });
@@ -821,8 +820,8 @@ function openEditModal(pageId){
   var s=document.getElementById('photoStatus'), t=document.getElementById('photoThumb');
   if(r['사진']){ s.textContent='기존 사진 있음'; s.className='photo-upload-status ok'; t.src=r['사진']; t.classList.add('show'); }
   else { s.textContent='파일을 선택하세요'; s.className='photo-upload-status'; t.classList.remove('show'); }
-  document.getElementById('addModal').classList.add('modal-open');
-  document.body.style.overflow='hidden';
+  var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display='none';
+  openModal('addModal');
 }
 function submitAddForm(){
   var name = document.getElementById('addName').value.trim();
@@ -938,14 +937,10 @@ function openDetailModal(id){
   document.getElementById('detailModalActions').innerHTML =
     '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
     +'<button class="detail-act-btn detail-del-btn" onclick="deleteRecord(\''+id+'\')">삭제</button>';
-  document.getElementById('detailModal').classList.add('modal-open');
-  document.body.style.overflow='hidden';
+  openModal('detailModal');
 }
 function closeDetailModal(e){
-  if(e && e.target!==e.currentTarget) return;
-  document.getElementById('detailModal').classList.remove('modal-open');
-  document.body.style.overflow='';
-  resetModalDragPos('detailModal');
+  closeModal('detailModal', e);
 }
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDetailModal(); });
 
@@ -1042,7 +1037,8 @@ var _categoryColorMap={};
 // 색상 뱃지 맵 공통 생성기(2026-07-10) — 값을 등장 순으로 6색 팔레트에 순환 배정
 // (8종처럼 팔레트보다 값이 많으면 일부 색이 겹칠 수 있음, 허용 범위)
 function ensureColorMap(key, map){
-  var all=getUniqueValues(key);
+  var seen={}, all=[];
+  ALL_DATA.forEach(function(r){ var v=r[key]; if(v && !seen[v]){ seen[v]=1; all.push(v); } });
   Object.keys(map).forEach(function(k){ delete map[k]; });
   all.forEach(function(v,i){ map[v]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
 }

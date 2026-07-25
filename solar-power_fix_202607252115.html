@@ -71,7 +71,7 @@ html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8
 html[data-theme="dark"] .tunnel-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
 html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
 html[data-theme="dark"] .tunnel-c4{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
-html[data-theme="dark"] .tunnel-c5{background:rgba(99,153,34,.22);color:#C0DD97;border-color:rgba(99,153,34,.4)}
+html[data-theme="dark"] .tunnel-c5{background:rgba(29,158,117,.18);color:#7BE0BE;border-color:rgba(29,158,117,.35)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
@@ -163,7 +163,7 @@ tr:hover td{background:var(--sky50)}
 /* ── FILTER (발전내역 툴바 — 하자보수현황 앱 필터바 패턴 재사용) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
-.search-box{flex:1;min-width:160px;padding:0 12px;height:36px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:36px;border-radius:var(--r8);border:1px solid var(--border);font-size:16px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 #tunnelDdMenu .dd-opt{text-align:left}
 /* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
@@ -180,7 +180,7 @@ tr:hover td{background:var(--sky50)}
 .tunnel-c2{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
 .tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 .tunnel-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
-.tunnel-c5{background:#EAF3DE;color:#27500A;border:1px solid #C0DD97}
+.tunnel-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -250,8 +250,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .header-right{flex-direction:column;align-items:flex-end;gap:3px}
   td{padding:10px 10px}
   th{padding:9px 10px}
-  /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
-  .search-box{font-size:16px}
   /* 터치 타겟 확보(하자보수현황 앱과 동일 기준, 2026-07-20) */
   .hdr-btn{padding:8px 10px;font-size:11px;min-height:40px;gap:3px}
   .top-tab{padding:9px 4px;font-size:12px}
@@ -599,7 +597,7 @@ function getGenAmt(r){ return r.gen||0; }
 function getFeeAmt(r){ return r.fee||0; }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function fmtKw(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:1}); }
-function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
 function makeModalDraggable(box, handle){
@@ -764,11 +762,6 @@ function recomputeGenAndFee(){
   const genEl=document.getElementById('addGen'), feeEl=document.getElementById('addFee');
   if(!isNaN(cumGen) && !isNaN(prevCumGen)){
     const gen=cumGen-prevCumGen;
-    if(gen<0){
-      alert('금월 누적발전량이 전일누적량보다 작습니다. 누적량 값을 확인해주세요.');
-      genEl.value=''; feeEl.value='';
-      return;
-    }
     genEl.value=gen;
     feeEl.value=!isNaN(unitPrice) ? Math.round(gen*unitPrice) : '';
   } else {
@@ -869,7 +862,6 @@ function submitAddForm(){
 
   recomputeGenAndFee();
   const gen=document.getElementById('addGen').value.trim();
-  if(gen===''){ return; }
   const capacity=getSelectValue('addCapacity','addCapacityCustom');
   const fee=document.getElementById('addFee').value.trim();
   const unitPrice=getSelectValue('addUnitPrice','addUnitPriceCustom');
@@ -1304,14 +1296,14 @@ async function loadData(opts){
     const data=await fetchNotion(body);
     let pages=data.results||[];
     let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-    while(cursor&&hasMore&&++pageCount<500){
+    while(cursor&&hasMore&&++pageCount<200){
       const d2=await fetchNotion({...body,start_cursor:cursor});
       pages=[...pages,...(d2.results||[])];
       cursor=d2.next_cursor;hasMore=d2.has_more;
     }
     if(hasMore){
-      console.warn('[solar-power] 페이지네이션 상한(500페이지, 약 50,000건)에 도달하여 일부 데이터가 누락되었을 수 있습니다. 필요 시 조회 기간을 좁혀주세요.');
-      toast('데이터가 많아 일부가 누락되었을 수 있습니다. 조회 기간을 좁혀보세요.');
+      console.warn('[solar-power] 페이지네이션 상한(200페이지)에 도달하여 일부 데이터가 누락되었을 수 있습니다.');
+      toast('데이터가 많아 일부가 누락되었을 수 있습니다.');
     }
     const parsed=pages.map(parseNotionPage).filter(Boolean);
     if(parsed.length>0){
@@ -1392,7 +1384,7 @@ function calcTunnelMap(recs){
 }
 
 // ── 터널 색상 팔레트 (전체 데이터 기준 알파벳순 고정 배정) ──
-const TUNNEL_COLORS=['#0366D6','#1D9E75','#D85A30','#BA7517','#534AB7','#639922'];
+const TUNNEL_COLORS=['#0366D6','#1D9E75','#D85A30','#BA7517','#534AB7','#0F6E56'];
 let _tunnelColorMap={};
 function ensureTunnelColors(){
   const all=[...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort();
@@ -1454,18 +1446,6 @@ function renderAll(){
 }
 
 // ── 요약 ──────────────────────────────────────────────
-// 요약 카드 색상 테마(bg/border/labelColor) 프리셋 — renderSummary() 3분기 공통 사용
-const SUMMARY_CELL_THEMES={
-  sky:{bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)'},
-  neutral:{bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)'},
-  teal:{bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)'},
-  coral:{bg:'var(--coral50)',border:'var(--coral100)',labelColor:'var(--coral)'}
-};
-function summaryCell(theme,label,value,sub,subColor){
-  const t=SUMMARY_CELL_THEMES[theme]||SUMMARY_CELL_THEMES.neutral;
-  return {bg:t.bg,border:t.border,labelColor:t.labelColor,label,value,sub,subColor};
-}
-function kwhValue(n){ return `${fmtWon(n)}<span style="font-size:12px;font-weight:500">kWh</span>`; }
 function renderSummary(recs){
   recs=recs||filteredRecords();
   const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
@@ -1473,26 +1453,25 @@ function renderSummary(recs){
 
   renderTunnelBars(tunnelMap);
 
-  let cells;
   if(curYear==='ALL'){
     const allGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
     const allFee=recs.reduce((s,r)=>s+getFeeAmt(r),0);
     const allTunnels=new Set(recs.map(r=>r.tunnel).filter(Boolean)).size;
-    cells=[
-      summaryCell('sky','전체 기간',kwhValue(allGen),'총 발전량'),
-      summaryCell('neutral','절감 전기요금',fmtWon(Math.floor(allFee)),'전체 합산'),
-      summaryCell('teal','가동 터널',`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,'전체 합산')
-    ];
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtWon(allGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(Math.floor(allFee)),sub:'전체 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'전체 합산'}
+    ]);
   } else if(curMonth===0){
     const allRecs2=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
     const yearGen=allRecs2.reduce((s,r)=>s+getGenAmt(r),0);
     const yearFee=allRecs2.reduce((s,r)=>s+getFeeAmt(r),0);
     const yearTunnels=new Set(allRecs2.map(r=>r.tunnel).filter(Boolean)).size;
-    cells=[
-      summaryCell('sky',`${curYear}년 연간`,kwhValue(yearGen),'총 발전량'),
-      summaryCell('neutral','절감 전기요금',fmtWon(Math.floor(yearFee)),'연간 합산'),
-      summaryCell('teal','가동 터널',`${yearTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,'연간 합산')
-    ];
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtWon(yearGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:'총 발전량'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'절감 전기요금',value:fmtWon(Math.floor(yearFee)),sub:'연간 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'가동 터널',value:`${yearTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,sub:'연간 합산'}
+    ]);
   } else {
     let pm=curMonth-1,py=curYear;
     if(pm<1){pm=12;py--;}
@@ -1501,15 +1480,15 @@ function renderSummary(recs){
     const diffGen=totalGen-prevGen;
     const sign=n=>n>=0?'+':'';
     const isUp=diffGen>=0;
-    const diffTheme=isUp?'teal':'coral';
-    const diffColor=SUMMARY_CELL_THEMES[diffTheme].labelColor;
-    cells=[
-      summaryCell('sky','전월 발전량',kwhValue(prevGen),`${py}년 ${pm}월`),
-      summaryCell('neutral','당월 발전량',kwhValue(totalGen),`${curYear}년 ${curMonth}월`),
-      summaryCell(diffTheme,'전월 대비',`${sign(diffGen)}${fmtWon(Math.abs(diffGen))}kWh`,diffGen===0?'변동 없음':isUp?'증가':'감소',diffColor)
-    ];
+    const diffColor=isUp?'var(--teal600)':'var(--coral)';
+    const diffBg=isUp?'var(--teal50)':'var(--coral50)';
+    const diffBorder=isUp?'var(--teal100)':'var(--coral100)';
+    document.getElementById('sumCompare').innerHTML=buildCompareCard([
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 발전량',value:`${fmtWon(prevGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:`${py}년 ${pm}월`},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 발전량',value:`${fmtWon(totalGen)}<span style="font-size:12px;font-weight:500">kWh</span>`,sub:`${curYear}년 ${curMonth}월`},
+      {bg:diffBg,border:diffBorder,labelColor:diffColor,label:'전월 대비',value:`${sign(diffGen)}${fmtWon(Math.abs(diffGen))}kWh`,sub:diffGen===0?'변동 없음':isUp?'증가':'감소',subColor:diffColor}
+    ]);
   }
-  document.getElementById('sumCompare').innerHTML=buildCompareCard(cells);
 }
 
 // ── 터널별 발전현황 (가로 바) ─────────────────────────

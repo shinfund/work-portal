@@ -21,14 +21,14 @@
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
   --shadow:none;
-  --hdr-bg:#032F62;
+  --hdr-bg:#0C447C;
   --hdr-text:#fff;
   --hdr-text-dim:rgba(255,255,255,.85);
   --hdr-btn-bg:rgba(255,255,255,.15);
   --hdr-btn-border:rgba(255,255,255,.35);
   --hdr-btn-hover-bg:rgba(255,255,255,.25);
   --hdr-btn-text:#fff;
-  --hdr-shadow:0 2px 8px rgba(3,47,98,.3);
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
   --hdr-error-text:rgba(255,150,130,.9);
 }
 html[data-theme="light"]{
@@ -129,7 +129,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
-.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:16px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .tb-action-btn.tb-add{background:#185FA5}
@@ -240,8 +240,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
 .modal-progress-bar{height:100%;width:0%;background:var(--sky);transition:width .25s ease}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+/* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
+.form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
+.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.form-group-grid .modal-field{margin-bottom:0}
+.form-group-grid .modal-label{font-size:11.5px}
+/* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력 */
+.elec-grid-input{width:72px;padding:4px 6px;font-size:16px}
+.elec-grid-select{width:64px;padding:4px 4px;font-size:16px}
 /* 전기설비기록·발전기점검처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
 .add-modal-box.wide-modal{max-width:820px}
+.detail-modal-box.wide-modal{max-width:820px}
 
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
@@ -261,8 +270,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .header-right{flex-direction:column;align-items:flex-end;gap:3px}
   td{padding:10px 10px}
   th{padding:9px 10px}
-  /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
-  .search-box{font-size:16px}
+  .form-group-grid{grid-template-columns:1fr}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -384,7 +392,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_elecinsp" onclick="exportElecInspReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_elecinsp">개별 보고서 생성</span>
+        <span id="reportLbl_elecinsp">보고서 생성</span>
       </button>
       <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportTeamUnifiedReport()" title="표지+전기시설점검표+고장수리실적+점검사진대지+간지를 한 파일로 묶어 생성">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -417,7 +425,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_repair" onclick="exportRepairReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_repair">개별 보고서 생성</span>
+        <span id="reportLbl_repair">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-repair"></div>
@@ -446,7 +454,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_photo" onclick="exportPhotoTeamReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_photo">개별 보고서 생성</span>
+        <span id="reportLbl_photo">보고서 생성</span>
       </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px">※ 번호는 해당 월 사진대지 전체에서 이어지는 일련번호입니다(터널별로 다시 시작하지 않음).</div>
@@ -686,18 +694,11 @@ const TAB_DEFS=[
       {key:'번호', type:'number', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{
           const d=dep['일자']; if(!d) return [];
-          // 점검사진 목록 로드 실패 시 records가 비어 항상 "1"을 잘못 제안하게 되므로
-          // (2026-07-25 감사 B3) loadFailed일 땐 자동 제안 자체를 하지 않는다.
-          if(TAB_STATE.photo.loadFailed) return [];
           const ym=d.slice(0,7);
           const nums=(TAB_STATE.photo.records||[])
             .filter(r=>(r['일자']||'').startsWith(ym))
             .map(r=>parseInt(r['번호'],10)).filter(n=>!isNaN(n));
           return [String(nums.length ? Math.max(...nums)+1 : 1)];
-        },
-        emptyHintFn:dep=>{
-          if(TAB_STATE.photo.loadFailed) return '⚠ 목록 로드 실패 — 번호를 직접 확인 후 입력하세요';
-          return '먼저 일자를 선택하세요';
         },
         emptyHint:'먼저 일자를 선택하세요'},
       // 사진설명은 노션 실데이터 기준 252건 중 서로 다른 값이 50개(2026-07-24 확인)로, 사진마다
@@ -712,7 +713,7 @@ function getTabDef(id){ return TAB_DEFS.find(t=>t.id===id); }
 function dataFields(tabDef){ return tabDef.fields.filter(f=>f.key); } // header:true 그룹 라벨 항목 제외
 
 const TAB_STATE={};
-TAB_DEFS.forEach(t=>{ TAB_STATE[t.id]={records:[], loaded:false, loading:false, loadFailed:false}; });
+TAB_DEFS.forEach(t=>{ TAB_STATE[t.id]={records:[], loaded:false, loading:false}; });
 // ── Notion 값 추출 헬퍼 ──
 function getText(p){
   if(!p) return '';
@@ -817,12 +818,10 @@ async function loadTabData(tabId){
     const pages=await fetchAllPages(tabDef.dbId, body);
     st.records=pages.map(p=>parseRecord(tabDef,p));
     st.loaded=true;
-    st.loadFailed=false;
     applyLatestFilterDefault(tabId);
     renderTabTable(tabId);
     updateLastUpdate();
   }catch(e){
-    st.loadFailed=true;
     toast('데이터 로드 실패: '+e.message);
     console.error(e);
   }finally{
@@ -870,6 +869,65 @@ document.addEventListener('click',e=>{
 const _tabFilters={};
 const _tabFilterUserPicked={};
 TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+// 목록에 기본 표시되지 않는 컬럼(ACB 상세 등)을 사용자가 선택해서 추가로 켜볼 수 있게 하는 상태 — 탭별로 localStorage에 저장
+const _tabExtraCols={};
+TAB_DEFS.forEach(t=>{
+  try{ _tabExtraCols[t.id]=JSON.parse(localStorage.getItem('mi_extracols_'+t.id)||'[]'); }
+  catch(e){ _tabExtraCols[t.id]=[]; }
+});
+function extraColCandidates(tabDef){
+  return dataFields(tabDef).filter(f=>!tabDef.listCols.includes(f.key) && f.type!=='file');
+}
+// ACB 필드처럼 그룹(조명용/일반용/동력용)이 있으면 "전압 R-S" 같은 짧은 label만으론 구분이 안 되므로 그룹명을 붙인다
+function fieldDisplayLabel(f){
+  return f.group ? f.group+' '+(f.label||f.key) : (f.label||f.key);
+}
+function toggleExtraCol(tabId, key, checked){
+  const list=_tabExtraCols[tabId]||(_tabExtraCols[tabId]=[]);
+  const i=list.indexOf(key);
+  if(checked && i<0) list.push(key);
+  else if(!checked && i>=0) list.splice(i,1);
+  localStorage.setItem('mi_extracols_'+tabId, JSON.stringify(list));
+  syncExtraHeaderCols(tabId);
+  renderTabTable(tabId);
+  const lbl=document.getElementById('colToggleLabel-'+tabId);
+  if(lbl) lbl.textContent = list.length ? `확인자 +${list.length}` : '확인자';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!list.length);
+}
+function syncExtraHeaderCols(tabId){
+  const tabDef=getTabDef(tabId);
+  const row=document.getElementById('thead-'+tabId);
+  if(!tabDef || !row) return;
+  row.querySelectorAll('th[data-extra]').forEach(th=>th.remove());
+  (_tabExtraCols[tabId]||[]).forEach(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    if(!f) return;
+    const th=document.createElement('th');
+    th.dataset.extra='1';
+    if(f.type==='number') th.className='r';
+    th.textContent=fieldDisplayLabel(f);
+    row.appendChild(th);
+  });
+}
+function buildColToggleDd(tabId){
+  const tabDef=getTabDef(tabId);
+  const candidates=extraColCandidates(tabDef);
+  const wrap=document.getElementById('colToggleWrap-'+tabId);
+  if(!wrap) return; // 추가로 보여줄 컬럼이 없는 탭은 buildTabFilterDd에서 애초에 렌더링하지 않음
+  const menu=document.getElementById('colToggleMenu-'+tabId);
+  const selected=_tabExtraCols[tabId]||[];
+  if(!menu.dataset.built){
+    menu.dataset.built='1';
+    menu.innerHTML=candidates.map(f=>`
+      <label class="dd-opt" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" value="${esc(f.key)}" ${selected.includes(f.key)?'checked':''} onchange="toggleExtraCol('${tabId}','${esc(f.key)}',this.checked)"/>
+        ${esc(fieldDisplayLabel(f))}
+      </label>`).join('');
+  }
+  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `확인자 +${selected.length}` : '확인자';
+  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!selected.length);
+  syncExtraHeaderCols(tabId);
+}
 // 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
 // (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
 function applyLatestFilterDefault(tabId){
@@ -905,8 +963,13 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
+      ${(extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
+        <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
+      </div>`:''}
     `;
   }
+  buildColToggleDd(tabId);
   // 연도 옵션 — 로드된 레코드의 실제 연도들
   const years=[...new Set(TAB_STATE[tabId].records.map(r=>(r[tabDef.dateKey]||'').slice(0,4)).filter(Boolean))].sort().reverse();
   const yearMenu=document.getElementById('ddYearMenu-'+tabId);
@@ -980,7 +1043,7 @@ function renderTabTable(tabId){
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
   if(!recs.length){
-    const colCount=tabDef.listCols.length;
+    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length;
     tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
     return;
   }
@@ -999,6 +1062,9 @@ function buildRow(tabDef, r){
   const cells=tabDef.listCols.map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
     return f ? buildCellHtml(f, r) : '<td>-</td>';
+  }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
+    const f=dataFields(tabDef).find(x=>x.key===key);
+    return f ? buildCellHtml(f, r) : '';
   }).join('');
   return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${cells}</tr>`;
 }
@@ -1229,6 +1295,15 @@ function hideAddModalProgress(){
   const wrap=document.getElementById('addModalProgressWrap');
   if(wrap) wrap.style.display='none';
 }
+function showAddModalProgress(){
+  const wrap=document.getElementById('addModalProgressWrap'), bar=document.getElementById('addModalProgressBar');
+  if(wrap) wrap.style.display='';
+  if(bar) bar.style.width='0%';
+}
+function updateAddModalProgress(done, total){
+  const bar=document.getElementById('addModalProgressBar');
+  if(bar) bar.style.width=Math.min(100, Math.round(done/total*100))+'%';
+}
 function openAddModal(tabId, recordId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
@@ -1239,10 +1314,18 @@ function openAddModal(tabId, recordId){
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
   document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
   let html='';
+  let groupOpen=false;
   tabDef.fields.forEach((f,idx)=>{
+    if(f.header){
+      if(groupOpen) html+='</div>';
+      html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
+      groupOpen=true;
+      return;
+    }
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
   });
+  if(groupOpen) html+='</div>';
   document.getElementById('addModalFields').innerHTML=html;
   document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elecinsp' || tabId==='repair');
   document.getElementById('addModal').classList.add('modal-open');
@@ -1732,8 +1815,9 @@ function colLetter(n){ let s=''; while(n>0){ const m=(n-1)%26; s=String.fromChar
 
 // 전기시설점검 — 2026-07-24 사용자 결정으로 원본 템플릿(터널 2개씩 묶은 8개 시트)에서
 // 터널당 1시트(13개 시트)로 구조 변경. 묶음 시트는 터널마다 총 행수가 달라 인쇄배율도
-// 시트마다 다르고(원본 템플릿 실측 64~80%), 계산식 배율(excelDynamicScale) 실험은 여백 과다·
-// 2페이지 잘림이 번갈아 재발해 안전관리 앱과 동일한 fitToPage 자동맞춤으로 되돌렸다(2026-07-24 저녁).
+// 시트마다 다르고(원본 템플릿 실측 64~80%), 배율을 자동 계산(fitToWidth/fitToHeight)하면
+// 여백 과다·2페이지 잘림이 번갈아 재발했었다 — 인쇄배율은 이제 고정값이 아니라 실제 콘텐츠
+// 높이 기준으로 시트마다 계산한다(elecInspBlockHeightPt() 참고).
 const ELECINSP_SHEET_GROUPS=TUNNEL_OPTIONS_ELEC.map(t=>({name:tunnelFnameAbbr(t), tunnels:[t]}));
 const ELECINSP_GUBUN_ORDER=['자동제어','조명설비','방재설비','관리동설비','터널진입차단설비'];
 function elecInspTunnelRecs(tunnel, year, month){
@@ -1877,7 +1961,6 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
       cell.border={
-        top: i===0?{style:'hair'}:undefined,
         left: ci===0?{style:'thin'}:undefined,
         right: ci===4?{style:'thin'}:undefined,
         bottom: isLast?{style:'thin'}:undefined
@@ -1897,6 +1980,40 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   }
 
   return noteEndRow+2; // 특이사항 박스 뒤 빈 줄 1행 + 다음 블록 시작행
+}
+// A4 세로 인쇄 가능 높이(포인트) = 용지높이(29.7cm) - 위/아래 여백(EXCEL_PAGE_PRESETS.portrait).
+// 위/아래 여백은 표지·일지간지도 다른 시트와 동일(왼쪽만 다름)이라 이 상수 하나로 전체 공용.
+const EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT = (29.7/2.54 - EXCEL_PAGE_PRESETS.portrait.top - EXCEL_PAGE_PRESETS.portrait.bottom) * 72;
+// "보고서 생성"(고정 서식지) 전체 공용 — 실제로 그릴 콘텐츠 높이(포인트)를 인쇄 가능 높이와
+// 비교해 "1페이지에 꽉 차게" 배율을 구한다(2026-07-24, 사용자 요청 — 보고서 시트는 전부 고정값
+// 대신 자동 계산으로 통일). 100%를 넘지 않게, 약간의 여유를 두고 98%를 상한으로 잡는다.
+// **중요(2026-07-24 버그 수정)**: 세로(높이) 기준으로만 배율을 계산하면 가로(열 너비 합)가
+// 그 배율에서 한 페이지 너비를 넘는 시트가 생긴다 — 넘치는 열이 "2페이지"로 잘려 넘어가 보였는데
+// 실제로는 세로가 아니라 가로 방향으로 페이지가 나뉜 것이었다(오른쪽 열 2~3개가 다음 페이지에
+// 나타남). colWidths를 넘기면 가로 기준 배율도 함께 계산해서 더 작은(더 보수적인) 쪽을 쓴다 —
+// Excel 열너비 1단위 ≈ 7px ≈ 5.25pt(기본 폰트 Calibri 11 기준 근사, MDW=7).
+function excelDynamicScale(contentHeightPt, colWidths, margins){
+  margins = margins || EXCEL_PAGE_PRESETS.portrait;
+  let scale = EXCEL_PORTRAIT_PRINTABLE_HEIGHT_PT/contentHeightPt*100;
+  if(colWidths && colWidths.length){
+    const printableWidthPt = (21/2.54 - margins.left - margins.right) * 72; // A4 가로(21cm) 기준
+    const contentWidthPt = colWidths.reduce((a,b)=>a+b, 0) * 5.25;
+    scale = Math.min(scale, printableWidthPt/contentWidthPt*100);
+  }
+  // 안전 여유 7% — 폰트 렌더링/셀 패딩 등 pt 단위 근사 계산이 완벽히 못 잡아내는 오차를 감안한
+  // 버퍼(2026-07-24, 표지 시트에서 계산값 83%가 실제로는 2페이지로 넘어가고 템플릿 실측 76%만
+  // 안전하게 1페이지에 맞았던 사례로 도입 — 딱 맞아떨어지는 경계값 대신 항상 여유를 둔다).
+  return Math.max(40, Math.min(98, Math.floor(scale*0.93)));
+}
+// 터널 블록 하나(부제+헤더+데이터+특이사항 5행)의 실제 인쇄 높이(포인트) 예측 —
+// drawElecInspTunnelBlock()이 실제로 그리는 행 높이 계산과 동일한 로직이어야 한다.
+function elecInspBlockHeightPt(rows){
+  const cols=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'비고',wrap:true}];
+  let h=30+EXCEL_ROW_HEIGHTS.header; // 부제행+헤더행
+  if(rows.length) rows.forEach(r=>{ h+=excelWrapAwareRowHeight(r, cols, ELECINSP_COL_WIDTHS, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data); });
+  else h+=EXCEL_ROW_HEIGHTS.data;
+  h+=ELECINSP_NOTE_ROWS*EXCEL_ROW_HEIGHTS.data; // 특이사항 박스
+  return h;
 }
 function buildElecInspReportSheet(wb, group, year, month, showTitle){
   const blocks=group.tunnels.map(t=>{
@@ -1950,11 +2067,11 @@ function exportElecInspReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }).catch(e=>{
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   });
 }
 
@@ -2078,11 +2195,11 @@ function exportRepairReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }).catch(e=>{
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   });
 }
 
@@ -2090,7 +2207,7 @@ function exportRepairReport(){
 function buildPhotoTeamReportRows(year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   return (TAB_STATE.photo.records||[])
-    .filter(r=>(r['일자']||'').startsWith(ymStr) && r['번호']!=null)
+    .filter(r=>(r['일자']||'').startsWith(ymStr) && r['번호'])
     .slice()
     .sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
 }
@@ -2204,11 +2321,11 @@ async function exportPhotoTeamReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }catch(e){
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   }
 }
 
@@ -2322,7 +2439,6 @@ async function buildOneTeamUnifiedReport(year, month){
   return {blob, year, month};
 }
 function exportTeamUnifiedReport(){
-  if(!isAuthed()){ openLoginModal(); return; }
   const btn=document.getElementById('unifiedReportBtn');
   const lbl=document.getElementById('unifiedReportLbl');
   const ym=resolveTabYearMonth('elecinsp', '날짜');

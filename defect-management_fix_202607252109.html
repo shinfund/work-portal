@@ -750,7 +750,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div class="modal-backdrop">
     <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
       <div class="modal-title">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--sky)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0366D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         설정
       </div>
       <div class="modal-field">
@@ -897,11 +897,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="dd-menu" id="statusDdMenu"></div>
     </div>
     <input class="search-box" id="searchBox" placeholder="🔍 하자내용, 위치 검색..." oninput="renderList()">
-    <button onclick="openAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+    <button onclick="openAddModal()" style="background:#185FA5;border-color:#185FA5;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
-    <button id="excelExportBtn" onclick="exportToExcel()" style="background:var(--teal600);border-color:var(--teal600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+    <button id="excelExportBtn" onclick="exportToExcel()" style="background:#0F6E56;border-color:#0F6E56;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="excelExportLabel">엑셀 생성</span>
     </button>
@@ -1005,11 +1005,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="dd-menu" id="contactManagerDdMenu"></div>
     </div>
     <input class="search-box" id="contactSearchBox" placeholder="🔍 업체명, 담당자, 관련업무 검색..." oninput="renderContactTable()">
-    <button class="hdr-btn" onclick="openContactAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
+    <button class="hdr-btn" onclick="openContactAddModal()" style="background:#185FA5;border-color:#185FA5;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규추가
     </button>
-    <button id="contactExcelExportBtn" onclick="exportContactExcel()" style="background:var(--teal600);border-color:var(--teal600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+    <button id="contactExcelExportBtn" onclick="exportContactExcel()" style="background:#0F6E56;border-color:#0F6E56;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="contactExcelExportLabel">엑셀 생성</span>
     </button>
@@ -1065,11 +1065,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="dd-menu" id="mgmtContractorDdMenu"></div>
     </div>
     <input class="search-box" id="mgmtSearchBox" placeholder="🔍 공사명, 위치, 계약자 검색..." oninput="renderMgmtTable()">
-    <button class="hdr-btn" onclick="openMgmtAddModal()" style="background:var(--sky600);border-color:var(--sky600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
+    <button class="hdr-btn" onclick="openMgmtAddModal()" style="background:#185FA5;border-color:#185FA5;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
-    <button id="mgmtExcelExportBtn" onclick="exportMgmtExcel()" style="background:var(--teal600);border-color:var(--teal600);color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+    <button id="mgmtExcelExportBtn" onclick="exportMgmtExcel()" style="background:#0F6E56;border-color:#0F6E56;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="mgmtExcelExportLabel">엑셀 생성</span>
     </button>
@@ -1136,7 +1136,7 @@ function getColKeys(){
   return COL_DEFS.map(function(c){return c.key;});
 }
 
-var MAX_PAGES = 20; // 노션 페이지네이션 최대 추가 페이지 수 (최초 1페이지 + 최대 20페이지) × 100건/페이지 = 2,100건
+var MAX_PAGES = 20; // 노션 페이지네이션 최대 페이지 수 (100건/페이지 × 20 = 2,000건)
 var EDIT_PAGE_ID = null; // 수정 모드: 노션 페이지 ID (null이면 등록 모드)
 
 // ── Worker/DB 연동 정보 (고정값 — 더 이상 사용자 입력 아님, 접근 제어는 로그인 토큰으로) ──
@@ -1214,7 +1214,6 @@ document.addEventListener('DOMContentLoaded', init);
 
 function loadDemo(){
   ALL_DATA = DEMO_DATA;
-  _tunnelColorsDirty = true;
   buildStatusFilter();
   buildTunnelFilter();
   buildManagerFilter();
@@ -1270,14 +1269,8 @@ window.addEventListener('storage', function(e){
     CFG.authToken = e.newValue || '';
     CFG.authExpires = parseInt(localStorage.getItem('wp_authExpires')||'0', 10) || 0;
     updateLoginStatusHint();
-    if(isAuthed()){ ALL_DATA=[]; NOTION_PROP_MAP={}; _tunnelColorsDirty=true; loadData(); }
-    else {
-      // 로그아웃: 사용자가 조작한 필터 플래그도 함께 초기화(다음 로그인 시 최신 연/월 기본값으로 복귀)
-      _filterDateUserPicked = false;
-      _filterTunnelUserPicked = false;
-      _filterStatusUserPicked = false;
-      loadDemo();
-    }
+    if(isAuthed()){ ALL_DATA=[]; NOTION_PROP_MAP={}; loadData(); }
+    else { loadDemo(); }
     // 업체연락처 탭도 로그인 상태 변경에 맞춰 다시 불러오도록 리셋(현재 그 탭이면 즉시 재조회)
     CONTACT_LOADED = false;
     if(CURRENT_TAB === 5){ loadContactData(); }
@@ -1464,7 +1457,6 @@ function loadData(){
           }
           return fetchNext(cursor, hasMore).then(function(){
             ALL_DATA = allPages.map(parseNotionPage).filter(function(r){ return r['하자내용']&&r['하자내용'].length>0; });
-            _tunnelColorsDirty = true;
             try{
               var _c=countStatus(ALL_DATA);
               localStorage.setItem('portal_summary_defect', JSON.stringify({unresolved:_c.prog+_c.poor, total:ALL_DATA.length, updatedAt:Date.now()}));
@@ -1476,11 +1468,12 @@ function loadData(){
             buildTabDropdowns();
             updateKPI();
             renderAll();
+            rebuildListHeader();
             setSync(false);
             if(AFTER_DEFECT_RELOAD_CB){ var cb=AFTER_DEFECT_RELOAD_CB; AFTER_DEFECT_RELOAD_CB=null; setTimeout(cb,120); }
             var now=new Date();
             var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
-            if(truncated) upTxt += ' ⚠ 데이터가 '+((MAX_PAGES+1)*100)+'건을 초과하여 일부만 표시됩니다';
+            if(truncated) upTxt += ' ⚠ 데이터가 '+MAX_PAGES*100+'건을 초과하여 일부만 표시됩니다';
             if(lu){
               lu.textContent=upTxt;
               lu.style.color = truncated ? 'var(--hdr-warn-text)' : '';
@@ -1577,27 +1570,12 @@ function buildNotionPropMap(props){
 
 function fmt(n){ return n<10?'0'+n:String(n); }
 
-// 신규등록 공통 패턴: propMap이 아직 비어있으면 DB에서 레코드 1건을 probe해 실제 속성명 매핑을
-// 빌드한 뒤 POST, 이미 매핑이 있으면 바로 POST (하자내역 자동연동/업체연락처/하자관리 3곳 공통,
-// 2026-07-25 중복 제거)
-function probeMapThenPost(dbId, propMap, buildMapFn, doPostFn){
-  if(Object.keys(propMap).length) return doPostFn();
-  return fetch(CFG.workerUrl+'/v1/databases/'+dbId+'/query', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ page_size:1 })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){ if((data.results||[]).length) buildMapFn(data.results[0]); })
-  .then(doPostFn)
-  .catch(function(){ return doPostFn(); });
-}
-
 /* ── COMMON HELPER ── */
 function getUniqueValuesFrom(arr, key){
   arr = arr || ALL_DATA;
   var seen={}, result=[];
   arr.forEach(function(r){ var v=r[key]; if(v&&!seen[v]){seen[v]=1;result.push(v);} });
-  return result.sort(function(a,b){ return a.localeCompare(b,'ko'); });
+  return result.sort();
 }
 function getUniqueValues(key){
   return getUniqueValuesFrom(ALL_DATA, key);
@@ -2046,17 +2024,12 @@ function rebuildListHeader(){
 // 터널명을 알파벳/가나다 순으로 정렬해 팔레트 6색을 순환 배정한다 ──
 var TUNNEL_CLASSES=['tunnel-c0','tunnel-c1','tunnel-c2','tunnel-c3','tunnel-c4','tunnel-c5'];
 var _tunnelColorMap={};
-// ALL_DATA가 갱신되는 시점(loadDemo/loadData/로그아웃 리셋)에만 true로 세팅 — renderList()가
-// 검색·필터 조작 때마다 매번 재계산하는 비효율을 캐싱으로 방지 (2026-07-25)
-var _tunnelColorsDirty = true;
 function ensureTunnelColors(){
-  if(!_tunnelColorsDirty) return;
   var seen={}, names=[];
   ALL_DATA.forEach(function(r){ var t=r['터널명']; if(t && !seen[t]){ seen[t]=1; names.push(t); } });
   names.sort();
   _tunnelColorMap={};
   names.forEach(function(t,i){ _tunnelColorMap[t]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
-  _tunnelColorsDirty = false;
 }
 function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'tunnel-c0'; }
 function managerBadgeClass(m){ return m==='안전관리자'?'mgr-safety':m==='점검팀'?'mgr-check':'mgr-safety'; }
@@ -2911,13 +2884,6 @@ function submitAddForm(confirmed){
     lbl.textContent = isEdit ? '수정' : '등록';
     closeAddModal();
     toast(isEdit ? '수정되었습니다.' : '등록되었습니다.');
-    if(!isEdit && saved && saved.id){
-      var newId = saved.id;
-      AFTER_DEFECT_RELOAD_CB = function(){
-        var r = ALL_DATA.find(function(d){ return d._pageId===newId; });
-        if(r) openDetail(r._idx);
-      };
-    }
     // 업체연락처DB 자동 등록: 신규등록 + 업체명 있음 + contactDbId 설정됨 + 동일 (터널명·관리·업체명·담당자·전화번호) 미존재 (관련업무 제외)
     if(!isEdit && company && CFG.contactDbId){
       // 하자보수DB 터널명은 "남정5" 같은 축약형, 업체연락처DB는 "남정5터널" 같은 전체형 사용 → 저장 전 통일
@@ -2949,7 +2915,16 @@ function submitAddForm(confirmed){
             else res.text().then(function(t){ console.warn('업체연락처 자동등록 실패 HTTP '+res.status, t); });
           }).catch(function(e){ console.error('업체연락처 자동등록 오류', e); });
         };
-        probeMapThenPost(CFG.contactDbId, CONTACT_PROP_MAP, buildContactPropMap, doAutoPost);
+        if(Object.keys(CONTACT_PROP_MAP).length){
+          doAutoPost();
+        } else {
+          fetch(CFG.workerUrl+'/v1/databases/'+CFG.contactDbId+'/query', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ page_size:1 })
+          }).then(function(r){ return r.json(); })
+            .then(function(d){ if((d.results||[]).length) buildContactPropMap(d.results[0]); })
+            .then(doAutoPost).catch(doAutoPost);
+        }
       }
     }
     loadData();
@@ -3381,7 +3356,18 @@ function submitContactForm(confirmed){
         body: JSON.stringify({ parent:{ database_id: CFG.contactDbId }, properties: p2 })
       });
     };
-    probeMapThenPost(CFG.contactDbId, CONTACT_PROP_MAP, buildContactPropMap, doPost)
+    var probeAndPost = function(){
+      if(Object.keys(CONTACT_PROP_MAP).length) return doPost();
+      return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.contactDbId)+'/query', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ page_size:1 })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ if((data.results||[]).length) buildContactPropMap(data.results[0]); })
+      .then(doPost)
+      .catch(function(){ return doPost(); });
+    };
+    probeAndPost()
     .then(function(res){
       if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
       return res.json();
@@ -3587,10 +3573,6 @@ var EXCEL_PAGE_PRESETS = {
   portrait:  { top:excelCm2in(1.5), bottom:excelCm2in(1), left:excelCm2in(1.5), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) }
 };
 
-// ⚠ 구조적 참고(2026-07-25, 코드감사 C7 — 리스크가 커서 리팩터링은 보류, 주석만 추가):
-// photo:true 컬럼(하자사진/조치사진)은 실제 데이터 필드명이 key+'_URL'(예: '하자사진_URL')이며,
-// 이 접미사 결합은 아래가 아니라 buildExcelReport 렌더링 쪽(약 L3842 `r[pc.col.key+'_URL']`)에
-// 암묵적으로 하드코딩되어 있다. key 값을 바꾸면 렌더링도 반드시 같이 맞춰야 한다.
 var EXCEL_COLUMNS = [
   { key:'날짜', header:'날짜', dateCol:true },
   { key:'터널명', header:'터널명' },
@@ -3598,9 +3580,9 @@ var EXCEL_COLUMNS = [
   { key:'공종', header:'공종' },
   { key:'위치', header:'위치' },
   { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
-  { key:'하자사진', header:'하자사진', photo:true, width:18 }, // 데이터 필드는 '하자사진_URL' (key+'_URL' 암묵적 결합)
+  { key:'하자사진', header:'하자사진', photo:true, width:18 },
   { key:'조치일', header:'조치일', dateCol:true },
-  { key:'조치사진', header:'조치사진', photo:true, width:18 }, // 데이터 필드는 '조치사진_URL' (key+'_URL' 암묵적 결합)
+  { key:'조치사진', header:'조치사진', photo:true, width:18 },
   { key:'조치여부', header:'조치여부' },
   { key:'업체명', header:'업체명' },
   { key:'업체담당자', header:'담당자' },
@@ -4414,7 +4396,18 @@ function submitMgmtForm(confirmed){
         body: JSON.stringify({ parent:{ database_id: CFG.mgmtDbId }, properties: buildMProps() })
       });
     };
-    probeMapThenPost(CFG.mgmtDbId, MGMT_PROP_MAP, buildMgmtPropMap, doPost)
+    var probeAndPost = function(){
+      if(Object.keys(MGMT_PROP_MAP).length) return doPost();
+      return fetch(CFG.workerUrl+'/v1/databases/'+(CFG.mgmtDbId)+'/query', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ page_size:1 })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){ if((data.results||[]).length) buildMgmtPropMap(data.results[0]); })
+      .then(doPost)
+      .catch(function(){ return doPost(); });
+    };
+    probeAndPost()
     .then(function(res){
       if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
       return res.json();
