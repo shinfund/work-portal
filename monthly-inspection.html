@@ -3180,6 +3180,9 @@ const REPORT_SHEET_GROUPS=[
   {name:'월간점검표2', gubuns:['비상전원설비','기타','태양광발전설비']},
   {name:'월간점검표3', gubuns:['직무고시']}
 ];
+// 데이터가 적은 구분(직무고시 등)만 있는 시트가 몇 줄만 그려지고 나머지 페이지가 테두리 없이
+// 비어 보이는 것 방지 — TASK_REPORT_MIN_ROWS와 동일 원리(2026-07-25).
+const MONTHLY_REPORT_MIN_ROWS=15;
 function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const ws=wb.addWorksheet(sheetName,{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
@@ -3212,13 +3215,17 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   subCell.alignment={vertical:'middle', horizontal:'left'};
   ws.getRow(3).height=30;
 
-  // 표 영역(헤더 4행 + 데이터 rows.length행) 절대 경계 기준으로 바깥=thin·안쪽=hair를 자동
+  // 표 영역(헤더 4행 + 데이터 totalRows행) 절대 경계 기준으로 바깥=thin·안쪽=hair를 자동
   // 계산(2026-07-22 요청) — buildElecReportSheet()의 gridBorder(range) 방식과 동일 원리:
   // 병합 범위는 "그 병합의 실제 r1~r2" 기준으로 판정해야 안전하다(2026-07-21엔 물리적 행마다
   // EXCEL_CELL_BORDER를 덮어써서 병합 마스터 셀의 최종 테두리가 span과 무관하게 결정돼
   // 일부 구간에서 빠지는 문제가 있었음 — 이번엔 gubunSpans/equipSpans의 실제 병합범위(rn1~rn2)에
   // 맞춰 마스터 셀에 한 번만 지정해서 재발을 피한다).
-  const REPORT_REGION={r1:4, r2:4+rows.length, c1:1, c2:6};
+  // 2026-07-25: 데이터가 적은 구분(예: 직무고시)만 있는 시트는 표가 몇 줄만 그려지고 나머지
+  // 페이지가 테두리 없이 텅 비어 보이는 문제가 있어(사용자 스크린샷으로 확인), 업무처리 시트의
+  // TASK_REPORT_MIN_ROWS와 동일한 방식으로 최소 행수 하한을 둔다(빈 줄도 테두리로 채움).
+  const totalRows=Math.max(rows.length, MONTHLY_REPORT_MIN_ROWS);
+  const REPORT_REGION={r1:4, r2:4+totalRows, c1:1, c2:6};
   function reportGridBorder(r1,r2,c1,c2){
     return {
       top:{style: r1===REPORT_REGION.r1 ? 'thin':'hair'},
@@ -3305,6 +3312,20 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     row.height=EXCEL_ROW_HEIGHTS.data;
     row.commit();
   });
+
+  // 실제 데이터가 MONTHLY_REPORT_MIN_ROWS보다 적으면, 나머지는 값 없이 테두리만 있는 빈 행으로
+  // 채워 표가 페이지 중간에서 갑자기 끊기지 않게 한다(2026-07-25).
+  for(let i=rows.length; i<totalRows; i++){
+    const rn=5+i;
+    const row=ws.getRow(rn);
+    for(let ci=0; ci<6; ci++){
+      const cell=row.getCell(ci+1);
+      cell.font=EXCEL_BODY_FONT;
+      cell.border=reportGridBorder(rn,rn,ci+1,ci+1);
+    }
+    row.height=EXCEL_ROW_HEIGHTS.data;
+    row.commit();
+  }
 }
 function buildOneMonthlyReport(tunnel, year, month){
   const rows=buildMonthlyReportRows(tunnel, year, month);
