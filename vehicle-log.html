@@ -157,6 +157,11 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-add:hover{background:#004A9E}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-delete{background:#8A8F98}
+.tb-action-btn.tb-delete:hover{background:#71767e}
+.tb-action-btn.tb-delete.on{background:#B23A2E}
+.tb-action-btn.tb-delete.on:hover{background:#962f25}
+.tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
 .tb-action-btn.tb-report{background:#534AB7}
 .tb-action-btn.tb-report:hover{background:#443a94}
 
@@ -516,11 +521,16 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
           <span id="reportExportLabel">보고서 생성</span>
         </button>
+        <button class="tb-action-btn tb-delete" id="delToggleBtn" onclick="toggleDeleteMode()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr>
+          <thead><tr id="detailThead">
             <th style="white-space:nowrap;width:1%">날짜</th>
             <th style="white-space:nowrap;width:1%">차량번호</th>
             <th class="col-cartype" style="white-space:nowrap;width:1%">차량구분</th>
@@ -1667,7 +1677,10 @@ function buildCompareCard(cells){
 // ── 공통: 상세 행 HTML 빌더 ─────────────────────────
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
 function buildDetailRow(r){
-  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
+  const checkCell = DELETE_MODE
+    ? `<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" ${DELETE_SELECTED.has(r.id)?'checked':''} onchange="toggleRowSelect('${r.id}',this.checked)"/></td>`
+    : '';
+  return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">${checkCell}
     <td style="white-space:nowrap">${fmtDate(r.date)}</td>
     <td style="white-space:nowrap"><span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carNo||'—')}</span></td>
     <td class="col-cartype" style="white-space:nowrap">${r.carType?`<span class="type-badge ${carSlug(r.carNo||'기타')}">${esc(r.carType)}</span>`:'-'}</td>
@@ -1680,6 +1693,107 @@ function buildDetailRow(r){
     <td class="r" style="white-space:nowrap">${fmtKm(r.cumDist)}</td>
     <td class="col-note" style="font-size:13px;white-space:nowrap">${esc(r.note||'')}</td>
   </tr>`;
+}
+// ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) ──
+let DELETE_MODE=false;
+let DELETE_SELECTED=new Set();
+function runWithConcurrency(tasks, limit){
+  return new Promise((resolve, reject)=>{
+    const results=new Array(tasks.length);
+    let idx=0, active=0, doneCount=0, failed=false;
+    function pump(){
+      if(failed) return;
+      while(active<limit && idx<tasks.length){
+        const cur=idx++;
+        active++;
+        tasks[cur]().then(v=>{
+          results[cur]=v; active--; doneCount++;
+          if(doneCount===tasks.length) resolve(results); else pump();
+        }).catch(e=>{ failed=true; reject(e); });
+      }
+    }
+    if(!tasks.length) resolve(results); else pump();
+  });
+}
+function toggleDeleteMode(){
+  DELETE_MODE=!DELETE_MODE;
+  DELETE_SELECTED=new Set();
+  updateDeleteToolbarUI();
+  updateDeleteHeaderCheckbox();
+  renderDetail();
+}
+function updateDeleteToolbarUI(){
+  const toggleBtn=document.getElementById('delToggleBtn');
+  const toggleLbl=document.getElementById('delToggleLbl');
+  const confirmBtn=document.getElementById('delConfirmBtn');
+  if(toggleBtn) toggleBtn.classList.toggle('on', DELETE_MODE);
+  if(toggleLbl) toggleLbl.textContent=DELETE_MODE?'삭제 편집 취소':'삭제 편집';
+  if(confirmBtn) confirmBtn.style.display=DELETE_MODE?'':'none';
+  updateDeleteConfirmLabel();
+}
+function updateDeleteConfirmLabel(){
+  const confirmBtn=document.getElementById('delConfirmBtn');
+  if(!confirmBtn) return;
+  const n=DELETE_SELECTED.size;
+  confirmBtn.textContent=n>0?`선택 삭제 (${n})`:'선택 삭제';
+  confirmBtn.disabled=n===0;
+}
+function updateDeleteHeaderCheckbox(){
+  const thead=document.getElementById('detailThead');
+  if(!thead) return;
+  let th=thead.querySelector('.del-col-th');
+  if(DELETE_MODE){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th';
+      th.style.width='36px';
+      th.innerHTML='<input type="checkbox" id="delAll" onchange="toggleSelectAllRows(this.checked)"/>';
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){
+    th.remove();
+  }
+}
+function syncSelectAllCheckbox(recs){
+  const all=document.getElementById('delAll');
+  if(!all) return;
+  all.checked=recs.length>0 && recs.every(r=>DELETE_SELECTED.has(r.id));
+  all.indeterminate=!all.checked && recs.some(r=>DELETE_SELECTED.has(r.id));
+}
+function toggleSelectAllRows(checked){
+  const recs=getDetailFilteredRecords();
+  recs.forEach(r=>{ if(checked) DELETE_SELECTED.add(r.id); else DELETE_SELECTED.delete(r.id); });
+  renderDetail();
+  updateDeleteConfirmLabel();
+}
+function toggleRowSelect(id, checked){
+  if(checked) DELETE_SELECTED.add(id); else DELETE_SELECTED.delete(id);
+  updateDeleteConfirmLabel();
+  syncSelectAllCheckbox(getDetailFilteredRecords());
+}
+async function deleteSelectedRows(){
+  if(!DELETE_SELECTED.size) return;
+  if(!confirm(DELETE_SELECTED.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  const ids=[...DELETE_SELECTED];
+  const confirmBtn=document.getElementById('delConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  let done=0;
+  const tasks=ids.map(id=>()=>fetch(CFG.workerUrl+'/v1/pages/'+id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ done++; if(confirmBtn) confirmBtn.textContent=`삭제 중... (${done}/${ids.length})`; }));
+  try{
+    await runWithConcurrency(tasks, 6);
+    ids.forEach(id=>{ const idx=ALL_RECORDS.findIndex(r=>r.id===id); if(idx>=0) ALL_RECORDS.splice(idx,1); });
+    toast(ids.length+'건 삭제되었습니다.');
+    DELETE_MODE=false; DELETE_SELECTED=new Set();
+    updateDeleteToolbarUI(); updateDeleteHeaderCheckbox();
+    renderAll();
+  }catch(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateDeleteConfirmLabel();
+    console.error(e);
+  }
 }
 function buildCarDetailRow(r){
   return `<tr onclick="openDetailModal('${r.id}')" style="cursor:pointer">
@@ -1965,9 +2079,11 @@ function renderDetail(){
   const filtered=getDetailFilteredRecords();
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
+  const colCount=11+(DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML=filtered.length
     ?filtered.map(r=>buildDetailRow(r)).join('')
-    :`<tr><td colspan="11">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+    :`<tr><td colspan="${colCount}">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+  if(DELETE_MODE) syncSelectAllCheckbox(filtered);
 }
 
 function emptyState(desc, icon='📋'){
