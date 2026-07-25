@@ -384,7 +384,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_elecinsp" onclick="exportElecInspReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_elecinsp">개별 보고서 생성</span>
+        <span id="reportLbl_elecinsp">보고서 생성</span>
       </button>
       <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportTeamUnifiedReport()" title="표지+전기시설점검표+고장수리실적+점검사진대지+간지를 한 파일로 묶어 생성">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
@@ -417,7 +417,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_repair" onclick="exportRepairReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_repair">개별 보고서 생성</span>
+        <span id="reportLbl_repair">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count" id="count-repair"></div>
@@ -446,7 +446,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
       <button class="tb-action-btn tb-report" id="reportBtn_photo" onclick="exportPhotoTeamReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_photo">개별 보고서 생성</span>
+        <span id="reportLbl_photo">보고서 생성</span>
       </button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px">※ 번호는 해당 월 사진대지 전체에서 이어지는 일련번호입니다(터널별로 다시 시작하지 않음).</div>
@@ -1950,11 +1950,11 @@ function exportElecInspReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }).catch(e=>{
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   });
 }
 
@@ -2078,11 +2078,11 @@ function exportRepairReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }).catch(e=>{
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   });
 }
 
@@ -2204,11 +2204,11 @@ async function exportPhotoTeamReport(){
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url), 4000);
     lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='개별 보고서 생성'; btn.disabled=false; }, 1500);
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
   }catch(e){
-    alert('개별 보고서 생성 실패: '+e.message);
+    alert('보고서 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent='개별 보고서 생성'; btn.disabled=false;
+    lbl.textContent='보고서 생성'; btn.disabled=false;
   }
 }
 
