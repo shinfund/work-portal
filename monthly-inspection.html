@@ -129,7 +129,9 @@ tr:hover td{background:var(--sky50)}
 
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.detail-count-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:2px 0 8px}
+.detail-count{font-size:13px;color:var(--txt2);font-weight:600}
+.count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -143,8 +145,8 @@ tr:hover td{background:var(--sky50)}
    더 짙은 amber800을 쓴다(2026-07-25, C1). amber800은 다크모드에서도 값이 바뀌지 않아 안전하다. */
 .tb-action-btn.tb-unified{background:var(--amber800)}
 .tb-action-btn.tb-unified:hover{background:#94400a}
-.tb-action-btn.tb-delete{background:#8A8F98}
-.tb-action-btn.tb-delete:hover{background:#71767e}
+.tb-action-btn.tb-delete{background:#495057}
+.tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
 .tb-action-btn.tb-delete.on:hover{background:#962f25}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
@@ -419,13 +421,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_monthly" onclick="toggleDeleteMode('monthly')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_monthly">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_monthly" onclick="deleteSelectedRows('monthly')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-monthly"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-monthly"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_monthly" onclick="toggleDeleteMode('monthly')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_monthly">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_monthly" onclick="deleteSelectedRows('monthly')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-monthly">
@@ -458,14 +464,18 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_elec">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_elec" onclick="toggleDeleteMode('elec')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_elec">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elec" onclick="deleteSelectedRows('elec')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="elecViewHint">※ 위 [기본정보|ACB 상세|설비현황] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
-    <div class="detail-count" id="count-elec"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-elec"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_elec" onclick="toggleDeleteMode('elec')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_elec">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elec" onclick="deleteSelectedRows('elec')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-elec">
@@ -493,13 +503,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_transformer">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_transformer" onclick="toggleDeleteMode('transformer')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_transformer">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_transformer" onclick="deleteSelectedRows('transformer')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-transformer"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-transformer"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_transformer" onclick="toggleDeleteMode('transformer')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_transformer">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_transformer" onclick="deleteSelectedRows('transformer')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-transformer">
@@ -532,14 +546,18 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_generator">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_generator" onclick="toggleDeleteMode('generator')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_generator">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_generator" onclick="deleteSelectedRows('generator')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px" id="generatorViewHint">※ 위 [기본정보|유류현황|점검체크리스트] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
-    <div class="detail-count" id="count-generator"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-generator"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_generator" onclick="toggleDeleteMode('generator')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_generator">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_generator" onclick="deleteSelectedRows('generator')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-generator">
@@ -568,13 +586,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_photo">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_photo">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-photo"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-photo"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_photo">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-photo">
@@ -602,13 +624,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_power">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_power" onclick="toggleDeleteMode('power')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_power">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_power" onclick="deleteSelectedRows('power')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-power"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-power"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_power" onclick="toggleDeleteMode('power')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_power">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_power" onclick="deleteSelectedRows('power')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-power">
@@ -636,13 +662,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         <span id="reportLbl_task">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_task" onclick="toggleDeleteMode('task')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_task">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_task" onclick="deleteSelectedRows('task')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-task"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-task"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_task" onclick="toggleDeleteMode('task')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_task">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_task" onclick="deleteSelectedRows('task')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-task">

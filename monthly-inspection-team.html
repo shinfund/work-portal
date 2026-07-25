@@ -128,7 +128,9 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
+.detail-count-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:2px 0 8px}
+.detail-count{font-size:13px;color:var(--txt2);font-weight:600}
+.count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -140,8 +142,8 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .tb-action-btn.tb-report:hover{background:#443a94}
 .tb-action-btn.tb-unified{background:#B45309}
 .tb-action-btn.tb-unified:hover{background:#94400a}
-.tb-action-btn.tb-delete{background:#8A8F98}
-.tb-action-btn.tb-delete:hover{background:#71767e}
+.tb-action-btn.tb-delete{background:#495057}
+.tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
 .tb-action-btn.tb-delete.on:hover{background:#962f25}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
@@ -395,13 +397,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
         <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_elecinsp" onclick="toggleDeleteMode('elecinsp')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_elecinsp">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elecinsp" onclick="deleteSelectedRows('elecinsp')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-elecinsp"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-elecinsp"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_elecinsp" onclick="toggleDeleteMode('elecinsp')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_elecinsp">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elecinsp" onclick="deleteSelectedRows('elecinsp')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-elecinsp">
@@ -429,13 +435,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_repair">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_repair" onclick="toggleDeleteMode('repair')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_repair">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
     </div>
-    <div class="detail-count" id="count-repair"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-repair"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_repair" onclick="toggleDeleteMode('repair')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_repair">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-repair">
@@ -463,14 +473,18 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_photo">보고서 생성</span>
       </button>
-      <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl_photo">삭제 편집</span>
-      </button>
-      <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
     </div>
     <div class="modal-hint" style="margin-bottom:8px">※ 번호는 해당 월 사진대지 전체에서 이어지는 일련번호입니다(터널별로 다시 시작하지 않음).</div>
-    <div class="detail-count" id="count-photo"></div>
+    <div class="detail-count-row">
+      <div class="detail-count" id="count-photo"></div>
+      <div class="count-actions">
+        <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl_photo">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
+      </div>
+    </div>
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-photo">

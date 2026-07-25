@@ -905,13 +905,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="excelExportLabel">엑셀 생성</span>
     </button>
-    <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-      <span id="delToggleLbl">삭제 편집</span>
-    </button>
-    <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
-  <div class="filter-count" id="filterCount"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div class="filter-count" id="filterCount"></div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="delToggleLbl">삭제 편집</span>
+      </button>
+      <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+    </div>
+  </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
       <table>
@@ -1018,13 +1022,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="contactExcelExportLabel">엑셀 생성</span>
     </button>
-    <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-      <span id="cDelToggleLbl">삭제 편집</span>
-    </button>
-    <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
-  <div class="filter-count" id="contactCount"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div class="filter-count" id="contactCount"></div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="cDelToggleLbl">삭제 편집</span>
+      </button>
+      <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+    </div>
+  </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
       <table>
@@ -1083,13 +1091,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="mgmtExcelExportLabel">엑셀 생성</span>
     </button>
-    <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-      <span id="mDelToggleLbl">삭제 편집</span>
-    </button>
-    <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
-  <div class="filter-count" id="mgmtCount"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <div class="filter-count" id="mgmtCount"></div>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        <span id="mDelToggleLbl">삭제 편집</span>
+      </button>
+      <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+    </div>
+  </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
       <table>
@@ -2760,7 +2772,7 @@ function updateDeleteToolbarUI(){
   var toggleBtn=document.getElementById('delToggleBtn');
   var toggleLbl=document.getElementById('delToggleLbl');
   var confirmBtn=document.getElementById('delConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleBtn) toggleBtn.style.background = DELETE_MODE ? '#B23A2E' : '#495057';
   if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
   if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
   updateDeleteConfirmLabel();
@@ -3635,7 +3647,7 @@ function toggleContactDeleteMode(){
   var toggleBtn=document.getElementById('cDelToggleBtn');
   var toggleLbl=document.getElementById('cDelToggleLbl');
   var confirmBtn=document.getElementById('cDelConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = CONTACT_DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleBtn) toggleBtn.style.background = CONTACT_DELETE_MODE ? '#B23A2E' : '#495057';
   if(toggleLbl) toggleLbl.textContent = CONTACT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
   if(confirmBtn) confirmBtn.style.display = CONTACT_DELETE_MODE ? '' : 'none';
   updateContactDeleteConfirmLabel();
@@ -4388,7 +4400,7 @@ function toggleMgmtDeleteMode(){
   var toggleBtn=document.getElementById('mDelToggleBtn');
   var toggleLbl=document.getElementById('mDelToggleLbl');
   var confirmBtn=document.getElementById('mDelConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = MGMT_DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleBtn) toggleBtn.style.background = MGMT_DELETE_MODE ? '#B23A2E' : '#495057';
   if(toggleLbl) toggleLbl.textContent = MGMT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
   if(confirmBtn) confirmBtn.style.display = MGMT_DELETE_MODE ? '' : 'none';
   updateMgmtDeleteConfirmLabel();
