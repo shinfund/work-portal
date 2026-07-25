@@ -9,17 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --sky:#0366D6; --sky50:#E9F1FE; --sky100:#C7DCF6; --sky600:#005CC5; --sky800:#032F62;
+  --sky:#378ADD; --sky50:#E6F1FB; --sky100:#B5D4F4; --sky600:#185FA5; --sky800:#0C447C;
   --teal:#1D9E75; --teal50:#E1F5EE; --teal100:#9FE1CB; --teal600:#0F6E56;
   --coral:#D85A30; --coral50:#FAECE7; --coral100:#F5C4B3; --coral800:#712B13;
   --amber:#BA7517; --amber50:#FAEEDA; --amber100:#FAC775; --amber800:#633806;
   --green:#639922; --green50:#EAF3DE; --green100:#C0DD97; --green800:#27500A;
   --purple:#534AB7; --purple50:#EEEDFE; --purple100:#CECBF6;
   --gray50:#F1EFE8; --gray100:#D3D1C7; --gray200:#B4B2A9; --gray600:#5F5E5A;
-  --bg:#FFFFFF; --card:#FFFFFF; --border:#E1E4E8; --border2:#F6F8FA;
-  --txt:#24292E; --txt2:#3A4453; --txt3:#6A737D;
+  --bg:#F5F8FF; --card:#FFFFFF; --border:#7B9DC0; --border2:#A3C0DE;
+  --txt:#1A2535; --txt2:#3D4F68; --txt3:#33475C;
   --r6:6px; --r8:8px; --r10:10px; --r12:12px; --r14:14px; --r16:16px; --r20:20px;
-  --shadow:none;
+  --shadow:0 2px 12px rgba(55,138,221,.08);
   --hdr-bg:#0C447C;
   --hdr-text:#fff;
   --hdr-text-dim:rgba(255,255,255,.85);
@@ -33,31 +33,30 @@
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
-  --hdr-text:#032F62;
+  --hdr-text:#0C447C;
   --hdr-text-dim:#355E82;
   --hdr-btn-bg:#E6F1FB;
   --hdr-btn-border:#B7CEE8;
   --hdr-btn-hover-bg:#D3E7FA;
-  --hdr-btn-text:#005CC5;
+  --hdr-btn-text:#185FA5;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
   --hdr-warn-text:#B8860B;
   --hdr-error-text:#B3261E;
 }
 html[data-theme="dark"]{
-  --bg:#24292E;
-  --card:#1C2024;
+  --bg:#191919;
+  --card:#242424;
   --border:rgba(255,255,255,.13);
   --border2:rgba(255,255,255,.09);
   --txt:rgba(255,255,255,.92);
   --txt2:rgba(255,255,255,.75);
   --txt3:rgba(255,255,255,.5);
-  --shadow:none;
-  --hdr-bg:#24292E;
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
   --hdr-error-text:rgba(255,150,130,.9);
-  --sky:#2E8FFF;
   /* 색상군 50/100 틴트 → 다크 카드 위 반투명 오버레이로 전환 */
-  --sky50:rgba(46,143,255,.16); --sky100:rgba(46,143,255,.32);
+  --sky50:rgba(55,138,221,.16); --sky100:rgba(55,138,221,.32);
   --teal50:rgba(29,158,117,.16); --teal100:rgba(29,158,117,.32);
   --coral50:rgba(216,90,48,.16); --coral100:rgba(216,90,48,.32);
   --amber50:rgba(186,117,23,.16); --amber100:rgba(186,117,23,.32);
@@ -66,7 +65,7 @@ html[data-theme="dark"]{
   --gray50:rgba(255,255,255,.06); --gray100:rgba(255,255,255,.12);
   --gray200:rgba(255,255,255,.2); --gray600:rgba(255,255,255,.55);
   /* 틴트 배경 위 텍스트로 쓰이는 진한 계열은 다크에서 밝게 반전 (가독성 확보) */
-  --sky600:#79B8FF; --sky800:#C8E1FF;
+  --sky600:#6FB4F0; --sky800:#8FCBFF;
   --teal600:#4FD1A5;
   --coral800:#F0916A;
   --amber800:#E8A93D;
@@ -159,7 +158,7 @@ tbody tr:last-child td{border-bottom:none}
 .tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
 .tunnel-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
 .tunnel-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
-html[data-theme="dark"] .tunnel-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
+html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
 html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
 html[data-theme="dark"] .tunnel-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
 html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
@@ -215,10 +214,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
 .theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
 .theme-swatch-light{background:#F8FAFC;}
-.theme-swatch-dark{background:#24292E;}
+.theme-swatch-dark{background:#191919;}
 .ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
 .theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
-.theme-swatch-dark .ts-side{background:#1C2024;border-right:1px solid rgba(255,255,255,.08);}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
 .theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
 
 /* ── DETAIL MODAL ── */
@@ -750,7 +749,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <div class="modal-backdrop">
     <div class="modal-box" style="max-width:480px" onclick="event.stopPropagation()">
       <div class="modal-title">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0366D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         설정
       </div>
       <div class="modal-field">

@@ -10,18 +10,18 @@
 <style>
 :root{
   /* 하자보수현황 앱과 수치 동일(2026-07-05 확정 — work-portal 공통 색상 팔레트 기준) */
-  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
+  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
   --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
   --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
-  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
-  --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
+  --bg:#F5F8FF;--card:#FFFFFF;--border:#7B9DC0;--border2:#A3C0DE;
+  --txt:#1A2535;--txt2:#3D4F68;--txt3:#33475C;
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
-  --shadow:none;
-  --hdr-bg:#032F62;
+  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --hdr-bg:#0C447C;
   --hdr-text:#fff;
   --hdr-text-dim:rgba(255,255,255,.85);
   --hdr-btn-bg:rgba(255,255,255,.15);
@@ -33,27 +33,26 @@
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
-  --hdr-text:#032F62;
+  --hdr-text:#0C447C;
   --hdr-text-dim:#355E82;
   --hdr-btn-bg:#E6F1FB;
   --hdr-btn-border:#B7CEE8;
   --hdr-btn-hover-bg:#D3E7FA;
-  --hdr-btn-text:#005CC5;
+  --hdr-btn-text:#185FA5;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
   --hdr-error-text:#B3261E;
 }
 html[data-theme="dark"]{
-  --bg:#24292E;--card:#1C2024;
+  --bg:#191919;--card:#242424;
   --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
   --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
-  --shadow:none;
-  --hdr-bg:#24292E;
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  --hdr-bg:#191919;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
   --hdr-error-text:rgba(255,150,130,.9);
   /* sky */
-  --sky:#2E8FFF;
-  --sky50:rgba(46,143,255,.16);--sky100:rgba(46,143,255,.32);
-  --sky600:#79B8FF;--sky800:#C8E1FF;
+  --sky50:rgba(55,138,221,.16);--sky100:rgba(55,138,221,.32);
+  --sky600:#6FB4F0;--sky800:#8FCBFF;
   /* teal */
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
@@ -66,7 +65,7 @@ html[data-theme="dark"]{
   /* purple */
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
-html[data-theme="dark"] .tunnel-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
+html[data-theme="dark"] .tunnel-c0{background:rgba(55,138,221,.22);color:#8FC7F5;border-color:rgba(55,138,221,.4)}
 html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
 html[data-theme="dark"] .tunnel-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
 html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
@@ -112,8 +111,8 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
-html[data-theme="dark"] .dd-btn.active{background:#032F62;border-color:#032F62}
-html[data-theme="dark"] .dd-opt.sel{background:#032F62}
+html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
+html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 
 /* ── 터널별 가로 바 차트 ── */
@@ -241,7 +240,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .theme-swatch-dark{background:#191919;}
 .ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
 .theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
-.theme-swatch-dark .ts-side{background:#24292E;border-right:1px solid rgba(255,255,255,.08);}
+.theme-swatch-dark .ts-side{background:#191919;border-right:1px solid rgba(255,255,255,.08);}
 .theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
 
 @media(max-width:480px){
@@ -1384,7 +1383,7 @@ function calcTunnelMap(recs){
 }
 
 // ── 터널 색상 팔레트 (전체 데이터 기준 알파벳순 고정 배정) ──
-const TUNNEL_COLORS=['#0366D6','#1D9E75','#D85A30','#BA7517','#534AB7','#0F6E56'];
+const TUNNEL_COLORS=['#378ADD','#1D9E75','#D85A30','#BA7517','#534AB7','#0F6E56'];
 let _tunnelColorMap={};
 function ensureTunnelColors(){
   const all=[...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort();
