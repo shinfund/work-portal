@@ -627,6 +627,16 @@ const TEAM_CHECKLIST_BY_GUBUN={
   '터널진입차단설비':['현장제어반 및 차단막 프레임 등 외관','전원공급 및 차단기 투입상태','전원 및 제어케이블 외관 및 단자 결선','관리동, 상황실, 현장제어반 동작상태','차단막 원단 파손 및 음향, 경광등 상태']
 };
 function teamChecklistOptions(gubun){ return TEAM_CHECKLIST_BY_GUBUN[gubun] || []; }
+// 점검내용별 점검방법 고정값(실데이터 2,470건 전수 검증 — 항목당 방법 100% 일치, 2026-07-25) —
+// 신규등록 시 구분 선택만으로 점검내용 다중선택 체크리스트에 점검방법을 자동으로 채워준다.
+const TEAM_METHOD_BY_ITEM={
+  '자동제어':{'RTU':'목시','DLP':'목시','MMI':'목시'},
+  '조명설비':{'조명제어기(리산테크)':'조작','거리유도표시등':'스캔','소화기표시등':'스캔','시선유도등':'스캔','실내 조명등 및 공동구 조명':'조작'},
+  '방재설비':{'자탐설비 외관상태 점검':'스캔','자탐설비 시스템 안정성 확인':'스캔','중계기 발신기 경종 표시등 외관 점검':'스캔','비상콘센트 전원투입 상태':'스캔','옥외 수배전반 소화기 외관 상태':'스캔'},
+  '관리동설비':{'화재수신기':'조작'},
+  '터널진입차단설비':{'현장제어반 및 차단막 프레임 등 외관':'조작','전원공급 및 차단기 투입상태':'조작','전원 및 제어케이블 외관 및 단자 결선':'조작','관리동, 상황실, 현장제어반 동작상태':'조작','차단막 원단 파손 및 음향, 경광등 상태':'조작'}
+};
+function teamMethodFor(gubun, item){ return (TEAM_METHOD_BY_ITEM[gubun]||{})[item] || ''; }
 // 전기시설점검 탭 — 구분(5종) 뱃지 색상 매핑(gubun-c0~c4 클래스는 CSS에 이미 정의됨)
 function gubunSlug(v){
   const map={'자동제어':'gubun-c1','조명설비':'gubun-c4','방재설비':'gubun-c0','관리동설비':'gubun-c5','터널진입차단설비':'gubun-c2'};
@@ -1218,6 +1228,80 @@ function refreshAllCascadeSelects(tabId){
   if(!tabDef) return;
   tabDef.fields.forEach((f,idx)=>{ if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx); });
 }
+// 전기시설점검 신규등록 — "구분" 값이 바뀔 때마다 그 구분의 표준 점검항목 전체를 기본 체크된
+// 상태로 다시 그린다(체크 해제로 이번엔 해당 없는 항목만 뺄 수 있음).
+// 신규등록 전용 "구분" 다중선택 — 한 터널·날짜에 여러 구분이 함께 점검되는 실사용 패턴 반영(2026-07-25)
+function elecinspGubunOptions(){
+  return getTabDef('elecinsp').fields.find(f=>f.key==='구분')?.options || [];
+}
+function buildElecinspGubunHtml(){
+  const opts=elecinspGubunOptions();
+  const boxes=opts.map((g,gi)=>`<label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600">
+      <input type="checkbox" id="eig_chk_${gi}" onchange="refreshElecinspChecklist()"/> ${esc(g)}
+    </label>`).join('');
+  return `<div class="modal-field">
+    <label class="modal-label">구분 <span class="modal-required">*</span></label>
+    <div class="modal-hint" style="margin-top:0">오늘 점검한 구분을 모두 선택하세요. 구분마다 표준 점검항목 체크리스트가 아래에 나타납니다.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">${boxes}</div>
+  </div>`;
+}
+function elecinspCheckedGubuns(){
+  const opts=elecinspGubunOptions();
+  const checked=[];
+  opts.forEach((g,gi)=>{ if(document.getElementById('eig_chk_'+gi)?.checked) checked.push({gubun:g, gi}); });
+  return checked;
+}
+// 구분 하나의 표준 점검항목 체크리스트 — id를 구분 인덱스(gi)로 네임스페이스해서 여러 구분이
+// 동시에 펼쳐져도 항목 인덱스가 겹치지 않게 한다.
+function buildElecinspChecklistHtml(gubun, gi){
+  const items=teamChecklistOptions(gubun);
+  if(!items.length) return '';
+  let rows='';
+  items.forEach((item,i)=>{
+    rows+=`<tr>
+      <td style="text-align:center"><input type="checkbox" id="eic_chk_${gi}_${i}" checked/></td>
+      <td>${esc(item)}</td>
+      <td>${esc(teamMethodFor(gubun,item))}</td>
+      <td><select class="modal-select" id="eic_result_${gi}_${i}">
+        <option value="양호" selected>양호</option>
+        <option value="불량">불량</option>
+        <option value="점검요">점검요</option>
+        <option value="-">-</option>
+      </select></td>
+    </tr>`;
+  });
+  return `<div class="modal-field">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <label class="modal-label" style="margin:0">${esc(gubun)} 점검내용</label>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="modal-cancel" style="padding:3px 10px;font-size:11.5px;min-height:auto" onclick="toggleElecinspGroupAll(${gi},true)">전체선택</button>
+        <button type="button" class="modal-cancel" style="padding:3px 10px;font-size:11.5px;min-height:auto" onclick="toggleElecinspGroupAll(${gi},false)">전체해제</button>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table><thead><tr><th style="width:34px"></th><th>점검내용</th><th style="width:90px">점검방법</th><th style="width:110px">점검결과</th></tr></thead><tbody>${rows}</tbody></table></div>
+  </div>`;
+}
+function refreshElecinspChecklist(){
+  const wrap=document.getElementById('elecinspChecklistWrap');
+  if(!wrap) return;
+  const checked=elecinspCheckedGubuns();
+  if(!checked.length){
+    wrap.innerHTML='<div class="modal-field"><label class="modal-label">점검내용 <span class="modal-required">*</span></label><div class="modal-hint">먼저 구분을 하나 이상 선택하세요.</div></div>';
+    return;
+  }
+  wrap.innerHTML='<div class="modal-hint" style="margin:0 0 8px">구분마다 표준 점검항목이 전부 체크된 상태로 표시됩니다 — 이번에 해당 없는 항목은 체크를 해제하세요. 체크된 항목마다 한 행씩 등록됩니다.</div>'
+    + checked.map(({gubun,gi})=>buildElecinspChecklistHtml(gubun,gi)).join('');
+}
+// 점검방법·점검결과는 고정값이라 수정할 일이 거의 없지만, 그날 실제로 점검 안 한 항목이 있을 때
+// 하나씩 해제하는 대신 구분 섹션 단위로 한 번에 체크/해제할 수 있게 한다.
+function toggleElecinspGroupAll(gi, checked){
+  const found=elecinspCheckedGubuns().find(x=>x.gi===gi);
+  if(!found) return;
+  teamChecklistOptions(found.gubun).forEach((item,i)=>{
+    const chk=document.getElementById('eic_chk_'+gi+'_'+i);
+    if(chk) chk.checked=checked;
+  });
+}
 function getFieldValue(f, idx){
   const id='ff_'+idx;
   if(f.type==='file'){
@@ -1236,6 +1320,15 @@ function hideAddModalProgress(){
   const wrap=document.getElementById('addModalProgressWrap');
   if(wrap) wrap.style.display='none';
 }
+function showAddModalProgress(){
+  const wrap=document.getElementById('addModalProgressWrap'), bar=document.getElementById('addModalProgressBar');
+  if(wrap) wrap.style.display='';
+  if(bar) bar.style.width='0%';
+}
+function updateAddModalProgress(done, total){
+  const bar=document.getElementById('addModalProgressBar');
+  if(bar) bar.style.width=Math.min(100, Math.round(done/total*100))+'%';
+}
 function openAddModal(tabId, recordId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
@@ -1245,8 +1338,17 @@ function openAddModal(tabId, recordId){
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
   document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
+  // 전기시설점검 신규등록(수정 아님)은 한 날짜·터널에 여러 구분·여러 항목을 한 번에 점검하는
+  // 경우가 대부분이라, 구분/점검내용/점검방법/점검결과 4개 필드를 개별 입력받는 대신 구분을
+  // 다중선택하게 하고 선택된 구분마다 표준 점검항목 전체를 기본 체크된 체크리스트로 보여준 뒤,
+  // 체크된 항목마다 한 행씩 등록한다(2026-07-25, 반복입력 부담 축소).
+  const isElecinspChecklist = tabId==='elecinsp' && !r;
   let html='';
   tabDef.fields.forEach((f,idx)=>{
+    if(isElecinspChecklist && (f.key==='구분' || f.key==='점검내용' || f.key==='점검방법' || f.key==='점검결과')){
+      if(f.key==='구분') html+='<div id="elecinspGubunWrap"></div><div id="elecinspChecklistWrap"></div>';
+      return;
+    }
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
   });
@@ -1263,6 +1365,10 @@ function openAddModal(tabId, recordId){
   tabDef.fields.forEach((f,idx)=>{
     if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
   });
+  if(isElecinspChecklist){
+    document.getElementById('elecinspGubunWrap').innerHTML=buildElecinspGubunHtml();
+    refreshElecinspChecklist();
+  }
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
@@ -1330,6 +1436,7 @@ function removePhotoFile(idx, fieldId){
   renderPhotoFileList(fieldId);
 }
 function submitAddForm(){
+  if(EDIT_TAB==='elecinsp' && !EDIT_PAGE_ID){ submitElecinspChecklist(); return; }
   const tabDef=getTabDef(EDIT_TAB);
   if(!tabDef) return;
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
@@ -1390,6 +1497,75 @@ function submitAddForm(){
       alert((isEdit?'수정':'등록')+' 실패: '+e.message);
       console.error(e);
     });
+}
+// 전기시설점검 신규등록(체크리스트 방식) — 터널명·날짜·제목·구분·비고·특이사항은 공유값으로 한 번만
+// 입력받고, 체크된 점검내용 항목마다 점검방법(고정값)+점검결과를 담아 한 행씩 Notion에 생성한다.
+async function submitElecinspChecklist(){
+  const tabDef=getTabDef('elecinsp');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const shared={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.key==='구분' || f.key==='점검내용' || f.key==='점검방법' || f.key==='점검결과') return;
+    const v=getFieldValue(f, idx);
+    shared[f.key]=v;
+    if(f.required && !v && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const checkedGubuns=elecinspCheckedGubuns();
+  if(!checkedGubuns.length){ alert('구분을 하나 이상 선택해주세요.'); return; }
+
+  const selected=[];
+  checkedGubuns.forEach(({gubun,gi})=>{
+    teamChecklistOptions(gubun).forEach((item,i)=>{
+      const chk=document.getElementById('eic_chk_'+gi+'_'+i);
+      if(chk && chk.checked){
+        selected.push({ gubun, item, method:teamMethodFor(gubun,item), result:document.getElementById('eic_result_'+gi+'_'+i)?.value||'양호' });
+      }
+    });
+  });
+  if(!selected.length){ alert('점검내용을 하나 이상 선택해주세요.'); return; }
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  showAddModalProgress();
+  const total=selected.length;
+  let done=0;
+  const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
+
+  const tasks=selected.map(sel=>()=>{
+    const properties={
+      '터널명':buildPropValue('select', shared['터널명']),
+      '날짜':buildPropValue('date', shared['날짜']),
+      '제목':buildPropValue('title', shared['제목']),
+      '구분':buildPropValue('select', sel.gubun),
+      '점검내용':buildPropValue('text', sel.item),
+      '점검방법':buildPropValue('select', sel.method),
+      '점검결과':buildPropValue('select', sel.result)
+    };
+    if(shared['비고']) properties['비고']=buildPropValue('text', shared['비고']);
+    if(shared['특이사항']) properties['특이사항']=buildPropValue('text', shared['특이사항']);
+    return notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties}).then(page=>{ progress(); return page; });
+  });
+
+  try{
+    const pages=await runWithConcurrency(tasks, 6);
+    const arr=TAB_STATE['elecinsp'].records;
+    pages.forEach(page=>{ arr.push(parseRecord(tabDef, page)); });
+    applyLatestFilterDefault('elecinsp');
+    renderTabTable('elecinsp');
+    updateLastUpdate();
+    btn.disabled=false; lbl.textContent='등록';
+    closeAddModal();
+    toast(selected.length+'건 등록되었습니다.');
+  }catch(e){
+    btn.disabled=false; lbl.textContent='등록';
+    alert('등록 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
+    console.error(e);
+  }
 }
 function deleteRecord(tabId, pageId){
   if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
