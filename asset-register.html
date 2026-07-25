@@ -138,6 +138,11 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-delete{background:#8A8F98}
+.tb-action-btn.tb-delete:hover{background:#71767e}
+.tb-action-btn.tb-delete.on{background:#B23A2E}
+.tb-action-btn.tb-delete.on:hover{background:#962f25}
+.tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
@@ -473,11 +478,16 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelExportLabel">엑셀 생성</span>
         </button>
+        <button class="tb-action-btn tb-delete" id="delToggleBtn" onclick="toggleDeleteMode()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          <span id="delToggleLbl">삭제 편집</span>
+        </button>
+        <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr>
+          <thead><tr id="theadDetail">
             <th style="white-space:nowrap">터널명</th>
             <th style="white-space:nowrap">품목분류</th>
             <th style="white-space:nowrap">품명</th>
@@ -1244,12 +1254,17 @@ function renderList(){
     return ad<bd?1:ad>bd?-1:0;
   });
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
+  var colCount = 11 + (DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML = rows.length
     ? rows.map(buildDetailRow).join('')
-    : '<tr><td colspan="11">'+emptyState('조건에 맞는 비품이 없습니다.','🔍')+'</td></tr>';
+    : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 비품이 없습니다.','🔍')+'</td></tr>';
+  if(DELETE_MODE) syncSelectAllCheckbox(rows);
 }
 function buildDetailRow(r){
-  return '<tr onclick="openDetailModal(\''+r.id+'\')" style="cursor:pointer">'
+  var checkCell = DELETE_MODE
+    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
+    : '';
+  return '<tr onclick="openDetailModal(\''+r.id+'\')" style="cursor:pointer">' + checkCell
     + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
     + '<td style="white-space:nowrap">'+(r['구분']?('<span class="type-badge '+categoryBadgeClass(r['구분'])+'">'+esc(r['구분'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'
     + '<td>'+esc(r['품명']||'-')+'</td>'
@@ -1262,6 +1277,96 @@ function buildDetailRow(r){
     + '<td style="white-space:nowrap">'+(r['구매상태']?('<span class="type-badge '+statusBadgeClass(r['구매상태'])+'">'+esc(r['구매상태'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
     + '</tr>';
+}
+/* ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) ── */
+var DELETE_MODE = false;
+var DELETE_SELECTED = new Set();
+function getVisibleDetailRows(){
+  return filtered().slice().sort(function(a,b){
+    var at=a['터널명']||'', bt=b['터널명']||'';
+    if(at!==bt) return at<bt?1:-1;
+    var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
+    return ad<bd?1:ad>bd?-1:0;
+  });
+}
+function toggleDeleteMode(){
+  DELETE_MODE = !DELETE_MODE;
+  DELETE_SELECTED = new Set();
+  updateDeleteToolbarUI();
+  updateDeleteHeaderCheckbox();
+  renderList();
+}
+function updateDeleteToolbarUI(){
+  var toggleBtn=document.getElementById('delToggleBtn');
+  var toggleLbl=document.getElementById('delToggleLbl');
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(toggleBtn) toggleBtn.classList.toggle('on', DELETE_MODE);
+  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
+  updateDeleteConfirmLabel();
+}
+function updateDeleteConfirmLabel(){
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(!confirmBtn) return;
+  var n=DELETE_SELECTED.size;
+  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+  confirmBtn.disabled = n===0;
+}
+function updateDeleteHeaderCheckbox(){
+  var thead=document.getElementById('theadDetail');
+  if(!thead) return;
+  var th=thead.querySelector('.del-col-th');
+  if(DELETE_MODE){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th';
+      th.style.width='36px';
+      th.innerHTML='<input type="checkbox" id="delAll" onchange="toggleSelectAllRows(this.checked)"/>';
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){
+    th.remove();
+  }
+}
+function syncSelectAllCheckbox(rows){
+  var all=document.getElementById('delAll');
+  if(!all) return;
+  all.checked = rows.length>0 && rows.every(function(r){ return DELETE_SELECTED.has(r.id); });
+  all.indeterminate = !all.checked && rows.some(function(r){ return DELETE_SELECTED.has(r.id); });
+}
+function toggleSelectAllRows(checked){
+  var rows=getVisibleDetailRows();
+  rows.forEach(function(r){ if(checked) DELETE_SELECTED.add(r.id); else DELETE_SELECTED.delete(r.id); });
+  renderList();
+  updateDeleteConfirmLabel();
+}
+function toggleRowSelect(id, checked){
+  if(checked) DELETE_SELECTED.add(id); else DELETE_SELECTED.delete(id);
+  updateDeleteConfirmLabel();
+  syncSelectAllCheckbox(getVisibleDetailRows());
+}
+function deleteSelectedRows(){
+  if(!DELETE_SELECTED.size) return;
+  if(!confirm(DELETE_SELECTED.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  var ids=Array.from(DELETE_SELECTED);
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  var done=0;
+  excelBatchPromises(ids, function(id){
+    return fetch(CFG.workerUrl+'/v1/pages/'+id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+ids.length+')'; });
+  }, 6).then(function(){
+    toast(ids.length+'건 삭제되었습니다.');
+    DELETE_MODE=false; DELETE_SELECTED=new Set();
+    updateDeleteToolbarUI(); updateDeleteHeaderCheckbox();
+    loadData();
+  }).catch(function(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateDeleteConfirmLabel();
+    console.error(e);
+  });
 }
 function emptyState(desc, icon){
   icon = icon||'📋';

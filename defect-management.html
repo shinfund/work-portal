@@ -905,6 +905,11 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="excelExportLabel">엑셀 생성</span>
     </button>
+    <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      <span id="delToggleLbl">삭제 편집</span>
+    </button>
+    <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
   <div class="filter-count" id="filterCount"></div>
   <div class="tbl-wrap">
@@ -1013,12 +1018,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="contactExcelExportLabel">엑셀 생성</span>
     </button>
+    <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      <span id="cDelToggleLbl">삭제 편집</span>
+    </button>
+    <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
   <div class="filter-count" id="contactCount"></div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
       <table>
-        <thead><tr>
+        <thead><tr id="contactThead">
           <th style="width:84px;white-space:nowrap">관리</th>
           <th style="width:90px;white-space:nowrap">터널명</th>
           <th style="width:110px;white-space:nowrap">업체명</th>
@@ -1073,12 +1083,17 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="mgmtExcelExportLabel">엑셀 생성</span>
     </button>
+    <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#8A8F98;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      <span id="mDelToggleLbl">삭제 편집</span>
+    </button>
+    <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
   </div>
   <div class="filter-count" id="mgmtCount"></div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
       <table>
-        <thead><tr>
+        <thead><tr id="mgmtThead">
           <th style="width:84px;white-space:nowrap">구분</th>
           <th style="width:70px;white-space:nowrap">번호/공구</th>
           <th style="min-width:220px">공사명</th>
@@ -2036,7 +2051,8 @@ function rebuildListHeader(){
   var visKeys = getColKeys();
   var thead = document.getElementById('listHead');
   if(!thead) return;
-  thead.innerHTML = visKeys.map(function(key){
+  var checkTh = DELETE_MODE ? '<th class="del-col-th" style="width:36px"><input type="checkbox" id="delAll" onchange="toggleSelectAllRows(this.checked)"/></th>' : '';
+  thead.innerHTML = checkTh + visKeys.map(function(key){
     var def=getColDef(key); if(!def) return '';
     return '<th class="'+def.width+'">'+esc(def.label)+'</th>';
   }).join('');
@@ -2075,8 +2091,9 @@ function renderList(){
 
   var visKeys = getColKeys();
   var tbody = document.getElementById('listBody');
+  var colCount = visKeys.length + (DELETE_MODE?1:0);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="'+visKeys.length+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
     if(CURRENT_TAB===1) updateKpiForList();
     return;
   }
@@ -2097,9 +2114,13 @@ function renderList(){
       if(key==='비고') return '<td class="'+cls+'"><span class="remark-content">'+esc(val||'-')+'</span></td>';
       return '<td class="'+cls+' td-nowrap">'+esc(val||'-')+'</td>';
     }).join('');
-    return '<tr onclick="openDetail('+r._idx+')">'+cells+'</tr>';
+    var checkCell = DELETE_MODE
+      ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(DELETE_SELECTED.has(r._idx)?'checked':'')+' onchange="toggleRowSelect('+r._idx+',this.checked)"/></td>'
+      : '';
+    return '<tr onclick="openDetail('+r._idx+')">'+checkCell+cells+'</tr>';
   }).join('');
   if(CURRENT_TAB===1) updateKpiForList();
+  if(DELETE_MODE) syncSelectAllCheckbox(rows);
 }
 
 function shortDate(d){
@@ -2721,6 +2742,76 @@ function deleteItem(idx){
       return;
     }
     alert('삭제 실패: '+e.message);
+    console.error(e);
+  });
+}
+
+/* ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) — 하자내역 탭 ── */
+var DELETE_MODE = false;
+var DELETE_SELECTED = new Set();
+function toggleDeleteMode(){
+  DELETE_MODE = !DELETE_MODE;
+  DELETE_SELECTED = new Set();
+  updateDeleteToolbarUI();
+  rebuildListHeader();
+  renderList();
+}
+function updateDeleteToolbarUI(){
+  var toggleBtn=document.getElementById('delToggleBtn');
+  var toggleLbl=document.getElementById('delToggleLbl');
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(toggleBtn) toggleBtn.style.background = DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
+  updateDeleteConfirmLabel();
+}
+function updateDeleteConfirmLabel(){
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(!confirmBtn) return;
+  var n=DELETE_SELECTED.size;
+  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+  confirmBtn.disabled = n===0;
+  confirmBtn.style.opacity = n===0 ? '.45' : '1';
+  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
+}
+function syncSelectAllCheckbox(rows){
+  var all=document.getElementById('delAll');
+  if(!all) return;
+  all.checked = rows.length>0 && rows.every(function(r){ return DELETE_SELECTED.has(r._idx); });
+  all.indeterminate = !all.checked && rows.some(function(r){ return DELETE_SELECTED.has(r._idx); });
+}
+function toggleSelectAllRows(checked){
+  var rows=filtered();
+  rows.forEach(function(r){ if(checked) DELETE_SELECTED.add(r._idx); else DELETE_SELECTED.delete(r._idx); });
+  renderList();
+  updateDeleteConfirmLabel();
+}
+function toggleRowSelect(idx, checked){
+  if(checked) DELETE_SELECTED.add(idx); else DELETE_SELECTED.delete(idx);
+  updateDeleteConfirmLabel();
+  syncSelectAllCheckbox(filtered());
+}
+function deleteSelectedRows(){
+  if(!DELETE_SELECTED.size) return;
+  if(!confirm(DELETE_SELECTED.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  var idxs=Array.from(DELETE_SELECTED);
+  var pageIds=idxs.map(function(idx){ var r=ALL_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  var done=0;
+  excelBatchPromises(pageIds, function(pageId){
+    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
+  }, 6).then(function(){
+    toast(pageIds.length+'건 삭제되었습니다.');
+    DELETE_MODE=false; DELETE_SELECTED=new Set();
+    updateDeleteToolbarUI();
+    loadData();
+  }).catch(function(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateDeleteConfirmLabel();
     console.error(e);
   });
 }
@@ -3505,8 +3596,9 @@ function renderContactTable(){
   ]);
   var tbody = document.getElementById('contactBody');
   if(!tbody) return;
+  var colCount = 7 + (CONTACT_DELETE_MODE?1:0);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(function(r){
@@ -3519,7 +3611,10 @@ function renderContactTable(){
     var telHtml = tel!=='-'
       ? '<a href="tel:'+esc(tel)+'" style="color:var(--txt);text-decoration:none">'+esc(tel)+'</a>'
       : '-';
-    return '<tr onclick="openContactDetail('+r._idx+')" style="cursor:pointer">'
+    var checkCell = CONTACT_DELETE_MODE
+      ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(CONTACT_DELETE_SELECTED.has(r._idx)?'checked':'')+' onchange="toggleContactRowSelect('+r._idx+',this.checked)"/></td>'
+      : '';
+    return '<tr onclick="openContactDetail('+r._idx+')" style="cursor:pointer">'+checkCell
       +'<td class="td-nowrap">'+gBadge+'</td>'
       +'<td class="td-nowrap">'+esc(r.터널명||'-')+'</td>'
       +'<td class="td-nowrap">'+esc(r.업체명||'-')+'</td>'
@@ -3529,6 +3624,82 @@ function renderContactTable(){
       +'<td class="td-nowrap">'+esc(r.비고||'-')+'</td>'
       +'</tr>';
   }).join('');
+  if(CONTACT_DELETE_MODE) syncContactSelectAllCheckbox(rows);
+}
+/* ── 업체연락처 행 삭제 편집 ── */
+var CONTACT_DELETE_MODE = false;
+var CONTACT_DELETE_SELECTED = new Set();
+function toggleContactDeleteMode(){
+  CONTACT_DELETE_MODE = !CONTACT_DELETE_MODE;
+  CONTACT_DELETE_SELECTED = new Set();
+  var toggleBtn=document.getElementById('cDelToggleBtn');
+  var toggleLbl=document.getElementById('cDelToggleLbl');
+  var confirmBtn=document.getElementById('cDelConfirmBtn');
+  if(toggleBtn) toggleBtn.style.background = CONTACT_DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleLbl) toggleLbl.textContent = CONTACT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(confirmBtn) confirmBtn.style.display = CONTACT_DELETE_MODE ? '' : 'none';
+  updateContactDeleteConfirmLabel();
+  var thead=document.getElementById('contactThead');
+  var th=thead&&thead.querySelector('.del-col-th');
+  if(CONTACT_DELETE_MODE){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th'; th.style.width='36px';
+      th.innerHTML='<input type="checkbox" id="cDelAll" onchange="toggleContactSelectAllRows(this.checked)"/>';
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){ th.remove(); }
+  renderContactTable();
+}
+function updateContactDeleteConfirmLabel(){
+  var confirmBtn=document.getElementById('cDelConfirmBtn');
+  if(!confirmBtn) return;
+  var n=CONTACT_DELETE_SELECTED.size;
+  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+  confirmBtn.disabled = n===0;
+  confirmBtn.style.opacity = n===0 ? '.45' : '1';
+  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
+}
+function syncContactSelectAllCheckbox(rows){
+  var all=document.getElementById('cDelAll');
+  if(!all) return;
+  all.checked = rows.length>0 && rows.every(function(r){ return CONTACT_DELETE_SELECTED.has(r._idx); });
+  all.indeterminate = !all.checked && rows.some(function(r){ return CONTACT_DELETE_SELECTED.has(r._idx); });
+}
+function toggleContactSelectAllRows(checked){
+  var rows=filteredContacts();
+  rows.forEach(function(r){ if(checked) CONTACT_DELETE_SELECTED.add(r._idx); else CONTACT_DELETE_SELECTED.delete(r._idx); });
+  renderContactTable();
+  updateContactDeleteConfirmLabel();
+}
+function toggleContactRowSelect(idx, checked){
+  if(checked) CONTACT_DELETE_SELECTED.add(idx); else CONTACT_DELETE_SELECTED.delete(idx);
+  updateContactDeleteConfirmLabel();
+  syncContactSelectAllCheckbox(filteredContacts());
+}
+function deleteSelectedContactRows(){
+  if(!CONTACT_DELETE_SELECTED.size) return;
+  if(!confirm(CONTACT_DELETE_SELECTED.size+'건을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  var idxs=Array.from(CONTACT_DELETE_SELECTED);
+  var pageIds=idxs.map(function(idx){ var r=CONTACT_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
+  var confirmBtn=document.getElementById('cDelConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  var done=0;
+  excelBatchPromises(pageIds, function(pageId){
+    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
+  }, 6).then(function(){
+    toast(pageIds.length+'건 삭제되었습니다.');
+    CONTACT_LOADED=false;
+    toggleContactDeleteMode();
+    loadContactData();
+  }).catch(function(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateContactDeleteConfirmLabel();
+    console.error(e);
+  });
 }
 
 /* ── 엑셀 생성 (하자내역 탭) ──
@@ -4175,8 +4346,9 @@ function renderMgmtTable(){
   ]);
   var tbody = document.getElementById('mgmtBody');
   if(!tbody) return;
+  var colCount = 12 + (MGMT_DELETE_MODE?1:0);
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
     return;
   }
   tbody.innerHTML = rows.map(function(r){
@@ -4187,7 +4359,10 @@ function renderMgmtTable(){
       : r['구분']==='지급자재'
       ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
       : esc(r['구분']);
-    return '<tr onclick="openMgmtDetail('+r._idx+')" style="cursor:pointer">'
+    var checkCell = MGMT_DELETE_MODE
+      ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(MGMT_DELETE_SELECTED.has(r._idx)?'checked':'')+' onchange="toggleMgmtRowSelect('+r._idx+',this.checked)"/></td>'
+      : '';
+    return '<tr onclick="openMgmtDetail('+r._idx+')" style="cursor:pointer">'+checkCell
       +'<td class="td-nowrap">'+cBadge+'</td>'
       +'<td class="td-nowrap">'+esc(r['번호/공구']||'-')+'</td>'
       +'<td style="font-size:13px;line-height:1.5">'+esc(r['공사명']||'-')+'</td>'
@@ -4202,6 +4377,82 @@ function renderMgmtTable(){
       +'<td class="td-nowrap">'+esc(r['계약자']||'-')+'</td>'
       +'</tr>';
   }).join('');
+  if(MGMT_DELETE_MODE) syncMgmtSelectAllCheckbox(rows);
+}
+/* ── 하자관리(보증) 행 삭제 편집 ── */
+var MGMT_DELETE_MODE = false;
+var MGMT_DELETE_SELECTED = new Set();
+function toggleMgmtDeleteMode(){
+  MGMT_DELETE_MODE = !MGMT_DELETE_MODE;
+  MGMT_DELETE_SELECTED = new Set();
+  var toggleBtn=document.getElementById('mDelToggleBtn');
+  var toggleLbl=document.getElementById('mDelToggleLbl');
+  var confirmBtn=document.getElementById('mDelConfirmBtn');
+  if(toggleBtn) toggleBtn.style.background = MGMT_DELETE_MODE ? '#B23A2E' : '#8A8F98';
+  if(toggleLbl) toggleLbl.textContent = MGMT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(confirmBtn) confirmBtn.style.display = MGMT_DELETE_MODE ? '' : 'none';
+  updateMgmtDeleteConfirmLabel();
+  var thead=document.getElementById('mgmtThead');
+  var th=thead&&thead.querySelector('.del-col-th');
+  if(MGMT_DELETE_MODE){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th'; th.style.width='36px';
+      th.innerHTML='<input type="checkbox" id="mDelAll" onchange="toggleMgmtSelectAllRows(this.checked)"/>';
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){ th.remove(); }
+  renderMgmtTable();
+}
+function updateMgmtDeleteConfirmLabel(){
+  var confirmBtn=document.getElementById('mDelConfirmBtn');
+  if(!confirmBtn) return;
+  var n=MGMT_DELETE_SELECTED.size;
+  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+  confirmBtn.disabled = n===0;
+  confirmBtn.style.opacity = n===0 ? '.45' : '1';
+  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
+}
+function syncMgmtSelectAllCheckbox(rows){
+  var all=document.getElementById('mDelAll');
+  if(!all) return;
+  all.checked = rows.length>0 && rows.every(function(r){ return MGMT_DELETE_SELECTED.has(r._idx); });
+  all.indeterminate = !all.checked && rows.some(function(r){ return MGMT_DELETE_SELECTED.has(r._idx); });
+}
+function toggleMgmtSelectAllRows(checked){
+  var rows=filteredMgmt();
+  rows.forEach(function(r){ if(checked) MGMT_DELETE_SELECTED.add(r._idx); else MGMT_DELETE_SELECTED.delete(r._idx); });
+  renderMgmtTable();
+  updateMgmtDeleteConfirmLabel();
+}
+function toggleMgmtRowSelect(idx, checked){
+  if(checked) MGMT_DELETE_SELECTED.add(idx); else MGMT_DELETE_SELECTED.delete(idx);
+  updateMgmtDeleteConfirmLabel();
+  syncMgmtSelectAllCheckbox(filteredMgmt());
+}
+function deleteSelectedMgmtRows(){
+  if(!MGMT_DELETE_SELECTED.size) return;
+  if(!confirm(MGMT_DELETE_SELECTED.size+'건을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  var idxs=Array.from(MGMT_DELETE_SELECTED);
+  var pageIds=idxs.map(function(idx){ var r=MGMT_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
+  var confirmBtn=document.getElementById('mDelConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  var done=0;
+  excelBatchPromises(pageIds, function(pageId){
+    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
+  }, 6).then(function(){
+    toast(pageIds.length+'건 삭제되었습니다.');
+    MGMT_LOADED=false;
+    toggleMgmtDeleteMode();
+    loadMgmtData();
+  }).catch(function(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateMgmtDeleteConfirmLabel();
+    console.error(e);
+  });
 }
 
 /* ── 하자관리 상세 (detailModal 재사용) ── */
