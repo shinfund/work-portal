@@ -124,13 +124,14 @@ tr:hover td{background:var(--sky50)}
 
 /* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 (연/월 등 dd-btn과 동일 색상 체계) ── */
 .view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.detail-count-row .view-toggle{margin-bottom:0}
 .view-toggle-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
 .view-toggle-btn.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
 
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
-.detail-count{font-size:13px;color:var(--txt2);font-weight:600}
+.detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -423,7 +424,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
     </div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-monthly"></div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_monthly" onclick="toggleDeleteMode('monthly')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -431,6 +431,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_monthly" onclick="deleteSelectedRows('monthly')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-monthly"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -444,11 +445,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 전기설비기록 -->
   <div class="panel" id="panel-elec">
-    <div class="view-toggle" id="elecViewToggle">
-      <button class="view-toggle-btn active" data-view="base" onclick="setElecView('base')">기본정보</button>
-      <button class="view-toggle-btn" data-view="acb" onclick="setElecView('acb')">ACB 상세(9개)</button>
-      <button class="view-toggle-btn" data-view="chk" onclick="setElecView('chk')">설비현황(32개)</button>
-    </div>
     <div class="filter-row">
       <div id="filterDd-elec" style="display:contents"></div>
       <input class="search-box" id="search-elec" placeholder="🔍 제목·수전전압 검색..." aria-label="검색" oninput="renderTabTable('elec')"/>
@@ -465,9 +461,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="reportLbl_elec">보고서 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px" id="elecViewHint">※ 위 [기본정보|ACB 상세|설비현황] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-elec"></div>
+      <div class="view-toggle" id="elecViewToggle">
+        <button class="view-toggle-btn active" data-view="base" onclick="setElecView('base')">기본정보</button>
+        <button class="view-toggle-btn" data-view="acb" onclick="setElecView('acb')">ACB 상세(9개)</button>
+        <button class="view-toggle-btn" data-view="chk" onclick="setElecView('chk')">설비현황(32개)</button>
+      </div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_elec" onclick="toggleDeleteMode('elec')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -475,6 +474,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elec" onclick="deleteSelectedRows('elec')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-elec"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -505,7 +505,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
     </div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-transformer"></div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_transformer" onclick="toggleDeleteMode('transformer')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -513,6 +512,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_transformer" onclick="deleteSelectedRows('transformer')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-transformer"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -526,11 +526,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 발전기점검 -->
   <div class="panel" id="panel-generator">
-    <div class="view-toggle" id="generatorViewToggle">
-      <button class="view-toggle-btn active" data-view="base" onclick="setGeneratorView('base')">기본정보</button>
-      <button class="view-toggle-btn" data-view="fuel" onclick="setGeneratorView('fuel')">유류현황(1건)</button>
-      <button class="view-toggle-btn" data-view="chk" onclick="setGeneratorView('chk')">점검체크리스트(20개)</button>
-    </div>
     <div class="filter-row">
       <div id="filterDd-generator" style="display:contents"></div>
       <input class="search-box" id="search-generator" placeholder="🔍 제목·점검자 검색..." aria-label="검색" oninput="renderTabTable('generator')"/>
@@ -547,9 +542,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="reportLbl_generator">보고서 생성</span>
       </button>
     </div>
-    <div class="modal-hint" style="margin-bottom:8px" id="generatorViewHint">※ 위 [기본정보|유류현황|점검체크리스트] 버튼으로 하위 데이터를 바로 조회할 수 있습니다. 행 클릭 시 상세창에서 전체 확인·수정도 가능하며, 엑셀에는 항상 전체 데이터가 포함됩니다.</div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-generator"></div>
+      <div class="view-toggle" id="generatorViewToggle">
+        <button class="view-toggle-btn active" data-view="base" onclick="setGeneratorView('base')">기본정보</button>
+        <button class="view-toggle-btn" data-view="fuel" onclick="setGeneratorView('fuel')">유류현황(1건)</button>
+        <button class="view-toggle-btn" data-view="chk" onclick="setGeneratorView('chk')">점검체크리스트(20개)</button>
+      </div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_generator" onclick="toggleDeleteMode('generator')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -557,6 +555,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_generator" onclick="deleteSelectedRows('generator')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-generator"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -588,7 +587,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
     </div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-photo"></div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -596,6 +594,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-photo"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -626,7 +625,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
     </div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-power"></div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_power" onclick="toggleDeleteMode('power')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -634,6 +632,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_power" onclick="deleteSelectedRows('power')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-power"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -664,7 +663,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </button>
     </div>
     <div class="detail-count-row">
-      <div class="detail-count" id="count-task"></div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_task" onclick="toggleDeleteMode('task')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -672,6 +670,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_task" onclick="deleteSelectedRows('task')" style="display:none" disabled>선택 삭제</button>
       </div>
+      <div class="detail-count" id="count-task"></div>
     </div>
     <div class="tbl-wrap">
       <table>

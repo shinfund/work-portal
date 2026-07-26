@@ -130,7 +130,7 @@ tr:hover td{background:var(--sky50)}
 /* ── FILTER ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
-.detail-count{font-size:13px;color:var(--txt2);font-weight:600}
+.detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -482,7 +482,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         </button>
       </div>
       <div class="detail-count-row">
-        <div class="detail-count" id="detailCount"></div>
         <div class="count-actions">
           <button class="tb-action-btn tb-delete" id="delToggleBtn" onclick="toggleDeleteMode()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -490,6 +489,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           </button>
           <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
         </div>
+        <div class="detail-count" id="detailCount"></div>
       </div>
       <div class="tbl-wrap">
         <table>
