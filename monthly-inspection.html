@@ -1571,7 +1571,7 @@ function updateLastUpdate(){
   if(!lu) return;
   const now=new Date();
   const p2=n=>String(n).padStart(2,'0');
-  lu.textContent='마지막 업데이트: '+p2(now.getMonth()+1)+'.'+p2(now.getDate())+'. '+(now.getHours()<12?'오전':'오후')+' '+p2(now.getHours()%12||12)+':'+p2(now.getMinutes());
+  lu.textContent='Update '+p2(now.getMonth()+1)+'.'+p2(now.getDate())+' '+p2(now.getHours())+':'+p2(now.getMinutes());
 }
 
 // ── 목록 렌더 ──

@@ -1507,7 +1507,7 @@ function loadData(){
             setSync(false);
             if(AFTER_DEFECT_RELOAD_CB){ var cb=AFTER_DEFECT_RELOAD_CB; AFTER_DEFECT_RELOAD_CB=null; setTimeout(cb,120); }
             var now=new Date();
-            var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
+            var upTxt='Update '+fmt(now.getMonth()+1)+'.'+fmt(now.getDate())+' '+fmt(now.getHours())+':'+fmt(now.getMinutes());
             if(truncated) upTxt += ' ⚠ 데이터가 '+((MAX_PAGES+1)*100)+'건을 초과하여 일부만 표시됩니다';
             if(lu){
               lu.textContent=upTxt;

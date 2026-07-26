@@ -1197,7 +1197,7 @@ function loadData(){
           }catch(e){}
           renderAll();
           var now=new Date();
-          var upTxt='마지막 업데이트: '+fmt(now.getMonth()+1)+'. '+fmt(now.getDate())+'. '+fmt(now.getHours())+':'+fmt(now.getMinutes());
+          var upTxt='Update '+fmt(now.getMonth()+1)+'.'+fmt(now.getDate())+' '+fmt(now.getHours())+':'+fmt(now.getMinutes());
           if(lu){ lu.textContent=upTxt; lu.style.color=''; }
         } else {
           if(!ALL_DATA.length){ ALL_DATA=DEMO_DATA.slice(); ensureTunnelColors(); ensureCategoryColors(); renderAll(); }
