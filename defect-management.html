@@ -911,7 +911,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="delToggleLbl">삭제 편집</span>
+        <span id="delToggleLbl">삭제</span>
       </button>
       <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
     </div>
@@ -1028,7 +1028,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="cDelToggleLbl">삭제 편집</span>
+        <span id="cDelToggleLbl">삭제</span>
       </button>
       <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
     </div>
@@ -1097,7 +1097,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div style="display:flex;gap:8px;flex-shrink:0">
       <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-        <span id="mDelToggleLbl">삭제 편집</span>
+        <span id="mDelToggleLbl">삭제</span>
       </button>
       <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
     </div>
@@ -2758,7 +2758,7 @@ function deleteItem(idx){
   });
 }
 
-/* ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) — 하자내역 탭 ── */
+/* ── 행 삭제(체크박스로 전체/개별 선택 후 일괄 삭제) — 하자내역 탭 ── */
 var DELETE_MODE = false;
 var DELETE_SELECTED = new Set();
 function toggleDeleteMode(){
@@ -2773,7 +2773,7 @@ function updateDeleteToolbarUI(){
   var toggleLbl=document.getElementById('delToggleLbl');
   var confirmBtn=document.getElementById('delConfirmBtn');
   if(toggleBtn) toggleBtn.style.background = DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 취소' : '삭제';
   if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
   updateDeleteConfirmLabel();
 }
@@ -3638,7 +3638,7 @@ function renderContactTable(){
   }).join('');
   if(CONTACT_DELETE_MODE) syncContactSelectAllCheckbox(rows);
 }
-/* ── 업체연락처 행 삭제 편집 ── */
+/* ── 업체연락처 행 삭제 ── */
 var CONTACT_DELETE_MODE = false;
 var CONTACT_DELETE_SELECTED = new Set();
 function toggleContactDeleteMode(){
@@ -3648,7 +3648,7 @@ function toggleContactDeleteMode(){
   var toggleLbl=document.getElementById('cDelToggleLbl');
   var confirmBtn=document.getElementById('cDelConfirmBtn');
   if(toggleBtn) toggleBtn.style.background = CONTACT_DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = CONTACT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(toggleLbl) toggleLbl.textContent = CONTACT_DELETE_MODE ? '삭제 취소' : '삭제';
   if(confirmBtn) confirmBtn.style.display = CONTACT_DELETE_MODE ? '' : 'none';
   updateContactDeleteConfirmLabel();
   var thead=document.getElementById('contactThead');
@@ -4391,7 +4391,7 @@ function renderMgmtTable(){
   }).join('');
   if(MGMT_DELETE_MODE) syncMgmtSelectAllCheckbox(rows);
 }
-/* ── 하자관리(보증) 행 삭제 편집 ── */
+/* ── 하자관리(보증) 행 삭제 ── */
 var MGMT_DELETE_MODE = false;
 var MGMT_DELETE_SELECTED = new Set();
 function toggleMgmtDeleteMode(){
@@ -4401,7 +4401,7 @@ function toggleMgmtDeleteMode(){
   var toggleLbl=document.getElementById('mDelToggleLbl');
   var confirmBtn=document.getElementById('mDelConfirmBtn');
   if(toggleBtn) toggleBtn.style.background = MGMT_DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = MGMT_DELETE_MODE ? '삭제 편집 취소' : '삭제 편집';
+  if(toggleLbl) toggleLbl.textContent = MGMT_DELETE_MODE ? '삭제 취소' : '삭제';
   if(confirmBtn) confirmBtn.style.display = MGMT_DELETE_MODE ? '' : 'none';
   updateMgmtDeleteConfirmLabel();
   var thead=document.getElementById('mgmtThead');

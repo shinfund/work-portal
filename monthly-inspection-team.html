@@ -402,7 +402,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_elecinsp" onclick="toggleDeleteMode('elecinsp')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          <span id="delToggleLbl_elecinsp">삭제 편집</span>
+          <span id="delToggleLbl_elecinsp">삭제</span>
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elecinsp" onclick="deleteSelectedRows('elecinsp')" style="display:none" disabled>선택 삭제</button>
       </div>
@@ -440,7 +440,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_repair" onclick="toggleDeleteMode('repair')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          <span id="delToggleLbl_repair">삭제 편집</span>
+          <span id="delToggleLbl_repair">삭제</span>
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
       </div>
@@ -479,7 +479,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_photo" onclick="toggleDeleteMode('photo')">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-          <span id="delToggleLbl_photo">삭제 편집</span>
+          <span id="delToggleLbl_photo">삭제</span>
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
       </div>
@@ -1065,7 +1065,7 @@ function buildRow(tabDef, r){
     : '';
   return `<tr onclick="openDetailModal('${tabDef.id}','${r.id}')" style="cursor:pointer">${checkCell}${cells}</tr>`;
 }
-// ── 행 삭제 편집(체크박스로 전체/개별 선택 후 일괄 삭제) — 전기시설점검·고장수리·점검사진 3개 탭 공용 ──
+// ── 행 삭제(체크박스로 전체/개별 선택 후 일괄 삭제) — 전기시설점검·고장수리·점검사진 3개 탭 공용 ──
 const DELETE_MODE={};
 const DELETE_SELECTED={};
 function toggleDeleteMode(tabId){
@@ -1081,7 +1081,7 @@ function updateDeleteToolbarUI(tabId){
   const confirmBtn=document.getElementById('delConfirmBtn_'+tabId);
   const on=!!DELETE_MODE[tabId];
   if(toggleBtn) toggleBtn.classList.toggle('on', on);
-  if(toggleLbl) toggleLbl.textContent=on?'삭제 편집 취소':'삭제 편집';
+  if(toggleLbl) toggleLbl.textContent=on?'삭제 취소':'삭제';
   if(confirmBtn) confirmBtn.style.display=on?'':'none';
   updateDeleteConfirmLabel(tabId);
 }
