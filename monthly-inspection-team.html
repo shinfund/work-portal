@@ -2088,10 +2088,10 @@ function elecInspGubunSpans(rows){
   }
   return spans;
 }
-// 시트 컬럼폭(구분/점검내용/점검방법/점검결과/비고) — buildElecInspReportSheet의 ws.columns와 동일한
+// 시트 컬럼폭(구분/점검내용/점검방법/점검결과/점검일자/비고) — buildElecInspReportSheet의 ws.columns와 동일한
 // 값을 행높이 자동계산(excelWrapAwareRowHeight)에도 그대로 써야 해서 상수로 분리.
-// 2026-07-24 15:45 최종 템플릿(터널당 1시트로 편집된 버전) 실측값으로 갱신.
-const ELECINSP_COL_WIDTHS=[20.640625,42.640625,12.640625,12.640625,17.640625];
+// 2026-07-24 15:45 최종 템플릿(터널당 1시트로 편집된 버전) 실측값으로 갱신. 2026-07-27 점검일자 컬럼 추가.
+const ELECINSP_COL_WIDTHS=[20.640625,42.640625,12.640625,12.640625,10.640625,17.640625];
 // 점검사진 대지 시트 A~J 컬럼폭 — 템플릿(사진1 시트) 실측값(2026-07-24). 번호(A/F)=좁게,
 // 라벨(B/G)=중간, 값(C~E/H~J, 3칸 병합)=넓게. 이전엔 10칸 균등폭(7.86)이었으나 템플릿과
 // 실제 인쇄 레이아웃이 달라서 실측값으로 교체.
@@ -2109,13 +2109,13 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const days=[...new Set(recs.map(r=>parseInt((r['날짜']||'').slice(8,10),10)).filter(Boolean))].sort((a,b)=>a-b);
   const subRow=startRow;
   // 터널명과 일자는 템플릿에서 서식이 다르다(터널명 16pt bold 좌측정렬 / 일자 13pt 일반 우측정렬) —
-  // 하나의 병합 셀에 같은 서식으로 합쳐 넣지 않고 A:B(터널명) / C:E(일자)로 분리.
+  // 하나의 병합 셀에 같은 서식으로 합쳐 넣지 않고 A:B(터널명) / C:F(일자)로 분리.
   ws.mergeCells(`A${subRow}:B${subRow}`);
   const nameCell=ws.getCell(`A${subRow}`);
   nameCell.value=`□ ${tunnel}`;
   nameCell.font={name:'맑은 고딕', size:16, bold:true};
   nameCell.alignment={vertical:'middle', horizontal:'left'};
-  ws.mergeCells(`C${subRow}:E${subRow}`);
+  ws.mergeCells(`C${subRow}:F${subRow}`);
   const dateCell=ws.getCell(`C${subRow}`);
   dateCell.value = days.length ? `일자 : ${year}년 ${month}월 ${days.join(',')}일` : '';
   dateCell.font={name:'맑은 고딕', size:13, bold:false};
@@ -2123,7 +2123,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   ws.getRow(subRow).height=30;
 
   const headerRow=subRow+1;
-  const headerLabels=['구분','점검내용','점검방법','점검결과','비  고'];
+  const headerLabels=['구분','점검내용','점검방법','점검결과','점검일자','비  고'];
   const hRow=ws.getRow(headerRow);
   hRow.height=EXCEL_ROW_HEIGHTS.header;
   const dataCount=Math.max(rows.length,1);
@@ -2131,7 +2131,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const noteEndRow=noteRow+ELECINSP_NOTE_ROWS-1;
   // 외곽 thin 박스가 헤더~데이터~특이사항 여백까지 하나로 이어진다(템플릿 실측) — 데이터 마지막 행의
   // 아래쪽은 hair(내부선)이고, 박스를 닫는 thin은 특이사항 박스의 마지막 행에서만 나온다.
-  const REGION={r1:headerRow, r2:noteEndRow, c1:1, c2:5};
+  const REGION={r1:headerRow, r2:noteEndRow, c1:1, c2:6};
   function gb(r1,r2,c1,c2){
     return {
       top:{style: r1===REGION.r1?'thin':'hair'}, bottom:{style: r2===REGION.r2?'thin':'hair'},
@@ -2153,11 +2153,11 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   });
   // 템플릿은 모든 데이터 컬럼이 wrapText:true(구분·점검내용·비고처럼 길어질 수 있는 칸이 잘리지
   // 않도록) — 글자 수가 많아 줄바꿈되는 행은 excelWrapAwareRowHeight로 행높이를 자동 계산한다.
-  const ELECINSP_COLS_META=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'비고',wrap:true}];
+  const ELECINSP_COLS_META=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'점검일자',wrap:false},{key:'비고',wrap:true}];
   rows.forEach((r,i)=>{
     const rn=headerRow+1+i;
     const row=ws.getRow(rn);
-    for(let ci=0; ci<5; ci++){
+    for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
       if(ci>=1) cell.border=gb(rn,rn,ci+1,ci+1);
@@ -2169,7 +2169,8 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
     row.getCell(2).value=r['점검내용'];
     row.getCell(3).value=r['점검방법'];
     row.getCell(4).value=r['점검결과'];
-    row.getCell(5).value=r['비고'];
+    row.getCell(5).value=fmtDate(r['날짜']);
+    row.getCell(6).value=r['비고'];
     row.height=excelWrapAwareRowHeight(r, ELECINSP_COLS_META, ELECINSP_COL_WIDTHS, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
     row.commit();
   });
@@ -2182,20 +2183,20 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const noteText=[...new Set(recs.map(r=>(r['특이사항']||'').trim()).filter(Boolean))].join(' / ');
   // 주의: ExcelJS의 mergeCells()는 병합범위 안의 모든 셀 테두리를 마스터(맨 왼쪽) 셀의 테두리로
   // 덮어써버린다(실측 확인, 2026-07-24) — 그래서 좌우 테두리만 다르게 주는 이 특이사항 박스는
-  // 병합으로는 만들 수 없다. 대신 5행을 병합하지 않고 A열에만 값을 넣어 텍스트가 옆 빈 셀(B~E)
+  // 병합으로는 만들 수 없다. 대신 행을 병합하지 않고 A열에만 값을 넣어 텍스트가 옆 빈 셀(B~F)
   // 위로 자연스럽게 겹쳐 흐르게(overflow) 한다 — 화면/인쇄 모두 병합한 것과 동일하게 보인다.
   for(let i=0;i<ELECINSP_NOTE_ROWS;i++){
     const rn=noteRow+i;
     const isLast=i===ELECINSP_NOTE_ROWS-1;
     const row=ws.getRow(rn);
     row.height=EXCEL_ROW_HEIGHTS.data;
-    for(let ci=0; ci<5; ci++){
+    for(let ci=0; ci<6; ci++){
       const cell=row.getCell(ci+1);
       cell.font=EXCEL_BODY_FONT;
       cell.border={
         top: i===0?{style:'hair'}:undefined,
         left: ci===0?{style:'thin'}:undefined,
-        right: ci===4?{style:'thin'}:undefined,
+        right: ci===5?{style:'thin'}:undefined,
         bottom: isLast?{style:'thin'}:undefined
       };
     }
@@ -2231,7 +2232,7 @@ function buildElecInspReportSheet(wb, group, year, month, showTitle){
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+headerTunnelLabel, oddFooter:''}
   });
   ws.columns=ELECINSP_COL_WIDTHS.map(w=>({width:w}));
-  ws.mergeCells('A1:E1');
+  ws.mergeCells('A1:F1');
   if(showTitle){
     const titleCell=ws.getCell('A1');
     titleCell.value='1. 터널전기시설 점검표'; titleCell.font={name:'HY헤드라인M', size:20};
@@ -2550,7 +2551,7 @@ function buildTeamCoverReportSheet(wb, year, month){
 
   ws.mergeCells('A1:M1');
   const titleCell=ws.getCell('A1');
-  titleCell.value='라. 점검팀'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
+  titleCell.value='2. 점검팀'; titleCell.font={name:'HY헤드라인M', size:26}; titleCell.alignment=TITLE;
 
   ws.mergeCells('A9:M9');
   const dateCell=ws.getCell('A9');
