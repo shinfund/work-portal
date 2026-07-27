@@ -537,6 +537,7 @@ function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
 
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
+function fmtDateMD(d){ const s=fmtDate(d); if(!s) return ''; return `${parseInt(s.slice(5,7),10)}/${parseInt(s.slice(8,10),10)}`; }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
@@ -2169,7 +2170,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
     row.getCell(2).value=r['점검내용'];
     row.getCell(3).value=r['점검방법'];
     row.getCell(4).value=r['점검결과'];
-    row.getCell(5).value=fmtDate(r['날짜']);
+    row.getCell(5).value=fmtDateMD(r['날짜']);
     row.getCell(6).value=r['비고'];
     row.height=excelWrapAwareRowHeight(r, ELECINSP_COLS_META, ELECINSP_COL_WIDTHS, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
     row.commit();
