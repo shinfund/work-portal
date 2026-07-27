@@ -3845,15 +3845,11 @@ function buildElecReportSheet(wb, r, tunnel){
 
   mc('A28:A28', '※ 점검결과의 판정은 ○(적합), ×(부적합) /(해당 없음)으로 표시한다.', F14(8), LEFT, undefined, false);
   mc('A30:A30', '3. 종합의견', F14(10), LEFT, undefined, false);
-  // 31~39행은 하나의 "종합의견" 박스 — 외곽 테두리만 남기고 행 사이 안쪽 가로선은 뺀다
-  // (2026-07-21 요청). 각 행이 A:R 병합 셀 하나씩이라 좌우 테두리는 9개 행 전부에 넣어야
-  // 이어져 보이고, 위/아래는 첫 행(31)·마지막 행(39)에만 넣는다.
-  const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
-  const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
-  const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
-  mc('A31:R31', '* '+((chk0&&chk0.종합의견)||'적합함'), F14(10), LEFT_INDENT, undefined, BOX_TOP);
-  for(let rn=32; rn<=38; rn++) mc(`A${rn}:R${rn}`, '', F14(10), LEFT_INDENT, undefined, BOX_LR);
-  mc('A39:R39', '', F14(10), LEFT_INDENT, undefined, BOX_BOTTOM);
+  // 31~39행 "종합의견" 박스 — 2026-07-27부터 9행을 각각 병합하던 방식에서 A31:R39 전체를
+  // 하나의 셀로 병합해 wrapText+상단정렬로 변경(월간점검결과-점검팀 전기시설점검 보고서의
+  // 특이사항 박스와 동일 패턴). 텍스트 앞에 자동으로 붙던 "* " 접두어도 함께 제거.
+  mc('A31:R39', (chk0&&chk0.종합의견)||'적합함', F14(10), Object.assign({}, LEFT_INDENT, {vertical:'top', wrapText:true}), undefined,
+    {left:{style:'thin'}, right:{style:'thin'}, top:{style:'thin'}, bottom:{style:'thin'}});
   mc('A40:A40', '※ 전기설비의 개·보수 작업은 반드시 정전상태에서 시행하시기 바랍니다.', F14(8), LEFT, undefined, false);
   mc('A41:A41', '※ 종합의견 란에는 점검내역, 점검결과, 부적합설비 개·보수 의견 및 안전교육 사항 등을 기록', F14(8), LEFT, undefined, false);
 
