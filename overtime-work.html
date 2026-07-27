@@ -1956,6 +1956,44 @@ function openEditModal(pageId){
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
 }
+// 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 500KB까지
+// 자동 압축한다. hwp/pdf 등 압축이 불가능한 문서 파일은 압축 없이 원본 그대로 1MB까지 허용하고,
+// 초과 시(또는 이미지가 압축 후에도 초과 시) 업로드를 막고 안내한다.
+const UPLOAD_MAX_BYTES = 500*1024;
+const UPLOAD_MAX_LABEL = '500KB';
+const UPLOAD_DOC_MAX_BYTES = 1024*1024;
+const UPLOAD_DOC_MAX_LABEL = '1MB';
+function compressImageToLimit(file, maxBytes){
+  return new Promise((resolve, reject)=>{
+    if(!file.type || !file.type.startsWith('image/') || file.size<=maxBytes){ resolve(file); return; }
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let w=img.naturalWidth, h=img.naturalHeight, quality=0.85, attempts=0;
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      const step=()=>{
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(blob=>{
+          if(!blob){ reject(new Error('이미지 압축 실패')); return; }
+          if(blob.size<=maxBytes){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          if(attempts>=8){ reject(new Error('이미지를 '+UPLOAD_MAX_LABEL+' 이하로 압축하지 못했습니다. 더 작은 사진을 선택해주세요.')); return; }
+          if(quality>0.4) quality-=0.15; else { w=Math.round(w*0.75); h=Math.round(h*0.75); }
+          step();
+        }, 'image/jpeg', quality);
+      };
+      step();
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src=url;
+  });
+}
 function uploadOvertimeFile(input){
   const file=input.files[0];
   if(!file) return;
@@ -1963,18 +2001,22 @@ function uploadOvertimeFile(input){
   if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='file-upload-status err'; return; }
   statusEl.textContent='업로드 중...';
   statusEl.className='file-upload-status';
-  const formData=new FormData();
-  formData.append('file', file);
-  formData.append('app', 'overtime-work');
-  fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(data=>{
-      _formFiles.push({ url:data.url, name:file.name });
-      renderFileList();
-      updateFileStatusText();
-      input.value=''; // 같은 파일을 다시 선택해도 change 이벤트가 또 뜨도록 초기화
-    })
-    .catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
+  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+    const isImage = outFile.type && outFile.type.startsWith('image/');
+    const limit = isImage ? UPLOAD_MAX_BYTES : UPLOAD_DOC_MAX_BYTES;
+    if(outFile.size>limit) throw new Error('파일 용량 초과 (최대 '+(isImage?UPLOAD_MAX_LABEL:UPLOAD_DOC_MAX_LABEL)+')'+(isImage?'':' — 문서 파일은 자동 압축이 불가능합니다'));
+    const formData=new FormData();
+    formData.append('file', outFile);
+    formData.append('app', 'overtime-work');
+    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(data=>{
+        _formFiles.push({ url:data.url, name:file.name });
+        renderFileList();
+        updateFileStatusText();
+        input.value=''; // 같은 파일을 다시 선택해도 change 이벤트가 또 뜨도록 초기화
+      });
+  }).catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
 }
 function removeOvertimeFile(idx){
   _formFiles.splice(idx,1);

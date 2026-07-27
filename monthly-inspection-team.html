@@ -1536,6 +1536,41 @@ function closeAddModal(e){
   _photoFiles=[];
   _photoMultiRows=[];
 }
+// 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 자동 압축,
+// 압축이 불가능한 파일(문서 등)이나 압축 후에도 초과하는 이미지는 업로드를 막고 안내한다.
+const UPLOAD_MAX_BYTES = 500*1024;
+const UPLOAD_MAX_LABEL = '500KB';
+function compressImageToLimit(file, maxBytes){
+  return new Promise((resolve, reject)=>{
+    if(!file.type || !file.type.startsWith('image/') || file.size<=maxBytes){ resolve(file); return; }
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      let w=img.naturalWidth, h=img.naturalHeight, quality=0.85, attempts=0;
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      const step=()=>{
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(blob=>{
+          if(!blob){ reject(new Error('이미지 압축 실패')); return; }
+          if(blob.size<=maxBytes){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          if(attempts>=8){ reject(new Error('이미지를 '+UPLOAD_MAX_LABEL+' 이하로 압축하지 못했습니다. 더 작은 사진을 선택해주세요.')); return; }
+          if(quality>0.4) quality-=0.15; else { w=Math.round(w*0.75); h=Math.round(h*0.75); }
+          step();
+        }, 'image/jpeg', quality);
+      };
+      step();
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src=url;
+  });
+}
 // ── 점검사진 업로드 (overtime-work 앱 다중 첨부파일 패턴 재사용, R2 monthly-inspection 폴더) ──
 function uploadInspectionPhoto(input, fieldId){
   const files=Array.from(input.files||[]);
@@ -1552,16 +1587,17 @@ function uploadInspectionPhoto(input, fieldId){
   const results=new Array(files.length).fill(null);
   let done=0;
   files.forEach((file,i)=>{
-    const formData=new FormData();
-    formData.append('file', file);
-    formData.append('app', 'monthly-inspection-team');
-    fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(data=>{
-        results[i]={ url:data.url, name:file.name };
-      })
+    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+      const formData=new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'monthly-inspection-team');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
+    })
       .catch(e=>{
-        toast('사진 업로드 실패: '+e.message);
+        toast('사진 업로드 실패('+file.name+'): '+e.message);
         console.error(e);
       })
       .finally(()=>{
@@ -1673,13 +1709,16 @@ function uploadPhotoMultiFile(input, key){
   const results=new Array(files.length).fill(null);
   let done=0;
   files.forEach((file,i)=>{
-    const formData=new FormData();
-    formData.append('file', file);
-    formData.append('app', 'monthly-inspection-team');
-    fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(data=>{ results[i]={ url:data.url, name:file.name }; })
-      .catch(e=>{ toast('사진 업로드 실패: '+e.message); console.error(e); })
+    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+      const formData=new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'monthly-inspection-team');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
+    })
+      .catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); })
       .finally(()=>{
         done++;
         if(done===files.length){

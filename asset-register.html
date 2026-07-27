@@ -749,6 +749,41 @@ function recomputeAmount(){
 }
 
 /* ── 사진 업로드 (하자보수현황 앱 uploadPhoto 패턴 재사용 — 단일 사진 필드) ── */
+// 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 자동 압축,
+// 압축이 불가능한 파일(문서 등)이나 압축 후에도 초과하는 이미지는 업로드를 막고 안내한다.
+var UPLOAD_MAX_BYTES = 500*1024;
+var UPLOAD_MAX_LABEL = '500KB';
+function compressImageToLimit(file, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0 || file.size<=maxBytes){ resolve(file); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight, quality=0.85, attempts=0;
+      var canvas=document.createElement('canvas');
+      var ctx=canvas.getContext('2d');
+      function step(){
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('이미지 압축 실패')); return; }
+          if(blob.size<=maxBytes){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          if(attempts>=8){ reject(new Error('이미지를 '+UPLOAD_MAX_LABEL+' 이하로 압축하지 못했습니다. 더 작은 사진을 선택해주세요.')); return; }
+          if(quality>0.4) quality-=0.15; else { w=Math.round(w*0.75); h=Math.round(h*0.75); }
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
 function uploadPhoto(input){
   var file = input.files[0];
   if(!file) return;
@@ -768,22 +803,24 @@ function uploadPhoto(input){
   statusEl.textContent='업로드 중...';
   statusEl.className='photo-upload-status';
 
-  var formData = new FormData();
-  formData.append('file', file);
-  formData.append('app', 'asset-register');
+  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
+    if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+    var formData = new FormData();
+    formData.append('file', outFile);
+    formData.append('app', 'asset-register');
 
-  fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(function(data){
-      urlEl.value=data.url;
-      thumbEl.src=data.url;
-      statusEl.textContent='✓ 업로드 완료';
-      statusEl.className='photo-upload-status ok';
-    })
-    .catch(function(e){
-      statusEl.textContent='✗ '+e.message;
-      statusEl.className='photo-upload-status err';
-    });
+    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(data){
+        urlEl.value=data.url;
+        thumbEl.src=data.url;
+        statusEl.textContent='✓ 업로드 완료';
+        statusEl.className='photo-upload-status ok';
+      });
+  }).catch(function(e){
+    statusEl.textContent='✗ '+e.message;
+    statusEl.className='photo-upload-status err';
+  });
 }
 function makePhotoThumb(url){
   if(!url || !url.trim()) return '<span style="color:var(--txt3)">-</span>';
