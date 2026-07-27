@@ -2105,22 +2105,14 @@ const ELECINSP_NOTE_ROWS=9;
 // 행(특이사항 여백 박스 뒤 빈 줄 포함)을 반환 — 남정1,2+남정3처럼 시트 하나에 터널 2개가 쌓이는 구조용.
 function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   const SECTION_FILL={type:'pattern', pattern:'solid', fgColor:{argb:'FFF2F2F2'}};
-  // 방문일자 목록은 대표행(rows, 중복 제거됨)이 아니라 원본 레코드(recs) 전체 기준 — 그 달에 실제
-  // 방문한 모든 날짜를 보여줘야 하므로.
-  const days=[...new Set(recs.map(r=>parseInt((r['날짜']||'').slice(8,10),10)).filter(Boolean))].sort((a,b)=>a-b);
   const subRow=startRow;
-  // 터널명과 일자는 템플릿에서 서식이 다르다(터널명 16pt bold 좌측정렬 / 일자 13pt 일반 우측정렬) —
-  // 하나의 병합 셀에 같은 서식으로 합쳐 넣지 않고 A:B(터널명) / C:F(일자)로 분리.
-  ws.mergeCells(`A${subRow}:B${subRow}`);
+  // 방문일자 요약("일자 : ..." 부제)은 2026-07-27 점검일자 컬럼 추가로 중복이 되어 제거 —
+  // A:F 전체를 터널명 한 셀로 합친다(이전엔 A:B 터널명 / C:F 일자로 분리돼 있었음).
+  ws.mergeCells(`A${subRow}:F${subRow}`);
   const nameCell=ws.getCell(`A${subRow}`);
   nameCell.value=`□ ${tunnel}`;
   nameCell.font={name:'맑은 고딕', size:16, bold:true};
   nameCell.alignment={vertical:'middle', horizontal:'left'};
-  ws.mergeCells(`C${subRow}:F${subRow}`);
-  const dateCell=ws.getCell(`C${subRow}`);
-  dateCell.value = days.length ? `일자 : ${year}년 ${month}월 ${days.join(',')}일` : '';
-  dateCell.font={name:'맑은 고딕', size:13, bold:false};
-  dateCell.alignment={vertical:'middle', horizontal:'right'};
   ws.getRow(subRow).height=30;
 
   const headerRow=subRow+1;
