@@ -917,9 +917,13 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       <span id="excelExportLabel">엑셀 생성</span>
     </button>
-    <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReport()">
+    <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportLabel">사진대지 생성</span>
+      <span id="photoReportProgLabel">사진대지(진행)</span>
+    </button>
+    <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      <span id="photoReportLabel">사진대지(완료)</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
@@ -4013,8 +4017,8 @@ function buildExcelReport(opts){
         printTitlesRow: '2:2'
       },
       headerFooter: {
-        oddHeader: '',
-        oddFooter: '&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'
+        oddHeader: '&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',
+        oddFooter: ''
       }
     });
 
@@ -4141,8 +4145,9 @@ function exportToExcel(){
 
 // ── 하자보수 사진대지 (점검팀 앱 "점검사진" 탭 보고서 생성 형식 참조, 2026-07-27) ──
 // 참고 형식은 사진 1장짜리 항목을 밴드당 2개씩 좌우로 배치하지만, 하자내역은 레코드 1건에
-// 이미 사진이 2장(하자사진/조치사진) 고정으로 붙어 있어 레코드 1건 = 사진1(위)+사진2(아래)
-// 세로 1열 전체폭 블록으로 구성한다(사용자 확인, 1시트당 2건씩 이어붙임).
+// 이미 사진이 최대 2장(하자사진/조치사진) 붙는 구조라 두 가지로 나눈다 — "완료"(하자+조치
+// 둘 다 있는 레코드, 1건=사진2장 위아래로 1시트) / "진행"(하자사진만 있고 조치사진이 아직
+// 없는 레코드, 2건=사진 1장씩 2시트... 아니 2건이 한 시트에, 합쳐서 시트당 사진 2장은 동일).
 function colLetter(n){
   var s='';
   while(n>0){ var m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); }
@@ -4158,12 +4163,16 @@ function excelPhotoAnchorBlock(col0, row0, col1, row1){
   };
 }
 var DEFECT_PHOTO_COL_WIDTHS = [14, 20, 20, 20, 20, 20];
-var DEFECT_PHOTO_RECORDS_PER_SHEET = 2;
-function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle){
+// 시트당 사진 수는 두 모드 다 2장으로 동일 — "완료"는 레코드 1건(하자+조치 2장)당 1시트,
+// "진행"은 레코드 2건(하자사진만 1장씩)당 1시트로 레코드 수가 다르다(2026-07-27 사용자 확인).
+var DEFECT_PHOTO_RECORDS_PER_SHEET = { done:1, progress:2 };
+function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle, mode){
+  var showAction = mode!=='progress';
+  var titleText = mode==='progress' ? '하자보수 사진대지(진행)' : '하자보수 사진대지(완료)';
   var ws = wb.addWorksheet('사진대지'+sheetIdx, {
     views: [{ showGridLines:false, zoomScale:90 }],
     pageSetup: { paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait },
-    headerFooter: { oddHeader:'', oddFooter:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T' }
+    headerFooter: { oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME, oddFooter:'' }
   });
   ws.columns = DEFECT_PHOTO_COL_WIDTHS.map(function(w){ return {width:w}; });
 
@@ -4182,7 +4191,7 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle){
     return cell;
   }
 
-  mc('A1:F1', showTitle ? '하자보수 사진대지' : null, { name:'HY헤드라인M', size:20 }, { vertical:'middle', horizontal:'left' }, false);
+  mc('A1:F1', showTitle ? titleText : null, { name:'HY헤드라인M', size:20 }, { vertical:'middle', horizontal:'left' }, false);
   ws.getRow(1).height = 50.05;
   ws.getRow(2).height = 10;
   ws.getRow(3).height = 20;
@@ -4194,9 +4203,15 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle){
   sheetRecords.forEach(function(r){
     var lblRow1 = rn;
     var img1Start = lblRow1+1, img1End = img1Start+IMG_ROWS-1;
-    var lblRow2 = img1End+1;
-    var img2Start = lblRow2+1, img2End = img2Start+IMG_ROWS-1;
-    var capStart = img2End+1, capMid = capStart+1, capEnd = capStart+2;
+    var lblRow2, img2Start, img2End, capBase;
+    if(showAction){
+      lblRow2 = img1End+1;
+      img2Start = lblRow2+1; img2End = img2Start+IMG_ROWS-1;
+      capBase = img2End+1;
+    } else {
+      capBase = img1End+1;
+    }
+    var capStart = capBase, capMid = capBase+1, capEnd = capBase+2;
     var REGION = { r1:lblRow1, r2:capEnd, c1:1, c2:6 };
     function gb(r1,r2,c1,c2){
       return {
@@ -4209,14 +4224,15 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle){
     mc('A'+lblRow1+':F'+lblRow1, '◆ 하자사진', F(11,true), { vertical:'middle', horizontal:'left' }, gb(lblRow1,lblRow1,1,6));
     for(var i=img1Start; i<=img1End; i++) ws.getRow(i).height = IMG_ROW_H;
     mc('A'+img1Start+':F'+img1End, undefined, F(10), CENTER, gb(img1Start,img1End,1,6));
-
-    ws.getRow(lblRow2).height = LABEL_ROW_H;
-    mc('A'+lblRow2+':F'+lblRow2, '◆ 조치사진', F(11,true), { vertical:'middle', horizontal:'left' }, gb(lblRow2,lblRow2,1,6));
-    for(var j=img2Start; j<=img2End; j++) ws.getRow(j).height = IMG_ROW_H;
-    mc('A'+img2Start+':F'+img2End, undefined, F(10), CENTER, gb(img2Start,img2End,1,6));
-
     if(r['하자사진_URL']) photoTasks.push({ url:r['하자사진_URL'], c1:0, r1:img1Start-1, c2:5, r2:img1End-1 });
-    if(r['조치사진_URL']) photoTasks.push({ url:r['조치사진_URL'], c1:0, r1:img2Start-1, c2:5, r2:img2End-1 });
+
+    if(showAction){
+      ws.getRow(lblRow2).height = LABEL_ROW_H;
+      mc('A'+lblRow2+':F'+lblRow2, '◆ 조치사진', F(11,true), { vertical:'middle', horizontal:'left' }, gb(lblRow2,lblRow2,1,6));
+      for(var j=img2Start; j<=img2End; j++) ws.getRow(j).height = IMG_ROW_H;
+      mc('A'+img2Start+':F'+img2End, undefined, F(10), CENTER, gb(img2Start,img2End,1,6));
+      if(r['조치사진_URL']) photoTasks.push({ url:r['조치사진_URL'], c1:0, r1:img2Start-1, c2:5, r2:img2End-1 });
+    }
 
     ws.getRow(capStart).height = CAP_ROW_H;
     ws.getRow(capMid).height = CAP_ROW_H;
@@ -4241,26 +4257,26 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle){
     });
   }));
 }
-function exportDefectPhotoReport(){
-  var btn = document.getElementById('photoReportBtn');
-  var lbl = document.getElementById('photoReportLabel');
-  var rows = filtered().slice().sort(function(a,b){
+function sortedDefectRowsByDate(){
+  return filtered().slice().sort(function(a,b){
     var da=(a['날짜']||'').replace(/[.\/]/g,'-');
     var db=(b['날짜']||'').replace(/[.\/]/g,'-');
     return da<db?1:da>db?-1:0;
-  }).filter(function(r){ return r['하자사진_URL'] || r['조치사진_URL']; });
-  if(!rows.length){ alert('사진이 첨부된 하자 기록이 없습니다.'); return; }
+  });
+}
+function runDefectPhotoExport(btn, lbl, rows, mode, lblDefault, fnamePrefix){
+  var recordsPerSheet = DEFECT_PHOTO_RECORDS_PER_SHEET[mode];
   btn.disabled = true; lbl.textContent = '생성 중...';
   loadExcelLib().then(function(){
     var wb = new ExcelJS.Workbook();
-    var sheetCount = Math.ceil(rows.length / DEFECT_PHOTO_RECORDS_PER_SHEET);
+    var sheetCount = Math.ceil(rows.length / recordsPerSheet);
     var chain = Promise.resolve();
     for(var s=0; s<sheetCount; s++){
       (function(s){
         chain = chain.then(function(){
           lbl.textContent = '사진 불러오는 중... ('+(s+1)+'/'+sheetCount+')';
-          var sheetRows = rows.slice(s*DEFECT_PHOTO_RECORDS_PER_SHEET, s*DEFECT_PHOTO_RECORDS_PER_SHEET+DEFECT_PHOTO_RECORDS_PER_SHEET);
-          return buildDefectPhotoSheet(wb, sheetRows, s+1, s===0);
+          var sheetRows = rows.slice(s*recordsPerSheet, s*recordsPerSheet+recordsPerSheet);
+          return buildDefectPhotoSheet(wb, sheetRows, s+1, s===0, mode);
         });
       })(s);
     }
@@ -4273,17 +4289,27 @@ function exportDefectPhotoReport(){
   }).then(function(blob){
     var url = URL.createObjectURL(blob);
     var now = new Date();
-    var fname = '하자보수사진대지_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+'.xlsx';
+    var fname = fnamePrefix+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+'.xlsx';
     var a = document.createElement('a'); a.href = url; a.download = fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
     lbl.textContent = '완료!';
-    setTimeout(function(){ lbl.textContent = '사진대지 생성'; btn.disabled = false; }, 1500);
+    setTimeout(function(){ lbl.textContent = lblDefault; btn.disabled = false; }, 1500);
   }).catch(function(e){
-    alert('사진대지 생성 실패: '+e.message);
+    alert(lblDefault+' 생성 실패: '+e.message);
     console.error(e);
-    lbl.textContent = '사진대지 생성'; btn.disabled = false;
+    lbl.textContent = lblDefault; btn.disabled = false;
   });
+}
+function exportDefectPhotoReportDone(){
+  var rows = sortedDefectRowsByDate().filter(function(r){ return r['하자사진_URL'] && r['조치사진_URL']; });
+  if(!rows.length){ alert('하자사진·조치사진이 모두 첨부된 완료 기록이 없습니다.'); return; }
+  runDefectPhotoExport(document.getElementById('photoReportBtn'), document.getElementById('photoReportLabel'), rows, 'done', '사진대지(완료)', '하자보수사진대지_완료_');
+}
+function exportDefectPhotoReportProgress(){
+  var rows = sortedDefectRowsByDate().filter(function(r){ return r['하자사진_URL'] && !r['조치사진_URL']; });
+  if(!rows.length){ alert('하자사진만 첨부된 진행중 기록이 없습니다.'); return; }
+  runDefectPhotoExport(document.getElementById('photoReportProgBtn'), document.getElementById('photoReportProgLabel'), rows, 'progress', '사진대지(진행)', '하자보수사진대지_진행_');
 }
 
 function exportContactExcel(){
