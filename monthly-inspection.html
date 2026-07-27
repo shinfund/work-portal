@@ -250,6 +250,8 @@ html[data-theme="dark"] .result-none{background:rgba(255,255,255,.1);color:rgba(
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:100px}
+.modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
@@ -2401,8 +2403,8 @@ function buildElecFormExtra(r){
         </select>
         <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
       </div>
-      <div class="modal-field"><label class="modal-label">종합의견</label><input class="modal-input" id="ec_jonghap" type="text" value="${esc(chk0?chk0.종합의견:'적합함')}"/></div>
-    </div>`;
+    </div>
+    <div class="modal-field"><label class="modal-label">종합의견</label><textarea class="modal-textarea" id="ec_jonghap">${esc(chk0?chk0.종합의견:'적합함')}</textarea></div>`;
   return acbHtml+acbCommonHtml+chkHtml+chkCommonHtml;
 }
 // 전기설비기록 탭 전용 — 특정 터널의 가장 최근 레코드(점검일자 내림차순으로 이미 정렬된 TAB_STATE
