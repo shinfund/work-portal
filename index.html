@@ -993,6 +993,12 @@ function closeTab(id) {
 
   unloadApp(id);
 
+  // 닫힌 탭 id는 navHistory에서도 제거 — 뒤로/앞으로가기가 이미 닫힌 탭으로 돌아가
+  // go()의 사이드바 치환 분기를 타면서 엉뚱한 활성 탭을 대체해버리는 것을 방지
+  const removedBefore = navHistory.slice(0, historyIndex).filter(h => h === id).length;
+  navHistory = navHistory.filter(h => h !== id);
+  historyIndex = Math.min(Math.max(historyIndex - removedBefore, 0), navHistory.length - 1);
+
   if (_cur === id) {
     const next = openTabs[idx - 1] || openTabs[0] || 'home';
     _cur = null; // go()의 동일 id 얼리리턴 방지
@@ -1133,6 +1139,7 @@ function doLogin(){
       showToast('로그인되었습니다.');
       updateTopbarStatus();
       reloadLoadedApps();
+      preloadHomeKpis();
     })
     .catch(() => showToast('로그인 요청 실패 — 네트워크를 확인하세요.'));
 }
@@ -1153,6 +1160,7 @@ window.addEventListener('storage', e => {
     updateTopbarStatus();
     renderHomeKpi();
     reloadLoadedApps();
+    preloadHomeKpis();
   } else if (e.key === 'theme' && e.newValue) {
     document.documentElement.setAttribute('data-theme', e.newValue);
     syncThemeOptUI();
@@ -1412,20 +1420,26 @@ renderHomeKpi();
 // (각 앱은 로그인 상태면 로드 시 스스로 데이터를 불러오도록 이미 구현돼 있음 — 그 로직을 그대로 재사용)
 function preloadHomeKpis() {
   const STALE_MS = 10 * 60 * 1000;
-  const PRELOAD_TIMEOUT_MS = 15 * 1000; // 느린 네트워크 대비 8초→15초로 상향
+  const PRELOAD_TIMEOUT_MS = 20 * 1000; // 레코드 많은 앱(순차 페이지네이션)까지 감안해 8→15→20초로 상향
   const zone = document.getElementById('kpi-preload-zone');
   if (!zone) return;
   Object.keys(APPS).forEach(id => {
     if (!isAppConfigured()) return;
     const s = readPortalSummary(id);
     if (s && s.updatedAt && (Date.now() - s.updatedAt) < STALE_MS) return;
+    const beforeUpdatedAt = s && s.updatedAt ? s.updatedAt : 0;
     const ifr = document.createElement('iframe');
     ifr.src = APPS[id].file + '?kpiPreload=1&v=' + Date.now();
     zone.appendChild(ifr);
-    // 로드가 더 일찍 끝나면 즉시 반영, 늦어도 타임아웃에 맞춰 정리(둘 중 먼저 오는 쪽)
+    // iframe 'load'는 문서 파싱 완료 시점일 뿐 데이터 fetch 완료를 보장하지 않음(레코드가 많은 앱은
+    // 여러 페이지를 순차 조회하느라 load 이후에도 한참 걸림) — 요약값이 실제로 갱신됐는지 폴링하고,
+    // 못 끝내면 타임아웃에 맞춰 정리(둘 중 먼저 오는 쪽)
     let done = false;
-    const finish = () => { if (done) return; done = true; ifr.remove(); renderHomeKpi(); };
-    ifr.addEventListener('load', finish);
+    const finish = () => { if (done) return; done = true; clearInterval(poll); ifr.remove(); renderHomeKpi(); };
+    const poll = setInterval(() => {
+      const cur = readPortalSummary(id);
+      if (cur && cur.updatedAt && cur.updatedAt > beforeUpdatedAt) finish();
+    }, 500);
     setTimeout(finish, PRELOAD_TIMEOUT_MS);
   });
 }

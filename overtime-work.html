@@ -1233,6 +1233,9 @@ function parseNotionPage(page){
 const DEFAULT_LOAD_MONTHS=2;
 let _fullHistoryLoaded=false;
 let _dataLoadedOnce=false;
+// loadData()가 probe로 감지한 실제 date 타입 속성명 — submitOvertimeForm()도 이 값을 그대로
+// 써서 하드코딩된 '날짜'와 실제 스키마가 어긋나는 것을 방지한다.
+let DATE_PROP='날짜';
 async function loadData(opts){
   opts=opts||{};
   const needFull=opts.full===true;
@@ -1248,19 +1251,19 @@ async function loadData(opts){
   if(syncLabel)syncLabel.textContent='불러오는 중...';
   if(lu)lu.textContent='';
   try{
-    // 날짜 속성명 자동 감지 (1건 probe)
+    // 날짜 속성명 자동 감지 (1건 probe) — 결과를 모듈 전역 DATE_PROP에 저장해 submitOvertimeForm()에서도 재사용
     const probe=await fetchNotion({page_size:1});
-    let dateProp='날짜';
+    DATE_PROP='날짜';
     if(probe.results&&probe.results.length){
       const pp=probe.results[0].properties||{};
-      for(const[k,v] of Object.entries(pp)){if(v.type==='date'){dateProp=k;break;}}
+      for(const[k,v] of Object.entries(pp)){if(v.type==='date'){DATE_PROP=k;break;}}
     }
-    const body={page_size:100,sorts:[{property:dateProp,direction:'ascending'}]};
+    const body={page_size:100,sorts:[{property:DATE_PROP,direction:'ascending'}]};
     if(!needFull){
       const cutoff=new Date();
       cutoff.setDate(1);
       cutoff.setMonth(cutoff.getMonth()-(DEFAULT_LOAD_MONTHS-1));
-      body.filter={property:dateProp,date:{on_or_after:cutoff.toISOString().slice(0,10)}};
+      body.filter={property:DATE_PROP,date:{on_or_after:cutoff.toISOString().slice(0,10)}};
     }
     const data=await fetchNotion(body);
     let pages=data.results||[];
@@ -1464,7 +1467,7 @@ function buildOvertimeDetailRow(r){
     <td style="white-space:nowrap"><span class="type-badge type-${typeSlug(r.type||'기타')}">${esc(r.type||'—')}</span></td>
     <td style="white-space:nowrap">${r.status?`<span class="type-badge status-${typeSlug(r.status)}">${esc(r.status)}</span>`:'-'}</td>
     <td style="white-space:nowrap">${esc(r.timeRange||'-')}</td>
-    <td class="r" style="white-space:nowrap">${r.hours?fmtH(r.hours)+'h':'-'}</td>
+    <td class="r" style="white-space:nowrap">${r.hours!=null&&r.hours!==''?fmtH(r.hours)+'h':'-'}</td>
     <td class="r pay-cell" style="white-space:nowrap">${fmtWon(getPayAmt(r))}</td>
     <td class="col-bank" style="white-space:nowrap">${esc(r.bankName||'-')}</td>
     <td class="col-bank" style="white-space:nowrap">${esc(r.bankBank||'-')}</td>
@@ -2008,7 +2011,7 @@ async function submitOvertimeForm(){
   const properties={};
   // 내용(title) — 노션 기존 데이터 패턴과 동일하게 "성명 근무명"으로 자동 생성
   properties['내용']={ title:[{ text:{ content:(employee+' '+type).trim() } }] };
-  properties['날짜']=date?{ date:{ start:date } }:{ date:null };
+  properties[DATE_PROP]=date?{ date:{ start:date } }:{ date:null };
   properties['성명']={ select:{ name:employee } };
   properties['근무명']={ select:{ name:type } };
   properties['소속']=org?{ select:{ name:org } }:{ select:null };

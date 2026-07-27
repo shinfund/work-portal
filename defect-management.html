@@ -2977,6 +2977,11 @@ function submitAddForm(confirmed){
   var contentKey = nk('하자내용') || '하자내용';
   properties[contentKey] = { title: [{ text: { content: content } }] };
 
+  // TODO: 아래 setProp 호출들은 속성 타입을 고정 가정(select/multi_select/rich_text/phone_number 등)하지만,
+  // buildNotionPropMap()의 matchers(대략 1543~1554행)는 터널명/공종/업무담당/조치여부/전화번호에 대해
+  // 실제 노션 DB에 select 외 multi_select·rich_text·title·checkbox 등 여러 타입이 올 수 있음을 이미 알고 있음(읽기 전용, 타입 미보존).
+  // 안전한 수정을 위해서는 buildNotionPropMap 단계에서 감지한 실제 타입을 별도 맵(NOTION_PROP_TYPE_MAP 등)에 보존해
+  // setProp이 필드별로 값 형태를 분기하도록 재구성해야 하나, 실제 노션 DB 스키마 확인 없이는 검증 불가해 보류함.
   setProp('날짜',    date ? { date: { start: date } } : { date: null });
   setProp('공종',    { multi_select: [{ name: type }] });
   setProp('터널명',  { select: { name: tunnel } });
@@ -3373,7 +3378,7 @@ function openContactEditModal(idx){
   var ceTunnels = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '터널명') : [];
   buildTunnelSelectOpts(document.getElementById('ceTunnel'), document.getElementById('ceTunnelCustom'), ceTunnels, r.터널명||'');
 
-  document.getElementById('ceGrp').value    = r.관리구분||'안전관리자';
+  buildGenericSelectOpts(document.getElementById('ceGrp'), document.getElementById('ceGrpCustom'), ['안전관리자','점검팀'], r.관리구분||'안전관리자');
   var ceCompanies = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '업체명') : [];
   buildGenericSelectOpts(document.getElementById('ceCo'), document.getElementById('ceCoCustom'), ceCompanies, r.업체명||'');
   var cePersons = CONTACT_DATA.length ? getUniqueValuesFrom(CONTACT_DATA, '담당자') : [];
@@ -4584,13 +4589,13 @@ function openMgmtEditModal(idx){
   buildGenericSelectOpts(document.getElementById('mgType'), document.getElementById('mgTypeCustom'), mgTypes, r['하자공종']||'');
   buildGenericSelectOpts(document.getElementById('mgContractor'), document.getElementById('mgContractorCustom'), mgContractors, r['계약자']||'');
 
-  document.getElementById('mgCategory').value = r['구분']||'';
+  buildGenericSelectOpts(document.getElementById('mgCategory'), document.getElementById('mgCategoryCustom'), ['전기공사','소방(전기)','지급자재'], r['구분']||'');
   document.getElementById('mgAmt').value = r['계약금액(원)']||'';
   document.getElementById('mgGuaranteeAmt').value = r['보증금액(원)']||'';
-  document.getElementById('mgRate').value = r['보증율']||'';
+  buildGenericSelectOpts(document.getElementById('mgRate'), document.getElementById('mgRateCustom'), ['2%','3%','5%'], r['보증율']||'');
   document.getElementById('mgStart').value = r['하자보수시작일']||'';
   document.getElementById('mgEnd').value = r['하자보수종료일']||'';
-  document.getElementById('mgPeriod').value = r['보증기간']||'';
+  buildGenericSelectOpts(document.getElementById('mgPeriod'), document.getElementById('mgPeriodCustom'), ['1년','2년','3년'], r['보증기간']||'');
 
   closeDetail();
   document.getElementById('mgmtEditModal').classList.add('modal-open');

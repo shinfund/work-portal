@@ -1802,7 +1802,7 @@ function renderElecFlatTable(){
     flat=elecChkFlatRows(recs);
     if(q) flat=flat.filter(x=>(x.설비구분+' '+x.설비항목).toLowerCase().includes(q));
     rowsHtml=flat.map(x=>{
-      const badge = x.판정==='×'?'result-bad':x.판정==='/'?'result-warn':'result-good';
+      const badge = !x.판정?'result-none':x.판정==='×'?'result-bad':x.판정==='/'?'result-warn':'result-good';
       return `<tr onclick="openDetailModal('elec','${x.parentId}')" style="cursor:pointer">
         <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
         <td style="white-space:nowrap">${esc(fmtDate(x.점검일자))}</td>
@@ -2373,7 +2373,12 @@ function buildElecFormExtra(r){
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
   // 터널명 select 변경 시(syncElecTunnelDefaults) elecChkGridWrap/elecChkHintWrap을 다시 그려 갱신한다
   // (buildGeneratorFormExtra/syncGeneratorTunnelDefaults와 동일 패턴, 2026-07-25 버그 수정).
-  const chkSrc = r || elecLatestForTunnel(document.getElementById('ff_0')?.value) || TAB_STATE['elec'].records[0] || null;
+  // 신규등록 최초 렌더 시점엔 이 함수가 addModalFields에 innerHTML로 삽입되기 전이라 ff_0은 아직
+  // DOM에 없거나(최초 오픈) 직전에 닫힌 모달의 값이 남아있는 상태(stale)라 여기서 읽으면 안 된다
+  // — 터널명은 어차피 신규등록 시 기본선택값이 없어 첫 렌더에는 특정 터널을 알 수 없으므로 가장 최근
+  // 등록 레코드로 폴백하고, 실제 터널별 갱신은 extraOnChange(syncElecTunnelDefaults, DOM 삽입 후 발생)에
+  // 맡긴다(2026-07-27 버그 수정).
+  const chkSrc = r || TAB_STATE['elec'].records[0] || null;
   let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>`;
   chkHtml+=`<div id="elecChkHintWrap">${!r ? buildElecChkHintHtml(chkSrc) : ''}</div>`;
   chkHtml+=`<div id="elecChkGridWrap">${buildElecChkGridHtml(chkSrc)}</div>`;
@@ -2465,7 +2470,11 @@ function buildGeneratorChkGridHtml(chkSrc){
 // 값이라 매번 새로 입력할 필요가 없음, 실제와 다르면 직접 고쳐서 등록).
 function buildGeneratorFormExtra(r){
   const fuel=r?r._fuel:null;
-  const chkSrc = r || generatorLatestForTunnel(document.getElementById('ff_0')?.value) || TAB_STATE['generator'].records[0] || null;
+  // buildElecFormExtra와 동일한 이유로 여기서도 ff_0 DOM 읽기를 하지 않는다 — 이 함수는
+  // addModalFields.innerHTML 삽입 전에 호출되므로 ff_0이 아직 없거나 직전에 닫힌 모달의 값이
+  // 남아있는 stale 상태다. 신규등록 최초 렌더에는 가장 최근 레코드로 폴백하고, 터널별 갱신은
+  // DOM 삽입 후 발생하는 extraOnChange(syncGeneratorTunnelDefaults)가 담당한다(2026-07-27 버그 수정).
+  const chkSrc = r || TAB_STATE['generator'].records[0] || null;
   let fuelHtml=`<div class="form-group-hd">유류현황(1건)</div>
     <div class="modal-hint" style="margin:-2px 0 8px">※ 종류·용량(L)·전일재고량(L)은 터널명 선택 시 자동으로 채워집니다(필요하면 직접 수정 가능). 입고량·사용량을 입력하면 금일재고량(L) = 전일재고량 − 사용량 + 입고량 으로 자동 계산됩니다(계산 후에도 직접 수정 가능).</div>
     <div class="form-group-grid">

@@ -1770,7 +1770,6 @@ const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
-const EXCEL_CELL_BORDER={top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}};
 // 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
 // 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨(고정 서식지의
 // buildElecReportSheet()가 쓰는 표 영역 경계 기준 gridBorder()와는 별개의 단순 버전).
@@ -2015,7 +2014,7 @@ function exportTabExcel(tabId){
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
   const fields=dataFields(tabDef);
   const tunnel=_tabFilters[tabId].tunnel;
-  const rows=filteredTabRecords(tabId).map(r=>{
+  const rows=getVisibleRecords(tabId).map(r=>{
     const row={};
     fields.forEach(f=>{
       if(f.type==='number') row[f.key]=Number(r[f.key])||0;
@@ -2598,6 +2597,10 @@ function buildTeamDailyLogDividerSheet(wb, year, month){
 async function ensureTabLoaded(id){
   if(TAB_STATE[id].loaded) return;
   await loadTabData(id);
+  if(!TAB_STATE[id].loaded){
+    const tabDef=getTabDef(id);
+    throw new Error(`'${tabDef?tabDef.label:id}' 탭 데이터 로드에 실패하여 보고서 생성을 중단합니다.`);
+  }
 }
 async function buildOneTeamUnifiedReport(year, month){
   await loadExcelLib(true);

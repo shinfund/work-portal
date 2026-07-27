@@ -557,6 +557,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="tbl-wrap">
         <table>
+          <!-- ⚠ 터널 컬럼(흥해터널/청하터널(주)/청하터널(부)/남정5터널)은 JS TREND_TUNNEL_COLS와 동일한 순서로 고정 하드코딩됨.
+               터널 추가/삭제 시 TREND_TUNNEL_COLS와 함께 이 행도 수동으로 맞춰야 함(정적 thead라 자동 동기화 안 됨). -->
           <thead><tr>
             <th>월</th><th class="r">발전량(kWh)</th>
             <th class="r">흥해터널</th><th class="r">청하터널(주)</th><th class="r">청하터널(부)</th><th class="r">남정5터널</th>
@@ -981,6 +983,7 @@ function closeDetailModal(e){
   resetModalDragPos('detailModal');
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAddModal();});
 
 // ── 날짜 ──────────────────────────────────────────────
 const _now=new Date();
@@ -1720,6 +1723,8 @@ function renderTunnel(recs){
 
 // ── 월별 추이 ─────────────────────────────────────────
 // 월별추이 "월별 요약" 테이블 고정 컬럼 순서(요청 기준) — 노션에 없는 터널이면 해당 컬럼은 0으로 표시
+// ⚠ TODO: 터널이 추가/삭제되면 이 배열과 함께 HTML <thead>(~line 561, "월별 요약" 테이블 고정 헤더)도 반드시 같이 수동으로 맞출 것.
+//    EXCEL_COLUMNS_TREND는 이 배열에서 파생되어 자동 동기화되지만, 정적 HTML thead는 그렇지 않음(단일 소스화 미완료).
 const TREND_TUNNEL_COLS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널'];
 function renderTrend(){
   const months=[];
@@ -2005,13 +2010,12 @@ function exportSolarExcel(){
     columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'portrait'
   });
 }
+// 터널 컬럼은 TREND_TUNNEL_COLS에서 파생(단일 소스) — 하드코딩 중복 제거, 터널 추가/삭제 시 TREND_TUNNEL_COLS만 고치면 이 배열은 자동 반영됨.
+// (단, ~line 561의 정적 HTML thead는 별도 — 위 TODO 주석 참고)
 const EXCEL_COLUMNS_TREND=[
   {key:'월',header:'월'},
   {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0'},
-  {key:'흥해터널',header:'흥해터널',numFmt:'#,##0'},
-  {key:'청하터널(주)',header:'청하터널(주)',numFmt:'#,##0'},
-  {key:'청하터널(부)',header:'청하터널(부)',numFmt:'#,##0'},
-  {key:'남정5터널',header:'남정5터널',numFmt:'#,##0'},
+  ...TREND_TUNNEL_COLS.map(name=>({key:name,header:name,numFmt:'#,##0'})),
   {key:'발전일수',header:'발전일수',numFmt:'#,##0'}
 ];
 function exportTrendExcel(){
