@@ -919,11 +919,11 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
     </button>
     <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportProgLabel">사진대지(진행)</span>
+      <span id="photoReportProgLabel">사진대지 (진행중)</span>
     </button>
     <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportLabel">사진대지(완료)</span>
+      <span id="photoReportLabel">사진대지 (완료)</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
@@ -4196,7 +4196,10 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle, mode){
   ws.getRow(2).height = 10;
   ws.getRow(3).height = 20;
 
-  var IMG_ROWS = 20, IMG_ROW_H = 13.1, LABEL_ROW_H = 18, CAP_ROW_H = 22, SPACER_H = 14;
+  // 행 높이는 일부러 실측 페이지 높이보다 넉넉하게 잡는다 — fitToHeight:1은 넘칠 때만
+  // 축소하고 남으면 그대로 두므로(늘려서 채워주지 않음), 자연 높이를 페이지보다 크게 만들어야
+  // 축소 적용을 통해 하단 여백 없이 항상 1페이지 꽉 채우게 된다(2026-07-27 사용자 지적).
+  var IMG_ROWS = 20, IMG_ROW_H = 22, LABEL_ROW_H = 20, CAP_ROW_H = 26, SPACER_H = 20;
   var photoTasks = [];
   var rn = 4;
 
@@ -4304,12 +4307,12 @@ function runDefectPhotoExport(btn, lbl, rows, mode, lblDefault, fnamePrefix){
 function exportDefectPhotoReportDone(){
   var rows = sortedDefectRowsByDate().filter(function(r){ return r['하자사진_URL'] && r['조치사진_URL']; });
   if(!rows.length){ alert('하자사진·조치사진이 모두 첨부된 완료 기록이 없습니다.'); return; }
-  runDefectPhotoExport(document.getElementById('photoReportBtn'), document.getElementById('photoReportLabel'), rows, 'done', '사진대지(완료)', '하자보수사진대지_완료_');
+  runDefectPhotoExport(document.getElementById('photoReportBtn'), document.getElementById('photoReportLabel'), rows, 'done', '사진대지 (완료)', '하자보수사진대지_완료_');
 }
 function exportDefectPhotoReportProgress(){
   var rows = sortedDefectRowsByDate().filter(function(r){ return r['하자사진_URL'] && !r['조치사진_URL']; });
   if(!rows.length){ alert('하자사진만 첨부된 진행중 기록이 없습니다.'); return; }
-  runDefectPhotoExport(document.getElementById('photoReportProgBtn'), document.getElementById('photoReportProgLabel'), rows, 'progress', '사진대지(진행)', '하자보수사진대지_진행_');
+  runDefectPhotoExport(document.getElementById('photoReportProgBtn'), document.getElementById('photoReportProgLabel'), rows, 'progress', '사진대지 (진행중)', '하자보수사진대지_진행_');
 }
 
 function exportContactExcel(){
