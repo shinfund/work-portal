@@ -3001,7 +3001,7 @@ function removePhotoFile(idx, fieldId){
 // 터널·번호 조합의 과거 입력값을 datalist로 제안한다(자유입력도 가능).
 var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name}]}]
 function newPhotoMultiRow(num, desc){
-  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', files:[] };
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[] };
 }
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
@@ -3024,7 +3024,15 @@ function renderPhotoMultiRows(){
   const tunnel=tunnelSel ? (tunnelSel.value==='__custom__' ? '' : tunnelSel.value) : '';
   wrap.innerHTML=_photoMultiRows.map(row=>{
     const numOpts=['1','2','3','4','5','6'].map(n=>`<option value="${n}"${row.num===n?' selected':''}>${n}</option>`).join('');
-    const descOpts=photoDescOptions(tunnel, row.num).map(d=>`<option value="${esc(d)}"></option>`).join('');
+    // 사진설명은 해당 터널·번호 조합에서 과거에 입력된 값들을 select 드롭다운으로 제안(직접입력은
+    // 다른 select 필드들과 동일하게 목록 맨 위 고정, 2026-07-28 사용자 요청 — 기존 datalist 방식은
+    // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음).
+    const descOptsArr=photoDescOptions(tunnel, row.num);
+    // descCustom은 "직접입력" 선택 직후(아직 아무것도 안 쳤을 때도) 입력칸을 계속 보여주기 위한
+    // 명시적 플래그 — row.desc만으로 판단하면 빈 문자열일 때 목록으로 되돌아가버리는 버그가 있었다
+    // (2026-07-28). 번호를 바꿔 목록이 달라졌는데 기존 값이 새 목록에 없는 경우도 직접입력으로 취급.
+    const isCustomDesc=row.descCustom || (!!row.desc && !descOptsArr.includes(row.desc));
+    const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
     const thumbs=row.files.map((f,fi)=>
       `<div style="position:relative">
         <img src="${esc(f.url)}" alt="사진" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
@@ -3040,8 +3048,12 @@ function renderPhotoMultiRows(){
       </div>
       <div style="flex:1;min-width:160px">
         <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
-        <input type="text" class="modal-input" style="padding:8px" list="pmfdesc_${row.key}" value="${esc(row.desc)}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
-        <datalist id="pmfdesc_${row.key}">${descOpts}</datalist>
+        <select class="modal-select" style="padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
+          <option value="">선택</option>
+          <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
+          ${descOpts}
+        </select>
+        <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
       </div>
       <div>
         <div class="modal-hint" style="margin:0 0 4px">점검사진</div>
@@ -3060,12 +3072,23 @@ function _photoMultiSet(key, field, val){
 function _photoMultiSetNum(key, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row.num=val;
-  renderPhotoMultiRows(); // 번호가 바뀌면 사진설명 datalist 제안 목록도 새 번호 기준으로 다시 계산
+  renderPhotoMultiRows(); // 번호가 바뀌면 사진설명 select 제안 목록도 새 번호 기준으로 다시 계산
 }
+function _photoMultiDescChange(key, selEl){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  if(selEl.value==='__custom__'){
+    row.descCustom=true;
+    renderPhotoMultiRows();
+    document.getElementById('pmfdescc_'+key)?.focus();
+  } else {
+    row.descCustom=false;
+    row.desc=selEl.value;
+  }
+}
+// 기본 6행(번호 고정 1~6)에 더해 드물게 필요한 추가 촬영분을 위한 여분 행 — 번호는 비워둬 사용자가 직접 고른다.
 function addPhotoMultiRow(){
-  const used=_photoMultiRows.map(r=>r.num).filter(Boolean);
-  const nextNum=['1','2','3','4','5','6'].find(n=>!used.includes(n)) || '';
-  _photoMultiRows.push(newPhotoMultiRow(nextNum, ''));
+  _photoMultiRows.push(newPhotoMultiRow('', ''));
   renderPhotoMultiRows();
 }
 function removePhotoMultiRow(key){
@@ -3107,12 +3130,15 @@ function removePhotoMultiFile(key, fileIdx){
   row.files.splice(fileIdx,1);
   renderPhotoMultiRows();
 }
-// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1번 슬롯으로 첫 행을 자동 생성한다.
+// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1~6번 슬롯을 한 번에 채워 기본
+// 표시한다(2026-07-28 사용자 요청 — 매번 하나씩 추가하기보다 6개 슬롯이 다 보이는 편이 편함).
+// 비어있는 슬롯(사진설명·사진 둘 다 없음)은 등록 시 자동으로 제외되므로 안 쓴 번호를 그냥
+// 비워둬도 된다 — "+행 추가"는 드물게 6장을 넘길 때만 쓴다.
 // 수정 모드·다른 탭에는 photoMultiRowsList가 없어 조용히 종료.
 function refreshPhotoMultiRows(){
   if(!document.getElementById('photoMultiRowsList')){ renderPhotoMultiRows(); return; }
   if(!_photoMultiRows.length){
-    _photoMultiRows=[newPhotoMultiRow('1','')];
+    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
   }
   renderPhotoMultiRows();
 }
@@ -3131,18 +3157,21 @@ async function submitPhotoMulti(){
     if(f.required && !v && !missing) missing=f.label||f.key;
   });
   if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
-  if(!_photoMultiRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
-  if(_photoMultiRows.some(row=>!String(row.num||'').trim())){ alert('모든 행의 번호를 선택해주세요.'); return; }
+  // 기본 6행 중 실제로 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외 — 사용자가
+  // 매번 6행을 전부 삭제할 필요 없이 필요한 행만 채우면 되도록(2026-07-28).
+  const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
+  if(!usedRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
+  if(usedRows.some(row=>!String(row.num||'').trim())){ alert('사진설명·사진을 입력한 행에는 번호를 선택해주세요.'); return; }
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
   showAddModalProgress();
-  const total=_photoMultiRows.length;
+  const total=usedRows.length;
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
-  const tasks=_photoMultiRows.map(row=>()=>{
+  const tasks=usedRows.map(row=>()=>{
     const properties={
       '터널명':buildPropValue('select', shared['터널명']),
       '일자':buildPropValue('date', shared['일자']),
