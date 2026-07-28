@@ -1159,7 +1159,7 @@ const TAB_DEFS=[
     fields:[
       {key:'터널명', type:'select', options:['청하터널','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
       {key:'점검일자', type:'date', required:true, cascadeTrigger:true},
-      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, badgeFn:gubunSlug},
+      {key:'구분', type:'select', options:['특고압설비','저압설비','비상전원설비','기타','태양광발전설비','직무고시'], cascadeTrigger:true, extraOnChange:'refreshMonthlyChecklist()', badgeFn:gubunSlug},
       {key:'설비명', type:'select', uiType:'cascade-select', dependsOn:['구분'], cascadeTrigger:true,
         optionsFn:dep=>getEquipmentOptions(dep['구분']), emptyHint:'먼저 구분을 선택하세요',
         // 구분="기타"/"태양광발전설비"는 보고서 양식에서 구분 컬럼만 쓰고 설비명이 없어 공란
@@ -1216,7 +1216,7 @@ const TAB_DEFS=[
         optionsFn:dep=>{ const t=titleWithMonth(dep['측정일자'],'변압기온도측정표'); return t?[t]:[]; },
         emptyHint:'먼저 측정일자를 선택하세요'},
       {key:'점검자', type:'select', options:['김동록','신종섭','김태선','공우식']},
-      {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true},
+      {key:'변압기종류', type:'select', options:['조명용','일반용','동력용'], cascadeTrigger:true, extraOnChange:'refreshTransformerChecklist()'},
       {key:'용량', type:'text', uiType:'cascade-select', dependsOn:['터널명','변압기종류'],
         optionsFn:dep=>transformerCapacityOptions(dep['터널명'], dep['변압기종류']), emptyHint:'먼저 터널명·변압기종류를 선택하세요'},
       {key:'측정지점', type:'text', required:true, uiType:'cascade-select', dependsOn:['변압기종류'], cascadeTrigger:true,
@@ -2301,6 +2301,166 @@ function getFieldValue(f, idx){
   }
   return (document.getElementById(id)?.value||'').trim();
 }
+// 월간점검 탭 신규등록 — 구분 선택 시 MONTHLY_CHECKLIST 표준 항목을 설비명별로 묶어 체크리스트로
+// 보여주고, 체크된 항목마다 점검결과를 개별 입력해 여러 설비·점검내용을 한 번에 등록한다(2026-07-28
+// 사용자 요청 — 같은 날짜에 여러 설비명에 대한 점검내용이 여러 건 있는 경우가 많음). 카탈로그에 없는
+// 항목은 하단 "직접입력"으로 추가. 수정 모드는 레코드 1건만 고치는 것이라 기존 단일값 필드
+// (설비명/점검내용/점검결과)를 그대로 사용한다.
+var _monthlyCustomItems=[]; // [{설비명,점검내용,점검결과}] — openAddModal에서 모달 열 때마다 초기화
+function buildMonthlyChecklistHtml(){
+  return `<div class="modal-field">
+    <label class="modal-label">점검항목 <span class="modal-required">*</span></label>
+    <div class="modal-hint">구분을 선택하면 표준 점검항목이 표시됩니다. 이번 점검에 해당하는 항목을 모두 체크하고 결과가 다르면 개별로 바꿔주세요(기본값: 양호). 목록에 없는 항목은 아래에서 직접 추가할 수 있습니다.</div>
+    <div id="monthlyChecklistCatalogWrap">${renderMonthlyChecklistCatalog('')}</div>
+    <div id="monthlyChecklistCustomWrap">${renderMonthlyChecklistCustom()}</div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+      <input id="mchkCustomSeolbi" class="modal-input" type="text" placeholder="설비명(선택)" style="flex:1;min-width:100px"/>
+      <input id="mchkCustomContent" class="modal-input" type="text" placeholder="점검내용 직접입력" style="flex:2;min-width:160px"/>
+      <button type="button" class="tb-action-btn tb-add" onclick="addMonthlyCustomItem()">추가</button>
+    </div>
+  </div>`;
+}
+function renderMonthlyChecklistCatalog(gubun){
+  if(!gubun) return '<div class="modal-hint">먼저 구분을 선택하세요.</div>';
+  const items=MONTHLY_CHECKLIST.filter(c=>c.구분===gubun);
+  if(!items.length) return '<div class="modal-hint">이 구분에는 표준 점검항목이 없습니다. 아래에서 직접 추가해주세요.</div>';
+  // 구분="기타"/"태양광발전설비"는 MONTHLY_CHECKLIST 원본에 예전 설비명(예: "발전기")이 남아있지만
+  // 실제로는 설비명이 없는 항목이다(getEquipmentOptions/getChecklistOptions와 동일한 예외 처리,
+  // 2026-07-23 데이터정리 참고) — 여기서도 동일하게 무시하고 "공통"으로만 묶는다.
+  const noEquip=GUBUN_NO_EQUIPMENT.includes(gubun);
+  const groups=[], map={};
+  items.forEach(it=>{
+    const g=noEquip ? '공통' : (it.설비명||'공통');
+    if(!map[g]){ map[g]={설비명:g,items:[]}; groups.push(map[g]); }
+    map[g].items.push(it);
+  });
+  let html='';
+  groups.forEach((g,gi)=>{
+    html+=`<div class="form-group-hd" style="margin-top:${gi===0?'4px':'14px'}">${esc(g.설비명)}</div>`;
+    g.items.forEach((it,ii)=>{
+      const cid='mchk_'+gi+'_'+ii;
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;flex:1;min-width:200px;cursor:pointer;font-weight:400">
+          <input type="checkbox" class="mchk-catalog-cb" id="${cid}" data-seolbi="${esc(g.설비명==='공통'?'':g.설비명)}" data-content="${esc(it.점검내용)}" onchange="onMonthlyChecklistToggle('${cid}')"/>
+          <span>${esc(it.점검내용)}</span>
+        </label>
+        <select id="${cid}_r" class="modal-select" style="width:110px;display:none">
+          <option value="양호">양호</option><option value="-">-</option><option value="불량">불량</option><option value="점검요">점검요</option>
+        </select>
+      </div>`;
+    });
+  });
+  return html;
+}
+function renderMonthlyChecklistCustom(){
+  if(!_monthlyCustomItems.length) return '';
+  let html='<div class="form-group-hd" style="margin-top:14px">직접입력 항목</div>';
+  _monthlyCustomItems.forEach((it,i)=>{
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
+      <span style="flex:1;min-width:200px">${it.설비명?esc(it.설비명)+' · ':''}${esc(it.점검내용)}</span>
+      <select class="modal-select" data-idx="${i}" style="width:110px" onchange="updateMonthlyCustomResult(this)">
+        <option value="양호"${it.점검결과==='양호'?' selected':''}>양호</option>
+        <option value="-"${it.점검결과==='-'?' selected':''}>-</option>
+        <option value="불량"${it.점검결과==='불량'?' selected':''}>불량</option>
+        <option value="점검요"${it.점검결과==='점검요'?' selected':''}>점검요</option>
+      </select>
+      <button type="button" class="tb-action-btn tb-delete" onclick="removeMonthlyCustomItem(${i})">삭제</button>
+    </div>`;
+  });
+  return html;
+}
+function onMonthlyChecklistToggle(cid){
+  const cb=document.getElementById(cid), sel=document.getElementById(cid+'_r');
+  if(sel) sel.style.display=(cb&&cb.checked)?'':'none';
+}
+// 구분(ff_2) 변경 시 호출 — 카탈로그만 다시 그린다(직접입력 항목은 손대지 않아 입력 중이던 값이 안 날아감).
+// 수정 모드에는 monthlyChecklistCatalogWrap이 없어 조용히 종료.
+function refreshMonthlyChecklist(){
+  const wrap=document.getElementById('monthlyChecklistCatalogWrap');
+  if(!wrap) return;
+  const gubunSel=document.getElementById('ff_2');
+  const gubun=gubunSel ? (gubunSel.value==='__custom__' ? '' : gubunSel.value) : '';
+  wrap.innerHTML=renderMonthlyChecklistCatalog(gubun);
+}
+function addMonthlyCustomItem(){
+  const gubunSel=document.getElementById('ff_2');
+  const gubun=gubunSel ? (gubunSel.value==='__custom__' ? '' : gubunSel.value) : '';
+  if(!gubun){ alert('먼저 구분을 선택해주세요.'); return; }
+  const contentInput=document.getElementById('mchkCustomContent');
+  const seolbiInput=document.getElementById('mchkCustomSeolbi');
+  const content=(contentInput?.value||'').trim();
+  if(!content){ alert('점검내용을 입력해주세요.'); return; }
+  const seolbi=GUBUN_NO_EQUIPMENT.includes(gubun) ? '' : (seolbiInput?.value||'').trim();
+  _monthlyCustomItems.push({설비명:seolbi, 점검내용:content, 점검결과:'양호'});
+  if(contentInput) contentInput.value='';
+  if(seolbiInput) seolbiInput.value='';
+  const wrap=document.getElementById('monthlyChecklistCustomWrap');
+  if(wrap) wrap.innerHTML=renderMonthlyChecklistCustom();
+}
+function removeMonthlyCustomItem(i){
+  _monthlyCustomItems.splice(i,1);
+  const wrap=document.getElementById('monthlyChecklistCustomWrap');
+  if(wrap) wrap.innerHTML=renderMonthlyChecklistCustom();
+}
+function updateMonthlyCustomResult(sel){
+  const i=parseInt(sel.dataset.idx,10);
+  if(_monthlyCustomItems[i]) _monthlyCustomItems[i].점검결과=sel.value;
+}
+// 체크된 카탈로그 항목 + 직접입력 항목을 합쳐 각각 별도 페이지로 순차 등록
+// (공통 필드: 터널명/점검일자/구분/제목/비고)
+async function submitMonthlyForm(){
+  const tabDef=getTabDef('monthly');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const commonKeys=['터널명','점검일자','구분','제목','비고'];
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header || !commonKeys.includes(f.key)) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    if(f.required && !v && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const items=[];
+  document.querySelectorAll('.mchk-catalog-cb:checked').forEach(cb=>{
+    const resultSel=document.getElementById(cb.id+'_r');
+    items.push({ 설비명:cb.dataset.seolbi||'', 점검내용:cb.dataset.content, 점검결과:(resultSel?resultSel.value:'양호') });
+  });
+  _monthlyCustomItems.forEach(it=>{
+    items.push({ 설비명:it.설비명||'', 점검내용:it.점검내용, 점검결과:it.점검결과||'양호' });
+  });
+  if(!items.length){ alert('점검항목을 하나 이상 선택하거나 추가해주세요.'); return; }
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true; lbl.textContent='등록 중...';
+  showAddModalProgress(); updateAddModalProgress(0, items.length);
+
+  const commonProps={};
+  tabDef.fields.forEach(f=>{
+    if(f.header || !commonKeys.includes(f.key)) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) commonProps[f.key]=val;
+  });
+
+  let done=0, failed=0;
+  for(const it of items){
+    const properties={...commonProps, '점검내용':buildPropValue('text', it.점검내용), '점검결과':buildPropValue('select', it.점검결과)};
+    if(it.설비명) properties['설비명']=buildPropValue('select', it.설비명);
+    try{
+      const resp=await fetch(CFG.workerUrl+'/v1/pages',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:tabDef.dbId},properties}) });
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+    }catch(e){ failed++; console.error(e); }
+    done++; updateAddModalProgress(done, items.length);
+  }
+
+  btn.disabled=false; lbl.textContent='등록';
+  closeAddModal();
+  loadTabData('monthly');
+  toast(failed ? `${items.length-failed}건 등록 완료, ${failed}건 실패` : `${items.length}건 등록되었습니다.`);
+}
 // 전기설비기록 신규등록/수정 — 설비현황 32개 입력 그리드 마크업만 별도 함수로 분리(터널명 변경 시
 // syncElecTunnelDefaults()가 이 그리드를 다시 그려 최근 레코드 값으로 갱신하기 위함, buildGeneratorChkGridHtml과 동일 패턴)
 function buildElecChkGridHtml(chkSrc){
@@ -2538,6 +2698,107 @@ const TRANSFORMER_REF_IMAGES=[
   {src:'assets/transformer-point-front.jpg', label:'전면 — ①~⑥번 지점'},
   {src:'assets/transformer-point-back.jpg', label:'후면 — ⑦~⑮번 지점'}
 ];
+// 변압기온도 탭 신규등록 — 변압기종류(조명용/일반용/동력용) 선택 시 지점 #1~#15를 체크리스트로
+// 보여주고, 체크된 지점마다 온도(℃)·비고를 개별 입력해 여러 지점을 한 번에 등록한다(2026-07-28
+// 사용자 요청 — 같은 날짜에 여러 지점을 함께 측정하는 경우가 많음). 수정 모드는 레코드 1건만
+// 고치는 것이라 기존 단일값 필드(측정지점/지점번호/온도(℃)/비고)를 그대로 사용한다.
+function buildTransformerChecklistHtml(){
+  return `<div class="modal-field">
+    <label class="modal-label">측정지점 <span class="modal-required">*</span></label>
+    <div class="modal-hint">변압기종류를 선택하면 지점 #1~#15 목록이 표시됩니다. 이번에 측정한 지점을 모두 체크하고 온도(℃)를 입력하세요(비고 기본값: 양호).</div>
+    <div id="transformerChecklistWrap">${renderTransformerChecklist('')}</div>
+  </div>`;
+}
+function renderTransformerChecklist(type){
+  if(!type) return '<div class="modal-hint">먼저 변압기종류를 선택하세요.</div>';
+  let html='';
+  for(let n=1;n<=15;n++){
+    const cid='tchk_'+n;
+    const point=type+' #'+n;
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;width:110px;cursor:pointer;font-weight:400">
+        <input type="checkbox" class="tchk-cb" id="${cid}" data-point="${esc(point)}" data-no="${n}" onchange="onTransformerChecklistToggle('${cid}')"/>
+        <span>${esc(point)}</span>
+      </label>
+      <input id="${cid}_t" class="modal-input" type="number" step="0.1" placeholder="온도(℃)" style="width:110px;display:none"/>
+      <select id="${cid}_r" class="modal-select" style="width:100px;display:none">
+        <option value="양호">양호</option><option value="불량">불량</option><option value="점검요">점검요</option>
+      </select>
+    </div>`;
+  }
+  return html;
+}
+function onTransformerChecklistToggle(cid){
+  const cb=document.getElementById(cid), t=document.getElementById(cid+'_t'), r=document.getElementById(cid+'_r');
+  const show=cb&&cb.checked;
+  if(t) t.style.display=show?'':'none';
+  if(r) r.style.display=show?'':'none';
+}
+// 변압기종류(ff_4) 변경 시 호출 — 수정 모드에는 transformerChecklistWrap이 없어 조용히 종료.
+function refreshTransformerChecklist(){
+  const wrap=document.getElementById('transformerChecklistWrap');
+  if(!wrap) return;
+  const typeSel=document.getElementById('ff_4');
+  const type=typeSel ? (typeSel.value==='__custom__' ? '' : typeSel.value) : '';
+  wrap.innerHTML=renderTransformerChecklist(type);
+}
+// 체크된 지점마다 별도 페이지로 순차 등록(공통 필드: 터널명/측정일자/제목/점검자/변압기종류/용량)
+async function submitTransformerForm(){
+  const tabDef=getTabDef('transformer');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const commonKeys=['터널명','측정일자','제목','점검자','변압기종류','용량'];
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header || !commonKeys.includes(f.key)) return;
+    const v=getFieldValue(f, idx);
+    values[f.key]=v;
+    if(f.required && !v && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const items=[];
+  document.querySelectorAll('.tchk-cb:checked').forEach(cb=>{
+    const tEl=document.getElementById(cb.id+'_t'), rEl=document.getElementById(cb.id+'_r');
+    items.push({ 측정지점:cb.dataset.point, 지점번호:cb.dataset.no, 온도:(tEl?tEl.value:''), 비고:(rEl?rEl.value:'양호') });
+  });
+  if(!items.length){ alert('측정지점을 하나 이상 체크해주세요.'); return; }
+  const noTemp=items.find(it=>it.온도==='');
+  if(noTemp){ alert(noTemp.측정지점+'의 온도(℃)를 입력해주세요.'); return; }
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true; lbl.textContent='등록 중...';
+  showAddModalProgress(); updateAddModalProgress(0, items.length);
+
+  const commonProps={};
+  tabDef.fields.forEach(f=>{
+    if(f.header || !commonKeys.includes(f.key)) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) commonProps[f.key]=val;
+  });
+
+  let done=0, failed=0;
+  for(const it of items){
+    const properties={...commonProps,
+      '측정지점':buildPropValue('text', it.측정지점),
+      '지점번호':buildPropValue('number', it.지점번호),
+      '온도(℃)':buildPropValue('number', it.온도),
+      '비고':buildPropValue('select', it.비고)
+    };
+    try{
+      const resp=await fetch(CFG.workerUrl+'/v1/pages',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:tabDef.dbId},properties}) });
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+    }catch(e){ failed++; console.error(e); }
+    done++; updateAddModalProgress(done, items.length);
+  }
+
+  btn.disabled=false; lbl.textContent='등록';
+  closeAddModal();
+  loadTabData('transformer');
+  toast(failed ? `${items.length-failed}건 등록 완료, ${failed}건 실패` : `${items.length}건 등록되었습니다.`);
+}
 function buildTransformerRefHtml(){
   return `<div class="form-group-hd">측정지점 참고사진(고정)</div>
     <div class="modal-hint" style="margin-bottom:8px">※ 지점번호 ①~⑮ 위치 확인용 참고사진입니다(모든 터널·변압기종류 공통). 클릭하면 크게 볼 수 있고, 등록 데이터에는 저장되지 않습니다.</div>
@@ -2568,6 +2829,7 @@ function openAddModal(tabId, recordId){
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
   if(!isAuthed()){ toast('로그인이 필요합니다.'); openCfgModal(); return; }
   hideAddModalProgress();
+  _monthlyCustomItems=[];
   EDIT_TAB=tabId; EDIT_PAGE_ID=recordId||null;
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
@@ -2577,6 +2839,11 @@ function openAddModal(tabId, recordId){
   //  그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다)
   let html='';
   let groupOpen=false;
+  // 신규등록(수정 아님)에서 한 번에 여러 건을 만드는 탭 — 아래 3개 필드는 단일값 select/text 대신
+  // buildMonthlyChecklistHtml/buildTransformerChecklistHtml의 체크리스트 UI로 대체된다(2026-07-28
+  // 사용자 요청 — 같은 날짜에 여러 설비/측정지점을 한 번에 점검·측정하는 경우가 많았음). 수정 모드는
+  // 기존 레코드 1건만 고치는 것이므로 원래의 단일값 필드 그대로 유지.
+  const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'] }[tabId] : null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header){
       if(groupOpen) html+='</div>';
@@ -2584,13 +2851,16 @@ function openAddModal(tabId, recordId){
       groupOpen=true;
       return;
     }
+    if(MULTI_ITEM_FIELDS && MULTI_ITEM_FIELDS.includes(f.key)) return;
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
   });
   if(groupOpen) html+='</div>';
   if(tabId==='elec') html+=buildElecFormExtra(r);
   if(tabId==='generator') html+=buildGeneratorFormExtra(r);
+  if(tabId==='transformer' && !r) html+=buildTransformerChecklistHtml();
   if(tabId==='transformer') html+=buildTransformerRefHtml();
+  if(tabId==='monthly' && !r) html+=buildMonthlyChecklistHtml();
   document.getElementById('addModalFields').innerHTML=html;
   // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
   // 이미 넓게 확장돼 있었음. monthly(캐스케이드셀렉트 3개+장문 점검내용)와 task(장문 업무내용·
@@ -2715,6 +2985,8 @@ function removePhotoFile(idx, fieldId){
 function submitAddForm(){
   if(EDIT_TAB==='elec'){ submitElecForm(); return; }
   if(EDIT_TAB==='generator'){ submitGeneratorForm(); return; }
+  if(EDIT_TAB==='monthly' && !EDIT_PAGE_ID){ submitMonthlyForm(); return; }
+  if(EDIT_TAB==='transformer' && !EDIT_PAGE_ID){ submitTransformerForm(); return; }
   const tabDef=getTabDef(EDIT_TAB);
   if(!tabDef) return;
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
