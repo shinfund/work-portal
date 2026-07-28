@@ -1253,8 +1253,8 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
-      {key:'일자', type:'date', required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
         emptyHint:'먼저 일자를 선택하세요'},
@@ -2830,6 +2830,7 @@ function openAddModal(tabId, recordId){
   if(!isAuthed()){ toast('로그인이 필요합니다.'); openCfgModal(); return; }
   hideAddModalProgress();
   _monthlyCustomItems=[];
+  _photoMultiRows=[]; _photoMultiNextKey=1;
   EDIT_TAB=tabId; EDIT_PAGE_ID=recordId||null;
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
@@ -2839,11 +2840,12 @@ function openAddModal(tabId, recordId){
   //  그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다)
   let html='';
   let groupOpen=false;
-  // 신규등록(수정 아님)에서 한 번에 여러 건을 만드는 탭 — 아래 3개 필드는 단일값 select/text 대신
-  // buildMonthlyChecklistHtml/buildTransformerChecklistHtml의 체크리스트 UI로 대체된다(2026-07-28
-  // 사용자 요청 — 같은 날짜에 여러 설비/측정지점을 한 번에 점검·측정하는 경우가 많았음). 수정 모드는
-  // 기존 레코드 1건만 고치는 것이므로 원래의 단일값 필드 그대로 유지.
-  const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'] }[tabId] : null;
+  // 신규등록(수정 아님)에서 한 번에 여러 건을 만드는 탭 — 아래 필드들은 단일값 select/text 대신
+  // buildMonthlyChecklistHtml/buildTransformerChecklistHtml/buildPhotoMultiHtml의 다중행 UI로
+  // 대체된다(2026-07-28 사용자 요청 — 같은 날짜에 여러 설비/측정지점/사진을 한 번에 등록하는 경우가
+  // 많았음, photo는 monthly-inspection-team.html에 먼저 구현된 패턴을 이식). 수정 모드는 기존
+  // 레코드 1건만 고치는 것이므로 원래의 단일값 필드 그대로 유지.
+  const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'], photo:['번호','사진설명','점검사진'] }[tabId] : null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header){
       if(groupOpen) html+='</div>';
@@ -2861,6 +2863,7 @@ function openAddModal(tabId, recordId){
   if(tabId==='transformer' && !r) html+=buildTransformerChecklistHtml();
   if(tabId==='transformer') html+=buildTransformerRefHtml();
   if(tabId==='monthly' && !r) html+=buildMonthlyChecklistHtml();
+  if(tabId==='photo' && !r) html+='<div id="photoMultiWrap"></div>';
   document.getElementById('addModalFields').innerHTML=html;
   // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
   // 이미 넓게 확장돼 있었음. monthly(캐스케이드셀렉트 3개+장문 점검내용)와 task(장문 업무내용·
@@ -2870,16 +2873,22 @@ function openAddModal(tabId, recordId){
   document.getElementById('addModal').classList.add('modal-open');
   document.body.style.overflow='hidden';
   initDraggableModals();
-  // 점검사진(type:'file') 필드 초기화 — 수정 모드면 기존 사진을 _photoFiles에 로드
+  // 점검사진(type:'file') 필드 초기화 — 수정 모드면 기존 사진을 _photoFiles에 로드(photo 탭
+  // 신규등록은 아래 photoMultiWrap이 행마다 별도 파일 목록(row.files)을 관리하므로 대상 아님)
   const fileIdx=tabDef.fields.findIndex(f=>f.type==='file');
-  if(fileIdx>=0){
+  if(fileIdx>=0 && !(tabId==='photo' && !r)){
     _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
     renderPhotoFileList('ff_'+fileIdx);
   }
   // 캐스케이딩 select 초기 옵션 채우기 — 수정 모드면 기존 값을 유지하며 목록에 없으면 직접입력으로 표시
   tabDef.fields.forEach((f,idx)=>{
+    if(MULTI_ITEM_FIELDS && MULTI_ITEM_FIELDS.includes(f.key)) return;
     if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
   });
+  if(tabId==='photo' && !r){
+    document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
+    renderPhotoMultiRows();
+  }
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
@@ -2889,6 +2898,7 @@ function closeAddModal(e){
   hideAddModalProgress();
   EDIT_TAB=null; EDIT_PAGE_ID=null;
   _photoFiles=[];
+  _photoMultiRows=[];
 }
 // 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 자동 압축,
 // 압축이 불가능한 파일(문서 등)이나 압축 후에도 초과하는 이미지는 업로드를 막고 안내한다.
@@ -2982,11 +2992,183 @@ function removePhotoFile(idx, fieldId){
   _photoFiles.splice(idx,1);
   renderPhotoFileList(fieldId);
 }
+// ── 점검사진 신규등록 다중행(번호·사진설명·사진) — monthly-inspection-team.html의 동일 탭에
+// 먼저 구현된 패턴 이식(2026-07-28). 이 앱은 팀 앱과 달리 번호가 월간 이어지는 일련번호가 아니라
+// 터널·날짜당 고정 1~6번 슬롯이라, 행마다 1~6 select로 번호를 고르게 하고 사진설명은 해당
+// 터널·번호 조합의 과거 입력값을 datalist로 제안한다(자유입력도 가능).
+var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name}]}]
+function newPhotoMultiRow(num, desc){
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', files:[] };
+}
+function buildPhotoMultiHtml(){
+  return `<div class="modal-field">
+    <label class="modal-label">번호·사진설명 <span class="modal-required">*</span></label>
+    <div class="modal-hint">촬영한 사진 수만큼 행을 추가해 번호(1~6)·사진설명·사진을 각각 등록합니다.</div>
+    <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+      <button type="button" class="tb-action-btn tb-add" onclick="addPhotoMultiRow()">+ 행 추가</button>
+    </div>
+    <div id="photoMultiRowsList"></div>
+  </div>`;
+}
+function renderPhotoMultiRows(){
+  const wrap=document.getElementById('photoMultiRowsList');
+  if(!wrap) return;
+  if(!_photoMultiRows.length){
+    wrap.innerHTML='<div class="modal-hint">터널명·일자를 선택하면 첫 행이 자동 생성됩니다.</div>';
+    return;
+  }
+  const tunnelSel=document.getElementById('ff_0');
+  const tunnel=tunnelSel ? (tunnelSel.value==='__custom__' ? '' : tunnelSel.value) : '';
+  wrap.innerHTML=_photoMultiRows.map(row=>{
+    const numOpts=['1','2','3','4','5','6'].map(n=>`<option value="${n}"${row.num===n?' selected':''}>${n}</option>`).join('');
+    const descOpts=photoDescOptions(tunnel, row.num).map(d=>`<option value="${esc(d)}"></option>`).join('');
+    const thumbs=row.files.map((f,fi)=>
+      `<div style="position:relative">
+        <img src="${esc(f.url)}" alt="사진" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+        <button type="button" onclick="removePhotoMultiFile(${row.key},${fi})" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer">✕</button>
+      </div>`
+    ).join('');
+    return `<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;border:1px solid var(--border);border-radius:var(--r8);padding:10px;margin-bottom:8px">
+      <div style="width:70px">
+        <div class="modal-hint" style="margin:0 0 4px">번호</div>
+        <select class="modal-select" style="padding:8px" onchange="_photoMultiSetNum(${row.key},this.value)">
+          <option value="">-</option>${numOpts}
+        </select>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
+        <input type="text" class="modal-input" style="padding:8px" list="pmfdesc_${row.key}" value="${esc(row.desc)}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+        <datalist id="pmfdesc_${row.key}">${descOpts}</datalist>
+      </div>
+      <div>
+        <div class="modal-hint" style="margin:0 0 4px">점검사진</div>
+        <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>
+        <input type="file" id="pmf_${row.key}" accept="image/*" multiple style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start">${thumbs}</div>
+      <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" style="align-self:center;width:24px;height:24px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+function _photoMultiSet(key, field, val){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(row) row[field]=val;
+}
+function _photoMultiSetNum(key, val){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(row) row.num=val;
+  renderPhotoMultiRows(); // 번호가 바뀌면 사진설명 datalist 제안 목록도 새 번호 기준으로 다시 계산
+}
+function addPhotoMultiRow(){
+  const used=_photoMultiRows.map(r=>r.num).filter(Boolean);
+  const nextNum=['1','2','3','4','5','6'].find(n=>!used.includes(n)) || '';
+  _photoMultiRows.push(newPhotoMultiRow(nextNum, ''));
+  renderPhotoMultiRows();
+}
+function removePhotoMultiRow(key){
+  _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
+  renderPhotoMultiRows();
+}
+function uploadPhotoMultiFile(input, key){
+  const files=Array.from(input.files||[]);
+  if(!files.length) return;
+  if(!isAuthed()){ toast('로그인이 필요합니다.'); return; }
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  const results=new Array(files.length).fill(null);
+  let done=0;
+  files.forEach((file,i)=>{
+    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+      const formData=new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'monthly-inspection');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
+    })
+      .catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); })
+      .finally(()=>{
+        done++;
+        if(done===files.length){
+          results.forEach(r=>{ if(r) row.files.push(r); });
+          renderPhotoMultiRows();
+        }
+      });
+  });
+  input.value='';
+}
+function removePhotoMultiFile(key, fileIdx){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  row.files.splice(fileIdx,1);
+  renderPhotoMultiRows();
+}
+// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1번 슬롯으로 첫 행을 자동 생성한다.
+// 수정 모드·다른 탭에는 photoMultiRowsList가 없어 조용히 종료.
+function refreshPhotoMultiRows(){
+  if(!document.getElementById('photoMultiRowsList')){ renderPhotoMultiRows(); return; }
+  if(!_photoMultiRows.length){
+    _photoMultiRows=[newPhotoMultiRow('1','')];
+  }
+  renderPhotoMultiRows();
+}
+// 행마다 별도 페이지로 순차 등록(공통 필드: 터널명/일자/제목, 최대 6개 동시 진행)
+async function submitPhotoMulti(){
+  const tabDef=getTabDef('photo');
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const sharedKeys=['터널명','일자','제목'];
+  const shared={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header || !sharedKeys.includes(f.key)) return;
+    const v=getFieldValue(f, idx);
+    shared[f.key]=v;
+    if(f.required && !v && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+  if(!_photoMultiRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
+  if(_photoMultiRows.some(row=>!String(row.num||'').trim())){ alert('모든 행의 번호를 선택해주세요.'); return; }
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  showAddModalProgress();
+  const total=_photoMultiRows.length;
+  let done=0;
+  const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
+
+  const tasks=_photoMultiRows.map(row=>()=>{
+    const properties={
+      '터널명':buildPropValue('select', shared['터널명']),
+      '일자':buildPropValue('date', shared['일자']),
+      '제목':buildPropValue('title', shared['제목']),
+      '번호':buildPropValue('number', row.num)
+    };
+    if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
+    if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
+    return notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties}).then(page=>{ progress(); return page; });
+  });
+
+  try{
+    await runWithConcurrency(tasks, 6);
+    btn.disabled=false; lbl.textContent='등록';
+    closeAddModal();
+    loadTabData('photo');
+    toast(total+'건 등록되었습니다.');
+  }catch(e){
+    btn.disabled=false; lbl.textContent='등록';
+    alert('등록 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
+    console.error(e);
+  }
+}
 function submitAddForm(){
   if(EDIT_TAB==='elec'){ submitElecForm(); return; }
   if(EDIT_TAB==='generator'){ submitGeneratorForm(); return; }
   if(EDIT_TAB==='monthly' && !EDIT_PAGE_ID){ submitMonthlyForm(); return; }
   if(EDIT_TAB==='transformer' && !EDIT_PAGE_ID){ submitTransformerForm(); return; }
+  if(EDIT_TAB==='photo' && !EDIT_PAGE_ID){ submitPhotoMulti(); return; }
   const tabDef=getTabDef(EDIT_TAB);
   if(!tabDef) return;
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
