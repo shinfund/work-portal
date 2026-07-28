@@ -142,9 +142,9 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-action-btn.tb-report{background:#534AB7}
 .tb-action-btn.tb-report:hover{background:#443a94}
-/* amber(#BA7517) 그대로 쓰면 흰 글자 대비가 3.7:1로 WCAG AA(4.5:1) 미달이라, 대비가 넉넉한(10:1)
-   더 짙은 amber800을 쓴다(2026-07-25, C1). amber800은 다크모드에서도 값이 바뀌지 않아 안전하다. */
-.tb-action-btn.tb-unified{background:var(--amber800)}
+/* 점검팀 앱(monthly-inspection-team.html)의 "통합 보고서 생성" 버튼과 색상을 통일(2026-07-28, 사용자 요청).
+   #B45309는 흰 글자 대비 5.02:1로 WCAG AA(4.5:1) 충족, 다크모드에서도 리터럴값이라 안전하다. */
+.tb-action-btn.tb-unified{background:#B45309}
 .tb-action-btn.tb-unified:hover{background:#94400a}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
@@ -165,19 +165,19 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .tunnel-c1{background:#147A44}
 .tunnel-c2{background:#5B4FBD}
 .tunnel-c3{background:#A15C00}
-.tunnel-c4{background:#5C5648}
+.tunnel-c4{background:#5C5648}
 /* 월간점검 탭 — 구분(6종) 뱃지 */
 .gubun-c0{background:#B23A12}
 .gubun-c1{background:#1565C0}
 .gubun-c2{background:#A15C00}
 .gubun-c3{background:#5C5648}
 .gubun-c4{background:#147A44}
-.gubun-c5{background:#5B4FBD}
+.gubun-c5{background:#5B4FBD}
 /* 월간점검 탭 — 점검결과(양호/불량/점검요/-) 뱃지 */
 .result-good{background:#147A44}
 .result-bad{background:#B23A12}
 .result-warn{background:#A15C00}
-.result-none{background:#5C5648}
+.result-none{background:#5C5648}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
