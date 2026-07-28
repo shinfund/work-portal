@@ -130,6 +130,7 @@ tr:hover td{background:var(--sky50)}
 .cat-긴급{background:#B23A2E}
 .cat-이벤트{background:#5B4FBD}
 .cat-업무{background:#A15C00}
+.cat-기타{background:#6D4C33}
 .cat-etc{background:var(--gray50);color:var(--gray600);border:1px solid var(--gray100)}
 
 /* ── 고정 뱃지 ── */
@@ -614,7 +615,7 @@ window.addEventListener('storage', function(e){
 
 /* ── 신규추가/수정/삭제 공통 헬퍼 ── */
 var EDIT_PAGE_ID = null;
-var CANONICAL_CATEGORIES = ['공지','안내','긴급','이벤트','업무'];
+var CANONICAL_CATEGORIES = ['공지','안내','긴급','이벤트','업무','기타'];
 function getUniqueValues(key){
   var seen={}, result=[];
   ALL_DATA.forEach(function(r){ var v=r[key]; if(v && !seen[v]){ seen[v]=1; result.push(v); } });
