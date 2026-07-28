@@ -168,7 +168,7 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── 근무형태 뱃지 ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 6px 2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 6px 2px 0;color:#fff;background:#5A6472;border:1px solid rgba(0,0,0,.18)}
 .type-당직근무{background:#1565C0}
 .type-비상대기{background:#147A44}
 .type-비상출동{background:#B23A12}
@@ -212,8 +212,6 @@ tr:hover td{background:var(--sky50)}
 #addModal.modal-open{display:block}
 #detailModal{display:none}
 #detailModal.modal-open{display:block}
-.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
-.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
 .detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r12);overflow:hidden;margin-bottom:14px}
@@ -233,6 +231,8 @@ tr:hover td{background:var(--sky50)}
 .detail-del-btn:hover{background:var(--coral100)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
@@ -866,11 +866,21 @@ function needsFullHistory(y,m){
   const ym=parseInt(y,10)*100+parseInt(m,10);
   return ym<cutoffYm;
 }
+// renderSummary의 "전월 대비"는 curYear/curMonth 바로 앞달 데이터도 함께 봐야 하므로,
+// 로드 범위 판정 시 당월뿐 아니라 전월 기준으로도 needsFullHistory를 확인한다
+// (안 그러면 로드창 경계月에서 전월 데이터가 빠져 "전월 ₩0"처럼 잘못 표시됨).
+function needsFullHistoryForCompare(y,m){
+  if(needsFullHistory(y,m)) return true;
+  if(m===0) return false;
+  let pm=m-1,py=y;
+  if(pm<1){pm=12;py--;}
+  return needsFullHistory(py,pm);
+}
 function pickYear(y){
   curYear=y; ddYearBase=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistoryForCompare(y,curMonth) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
@@ -878,7 +888,7 @@ function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistoryForCompare(curYear,m) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
 }
@@ -1289,6 +1299,12 @@ async function loadData(opts){
         if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
       }
       renderAll();
+      // 이번달 데이터가 아직 없어 latest가 로드창 경계 밖으로 밀려나면(예: 이번달 등록건 0건),
+      // "전월 대비" 비교에 필요한 전월 데이터가 기본 로드범위(최근 2개월)에 안 잡힐 수 있다 —
+      // 그 경우에만 전체 이력을 한 번 더 불러와 재렌더링(finally에서 _isLoading이 풀린 뒤 실행되도록 지연)
+      if(!needFull && needsFullHistoryForCompare(curYear,curMonth)){
+        setTimeout(()=>{ if(isAuthed())loadData({full:true}); },0);
+      }
       const now=new Date();
       const ts=`${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
       if(lu){lu.textContent='Update '+ts;lu.style.color='';}
