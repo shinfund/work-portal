@@ -28,7 +28,11 @@ const MIME_BY_EXT = {
   ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   pdf: "application/pdf", txt: "text/plain", csv: "text/csv", zip: "application/zip",
 };
-const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB
+const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB (기본, 대부분의 앱 — 사진은 클라이언트에서 500KB로 압축 후 업로드)
+// 앱별로 기본값보다 큰 상한이 필요하면 여기 추가(예: 문서 첨부 위주 앱). R2/Worker 자체는 훨씬 큰
+// 파일도 스트리밍으로 처리 가능하지만, Cloudflare 기본 요청 업로드 한도(플랜별 100MB 안팎)에 여유를
+// 두기 위해 50MB로 설정(2026-07-28, 공지사항 앱 — 사진은 500KB로 압축, 문서 첨부만 이 상한 적용).
+const MAX_UPLOAD_BYTES_BY_APP = { notice: 50 * 1024 * 1024 };
 
 const LOGIN_MAX_ATTEMPTS = 10;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
@@ -274,14 +278,15 @@ export default {
         const file = formData.get("file");
         if (!file) return corsJson({ error: "file 필드 없음" }, 400, CORS);
 
-        if (file.size > MAX_UPLOAD_BYTES) {
-          return corsJson({ error: "파일 용량 초과 (최대 8MB)" }, 413, CORS);
-        }
-
         const UPLOAD_APPS = ["defect-management", "asset-register", "overtime-work", "monthly-inspection", "monthly-inspection-team", "notice"];
         const DEFAULT_UPLOAD_APP = "defect-management";
         const appId = formData.get("app");
         const folder = UPLOAD_APPS.includes(appId) ? appId : DEFAULT_UPLOAD_APP;
+
+        const maxBytes = MAX_UPLOAD_BYTES_BY_APP[folder] || MAX_UPLOAD_BYTES;
+        if (file.size > maxBytes) {
+          return corsJson({ error: `파일 용량 초과 (최대 ${Math.round(maxBytes / 1024 / 1024)}MB)` }, 413, CORS);
+        }
 
         const nameParts = (file.name || "").split(".");
         const ext = nameParts.length > 1 ? nameParts.pop().toLowerCase() : "";

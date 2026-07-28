@@ -164,6 +164,20 @@ html[data-theme="dark"] .attach-chip .ac-kind.link{background:rgba(52,168,110,.2
 .detail-attach-link.plain:hover{background:var(--sky100)}
 .m365-hint{font-size:11px;color:var(--txt3);margin-top:8px;line-height:1.6}
 
+/* ── 첨부 이미지 미리보기(사진 첨부 시 상세모달에 크게 표시, 하자보수현황 앱 사진 섹션 패턴) ── */
+.attach-photo-block{margin-bottom:10px}
+.attach-photo-block:last-child{margin-bottom:0}
+.attach-photo-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
+
 /* ── 본문 ── */
 .content-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r8);padding:14px;font-size:13.5px;color:var(--txt2);white-space:pre-wrap;word-break:break-word;line-height:1.75}
 
@@ -325,6 +339,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
             <span class="attach-status" id="attachStatus">파일을 선택하세요 (여러 개 선택 가능)</span>
           </div>
           <input type="file" id="addAttachFile" multiple style="display:none" onchange="uploadAttachments(this)">
+          <div class="m365-hint">사진은 자동으로 500KB 이하로 압축되고, 문서 등 일반 파일은 최대 50MB까지 압축 없이 업로드됩니다.</div>
           <div class="attach-link-row">
             <input id="addLinkUrl" class="modal-input" type="text" placeholder="OneDrive/SharePoint/Teams 공유 링크 (엑셀 공동편집용)"/>
             <button type="button" class="attach-file-btn" onclick="addLinkAttachment()">링크 추가</button>
@@ -479,6 +494,13 @@ function isM365Link(url){
       || /(^|\.)onedrive\.live\.com$/.test(host) || host==='1drv.ms'
       || /(^|\.)officeapps\.live\.com$/.test(host);
   }catch(e){ return false; }
+}
+/* ── 이미지 파일 판별(확장자 기준) — 사진 첨부는 상세모달에서 링크 대신 큰 미리보기로 표시 ── */
+function isImageUrl(url){
+  try{
+    var path = new URL(url).pathname.toLowerCase();
+    return /\.(jpe?g|jfif|png|gif|webp|bmp|svg)$/.test(path);
+  }catch(e){ return /\.(jpe?g|jfif|png|gif|webp|bmp|svg)(\?|$)/i.test(url||''); }
 }
 
 /* ── 모달 드래그 이동 ── */
@@ -659,6 +681,43 @@ function addLinkAttachment(){
   input.value='';
   renderAttachmentChips();
 }
+/* ── 사진은 500KB로 압축(다른 work-portal 앱과 동일 기준), 문서 등 일반 파일은 압축 없이
+   Worker 상한(50MB, notice 앱 전용)까지 허용 — 2026-07-28 사용자 요청 ── */
+var IMAGE_MAX_BYTES = 500*1024;
+var IMAGE_MAX_LABEL = '500KB';
+var FILE_MAX_BYTES = 50*1024*1024;
+var FILE_MAX_LABEL = '50MB';
+function compressImageToLimit(file, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0 || file.size<=maxBytes){ resolve(file); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight, quality=0.85, attempts=0;
+      var canvas=document.createElement('canvas');
+      var ctx=canvas.getContext('2d');
+      function step(){
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('이미지 압축 실패')); return; }
+          if(blob.size<=maxBytes){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          if(attempts>=8){ reject(new Error('이미지를 '+IMAGE_MAX_LABEL+' 이하로 압축하지 못했습니다. 더 작은 사진을 선택해주세요.')); return; }
+          if(quality>0.4) quality-=0.15; else { w=Math.round(w*0.75); h=Math.round(h*0.75); }
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
 function uploadAttachments(input){
   var files = Array.prototype.slice.call(input.files||[]);
   if(!files.length) return;
@@ -668,31 +727,41 @@ function uploadAttachments(input){
     return;
   }
   var statusEl = document.getElementById('attachStatus');
-  var done=0, total=files.length;
+  var done=0, total=files.length, failed=[];
   statusEl.textContent='업로드 중... (0/'+total+')';
   statusEl.className='attach-status';
   function uploadOne(file){
-    var formData = new FormData();
-    formData.append('file', file);
-    formData.append('app', 'notice');
-    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(function(data){
-        ADD_ATTACHMENTS.push({ name:file.name, url:data.url });
-        done++;
-        statusEl.textContent='업로드 중... ('+done+'/'+total+')';
-        renderAttachmentChips();
-      });
+    var isImage = file.type && file.type.indexOf('image/')===0;
+    var prep = isImage
+      ? compressImageToLimit(file, IMAGE_MAX_BYTES)
+      : (file.size>FILE_MAX_BYTES ? Promise.reject(new Error('파일 용량 초과 (최대 '+FILE_MAX_LABEL+')')) : Promise.resolve(file));
+    return prep.then(function(outFile){
+      var formData = new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'notice');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(function(data){
+          ADD_ATTACHMENTS.push({ name:file.name, url:data.url });
+        });
+    }).catch(function(e){
+      failed.push(file.name+' ('+e.message+')');
+    }).then(function(){
+      done++;
+      statusEl.textContent='업로드 중... ('+done+'/'+total+')';
+      renderAttachmentChips();
+    });
   }
   files.reduce(function(p, file){ return p.then(function(){ return uploadOne(file); }); }, Promise.resolve())
     .then(function(){
-      statusEl.textContent='✓ 업로드 완료 ('+total+'건)';
-      statusEl.className='attach-status ok';
       input.value='';
-    })
-    .catch(function(e){
-      statusEl.textContent='✗ '+e.message;
-      statusEl.className='attach-status err';
+      if(failed.length){
+        statusEl.textContent='⚠ '+(total-failed.length)+'/'+total+'건 업로드 완료, 실패: '+failed.join(', ');
+        statusEl.className='attach-status err';
+      } else {
+        statusEl.textContent='✓ 업로드 완료 ('+total+'건)';
+        statusEl.className='attach-status ok';
+      }
     });
 }
 
@@ -811,21 +880,42 @@ function deleteRecord(pageId){
 /* ── 상세 모달 ── */
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
 function catBadgeClass(c){ return CANONICAL_CATEGORIES.indexOf(c)>=0 ? 'cat-'+c : 'cat-etc'; }
+function buildAttachmentPhotoHtml(a){
+  var url = a.url;
+  return '<div class="attach-photo-block">'
+    + '<div class="attach-photo-head">'
+    +   '<span class="detail-attach-name">📷 '+esc(a.name||url)+'</span>'
+    +   '<a class="detail-attach-link plain" href="'+esc(url)+'" target="_blank" rel="noopener">새 탭에서 보기</a>'
+    + '</div>'
+    + '<div class="photo-wrap"><a href="'+esc(url)+'" target="_blank" rel="noopener">'
+    +   '<img class="photo-img loading" src="'+esc(url)+'" alt="'+esc(a.name||'첨부 이미지')+'"'
+    +   ' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+    +   ' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+    +   '></a>'
+    +   '<div class="photo-spinner"></div>'
+    +   '<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(url)+'" target="_blank">링크로 직접 열기 →</a></div>'
+    + '</div>'
+    + '</div>';
+}
 function buildAttachmentHtml(list){
   if(!list || !list.length) return '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">첨부파일 없음</div>';
-  return list.map(function(a){
-    var isLink = isM365Link(a.url);
-    if(isLink){
+  var hasM365 = false;
+  var html = list.map(function(a){
+    if(isM365Link(a.url)){
+      hasM365 = true;
       return '<div class="detail-attach-item">'
         + '<span class="detail-attach-name">🔗 '+esc(a.name||a.url)+'</span>'
         + '<a class="detail-attach-link" href="'+esc(a.url)+'" target="_blank" rel="noopener">Excel/Office 공동편집 열기 →</a>'
         + '</div>';
     }
+    if(isImageUrl(a.url)) return buildAttachmentPhotoHtml(a);
     return '<div class="detail-attach-item">'
       + '<span class="detail-attach-name">📎 '+esc(a.name||a.url)+'</span>'
       + '<a class="detail-attach-link plain" href="'+esc(a.url)+'" target="_blank" rel="noopener">열기/다운로드</a>'
       + '</div>';
-  }).join('') + '<div class="m365-hint">🔗 표시된 항목은 Microsoft 365 계정으로 로그인된 상태에서 여러 명이 동시에 실시간 편집할 수 있습니다.</div>';
+  }).join('');
+  if(hasM365) html += '<div class="m365-hint">🔗 표시된 항목은 Microsoft 365 계정으로 로그인된 상태에서 여러 명이 동시에 실시간 편집할 수 있습니다.</div>';
+  return html;
 }
 function openDetailModal(id){
   var r = ALL_DATA.find(function(x){ return x.id===id; });
