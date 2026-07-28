@@ -54,11 +54,7 @@ html[data-theme="dark"]{
   /* coral (used as plain text-on-tint accent for '증가' state) */
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);
   /* 근무형태 뱃지 — 다크 톤 */
-}
-html[data-theme="dark"] .type-당직근무{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
-html[data-theme="dark"] .type-비상대기{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .type-비상출동{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
-html[data-theme="dark"] .type-비상근무{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
+}
 /* 다크 모드 전용 — 선택된 dd-btn/dd-opt은 --sky800(다크에서 밝은 파스텔블루로 재정의됨)
    대신 하자보수현황 앱과 동일하게 항상 고정된 짙은 네이비를 쓴다(2026-07-10, 색상 통일) */
 html[data-theme="dark"] .dd-btn.active{background:#032F62;border-color:#032F62}
@@ -172,21 +168,17 @@ tr:hover td{background:var(--sky50)}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
 
 /* ── 근무형태 뱃지 ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 6px 2px 0}
-.type-당직근무{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
-.type-비상대기{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
-.type-비상출동{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
-.type-비상근무{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 6px 2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.type-당직근무{background:#1565C0}
+.type-비상대기{background:#147A44}
+.type-비상출동{background:#B23A12}
+.type-비상근무{background:#A15C00}
 
 /* ── 상태 뱃지 ── */
-.status-예정{background:#FAEEDA;color:#633806;border:1px solid #E8C875}
-.status-진행중{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
-.status-완료{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
-.status-반려{background:#FAECE7;color:#712B13;border:1px solid #F5C4B3}
-html[data-theme="dark"] .status-예정{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
-html[data-theme="dark"] .status-진행중{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
-html[data-theme="dark"] .status-완료{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .status-반려{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
+.status-예정{background:#A15C00}
+.status-진행중{background:#5B4FBD}
+.status-완료{background:#147A44}
+.status-반려{background:#B23A12}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}

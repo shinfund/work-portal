@@ -76,10 +76,10 @@ html[data-theme="dark"]{
    '흰 글씨가 올라가는 솔리드 배경'으로 쓰는 소수 지점은 원래의 진한 색으로 고정 복원 */
 html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
 html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
-/* coral/amber는 베이스 색을 그대로 유지(솔리드 버튼과 공용)하되, 틴트 배지 위 텍스트만
-   다크에서 대비가 떨어져 별도로 밝은 톤으로 교체 */
-html[data-theme="dark"] .badge-prog, html[data-theme="dark"] .status-prog{color:#F0916A}
-html[data-theme="dark"] .badge-poor, html[data-theme="dark"] .status-poor{color:#E8A93D}
+/* coral/amber는 베이스 색을 그대로 유지(솔리드 버튼과 공용)하되, 틴트 카드 위 텍스트만
+   다크에서 대비가 떨어져 별도로 밝은 톤으로 교체(진행상태 배지는 흰 글자 고정이라 대상 아님, 2026-07-28) */
+html[data-theme="dark"] .status-prog{color:#F0916A}
+html[data-theme="dark"] .status-poor{color:#E8A93D}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;word-break:keep-all;-webkit-font-smoothing:antialiased}
 
@@ -145,26 +145,20 @@ tbody tr:last-child td{border-bottom:none}
 .col-photo{width:56px;min-width:52px;text-align:center}
 
 /* ── STATUS BADGE ── */
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:var(--r8);font-size:12px;font-weight:400;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:var(--r8);font-size:12px;font-weight:400;white-space:nowrap;color:#fff;border:1px solid rgba(0,0,0,.18)}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-done{background:var(--teal50);color:var(--teal600)}
-.badge-prog{background:var(--coral50);color:var(--coral800)}
-.badge-poor{background:var(--amber50);color:var(--amber800)}
+.badge-done{background:#0D6D63}
+.badge-prog{background:#B23A12}
+.badge-poor{background:#A15C00}
 
 /* ── 터널명·관리 뱃지(2026-07-10, 다른 work-portal 앱과 동일한 팔레트 재사용) ── */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
-.tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
-.tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
-.tunnel-c2{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
-.tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
-.tunnel-c4{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
-.tunnel-c5{background:#D9F2E6;color:#0E3D2C;border:1px solid #7BD9AE}
-html[data-theme="dark"] .tunnel-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
-html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .tunnel-c2{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
-html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
-html[data-theme="dark"] .tunnel-c4{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
-html[data-theme="dark"] .tunnel-c5{background:rgba(29,158,117,.18);color:#7BE0BE;border-color:rgba(29,158,117,.35)}
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.tunnel-c0{background:#1565C0}
+.tunnel-c1{background:#147A44}
+.tunnel-c2{background:#B23A12}
+.tunnel-c3{background:#A15C00}
+.tunnel-c4{background:#5B4FBD}
+.tunnel-c5{background:#0D6D63}
 .mgr-safety{background:var(--sky50);color:var(--sky800);border:1px solid var(--sky100)}
 .mgr-check{background:var(--teal50);color:var(--teal600);border:1px solid var(--teal100)}
 

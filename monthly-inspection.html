@@ -156,42 +156,28 @@ tr:hover td{background:var(--sky50)}
 html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 
 /* ── 뱃지(터널명 등) ── */
-/* C4(2026-07-25 코드감사, 스킵): 아래 뱃지 색상(tunnel-c0~4/gubun-c0~5/result-*)이 팔레트 변수를
-   전혀 참조하지 않고 전부 리터럴 hex로 하드코딩돼 있음 — 구조적으로 범위가 커서 이번엔 손대지 않음.
-   팔레트 변경 시 이 블록도 함께 확인 필요. */
-.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0}
-.tunnel-c0{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
-.tunnel-c1{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
-.tunnel-c2{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
-.tunnel-c3{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
-.tunnel-c4{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
-html[data-theme="dark"] .tunnel-c0{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
-html[data-theme="dark"] .tunnel-c1{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .tunnel-c2{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
-html[data-theme="dark"] .tunnel-c3{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
-html[data-theme="dark"] .tunnel-c4{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+/* 2026-07-28: 배경색과 글자색이 같은 색 계열이라 가독성이 떨어진다는 피드백으로 전면 개편 —
+   배경은 진한 단색으로 통일하고 글자는 흰색 고정(라이트/다크 공통, 테마별 분기 불필요해짐).
+   work-portal 전체 앱(monthly-inspection-team/asset-register/defect-management/solar-power/
+   vehicle-log/overtime-work)에 동일 팔레트로 일괄 적용. */
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.tunnel-c0{background:#1565C0}
+.tunnel-c1{background:#147A44}
+.tunnel-c2{background:#5B4FBD}
+.tunnel-c3{background:#A15C00}
+.tunnel-c4{background:#5C5648}
 /* 월간점검 탭 — 구분(6종) 뱃지 */
-.gubun-c0{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
-.gubun-c1{background:#D6EAF8;color:#0A3F73;border:1px solid #93C6EE}
-.gubun-c2{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
-.gubun-c3{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
-.gubun-c4{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
-.gubun-c5{background:#ECEAFC;color:#322B6B;border:1px solid #C7C2F2}
-html[data-theme="dark"] .gubun-c0{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
-html[data-theme="dark"] .gubun-c1{background:rgba(46,143,255,.22);color:#8FC7F5;border-color:rgba(46,143,255,.4)}
-html[data-theme="dark"] .gubun-c2{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
-html[data-theme="dark"] .gubun-c3{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
-html[data-theme="dark"] .gubun-c4{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .gubun-c5{background:rgba(83,74,183,.24);color:#C4BEF5;border-color:rgba(83,74,183,.45)}
+.gubun-c0{background:#B23A12}
+.gubun-c1{background:#1565C0}
+.gubun-c2{background:#A15C00}
+.gubun-c3{background:#5C5648}
+.gubun-c4{background:#147A44}
+.gubun-c5{background:#5B4FBD}
 /* 월간점검 탭 — 점검결과(양호/불량/점검요/-) 뱃지 */
-.result-good{background:#D5EED8;color:#103D15;border:1px solid #84CC8B}
-.result-bad{background:#FAE0D5;color:#5C1C05;border:1px solid #F0A080}
-.result-warn{background:#FAE8C5;color:#4A2200;border:1px solid #E8A830}
-.result-none{background:#ECE9E0;color:#3D3A30;border:1px solid #C7C2B2}
-html[data-theme="dark"] .result-good{background:rgba(29,158,117,.22);color:#6FE0B8;border-color:rgba(29,158,117,.4)}
-html[data-theme="dark"] .result-bad{background:rgba(216,90,48,.22);color:#F2A080;border-color:rgba(216,90,48,.4)}
-html[data-theme="dark"] .result-warn{background:rgba(186,117,23,.22);color:#F0C070;border-color:rgba(186,117,23,.4)}
-html[data-theme="dark"] .result-none{background:rgba(255,255,255,.1);color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.2)}
+.result-good{background:#147A44}
+.result-bad{background:#B23A12}
+.result-warn{background:#A15C00}
+.result-none{background:#5C5648}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -481,7 +467,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-elec">
-          <th>터널명</th><th>점검일자</th><th>제목</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th>
+          <th>터널명</th><th>점검일자</th><th>제목</th><th>수전전압/용량</th><th>발전전압/용량</th><th>태양광용량</th><th>점검종별</th><th>점검횟수</th><th>점검담당자</th><th>점검확인자</th><th>종합의견</th>
         </tr></thead>
         <tbody id="tbody-elec"></tbody>
       </table>
@@ -1694,7 +1680,7 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
-      ${(extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
+      ${(tabId!=='generator' && extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
         <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
         <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
       </div>`:''}
@@ -1922,7 +1908,7 @@ function renderTabTable(tabId){
   if(!tbody) return;
   const delMode=!!DELETE_MODE[tabId];
   if(!recs.length){
-    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length + (delMode?1:0);
+    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length + (delMode?1:0) + (tabId==='elec'?3:0);
     tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
     return;
   }
@@ -1938,6 +1924,12 @@ function buildCellHtml(f, r){
   if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
   return `<td>${esc(r[key]||'-')}</td>`;
 }
+// 점검담당자/점검확인자/종합의견은 elec1(부모) 필드가 아니라 elec3(설비현황) 자식에 공통 반복
+// 저장된 값이라(2026-07-21 실스키마 확인, exportElecExcel과 동일 패턴) 대표로 _chk[0]에서 읽는다.
+function elecBaseChildCellsHtml(r){
+  const chk0=(r._chk&&r._chk[0])||null;
+  return `<td>${esc((chk0&&chk0.점검담당자)||'-')}</td><td>${esc((chk0&&chk0.점검확인자)||'-')}</td><td>${esc((chk0&&chk0.종합의견)||'-')}</td>`;
+}
 function buildRow(tabDef, r){
   const cells=tabDef.listCols.map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
@@ -1945,7 +1937,7 @@ function buildRow(tabDef, r){
   }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
     return f ? buildCellHtml(f, r) : '';
-  }).join('');
+  }).join('') + (tabDef.id==='elec' ? elecBaseChildCellsHtml(r) : '');
   const delMode=!!DELETE_MODE[tabDef.id];
   const checked=(DELETE_SELECTED[tabDef.id]&&DELETE_SELECTED[tabDef.id].has(r.id));
   const checkCell=delMode
