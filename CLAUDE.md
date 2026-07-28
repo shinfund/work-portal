@@ -3,9 +3,11 @@
 정적 HTML로 만든 사내 업무포털. `index.html`이 셸(사이드바/헤더)이고, 각 업무 앱은 독립 실행도 가능한 단일 HTML 파일이며 `index.html`에서 iframe으로 불러온다.
 
 - `index.html` — 포털 셸 (사이드바, 모바일 상단 메뉴, 탭 관리)
+- `announcement.html` — 공지사항
 - `asset-register.html` — 비품대장
 - `defect-management.html` — 하자보수현황
 - `monthly-inspection.html` — 월간점검결과-안전관리
+- `monthly-inspection-team.html` — 월간점검결과-점검팀
 - `overtime-work.html` — 연장근무
 - `solar-power.html` — 태양광발전량
 - `vehicle-log.html` — 차량운행일지
