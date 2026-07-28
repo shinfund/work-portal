@@ -2856,13 +2856,16 @@ function openAddModal(tabId, recordId){
     if(MULTI_ITEM_FIELDS && MULTI_ITEM_FIELDS.includes(f.key)) return;
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
+    // 체크리스트는 그 값을 좌우하는 트리거 필드(월간점검=구분, 변압기온도=변압기종류) 바로 아래
+    // 배치한다 — 맨 아래(제목·비고 뒤)에 있으면 구분과의 연관성이 시각적으로 끊겨 보인다는
+    // 사용자 피드백(2026-07-28).
+    if(!r && tabId==='monthly' && f.key==='구분') html+=buildMonthlyChecklistHtml();
+    if(!r && tabId==='transformer' && f.key==='변압기종류') html+=buildTransformerChecklistHtml();
   });
   if(groupOpen) html+='</div>';
   if(tabId==='elec') html+=buildElecFormExtra(r);
   if(tabId==='generator') html+=buildGeneratorFormExtra(r);
-  if(tabId==='transformer' && !r) html+=buildTransformerChecklistHtml();
   if(tabId==='transformer') html+=buildTransformerRefHtml();
-  if(tabId==='monthly' && !r) html+=buildMonthlyChecklistHtml();
   if(tabId==='photo' && !r) html+='<div id="photoMultiWrap"></div>';
   document.getElementById('addModalFields').innerHTML=html;
   // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
