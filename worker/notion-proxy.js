@@ -31,8 +31,8 @@ const MIME_BY_EXT = {
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8MB (기본, 대부분의 앱 — 사진은 클라이언트에서 500KB로 압축 후 업로드)
 // 앱별로 기본값보다 큰 상한이 필요하면 여기 추가(예: 문서 첨부 위주 앱). R2/Worker 자체는 훨씬 큰
 // 파일도 스트리밍으로 처리 가능하지만, Cloudflare 기본 요청 업로드 한도(플랜별 100MB 안팎)에 여유를
-// 두기 위해 50MB로 설정(2026-07-28, 공지사항 앱 — 사진은 500KB로 압축, 문서 첨부만 이 상한 적용).
-const MAX_UPLOAD_BYTES_BY_APP = { notice: 50 * 1024 * 1024 };
+// 두기 위해 20MB로 설정(2026-07-28, 공지사항 앱 — 사진은 500KB로 압축, 문서 첨부만 이 상한 적용).
+const MAX_UPLOAD_BYTES_BY_APP = { notice: 20 * 1024 * 1024 };
 
 const LOGIN_MAX_ATTEMPTS = 10;
 const LOGIN_WINDOW_SECONDS = 15 * 60;
