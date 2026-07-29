@@ -135,6 +135,14 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:center;margin-top:18%;letter-spacing:6px}
 .rc-toc-list{margin-top:6%;max-width:78%;margin-left:auto;margin-right:auto;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
 @media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
+/* 월간점검 페이지 — 실제 엑셀 시트(월간점검표1~3)의 표 구조(구분·설비명 세로병합) 재현 */
+.rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
+.rc-monthly-table{border-collapse:collapse;width:100%;font-size:13px}
+.rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
+.rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
+.rc-monthly-gubun,.rc-monthly-seolbi{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
+.rc-monthly-content{text-align:left}
+.rc-monthly-dated{display:block;color:var(--teal600);font-size:10.5px;font-weight:700;margin-top:2px}
 /* 재사용된 모달 필드(.modal-input/.modal-select 등)는 원래 16px(iOS 자동확대 방지용, 3-9 원칙)라
    보고서 페이지 안 다른 텍스트(13px대)보다 눈에 띄게 커 보인다(2026-07-29 사용자 피드백) — 이 탭
    안에서만 데스크톱 크기를 줄인다. 480px 이하는 절대 손대지 않아 iOS 자동확대 방지 규칙은 그대로 유지. */
@@ -5900,7 +5908,8 @@ function monthlyDatedRecord(tunnel, item, ym){
 }
 async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">1. 월간 점검결과표</div>
+    <div class="report-title-band" style="text-align:left">1. 월간 점검결과표</div>
+    <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpMonthlyBody"></div>`;
   await loadTabData('monthly');
@@ -5908,6 +5917,9 @@ async function renderReportPage_monthly(){
   document.getElementById('rpLoading')?.remove();
   renderMonthlyFullCatalog();
 }
+// 실제 생성되는 엑셀 시트(월간점검표1~3)를 직접 열어 확인한 표 구조를 그대로 재현(2026-07-29 사용자
+// 요청) — 구분·설비명 컬럼이 세로로 병합돼 있다(REPORT_CHECKLIST_ORDER가 이미 설비명별로 뭉쳐 있는
+// 순서라 연속 구간만 세면 rowspan을 그대로 구할 수 있다).
 function renderMonthlyFullCatalog(){
   const wrap=document.getElementById('rpMonthlyBody');
   if(!wrap) return;
@@ -5933,26 +5945,37 @@ function renderMonthlyFullCatalog(){
       <div class="dd-menu" id="rpMonthlyDayMenu">${Array.from({length:lastDay},(_,i)=>i+1).map(d=>
         `<div class="dd-opt" data-val="${d}" onclick="applyMonthlyBulkDay(${d})">${Number(REPORT_SEL.month)}월 ${d}일</div>`).join('')}</div>
     </div>
-  </div>`;
+  </div>
+  <div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:64px">구분</th><th style="width:74px">설비명</th><th>점검내용</th><th style="width:140px">점검결과</th><th style="width:150px">점검일자</th></tr></thead><tbody>`;
   groups.forEach(g=>{
     const gi=groups.indexOf(g);
-    html+=`<div class="report-section-hd">${esc(g.구분)}</div>`;
-    g.items.forEach((it,ii)=>{
-      const rid='rpmc_'+gi+'_'+ii;
-      const did='rpmcd_'+gi+'_'+ii;
-      const dated=monthlyDatedRecord(tunnel, it, ym);
-      const label=(it.설비명?esc(it.설비명)+' · ':'')+esc(it.점검내용);
-      const curVal=dated?dated['점검결과']:'';
-      const opts=['','양호','-','불량','점검요'].map(v=>
-        `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;flex-wrap:wrap;border-bottom:1px solid var(--border2)">
-        <span style="flex:1;min-width:180px;font-size:13px">${label}${dated?` <span style="color:var(--teal600);font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
-        <input type="date" id="${did}" class="modal-input" style="width:150px" value="${esc(dated?dated['점검일자']:'')}"/>
-        <select id="${rid}" class="modal-select elec-grid-select" style="width:110px" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select>
-      </div>`;
-    });
+    let gubunPrinted=false, si=0;
+    while(si<g.items.length){
+      const seolbi=g.items[si].설비명||'';
+      let span=1;
+      while(si+span<g.items.length && (g.items[si+span].설비명||'')===seolbi) span++;
+      for(let k=0;k<span;k++){
+        const ii=si+k;
+        const it=g.items[ii];
+        const rid='rpmc_'+gi+'_'+ii;
+        const did='rpmcd_'+gi+'_'+ii;
+        const dated=monthlyDatedRecord(tunnel, it, ym);
+        const curVal=dated?dated['점검결과']:'';
+        const opts=['','양호','-','불량','점검요'].map(v=>
+          `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
+        html+='<tr>';
+        if(!gubunPrinted){ html+=`<td rowspan="${g.items.length}" class="rc-monthly-gubun">${esc(g.구분)}</td>`; gubunPrinted=true; }
+        if(k===0){ html+=`<td rowspan="${span}" class="rc-monthly-seolbi">${esc(seolbi)}</td>`; }
+        html+=`<td class="rc-monthly-content">${esc(it.점검내용)}${dated?`<span class="rc-monthly-dated">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</td>`;
+        html+=`<td><select id="${rid}" class="modal-select elec-grid-select" style="width:100%" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select></td>`;
+        html+=`<td><input type="date" id="${did}" class="modal-input" style="width:100%" value="${esc(dated?dated['점검일자']:'')}"></td>`;
+        html+='</tr>';
+      }
+      si+=span;
+    }
   });
-  html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpMonthlySubmitBtn" onclick="submitMonthlyReportForm()">저장</button></div>
+  html+=`</tbody></table></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpMonthlySubmitBtn" onclick="submitMonthlyReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpMonthlyProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpMonthlyProgressBar"></div></div>`;
   wrap.innerHTML=html;
 }
@@ -6022,15 +6045,29 @@ async function renderReportPreview_monthly(){
     const rec=recs.find(r=>r['구분']===item.구분 && (r['설비명']||'')===(item.설비명||'') && r['점검내용']===item.점검내용);
     if(!rec) return;
     if(!map[item.구분]){ map[item.구분]={구분:item.구분, items:[]}; groups.push(map[item.구분]); }
-    map[item.구분].items.push({label:(item.설비명?item.설비명+' · ':'')+item.점검내용, 결과:rec['점검결과'], 일자:rec['점검일자'], 비고:rec['비고']});
+    map[item.구분].items.push({설비명:item.설비명||'', 점검내용:item.점검내용, 결과:rec['점검결과'], 일자:rec['점검일자'], 비고:rec['비고']});
   });
-  let html=`<div class="report-title-band">1. 월간 점검결과표 <span style="font-size:12px;font-weight:600;color:var(--txt3)">(미리보기)</span></div>`;
-  if(!groups.length){ html+=previewEmptyMsg(); }
-  else groups.forEach(g=>{
-    html+=`<div class="report-section-hd">${esc(g.구분)}</div><div class="tbl-wrap"><table><thead><tr><th>항목</th><th>점검결과</th><th>점검일자</th><th>비고</th></tr></thead><tbody>`;
-    g.items.forEach(it=>{ html+=`<tr><td>${esc(it.label)}</td><td>${esc(it.결과||'-')}</td><td>${esc(it.일자||'-')}</td><td>${esc(it.비고||'')}</td></tr>`; });
-    html+='</tbody></table></div>';
+  let html=`<div class="report-title-band" style="text-align:left">1. 월간 점검결과표 <span style="font-size:12px;font-weight:600;color:var(--txt3)">(미리보기)</span></div>
+    <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>`;
+  if(!groups.length){ html+=previewEmptyMsg(); wrap.innerHTML=html; return; }
+  html+=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:64px">구분</th><th style="width:74px">설비명</th><th>점검내용</th><th style="width:70px">점검결과</th><th style="width:90px">점검일자</th><th>비고</th></tr></thead><tbody>`;
+  groups.forEach(g=>{
+    let gubunPrinted=false, si=0;
+    while(si<g.items.length){
+      const seolbi=g.items[si].설비명;
+      let span=1;
+      while(si+span<g.items.length && g.items[si+span].설비명===seolbi) span++;
+      for(let k=0;k<span;k++){
+        const it=g.items[si+k];
+        html+='<tr>';
+        if(!gubunPrinted){ html+=`<td rowspan="${g.items.length}" class="rc-monthly-gubun">${esc(g.구분)}</td>`; gubunPrinted=true; }
+        if(k===0){ html+=`<td rowspan="${span}" class="rc-monthly-seolbi">${esc(seolbi)}</td>`; }
+        html+=`<td class="rc-monthly-content">${esc(it.점검내용)}</td><td style="text-align:center">${esc(it.결과||'-')}</td><td style="text-align:center">${esc(it.일자||'-')}</td><td>${esc(it.비고||'')}</td></tr>`;
+      }
+      si+=span;
+    }
   });
+  html+='</tbody></table></div>';
   wrap.innerHTML=html;
 }
 
@@ -6400,6 +6437,9 @@ function syncReportSelLabels(){
   document.getElementById('rpMonthLabel').textContent=Number(REPORT_SEL.month)+'월';
   document.querySelectorAll('#rpYearMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.year));
   document.querySelectorAll('#rpMonthMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.month));
+  // 입력폼 상단 필터는 "전체"가 없이 항상 구체적인 값 하나가 선택돼 있으므로, 다른 탭 필터가 "전체"가
+  // 아닌 값을 고를 때 진하게 채워지는 것과 동일하게 항상 active(진한 색)로 표시한다(2026-07-29 사용자 요청).
+  ['rpTunnelBtn','rpYearBtn','rpMonthBtn'].forEach(id=>document.getElementById(id)?.classList.add('active'));
 }
 // 미리보기 모드 — "제대로 입력됐는지" 저장된 실데이터를 보고서 섹션 구조로 읽기전용 표시(2026-07-29
 // 사용자 요청). 페이지 이동해도 켜둔 상태가 유지된다(gotoReportPage가 매번 이 값을 다시 확인).
