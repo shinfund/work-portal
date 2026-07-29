@@ -250,9 +250,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
-/* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력 */
-.elec-grid-input{width:72px;padding:4px 6px;font-size:16px}
-.elec-grid-select{width:64px;padding:4px 4px;font-size:16px}
+/* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
+   PC/태블릿은 13px로 축소(2026-07-29 사용자 요청), 모바일(480px 이하)은 iOS Safari 자동 확대 방지를 위해 16px 유지(아래 미디어쿼리) */
+.elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
+.elec-grid-select{width:64px;padding:4px 4px;font-size:13px}
 /* 전기설비기록·발전기점검처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
 .add-modal-box.wide-modal{max-width:820px}
 .detail-modal-box.wide-modal{max-width:820px}
@@ -277,6 +278,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   th{padding:9px 10px}
   /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
   .search-box{font-size:16px}
+  .elec-grid-input,.elec-grid-select{font-size:16px}
   .form-group-grid{grid-template-columns:1fr}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
@@ -2341,10 +2343,10 @@ function renderMonthlyChecklistCatalog(gubun){
       const cid='mchk_'+gi+'_'+ii;
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:6px;flex:1;min-width:200px;cursor:pointer;font-weight:400">
-          <input type="checkbox" class="mchk-catalog-cb" id="${cid}" data-seolbi="${esc(g.설비명==='공통'?'':g.설비명)}" data-content="${esc(it.점검내용)}" onchange="onMonthlyChecklistToggle('${cid}')"/>
+          <input type="checkbox" class="mchk-catalog-cb" id="${cid}" data-seolbi="${esc(g.설비명==='공통'?'':g.설비명)}" data-content="${esc(it.점검내용)}"/>
           <span>${esc(it.점검내용)}</span>
         </label>
-        <select id="${cid}_r" class="modal-select" style="width:110px;display:none">
+        <select id="${cid}_r" class="modal-select elec-grid-select" style="width:110px" onchange="onMonthlyChecklistInput('${cid}')">
           <option value="양호">양호</option><option value="-">-</option><option value="불량">불량</option><option value="점검요">점검요</option>
         </select>
       </div>`;
@@ -2358,7 +2360,7 @@ function renderMonthlyChecklistCustom(){
   _monthlyCustomItems.forEach((it,i)=>{
     html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
       <span style="flex:1;min-width:200px">${it.설비명?esc(it.설비명)+' · ':''}${esc(it.점검내용)}</span>
-      <select class="modal-select" data-idx="${i}" style="width:110px" onchange="updateMonthlyCustomResult(this)">
+      <select class="modal-select elec-grid-select" data-idx="${i}" style="width:110px" onchange="updateMonthlyCustomResult(this)">
         <option value="양호"${it.점검결과==='양호'?' selected':''}>양호</option>
         <option value="-"${it.점검결과==='-'?' selected':''}>-</option>
         <option value="불량"${it.점검결과==='불량'?' selected':''}>불량</option>
@@ -2369,9 +2371,11 @@ function renderMonthlyChecklistCustom(){
   });
   return html;
 }
-function onMonthlyChecklistToggle(cid){
-  const cb=document.getElementById(cid), sel=document.getElementById(cid+'_r');
-  if(sel) sel.style.display=(cb&&cb.checked)?'':'none';
+// 점검결과는 체크 여부와 무관하게 항상 표시하되(2026-07-29 사용자 요청), 값을 바꾸면 등록
+// 대상에서 빠지지 않도록 체크박스를 자동으로 켜준다.
+function onMonthlyChecklistInput(cid){
+  const cb=document.getElementById(cid);
+  if(cb) cb.checked=true;
 }
 // 구분(ff_2) 변경 시 호출 — 카탈로그만 다시 그린다(직접입력 항목은 손대지 않아 입력 중이던 값이 안 날아감).
 // 수정 모드에는 monthlyChecklistCatalogWrap이 없어 조용히 종료.
@@ -2717,22 +2721,22 @@ function renderTransformerChecklist(type){
     const point=type+' #'+n;
     html+=`<div style="display:flex;align-items:center;gap:8px;padding:4px 0;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;width:110px;cursor:pointer;font-weight:400">
-        <input type="checkbox" class="tchk-cb" id="${cid}" data-point="${esc(point)}" data-no="${n}" onchange="onTransformerChecklistToggle('${cid}')"/>
+        <input type="checkbox" class="tchk-cb" id="${cid}" data-point="${esc(point)}" data-no="${n}"/>
         <span>${esc(point)}</span>
       </label>
-      <input id="${cid}_t" class="modal-input" type="number" step="0.1" placeholder="온도(℃)" style="width:110px;display:none"/>
-      <select id="${cid}_r" class="modal-select" style="width:100px;display:none">
+      <input id="${cid}_t" class="modal-input elec-grid-input" type="number" step="0.1" placeholder="온도(℃)" style="width:110px" oninput="onTransformerChecklistInput('${cid}')"/>
+      <select id="${cid}_r" class="modal-select elec-grid-select" style="width:100px" onchange="onTransformerChecklistInput('${cid}')">
         <option value="양호">양호</option><option value="불량">불량</option><option value="점검요">점검요</option>
       </select>
     </div>`;
   }
   return html;
 }
-function onTransformerChecklistToggle(cid){
-  const cb=document.getElementById(cid), t=document.getElementById(cid+'_t'), r=document.getElementById(cid+'_r');
-  const show=cb&&cb.checked;
-  if(t) t.style.display=show?'':'none';
-  if(r) r.style.display=show?'':'none';
+// 온도·점검결과는 체크 여부와 무관하게 항상 표시하되(2026-07-29 사용자 요청), 값을 입력하면
+// 등록 대상에서 빠지지 않도록 체크박스를 자동으로 켜준다.
+function onTransformerChecklistInput(cid){
+  const cb=document.getElementById(cid);
+  if(cb) cb.checked=true;
 }
 // 변압기종류(ff_4) 변경 시 호출 — 수정 모드에는 transformerChecklistWrap이 없어 조용히 종료.
 function refreshTransformerChecklist(){
@@ -2856,11 +2860,11 @@ function openAddModal(tabId, recordId){
     if(MULTI_ITEM_FIELDS && MULTI_ITEM_FIELDS.includes(f.key)) return;
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
-    // 체크리스트는 그 값을 좌우하는 트리거 필드(월간점검=구분, 변압기온도=변압기종류) 바로 아래
-    // 배치한다 — 맨 아래(제목·비고 뒤)에 있으면 구분과의 연관성이 시각적으로 끊겨 보인다는
-    // 사용자 피드백(2026-07-28).
+    // 체크리스트는 그 값을 좌우하는 트리거 필드 바로 아래 배치한다 — 맨 아래(제목·비고 뒤)에
+    // 있으면 연관성이 시각적으로 끊겨 보인다는 사용자 피드백(2026-07-28). 변압기온도는 용량이
+    // 변압기종류 바로 다음 필드라 용량까지 렌더링한 뒤에 체크리스트를 붙인다(2026-07-29).
     if(!r && tabId==='monthly' && f.key==='구분') html+=buildMonthlyChecklistHtml();
-    if(!r && tabId==='transformer' && f.key==='변압기종류') html+=buildTransformerChecklistHtml();
+    if(!r && tabId==='transformer' && f.key==='용량') html+=buildTransformerChecklistHtml();
   });
   if(groupOpen) html+='</div>';
   if(tabId==='elec') html+=buildElecFormExtra(r);
@@ -3006,7 +3010,7 @@ function newPhotoMultiRow(num, desc){
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
     <label class="modal-label">번호·사진설명 <span class="modal-required">*</span></label>
-    <div class="modal-hint">촬영한 사진 수만큼 행을 추가해 번호(1~6)·사진설명·사진을 각각 등록합니다.</div>
+    <div class="modal-hint">기본 1행(사진설명·사진)만 등록하며, 필요 시 "+ 행 추가"로 늘릴 수 있습니다.</div>
     <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
       <button type="button" class="tb-action-btn tb-add" onclick="addPhotoMultiRow()">+ 행 추가</button>
     </div>
@@ -3086,7 +3090,7 @@ function _photoMultiDescChange(key, selEl){
     row.desc=selEl.value;
   }
 }
-// 기본 6행(번호 고정 1~6)에 더해 드물게 필요한 추가 촬영분을 위한 여분 행 — 번호는 비워둬 사용자가 직접 고른다.
+// 기본 1행에 더해 드물게 필요한 추가 촬영분을 위한 여분 행 — 번호는 비워둬 사용자가 직접 고른다.
 function addPhotoMultiRow(){
   _photoMultiRows.push(newPhotoMultiRow('', ''));
   renderPhotoMultiRows();
@@ -3130,15 +3134,14 @@ function removePhotoMultiFile(key, fileIdx){
   row.files.splice(fileIdx,1);
   renderPhotoMultiRows();
 }
-// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1~6번 슬롯을 한 번에 채워 기본
-// 표시한다(2026-07-28 사용자 요청 — 매번 하나씩 추가하기보다 6개 슬롯이 다 보이는 편이 편함).
-// 비어있는 슬롯(사진설명·사진 둘 다 없음)은 등록 시 자동으로 제외되므로 안 쓴 번호를 그냥
-// 비워둬도 된다 — "+행 추가"는 드물게 6장을 넘길 때만 쓴다.
+// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1번 슬롯 1행만 기본 표시한다
+// (2026-07-29 사용자 요청 — 이 탭은 한 날짜에 하나의 점검내용에 대한 사진만 등록하면 되므로,
+// team 앱과 달리 1~6번 슬롯을 한 번에 채울 필요가 없음). 여러 장이 필요하면 "+행 추가"로 늘린다.
 // 수정 모드·다른 탭에는 photoMultiRowsList가 없어 조용히 종료.
 function refreshPhotoMultiRows(){
   if(!document.getElementById('photoMultiRowsList')){ renderPhotoMultiRows(); return; }
   if(!_photoMultiRows.length){
-    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
+    _photoMultiRows=[newPhotoMultiRow('1','')];
   }
   renderPhotoMultiRows();
 }
@@ -3157,8 +3160,7 @@ async function submitPhotoMulti(){
     if(f.required && !v && !missing) missing=f.label||f.key;
   });
   if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
-  // 기본 6행 중 실제로 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외 — 사용자가
-  // 매번 6행을 전부 삭제할 필요 없이 필요한 행만 채우면 되도록(2026-07-28).
+  // 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28).
   const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
   if(!usedRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
   if(usedRows.some(row=>!String(row.num||'').trim())){ alert('사진설명·사진을 입력한 행에는 번호를 선택해주세요.'); return; }
