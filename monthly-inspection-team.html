@@ -56,7 +56,7 @@ html[data-theme="dark"]{
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
-  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);--amber800:#F0B961;
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
@@ -433,7 +433,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-repair"></div>
-      <div class="detail-count warn" id="pendingCount-repair"></div>
+      <div class="detail-count warn" id="pendingCount-repair" style="cursor:pointer" title="클릭하면 전체 연/월의 미조치 건을 봅니다" onclick="showAllPendingRepairs()"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -1028,6 +1028,14 @@ function filteredTabRecords(tabId){
   if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
   if(tabId==='repair' && flt.status && flt.status!=='ALL') recs=recs.filter(r=>flt.status==='미조치' ? !r['조치일'] : !!r['조치일']);
   return recs;
+}
+// "미조치 N건" KPI 배지 클릭 — 연/월 필터를 전체로 풀고 상태를 미조치로 맞춰, 어느 달을 보고
+// 있었든 이월된 미조치 건을 바로 전부 볼 수 있게 한다(2026-07-29 사용자 요청).
+function showAllPendingRepairs(){
+  const f=_tabFilters.repair;
+  f.year='ALL'; f.month='ALL'; f.status='미조치';
+  _tabFilterUserPicked.repair=true;
+  renderTabTable('repair');
 }
 function getVisibleRecords(tabId){
   const tabDef=getTabDef(tabId);
