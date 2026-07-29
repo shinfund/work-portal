@@ -1,24 +1,31 @@
 // 노션 점검사진DB(월간점검결과_점검팀)의 "번호"를 월별 전체 연번(터널마다 고정된 오프셋을 더한
 // 1~42 형태, 예: 흥해=1~6·청하=7~12·남정1·2=13~15...)에서 터널별로 1부터 시작하는 순번으로
-// 바꾸는 1회성 스크립트(2026-01~06월 데이터 대상, 2026-07-29 사용자 요청).
+// 바꾸는 스크립트(2026-07-29 사용자 요청).
 //
-// 오프셋은 하드코딩하지 않고, 조회된 데이터에서 터널별 최소 번호를 구해 자동 계산한다
-// (신규번호 = 기존번호 - 터널별최소번호 + 1).
+// 오프셋은 하드코딩하지 않고, (터널명, 연월) 조합별로 그 안의 최소 번호를 구해 자동 계산한다
+// (신규번호 = 기존번호 - 그룹내최소번호 + 1). 월 단위로 그룹을 나누는 이유 — 앱의 번호 자동
+// 제안 로직이 한동안 예전 방식(터널 구분 없이 그 달 전체 최대번호+1)으로 되돌아가 있어서
+// (2026-07-29 재발견) 이미 정상화된 달과 아직 안 된 달이 섞여 있을 수 있다. 터널 단위로만
+// 오프셋을 구하면 이미 고쳐진 달(최소값 1) 때문에 안 고쳐진 달의 오프셋이 0으로 잘못 계산되므로,
+// 반드시 (터널, 연월) 조합 단위로 그룹을 나눠야 한다.
 //
 // 사용법:
-//   node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호>          → 미리보기만(쓰기 없음)
-//   node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> --apply  → 실제 반영
+//   node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> [시작일] [종료일(제외)]        → 미리보기만(쓰기 없음)
+//   node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> [시작일] [종료일(제외)] --apply → 실제 반영
+// 날짜 생략 시 기본값은 2026-01-01 ~ 2027-01-01(2026년 전체).
 
-const [, , workerUrl, password, flag] = process.argv;
+const args = process.argv.slice(2);
+const APPLY = args.includes("--apply");
+const positional = args.filter((a) => a !== "--apply");
+const [workerUrl, password, startArg, endArg] = positional;
 if (!workerUrl || !password) {
-  console.error("사용법: node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> [--apply]");
+  console.error("사용법: node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> [시작일] [종료일(제외)] [--apply]");
   process.exit(1);
 }
-const APPLY = flag === "--apply";
 
 const PHOTO_DB_ID = "83a945c6-79fe-4f2b-87e6-2ceef9557d0a";
-const START_DATE = "2026-01-01";
-const END_DATE_EXCLUSIVE = "2026-07-01"; // 1~6월
+const START_DATE = startArg || "2026-01-01";
+const END_DATE_EXCLUSIVE = endArg || "2027-01-01";
 
 async function main() {
   const loginRes = await fetch(`${workerUrl}/login`, {
@@ -74,19 +81,22 @@ async function main() {
     console.warn(`터널명/번호가 비어있는 레코드 ${pages.length - records.length}건은 건너뜁니다.`);
   }
 
-  // 3) 터널별 최소 번호(오프셋) 계산
-  const minByTunnel = {};
+  // 3) (터널명, 연월) 조합별 최소 번호(오프셋) 계산 — 이미 정상화된 달과 안 된 달이 섞여
+  // 있어도 각 달을 독립적으로 취급하기 위해 터널만이 아니라 연월까지 키에 포함한다.
+  const groupKey = (r) => `${r.tunnel}|${r.date.slice(0, 7)}`;
+  const minByGroup = {};
   records.forEach((r) => {
-    if (minByTunnel[r.tunnel] == null || r.num < minByTunnel[r.tunnel]) minByTunnel[r.tunnel] = r.num;
+    const k = groupKey(r);
+    if (minByGroup[k] == null || r.num < minByGroup[k]) minByGroup[k] = r.num;
   });
-  console.log("터널별 기존 최소 번호(오프셋 기준):");
-  Object.entries(minByTunnel)
+  console.log("터널·연월 조합별 기존 최소 번호(오프셋 기준):");
+  Object.entries(minByGroup)
     .sort((a, b) => a[1] - b[1])
-    .forEach(([t, min]) => console.log(`  ${t}: ${min}`));
+    .forEach(([k, min]) => console.log(`  ${k}: ${min}`));
 
   // 4) 새 번호 계산 + 실제로 바뀌는 것만 대상
   const updates = records
-    .map((r) => ({ ...r, newNum: r.num - minByTunnel[r.tunnel] + 1 }))
+    .map((r) => ({ ...r, newNum: r.num - minByGroup[groupKey(r)] + 1 }))
     .filter((r) => r.newNum !== r.num);
 
   console.log(`\n갱신 대상 ${updates.length}건 / 전체 ${records.length}건`);
