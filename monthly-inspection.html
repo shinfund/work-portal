@@ -93,6 +93,28 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .main{padding:10px 12px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 
+/* ── 보고서입력 탭: 페이지 칩 네비 + A4 용지 카드 ── */
+.report-page-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.report-page-chips{flex:1;display:flex;gap:6px;flex-wrap:wrap}
+.report-page-chip{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.report-page-chip.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
+/* 종이 안쪽은 다크모드에서도 항상 라이트로 고정 — 재사용되는 모달 필드(.modal-select/.modal-input/
+   .modal-label 등)가 전부 CSS 커스텀 프로퍼티(var(--txt)/var(--card) 등)를 참조하므로, 흰 배경
+   .report-paper 안에서 전역 다크 테마 값을 그대로 쓰면 글자가 흰 배경에 흰 글자로 안 보이는 문제가
+   생긴다(2026-07-29 실측). :root의 라이트 값을 .report-paper 스코프에 다시 선언해 하위 요소가
+   전부 라이트로 렌더되게 한다 — 개별 컴포넌트를 일일이 오버라이드하지 않아도 되는 가장 안전한 방법.
+   .report-page-chip/이전·다음 버튼 등 종이 "바깥" 크롬은 이 규칙의 영향을 받지 않고 전역 테마를 그대로 따른다. */
+.report-paper{
+  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;--txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
+  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;--sky800-solid:#032F62;
+  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  background:#FFFFFF;color:#24292E;max-width:800px;margin:0 auto;border:1px solid #D8DEE6;border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
+html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5);border-color:#3A3F45}
+.report-title-band{text-align:center;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid #0C447C}
+.report-subtitle{text-align:center;font-size:14px;color:#5F5E5A;margin-bottom:18px}
+.report-section-hd{font-size:13.5px;font-weight:800;background:#E9F1FE;color:#032F62;padding:7px 12px;border-radius:6px;margin:16px 0 8px}
+@media(max-width:480px){ .report-paper{padding:16px 12px} }
+
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
@@ -257,6 +279,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 /* 전기설비기록·발전기점검처럼 자식 표가 많은 탭은 모달 폭을 넓혀서 표시(다른 탭 모달은 영향 없음) */
 .add-modal-box.wide-modal{max-width:820px}
 .detail-modal-box.wide-modal{max-width:820px}
+/* 보고서입력 탭 — #addModal을 페이지 안으로 옮겨 오버레이가 아닌 일반 콘텐츠처럼 보이게 함(§계획 "모달 재배치").
+   id 선택자로 명시도를 올려 .wide-modal 등 기존 폭 규칙보다 항상 우선 적용되게 한다. */
+#addModal.modal-inline{display:block!important;position:static}
+#addModal.modal-inline .modal-backdrop{position:static;background:none;padding:0;display:block;inset:auto}
+#addModal.modal-inline .modal-box{max-width:none!important;width:100%;box-shadow:none;border-radius:0;padding:0;background:transparent;max-height:none;overflow:visible}
+#addModal.modal-inline .detail-modal-hd{cursor:default}
 
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
@@ -336,6 +364,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     </div>
   </div>
 </div>
+<!-- #addModal의 원래 위치 — 보고서입력 탭에서 인라인으로 옮겼다가 되돌릴 때 사용(mountAddModalInline/unmountAddModalInline) -->
+<div id="addModalHome" style="display:none"></div>
 
 <!-- MODAL: 상세조회(수정/삭제) -->
 <div id="detailModal">
@@ -379,7 +409,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-monthly" role="tab" aria-selected="true" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">보고서입력</button>
+  <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
   <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
   <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
   <button class="top-tab" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')">발전기점검</button>
@@ -391,8 +422,19 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- MAIN -->
 <div class="main">
 
+  <!-- ▸ 보고서입력(신설) — 실제 A4 보고서 지면 그대로의 모양으로 입력하는 대체 UI. 데이터는 아래 각 탭과 완전히 동일한 노션 레코드에 저장된다. -->
+  <div class="panel active" id="panel-formEntry">
+    <div class="sc" id="reportSelBar"></div>
+    <div class="report-page-nav">
+      <button class="tb-action-btn" id="reportPrevBtn" onclick="reportPagePrev()">‹ 이전</button>
+      <div class="report-page-chips" id="reportPageChips"></div>
+      <button class="tb-action-btn" id="reportNextBtn" onclick="reportPageNext()">다음 ›</button>
+    </div>
+    <div class="report-paper" id="reportPaper"></div>
+  </div>
+
   <!-- ▸ 월간점검 -->
-  <div class="panel active" id="panel-monthly">
+  <div class="panel" id="panel-monthly">
     <div class="filter-row">
       <div id="filterDd-monthly" style="display:contents"></div>
       <input class="search-box" id="search-monthly" placeholder="🔍 설비명·제목·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('monthly')"/>
@@ -1303,6 +1345,13 @@ function dataFields(tabDef){ return tabDef.fields.filter(f=>f.key); } // header:
 
 const TAB_STATE={};
 TAB_DEFS.forEach(t=>{ TAB_STATE[t.id]={records:[], loaded:false, loading:false}; });
+
+// ── 보고서입력 탭(신설) 전용 상태 — 기존 TAB_DEFS/_tabFilters와 완전 분리 ──
+const REPORT_PAGE_IDS=['cover','monthly','elec','transformer','generator','photo','power','task','divider'];
+const REPORT_PAGE_LABELS={cover:'표지', monthly:'월간점검', elec:'전기설비기록', transformer:'변압기온도',
+  generator:'발전기점검', photo:'점검사진', power:'전력사용량', task:'업무처리', divider:'간지'};
+let REPORT_SEL={tunnel:'', year:String(new Date().getFullYear()), month:String(new Date().getMonth()+1).padStart(2,'0')};
+let _reportCurPage='cover';
 
 // ── Notion 값 추출 헬퍼 ──
 function getText(p){
@@ -2899,6 +2948,13 @@ function openAddModal(tabId, recordId){
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
+  // 보고서입력 탭에서 인라인으로 떠 있는 동안은(제출 성공 후 submitXForm이 이 함수를 호출) 모달을
+  // 닫는 대신 원래 자리로 되돌리고 현재 보고서 페이지를 다시 그린다 — 기존 7탭에서는 이 조건이
+  // 항상 false라 아래 동작이 그대로 유지된다.
+  if(document.getElementById('addModal').classList.contains('modal-inline')){
+    gotoReportPage(_reportCurPage); // 내부에서 unmountAddModalInline() 후 현재 페이지를 다시 그림
+    return;
+  }
   document.getElementById('addModal').classList.remove('modal-open');
   document.body.style.overflow='';
   resetModalDragPos('addModal');
@@ -5520,6 +5576,374 @@ function buildDailyLogDividerSheet(wb, tunnel, year, month){
 
   for(let r=15; r<=25; r++) ws.getRow(r).height=30;
 }
+
+// ── 보고서입력 탭: 표지·간지 페이지 — buildCoverReportSheet/buildDailyLogDividerSheet와 동일한 텍스트 공식으로 화면 미리보기(읽기전용, DB 없음) ──
+function reportBaseTunnel(t){ return (t||'').replace(/\(주\)|\(부\)/,''); }
+function renderReportPage_cover(){
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel), year=REPORT_SEL.year, month=String(Number(REPORT_SEL.month));
+  const letter=TUNNEL_REPORT_LETTER[tunnel]||'';
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band" style="font-size:26px">${letter?letter+'. ':''}${tunnel}</div>
+    <div style="text-align:center;font-weight:800;font-size:22px;margin:26px 0 34px">${year}년 ${month}월</div>
+    <div style="text-align:center;font-weight:800;font-size:17px;margin-bottom:14px">목&nbsp;&nbsp;&nbsp;&nbsp;차</div>
+    <div style="max-width:360px;margin:0 auto;font-size:15px;line-height:2.1">
+      ${UNIFIED_TOC_ITEMS.map(item=>`<div>${item}</div>`).join('')}
+    </div>`;
+}
+function renderReportPage_divider(){
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel), year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
+  const lastDay=new Date(year, month, 0).getDate();
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band" style="font-size:22px">8. 일일점검일지</div>
+    <div style="text-align:center;font-weight:700;font-size:17px;margin:150px 0">기간 : ${year}년 ${month}월 1일 ~ ${year}년 ${month}월 ${lastDay}일</div>
+    <div style="text-align:center;color:#8A8F98;font-size:12px">${tunnel}</div>`;
+}
+
+// ── 보고서입력 탭: 점검사진 페이지 — buildPhotoMultiHtml(6슬롯 일괄등록)이 이미 보고서 지면과 1:1이라 얇은 래퍼만 필요 ──
+function renderReportPage_photo(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">5. 운영관리 사진대지</div>
+    <div id="rpPhotoMount"></div>`;
+  mountAddModalInline('rpPhotoMount');
+  openAddModal('photo');
+  document.body.style.overflow='';
+  reportPresetField('ff_0', REPORT_SEL.tunnel);
+}
+// 필드에 REPORT_SEL 값을 미리 채운 뒤 실제 change 이벤트를 발생시켜 그 필드의 onchange(캐스케이드
+// 재계산·extraOnChange)를 사용자가 직접 선택했을 때와 100% 동일하게 실행시킨다.
+function reportPresetField(id, value){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.value=value;
+  el.dispatchEvent(new Event('change'));
+}
+// 선택된 터널·연·월에 해당하는 기존 레코드를 찾아 "새로 입력" 대신 "수정"으로 열리게 한다(재방문 시 값 보존).
+async function findExistingRecordForSel(tabId, dateKey){
+  if(!TAB_STATE[tabId].loaded) await loadTabData(tabId);
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  return (TAB_STATE[tabId].records||[]).find(r=>r['터널명']===REPORT_SEL.tunnel && (r[dateKey]||'').slice(0,7)===ym) || null;
+}
+
+// ── 보고서입력 탭: 전기설비기록 페이지 — buildElecFormExtra(1.기본사항/2.점검내역/3.종합의견)가 이미 보고서 구조와 거의 1:1이라 얇은 래퍼만 필요 ──
+async function renderReportPage_elec(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">2. 전기설비 점검결과기록표</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpElecMount"></div>`;
+  const existing=await findExistingRecordForSel('elec','점검일자');
+  if(_reportCurPage!=='elec') return; // 로딩 중 사용자가 다른 페이지로 이동했으면 중단
+  document.getElementById('rpLoading')?.remove();
+  mountAddModalInline('rpElecMount');
+  openAddModal('elec', existing?existing.id:null);
+  document.body.style.overflow='';
+  if(!existing) reportPresetField('ff_0', REPORT_SEL.tunnel);
+}
+
+// ── 보고서입력 탭: 발전기점검 페이지 — 1레코드=1가동일(buildGeneratorFormExtra/submitGeneratorForm 그대로 재사용) + 이번달 등록된 가동일 목록 ──
+async function renderReportPage_generator(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">4. 비상발전기 점검 및 가동일지</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpGenMount"></div>
+    <div id="rpGenList" style="margin-top:22px"></div>`;
+  await loadTabData('generator'); // 저장 직후 재방문 시에도 목록이 항상 최신이도록 매번 새로 불러온다
+  if(_reportCurPage!=='generator') return; // 로딩 중 다른 페이지로 이동했으면 중단
+  document.getElementById('rpLoading')?.remove();
+  mountAddModalInline('rpGenMount');
+  openAddModal('generator');
+  document.body.style.overflow='';
+  reportPresetField('ff_0', REPORT_SEL.tunnel);
+  renderGeneratorMonthList();
+}
+function renderGeneratorMonthList(){
+  const wrap=document.getElementById('rpGenList');
+  if(!wrap) return;
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.generator.records||[]).filter(r=>r['터널명']===REPORT_SEL.tunnel && (r['가동일자']||'').slice(0,7)===ym)
+    .sort((a,b)=>(a['가동일자']||'').localeCompare(b['가동일자']||''));
+  wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 가동일 (${recs.length}건)</div>` +
+    (recs.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${recs.map(r=>
+      `<button class="report-page-chip" onclick="loadGeneratorDay('${r.id}')">${esc((r['가동일자']||'').slice(5))} 수정</button>`
+    ).join('')}</div>` : `<div style="color:#8A8F98;font-size:12px">아직 등록된 가동일이 없습니다.</div>`);
+}
+function loadGeneratorDay(recordId){
+  mountAddModalInline('rpGenMount');
+  openAddModal('generator', recordId);
+  document.body.style.overflow='';
+}
+
+// ── 보고서입력 탭: 업무처리 페이지 — generator 페이지와 동일 패턴(신규 입력폼 + 이번달 목록), 단일 레코드라 더 단순 ──
+// task는 터널명 옵션이 3개뿐(청하터널(주)/(부) 구분 없음) — reportBaseTunnel()로 접미사를 제거해야 매칭된다.
+async function renderReportPage_task(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">7. 월간 업무처리사항</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpTaskMount"></div>
+    <div id="rpTaskList" style="margin-top:22px"></div>`;
+  await loadTabData('task');
+  if(_reportCurPage!=='task') return;
+  document.getElementById('rpLoading')?.remove();
+  mountAddModalInline('rpTaskMount');
+  openAddModal('task');
+  document.body.style.overflow='';
+  reportPresetField('ff_0', reportBaseTunnel(REPORT_SEL.tunnel));
+  renderTaskMonthList();
+}
+function renderTaskMonthList(){
+  const wrap=document.getElementById('rpTaskList');
+  if(!wrap) return;
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.task.records||[]).filter(r=>r['터널명']===tunnel && (r['날짜']||'').slice(0,7)===ym)
+    .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''));
+  wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 업무처리 (${recs.length}건)</div>` +
+    (recs.length ? `<div style="display:flex;flex-direction:column;gap:6px">${recs.map(r=>
+      `<button class="report-page-chip" style="text-align:left;border-radius:8px" onclick="loadTaskRecord('${r.id}')">${esc((r['날짜']||'').slice(5))} · ${esc(r['업무내용']||'')}</button>`
+    ).join('')}</div>` : `<div style="color:#8A8F98;font-size:12px">아직 등록된 업무처리가 없습니다.</div>`);
+}
+function loadTaskRecord(recordId){
+  mountAddModalInline('rpTaskMount');
+  openAddModal('task', recordId);
+  document.body.style.overflow='';
+}
+
+// ── 보고서입력 탭: 변압기온도 페이지 — 3종류(조명용/일반용/동력용) 아코디언 ──
+// tchk_1~15 id가 종류와 무관하게 고정이라(document.querySelectorAll('.tchk-cb:checked')가 전역 조회)
+// 3종류를 동시에 인라인으로 띄우면 id 충돌이 난다 — 한 번에 한 섹션만 마운트하고 ff_4(변압기종류)는
+// 코드로 강제 세팅 후 비활성화해 사용자가 못 바꾸게 한다. 매 렌더마다 실제 저장 건수를 다시 세어
+// 보여주므로 "제출 성공/취소"를 구분할 필요 없이 항상 정확하다.
+const TRANSFORMER_TYPES=['조명용','일반용','동력용'];
+let _transformerExpanded=null;
+async function renderReportPage_transformer(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">3. 변압기 온도측정표</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpTransSections"></div>`;
+  _transformerExpanded=null;
+  await loadTabData('transformer');
+  if(_reportCurPage!=='transformer') return;
+  document.getElementById('rpLoading')?.remove();
+  renderTransformerAccordion();
+}
+function transformerTypeCount(type){
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  return (TAB_STATE.transformer.records||[]).filter(r=>r['터널명']===REPORT_SEL.tunnel && r['변압기종류']===type && (r['측정일자']||'').slice(0,7)===ym).length;
+}
+function renderTransformerAccordion(){
+  const wrap=document.getElementById('rpTransSections');
+  if(!wrap) return;
+  wrap.innerHTML = TRANSFORMER_TYPES.map(type=>{
+    const isOpen=_transformerExpanded===type;
+    const cnt=transformerTypeCount(type);
+    return `<div class="report-section-hd" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="expandTransformerSection('${type}')">
+        <span>${type} 변압기 <span style="font-weight:600;color:${cnt>0?'#0B7D3E':'#8A8F98'}">(이번달 ${cnt}건 측정)</span></span>
+        <span style="font-size:11px">${isOpen?'▲ 접기':'▶ 측정 입력'}</span>
+      </div>
+      <div id="rpTransMount_${esc(type)}"></div>`;
+  }).join('');
+  if(_transformerExpanded){
+    mountAddModalInline('rpTransMount_'+_transformerExpanded);
+    openAddModal('transformer');
+    document.body.style.overflow='';
+    reportPresetField('ff_0', REPORT_SEL.tunnel);
+    const typeSel=document.getElementById('ff_4');
+    if(typeSel){
+      typeSel.value=_transformerExpanded;
+      typeSel.dispatchEvent(new Event('change'));
+      typeSel.disabled=true; // 이 섹션의 종류는 고정 — 사용자가 임의로 바꾸지 못하게 함
+    }
+  }
+}
+function expandTransformerSection(type){
+  _transformerExpanded = (_transformerExpanded===type) ? null : type;
+  unmountAddModalInline();
+  renderTransformerAccordion();
+}
+
+// ── 보고서입력 탭: 월간점검 페이지 — REPORT_CHECKLIST_ORDER 전체 6개 구분을 한 화면에서 입력 ──
+// 유일하게 완전 신규 제출 로직(기존 submitMonthlyForm은 구분 1개씩·항상 신규생성이라 재사용 불가).
+// monthly는 터널명 옵션이 3개뿐(task와 동일, (주)/(부) 구분 없음) — reportBaseTunnel() 필요.
+// buildMonthlyReportRows()와 동일한 "이 터널에 실제 이력이 있는 항목만 표시" 규칙을 그대로 따른다.
+function monthlyApplicableItems(tunnel){
+  const recs=(TAB_STATE.monthly.records||[]).filter(r=>r['터널명']===tunnel);
+  return REPORT_CHECKLIST_ORDER.filter(item=>
+    recs.some(r=>r['구분']===item.구분 && (r['설비명']||'')===(item.설비명||'') && r['점검내용']===item.점검내용)
+  );
+}
+function monthlyDatedRecord(tunnel, item, ym){
+  return (TAB_STATE.monthly.records||[]).find(r=>r['터널명']===tunnel && r['구분']===item.구분 &&
+    (r['설비명']||'')===(item.설비명||'') && r['점검내용']===item.점검내용 && (r['점검일자']||'').slice(0,7)===ym) || null;
+}
+async function renderReportPage_monthly(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">1. 월간 점검결과표</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpMonthlyBody"></div>`;
+  await loadTabData('monthly');
+  if(_reportCurPage!=='monthly') return;
+  document.getElementById('rpLoading')?.remove();
+  renderMonthlyFullCatalog();
+}
+function renderMonthlyFullCatalog(){
+  const wrap=document.getElementById('rpMonthlyBody');
+  if(!wrap) return;
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const items=monthlyApplicableItems(tunnel);
+  if(!items.length){
+    wrap.innerHTML=`<div style="color:#8A8F98;font-size:12px">이 터널에는 등록된 점검항목 이력이 없습니다. (기존 "월간점검" 탭에서 신규등록 후 다시 방문해주세요)</div>`;
+    return;
+  }
+  const groups=[], map={};
+  items.forEach(it=>{
+    if(!map[it.구분]){ map[it.구분]={구분:it.구분,items:[]}; groups.push(map[it.구분]); }
+    map[it.구분].items.push(it);
+  });
+  let html=`<div class="modal-field" style="max-width:220px;margin-bottom:16px">
+    <label class="modal-label">점검일자 <span class="modal-required">*</span></label>
+    <input id="rpMonthlyDate" class="modal-input" type="date"/>
+    <div class="modal-hint">저장 시 변경된 항목들의 점검일자로 공통 사용됩니다.</div>
+  </div>`;
+  groups.forEach(g=>{
+    const gi=groups.indexOf(g);
+    html+=`<div class="report-section-hd">${esc(g.구분)}</div>`;
+    g.items.forEach((it,ii)=>{
+      const rid='rpmc_'+gi+'_'+ii;
+      const dated=monthlyDatedRecord(tunnel, it, ym);
+      const label=(it.설비명?esc(it.설비명)+' · ':'')+esc(it.점검내용);
+      const curVal=dated?dated['점검결과']:'';
+      const opts=['','양호','-','불량','점검요'].map(v=>
+        `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;flex-wrap:wrap;border-bottom:1px solid #EEF1F5">
+        <span style="flex:1;min-width:220px;font-size:13px">${label}${dated?` <span style="color:#0B7D3E;font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
+        <select id="${rid}" class="modal-select elec-grid-select" style="width:110px" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select>
+      </div>`;
+    });
+  });
+  html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpMonthlySubmitBtn" onclick="submitMonthlyReportForm()">저장</button></div>
+    <div class="modal-progress-wrap" id="rpMonthlyProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpMonthlyProgressBar"></div></div>`;
+  wrap.innerHTML=html;
+}
+async function submitMonthlyReportForm(){
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
+  const dateEl=document.getElementById('rpMonthlyDate');
+  const dateVal=dateEl?dateEl.value:'';
+  const selects=[...document.querySelectorAll('#rpMonthlyBody select[id^="rpmc_"]')].filter(s=>s.value!=='');
+  if(!selects.length){ alert('변경할 점검결과를 하나 이상 선택해주세요.'); return; }
+  if(!dateVal){ alert('점검일자를 입력해주세요.'); return; }
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const btn=document.getElementById('rpMonthlySubmitBtn');
+  btn.disabled=true; btn.textContent='저장 중...';
+  const wrap=document.getElementById('rpMonthlyProgressWrap'), bar=document.getElementById('rpMonthlyProgressBar');
+  wrap.style.display=''; bar.style.width='0%';
+  let failed=0, done=0;
+  const dbId=getTabDef('monthly').dbId;
+  const tasks=selects.map(sel=>async ()=>{
+    const item={구분:sel.dataset.gubun, 설비명:sel.dataset.seolbi, 점검내용:sel.dataset.content};
+    const existing=monthlyDatedRecord(tunnel, item, ym);
+    const props={
+      '터널명':buildPropValue('select', tunnel),
+      '점검일자':buildPropValue('date', dateVal),
+      '구분':buildPropValue('select', item.구분),
+      '제목':buildPropValue('title', titleWithMonth(dateVal,'월간점검결과표')),
+      '점검내용':buildPropValue('text', item.점검내용),
+      '점검결과':buildPropValue('select', sel.value)
+    };
+    if(item.설비명) props['설비명']=buildPropValue('select', item.설비명);
+    try{
+      if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
+      else await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
+    }catch(e){ failed++; console.error(e); }
+    done++; bar.style.width=Math.round(done/selects.length*100)+'%';
+  });
+  await runWithConcurrency(tasks, 6);
+  btn.disabled=false; btn.textContent='저장';
+  wrap.style.display='none';
+  await loadTabData('monthly');
+  toast(failed?`${selects.length-failed}건 저장 완료, ${failed}건 실패`:`${selects.length}건 저장되었습니다.`);
+  if(_reportCurPage==='monthly') renderMonthlyFullCatalog();
+}
+
+// ── 보고서입력 탭: 전력사용량 페이지 — 일자별(최대 31행) MAIN/조명용 입력 그리드, 신규 upsert 로직 ──
+// power는 elec/generator/photo와 동일하게 터널명이 4옵션((주)/(부) 구분 있음) — reportBaseTunnel 불필요.
+function powerRecordLookup(tunnel, dateStr){
+  return (TAB_STATE.power.records||[]).find(r=>r['터널명']===tunnel && r['일자']===dateStr) || null;
+}
+async function renderReportPage_power(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">6. 전력데이터 분석</div>
+    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpPowerBody"></div>`;
+  await loadTabData('power');
+  if(_reportCurPage!=='power') return;
+  document.getElementById('rpLoading')?.remove();
+  renderPowerGrid();
+}
+function renderPowerGrid(){
+  const wrap=document.getElementById('rpPowerBody');
+  if(!wrap) return;
+  const tunnel=REPORT_SEL.tunnel;
+  const year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
+  const lastDay=new Date(year, month, 0).getDate();
+  let rows='';
+  for(let d=1; d<=lastDay; d++){
+    const dateStr=REPORT_SEL.year+'-'+REPORT_SEL.month+'-'+String(d).padStart(2,'0');
+    const rec=powerRecordLookup(tunnel, dateStr);
+    const mainV=rec&&rec['MAIN(kWh)']!=null?rec['MAIN(kWh)']:'';
+    const lightV=rec&&rec['조명용(kWh)']!=null?rec['조명용(kWh)']:'';
+    rows+=`<tr data-date="${dateStr}">
+      <td style="padding:4px 8px;font-size:12.5px">${month}월 ${d}일</td>
+      <td><input class="modal-input pw-main" type="number" step="0.01" style="width:100px" value="${mainV}"></td>
+      <td><input class="modal-input pw-light" type="number" step="0.01" style="width:100px" value="${lightV}"></td>
+      <td><input class="modal-input pw-note" type="text" style="width:140px" value="${esc((rec&&rec['비고'])||'')}"></td>
+    </tr>`;
+  }
+  wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>일자</th><th>MAIN(kWh)</th><th>조명용(kWh)</th><th>비고</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">저장</button></div>
+    <div class="modal-progress-wrap" id="rpPowerProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpPowerProgressBar"></div></div>`;
+}
+async function submitPowerReportForm(){
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+  const tunnel=REPORT_SEL.tunnel;
+  const dbId=getTabDef('power').dbId;
+  const targets=[];
+  document.querySelectorAll('#rpPowerBody tbody tr').forEach(tr=>{
+    const dateStr=tr.dataset.date;
+    const main=tr.querySelector('.pw-main').value, light=tr.querySelector('.pw-light').value, note=tr.querySelector('.pw-note').value;
+    if(main==='' && light==='' && note==='') return; // 아무 값도 없는 날은 건너뜀(빈 레코드 생성 방지)
+    targets.push({dateStr, main, light, note});
+  });
+  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  const btn=document.getElementById('rpPowerSubmitBtn');
+  btn.disabled=true; btn.textContent='저장 중...';
+  const wrap=document.getElementById('rpPowerProgressWrap'), bar=document.getElementById('rpPowerProgressBar');
+  wrap.style.display=''; bar.style.width='0%';
+  let done=0, failed=0;
+  const tasks=targets.map(t=>async ()=>{
+    const existing=powerRecordLookup(tunnel, t.dateStr);
+    const props={
+      '터널명':buildPropValue('select', tunnel),
+      '일자':buildPropValue('date', t.dateStr),
+      '제목':buildPropValue('title', titleWithMonth(t.dateStr,'전력사용량')),
+      'MAIN(kWh)':buildPropValue('number', t.main),
+      '조명용(kWh)':buildPropValue('number', t.light),
+      '비고':buildPropValue('text', t.note)
+    };
+    try{
+      if(existing) await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props});
+      else await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
+    }catch(e){ failed++; console.error(e); }
+    done++; bar.style.width=Math.round(done/targets.length*100)+'%';
+  });
+  await runWithConcurrency(tasks, 6);
+  btn.disabled=false; btn.textContent='저장';
+  wrap.style.display='none';
+  await loadTabData('power');
+  toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
+  if(_reportCurPage==='power') renderPowerGrid();
+}
+
 // 통합 보고서는 월간점검 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는 탭
 // (전기설비기록/변압기온도/발전기점검/점검사진/전력사용량/업무처리)은 먼저 로드해줘야 한다 —
 // 안 그러면 "해당 월에 데이터가 없어서" 빠진 게 아니라 "탭을 안 열어봐서" 빠지는 조용한
@@ -5707,8 +6131,95 @@ function exportGeneratorExcel(){
   });
 }
 
+// ── 보고서입력 탭(신설) — 실제 A4 보고서 지면 순서/모양을 따라 이동하는 페이지형 UI.
+// 기존 7개 탭의 모달·제출 함수를 그대로 재사용하며(§계획 참고), 여기서는 탭 뼈대(선택바·페이지 네비)만 담당한다.
+// mountAddModalInline/unmountAddModalInline 및 각 페이지 렌더 함수(renderReportPage_*)는 이후 단계에서 채운다.
+const REPORT_TUNNELS=['청하터널(주)','청하터널(부)','흥해터널','남정5터널'];
+let _reportInited=false;
+function initReportTab(){
+  if(!_reportInited){
+    _reportInited=true;
+    document.getElementById('reportSelBar').innerHTML=
+      `<div class="filter-row" style="margin-bottom:0">
+        <select class="modal-select" id="reportSelTunnel" style="max-width:160px" onchange="onReportSelChange()">
+          ${REPORT_TUNNELS.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+        <select class="modal-select" id="reportSelYear" style="max-width:100px" onchange="onReportSelChange()"></select>
+        <select class="modal-select" id="reportSelMonth" style="max-width:90px" onchange="onReportSelChange()"></select>
+      </div>`;
+    const yEl=document.getElementById('reportSelYear'), mEl=document.getElementById('reportSelMonth');
+    const curY=new Date().getFullYear();
+    yEl.innerHTML=[curY-1,curY,curY+1].map(y=>`<option value="${y}">${y}년</option>`).join('');
+    mEl.innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<option value="${String(m).padStart(2,'0')}">${m}월</option>`).join('');
+    document.getElementById('reportSelTunnel').value=REPORT_SEL.tunnel||REPORT_TUNNELS[0];
+    document.getElementById('reportSelYear').value=REPORT_SEL.year;
+    document.getElementById('reportSelMonth').value=REPORT_SEL.month;
+    REPORT_SEL.tunnel=document.getElementById('reportSelTunnel').value;
+    document.getElementById('reportPageChips').innerHTML=REPORT_PAGE_IDS.map(id=>
+      `<button class="report-page-chip" id="chip-${id}" onclick="gotoReportPage('${id}')">${REPORT_PAGE_LABELS[id]}</button>`
+    ).join('');
+  }
+  gotoReportPage(_reportCurPage);
+}
+function onReportSelChange(){
+  REPORT_SEL.tunnel=document.getElementById('reportSelTunnel').value;
+  REPORT_SEL.year=document.getElementById('reportSelYear').value;
+  REPORT_SEL.month=document.getElementById('reportSelMonth').value;
+  gotoReportPage(_reportCurPage);
+}
+function gotoReportPage(id){
+  unmountAddModalInline();
+  _reportCurPage=id;
+  REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
+  const idx=REPORT_PAGE_IDS.indexOf(id);
+  document.getElementById('reportPrevBtn').disabled=(idx<=0);
+  document.getElementById('reportNextBtn').disabled=(idx>=REPORT_PAGE_IDS.length-1);
+  const fn=window['renderReportPage_'+id];
+  if(typeof fn==='function'){ fn(); }
+  else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:#8A8F98;padding:30px 0">준비 중입니다.</div>`; }
+}
+function reportPagePrev(){ const i=REPORT_PAGE_IDS.indexOf(_reportCurPage); if(i>0) gotoReportPage(REPORT_PAGE_IDS[i-1]); }
+function reportPageNext(){ const i=REPORT_PAGE_IDS.indexOf(_reportCurPage); if(i<REPORT_PAGE_IDS.length-1) gotoReportPage(REPORT_PAGE_IDS[i+1]); }
+// ── #addModal을 보고서입력 탭 안으로 옮겨 인라인으로 보여주는 재배치 메커니즘 ──
+// 기존 openAddModal/submitXForm/closeAddModal은 전부 document.getElementById로 필드를 읽고 쓰므로
+// 절대 새로 복제해 그리지 않는다 — 같은 DOM 노드를 그대로 옮겨 붙여서 로직을 100% 재사용한다.
+let _reportModalDragGuardAttached=false;
+function _reportInstallModalDragGuard(){
+  if(_reportModalDragGuardAttached) return;
+  _reportModalDragGuardAttached=true;
+  const modal=document.getElementById('addModal');
+  // 인라인 상태에서는 헤더를 드래그하면 makeModalDraggable()이 modal-box를 position:fixed로
+  // 바꿔버려 페이지 레이아웃이 깨진다 — capture 단계에서 드래그 시작 이벤트만 막는다(닫기 버튼의
+  // click 이벤트는 별개라 영향 없음).
+  ['mousedown','touchstart'].forEach(evt=>{
+    modal.addEventListener(evt, e=>{
+      if(modal.classList.contains('modal-inline') && e.target.closest('.detail-modal-hd')) e.stopPropagation();
+    }, true);
+  });
+}
+function mountAddModalInline(containerId){
+  _reportInstallModalDragGuard();
+  const modal=document.getElementById('addModal');
+  document.getElementById(containerId).appendChild(modal);
+  modal.classList.add('modal-inline');
+}
+function unmountAddModalInline(){
+  const modal=document.getElementById('addModal');
+  if(!modal.classList.contains('modal-inline')) return; // 이미 원래 자리 — 중복 처리 방지
+  // #addModalHome은 display:none인 "위치 표시용" 빈 div이므로 그 자식으로 넣으면 부모의
+  // display:none에 가려 #addModal.modal-open{display:block}이 무시된다 — 반드시 형제로 복원해야 한다.
+  const home=document.getElementById('addModalHome');
+  home.parentNode.insertBefore(modal, home);
+  modal.classList.remove('modal-inline','modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+  hideAddModalProgress();
+  EDIT_TAB=null; EDIT_PAGE_ID=null;
+  _photoFiles=[]; _photoMultiRows=[];
+}
+
 // ── 하단 탭 전환 ──
-const PANEL_IDS=TAB_DEFS.map(t=>t.id);
+const PANEL_IDS=['formEntry', ...TAB_DEFS.map(t=>t.id)];
 let _activePanel=PANEL_IDS[0];
 function switchPanel(id){
   if(id===_activePanel) return;
@@ -5719,12 +6230,13 @@ function switchPanel(id){
     if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
   });
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  if(id==='formEntry'){ initReportTab(); } else { unmountAddModalInline(); }
   const tabDef=getTabDef(id);
   if(tabDef && tabDef.fields && !TAB_STATE[id].loaded && isAuthed()) loadTabData(id);
 }
 
 // ── 초기화 ──
-if(isAuthed()){ loadTabData('monthly'); }
+if(isAuthed()){ initReportTab(); }
 else { openLoginModal(); }
 </script>
 </div>
