@@ -93,26 +93,28 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .main{padding:10px 12px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 
-/* ── 보고서입력 탭: 페이지 칩 네비 + A4 용지 카드 ── */
-.report-page-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.report-page-chips{flex:1;display:flex;gap:6px;flex-wrap:wrap}
-.report-page-chip{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+/* ── 보고서입력 탭: 필터+페이지 칩을 한 줄에 배치(스크롤), A4 용지 카드는 일반 카드처럼 다크/라이트 테마를 그대로 따름 ── */
+.report-toolbar{display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
+.report-toolbar .dd-wrap,.report-toolbar-sep{flex-shrink:0}
+.report-toolbar-sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
+.report-page-chips{display:flex;gap:6px;flex-shrink:0}
+.report-page-chip{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
-/* 종이 안쪽은 다크모드에서도 항상 라이트로 고정 — 재사용되는 모달 필드(.modal-select/.modal-input/
-   .modal-label 등)가 전부 CSS 커스텀 프로퍼티(var(--txt)/var(--card) 등)를 참조하므로, 흰 배경
-   .report-paper 안에서 전역 다크 테마 값을 그대로 쓰면 글자가 흰 배경에 흰 글자로 안 보이는 문제가
-   생긴다(2026-07-29 실측). :root의 라이트 값을 .report-paper 스코프에 다시 선언해 하위 요소가
-   전부 라이트로 렌더되게 한다 — 개별 컴포넌트를 일일이 오버라이드하지 않아도 되는 가장 안전한 방법.
-   .report-page-chip/이전·다음 버튼 등 종이 "바깥" 크롬은 이 규칙의 영향을 받지 않고 전역 테마를 그대로 따른다. */
-.report-paper{
-  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;--txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
-  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;--sky800-solid:#032F62;
-  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
-  background:#FFFFFF;color:#24292E;max-width:800px;margin:0 auto;border:1px solid #D8DEE6;border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
-html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5);border-color:#3A3F45}
-.report-title-band{text-align:center;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid #0C447C}
-.report-subtitle{text-align:center;font-size:14px;color:#5F5E5A;margin-bottom:18px}
-.report-section-hd{font-size:13.5px;font-weight:800;background:#E9F1FE;color:#032F62;padding:7px 12px;border-radius:6px;margin:16px 0 8px}
+.report-paper{background:var(--card);color:var(--txt);max-width:800px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
+html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
+.report-title-band{text-align:center;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
+.report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
+.report-section-hd{font-size:13.5px;font-weight:800;background:var(--sky50);color:var(--sky800);padding:7px 12px;border-radius:6px;margin:16px 0 8px}
+/* 재사용된 모달 필드(.modal-input/.modal-select 등)는 원래 16px(iOS 자동확대 방지용, 3-9 원칙)라
+   보고서 페이지 안 다른 텍스트(13px대)보다 눈에 띄게 커 보인다(2026-07-29 사용자 피드백) — 이 탭
+   안에서만 데스크톱 크기를 줄인다. 480px 이하는 절대 손대지 않아 iOS 자동확대 방지 규칙은 그대로 유지. */
+@media(min-width:481px){
+  .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
+  .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
+  .report-paper .modal-label{font-size:12.5px}
+  .report-paper .modal-hint{font-size:11px}
+  .report-paper .detail-modal-hd h3{font-size:14px}
+}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
@@ -409,7 +411,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">보고서입력</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼</button>
   <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
   <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
   <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
@@ -424,12 +426,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
   <!-- ▸ 보고서입력(신설) — 실제 A4 보고서 지면 그대로의 모양으로 입력하는 대체 UI. 데이터는 아래 각 탭과 완전히 동일한 노션 레코드에 저장된다. -->
   <div class="panel active" id="panel-formEntry">
-    <div class="sc" id="reportSelBar"></div>
-    <div class="report-page-nav">
-      <button class="tb-action-btn" id="reportPrevBtn" onclick="reportPagePrev()">‹ 이전</button>
-      <div class="report-page-chips" id="reportPageChips"></div>
-      <button class="tb-action-btn" id="reportNextBtn" onclick="reportPageNext()">다음 ›</button>
-    </div>
+    <div class="sc report-toolbar" id="reportSelBar"></div>
     <div class="report-paper" id="reportPaper"></div>
   </div>
 
@@ -2592,7 +2589,10 @@ function buildElecFormExtra(r){
   // 점검담당자/점검확인자/종합의견도 elec1이 아니라 elec3(설비현황)DB 속성이고 32건 전부 같은 값이
   // 반복 저장되는 구조 — 마찬가지로 입력창 1벌만 두고 저장 시 32건 모두에 복사한다.
   const chk0 = (r && r._chk && r._chk[0]) || null;
+  // 종합의견을 먼저, 점검담당자/점검확인자(서명란 성격)는 맨 아래로(2026-07-29 사용자 요청 — 실제
+  // 보고서 지면에서도 종합의견 다음에 확인자 서명이 오는 흐름과 맞춤).
   const chkCommonHtml=`<div class="form-group-hd">확인·종합의견(설비현황 32건에 공통 저장)</div>
+    <div class="modal-field"><label class="modal-label">종합의견</label><textarea class="modal-textarea" id="ec_jonghap">${esc(chk0?chk0.종합의견:'적합함')}</textarea></div>
     <div class="form-group-grid">
       <div class="modal-field"><label class="modal-label">점검담당자</label>
         <select class="modal-select" id="ec_damdang" onchange="onSelectChange(this,'ec_damdangc')">
@@ -2608,8 +2608,7 @@ function buildElecFormExtra(r){
         </select>
         <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
       </div>
-    </div>
-    <div class="modal-field"><label class="modal-label">종합의견</label><textarea class="modal-textarea" id="ec_jonghap">${esc(chk0?chk0.종합의견:'적합함')}</textarea></div>`;
+    </div>`;
   return acbHtml+acbCommonHtml+chkHtml+chkCommonHtml;
 }
 // 전기설비기록 탭 전용 — 특정 터널의 가장 최근 레코드(점검일자 내림차순으로 이미 정렬된 TAB_STATE
@@ -5596,7 +5595,7 @@ function renderReportPage_divider(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band" style="font-size:22px">8. 일일점검일지</div>
     <div style="text-align:center;font-weight:700;font-size:17px;margin:150px 0">기간 : ${year}년 ${month}월 1일 ~ ${year}년 ${month}월 ${lastDay}일</div>
-    <div style="text-align:center;color:#8A8F98;font-size:12px">${tunnel}</div>`;
+    <div style="text-align:center;color:var(--txt3);font-size:12px">${tunnel}</div>`;
 }
 
 // ── 보고서입력 탭: 점검사진 페이지 — buildPhotoMultiHtml(6슬롯 일괄등록)이 이미 보고서 지면과 1:1이라 얇은 래퍼만 필요 ──
@@ -5628,7 +5627,7 @@ async function findExistingRecordForSel(tabId, dateKey){
 async function renderReportPage_elec(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">2. 전기설비 점검결과기록표</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpElecMount"></div>`;
   const existing=await findExistingRecordForSel('elec','점검일자');
   if(_reportCurPage!=='elec') return; // 로딩 중 사용자가 다른 페이지로 이동했으면 중단
@@ -5643,7 +5642,7 @@ async function renderReportPage_elec(){
 async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">4. 비상발전기 점검 및 가동일지</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpGenMount"></div>
     <div id="rpGenList" style="margin-top:22px"></div>`;
   await loadTabData('generator'); // 저장 직후 재방문 시에도 목록이 항상 최신이도록 매번 새로 불러온다
@@ -5664,7 +5663,7 @@ function renderGeneratorMonthList(){
   wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 가동일 (${recs.length}건)</div>` +
     (recs.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${recs.map(r=>
       `<button class="report-page-chip" onclick="loadGeneratorDay('${r.id}')">${esc((r['가동일자']||'').slice(5))} 수정</button>`
-    ).join('')}</div>` : `<div style="color:#8A8F98;font-size:12px">아직 등록된 가동일이 없습니다.</div>`);
+    ).join('')}</div>` : `<div style="color:var(--txt3);font-size:12px">아직 등록된 가동일이 없습니다.</div>`);
 }
 function loadGeneratorDay(recordId){
   mountAddModalInline('rpGenMount');
@@ -5677,7 +5676,7 @@ function loadGeneratorDay(recordId){
 async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">7. 월간 업무처리사항</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpTaskMount"></div>
     <div id="rpTaskList" style="margin-top:22px"></div>`;
   await loadTabData('task');
@@ -5699,7 +5698,7 @@ function renderTaskMonthList(){
   wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 업무처리 (${recs.length}건)</div>` +
     (recs.length ? `<div style="display:flex;flex-direction:column;gap:6px">${recs.map(r=>
       `<button class="report-page-chip" style="text-align:left;border-radius:8px" onclick="loadTaskRecord('${r.id}')">${esc((r['날짜']||'').slice(5))} · ${esc(r['업무내용']||'')}</button>`
-    ).join('')}</div>` : `<div style="color:#8A8F98;font-size:12px">아직 등록된 업무처리가 없습니다.</div>`);
+    ).join('')}</div>` : `<div style="color:var(--txt3);font-size:12px">아직 등록된 업무처리가 없습니다.</div>`);
 }
 function loadTaskRecord(recordId){
   mountAddModalInline('rpTaskMount');
@@ -5717,7 +5716,7 @@ let _transformerExpanded=null;
 async function renderReportPage_transformer(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">3. 변압기 온도측정표</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpTransSections"></div>`;
   _transformerExpanded=null;
   await loadTabData('transformer');
@@ -5736,7 +5735,7 @@ function renderTransformerAccordion(){
     const isOpen=_transformerExpanded===type;
     const cnt=transformerTypeCount(type);
     return `<div class="report-section-hd" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="expandTransformerSection('${type}')">
-        <span>${type} 변압기 <span style="font-weight:600;color:${cnt>0?'#0B7D3E':'#8A8F98'}">(이번달 ${cnt}건 측정)</span></span>
+        <span>${type} 변압기 <span style="font-weight:600;color:${cnt>0?'var(--teal600)':'var(--txt3)'}">(이번달 ${cnt}건 측정)</span></span>
         <span style="font-size:11px">${isOpen?'▲ 접기':'▶ 측정 입력'}</span>
       </div>
       <div id="rpTransMount_${esc(type)}"></div>`;
@@ -5777,7 +5776,7 @@ function monthlyDatedRecord(tunnel, item, ym){
 async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">1. 월간 점검결과표</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpMonthlyBody"></div>`;
   await loadTabData('monthly');
   if(_reportCurPage!=='monthly') return;
@@ -5791,7 +5790,7 @@ function renderMonthlyFullCatalog(){
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const items=monthlyApplicableItems(tunnel);
   if(!items.length){
-    wrap.innerHTML=`<div style="color:#8A8F98;font-size:12px">이 터널에는 등록된 점검항목 이력이 없습니다. (기존 "월간점검" 탭에서 신규등록 후 다시 방문해주세요)</div>`;
+    wrap.innerHTML=`<div style="color:var(--txt3);font-size:12px">이 터널에는 등록된 점검항목 이력이 없습니다. (기존 "월간점검" 탭에서 신규등록 후 다시 방문해주세요)</div>`;
     return;
   }
   const groups=[], map={};
@@ -5814,8 +5813,8 @@ function renderMonthlyFullCatalog(){
       const curVal=dated?dated['점검결과']:'';
       const opts=['','양호','-','불량','점검요'].map(v=>
         `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
-      html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;flex-wrap:wrap;border-bottom:1px solid #EEF1F5">
-        <span style="flex:1;min-width:220px;font-size:13px">${label}${dated?` <span style="color:#0B7D3E;font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;flex-wrap:wrap;border-bottom:1px solid var(--border2)">
+        <span style="flex:1;min-width:220px;font-size:13px">${label}${dated?` <span style="color:var(--teal600);font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
         <select id="${rid}" class="modal-select elec-grid-select" style="width:110px" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select>
       </div>`;
     });
@@ -5873,7 +5872,7 @@ function powerRecordLookup(tunnel, dateStr){
 async function renderReportPage_power(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">6. 전력데이터 분석</div>
-    <div id="rpLoading" style="text-align:center;color:#8A8F98;font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPowerBody"></div>`;
   await loadTabData('power');
   if(_reportCurPage!=='power') return;
@@ -6136,50 +6135,82 @@ function exportGeneratorExcel(){
 // mountAddModalInline/unmountAddModalInline 및 각 페이지 렌더 함수(renderReportPage_*)는 이후 단계에서 채운다.
 const REPORT_TUNNELS=['청하터널(주)','청하터널(부)','흥해터널','남정5터널'];
 let _reportInited=false;
+// 터널·연·월 필터를 앱 표준 dd-btn/dd-menu(목록방식 드롭다운, toggleDd/closeDd 재사용)로 구성하고
+// 페이지 칩을 같은 행에 이어붙인다(2026-07-29 사용자 요청 — 기존 네이티브 select(16px)는 글자가
+// 너무 크고 위아래 공간도 따로 차지했음). 이전/다음 버튼은 칩을 직접 눌러 이동하면 되므로 제거.
 function initReportTab(){
   if(!_reportInited){
     _reportInited=true;
     document.getElementById('reportSelBar').innerHTML=
-      `<div class="filter-row" style="margin-bottom:0">
-        <select class="modal-select" id="reportSelTunnel" style="max-width:160px" onchange="onReportSelChange()">
-          ${REPORT_TUNNELS.map(t=>`<option value="${t}">${t}</option>`).join('')}
-        </select>
-        <select class="modal-select" id="reportSelYear" style="max-width:100px" onchange="onReportSelChange()"></select>
-        <select class="modal-select" id="reportSelMonth" style="max-width:90px" onchange="onReportSelChange()"></select>
-      </div>`;
-    const yEl=document.getElementById('reportSelYear'), mEl=document.getElementById('reportSelMonth');
+      `<div class="dd-wrap" id="rpTunnelWrap">
+        <button class="dd-btn" id="rpTunnelBtn" type="button" onclick="toggleDd('rpTunnelMenu','rpTunnelBtn')" aria-haspopup="listbox" aria-label="터널 선택"><span id="rpTunnelLabel"></span></button>
+        <div class="dd-menu" id="rpTunnelMenu">${REPORT_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
+      </div>
+      <input id="rpTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접입력" style="display:none;width:130px;flex-shrink:0" onchange="onReportTunnelCustomChange(this.value)"/>
+      <div class="dd-wrap" id="rpYearWrap">
+        <button class="dd-btn" id="rpYearBtn" type="button" onclick="toggleDd('rpYearMenu','rpYearBtn')" aria-haspopup="listbox" aria-label="연도 선택"><span id="rpYearLabel"></span></button>
+        <div class="dd-menu" id="rpYearMenu"></div>
+      </div>
+      <div class="dd-wrap" id="rpMonthWrap">
+        <button class="dd-btn" id="rpMonthBtn" type="button" onclick="toggleDd('rpMonthMenu','rpMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rpMonthLabel"></span></button>
+        <div class="dd-menu" id="rpMonthMenu"></div>
+      </div>
+      <div class="report-toolbar-sep"></div>
+      <div class="report-page-chips" id="reportPageChips"></div>`;
     const curY=new Date().getFullYear();
-    yEl.innerHTML=[curY-1,curY,curY+1].map(y=>`<option value="${y}">${y}년</option>`).join('');
-    mEl.innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<option value="${String(m).padStart(2,'0')}">${m}월</option>`).join('');
-    document.getElementById('reportSelTunnel').value=REPORT_SEL.tunnel||REPORT_TUNNELS[0];
-    document.getElementById('reportSelYear').value=REPORT_SEL.year;
-    document.getElementById('reportSelMonth').value=REPORT_SEL.month;
-    REPORT_SEL.tunnel=document.getElementById('reportSelTunnel').value;
+    document.getElementById('rpYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
+    document.getElementById('rpMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
+    if(!REPORT_SEL.tunnel) REPORT_SEL.tunnel=REPORT_TUNNELS[0];
+    document.getElementById('rpTunnelMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      closeDd('rpTunnelMenu','rpTunnelBtn');
+      if(opt.dataset.val==='__custom__'){
+        const ci=document.getElementById('rpTunnelCustom');
+        ci.style.display=''; ci.value=REPORT_TUNNELS.includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
+        return;
+      }
+      document.getElementById('rpTunnelCustom').style.display='none';
+      REPORT_SEL.tunnel=opt.dataset.val; syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
+    document.getElementById('rpYearMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.year=opt.dataset.val; closeDd('rpYearMenu','rpYearBtn'); syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
+    document.getElementById('rpMonthMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.month=opt.dataset.val; closeDd('rpMonthMenu','rpMonthBtn'); syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
     document.getElementById('reportPageChips').innerHTML=REPORT_PAGE_IDS.map(id=>
       `<button class="report-page-chip" id="chip-${id}" onclick="gotoReportPage('${id}')">${REPORT_PAGE_LABELS[id]}</button>`
     ).join('');
+    syncReportSelLabels();
   }
   gotoReportPage(_reportCurPage);
 }
-function onReportSelChange(){
-  REPORT_SEL.tunnel=document.getElementById('reportSelTunnel').value;
-  REPORT_SEL.year=document.getElementById('reportSelYear').value;
-  REPORT_SEL.month=document.getElementById('reportSelMonth').value;
+function onReportTunnelCustomChange(v){
+  v=(v||'').trim();
+  if(!v) return;
+  REPORT_SEL.tunnel=v;
+  syncReportSelLabels();
   gotoReportPage(_reportCurPage);
+}
+function syncReportSelLabels(){
+  const isCustomTunnel=!REPORT_TUNNELS.includes(REPORT_SEL.tunnel);
+  document.getElementById('rpTunnelLabel').textContent=REPORT_SEL.tunnel||'터널 선택';
+  document.querySelectorAll('#rpTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val==='__custom__'?isCustomTunnel:o.dataset.val===REPORT_SEL.tunnel));
+  document.getElementById('rpYearLabel').textContent=REPORT_SEL.year+'년';
+  document.getElementById('rpMonthLabel').textContent=Number(REPORT_SEL.month)+'월';
+  document.querySelectorAll('#rpYearMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.year));
+  document.querySelectorAll('#rpMonthMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.month));
 }
 function gotoReportPage(id){
   unmountAddModalInline();
   _reportCurPage=id;
   REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
-  const idx=REPORT_PAGE_IDS.indexOf(id);
-  document.getElementById('reportPrevBtn').disabled=(idx<=0);
-  document.getElementById('reportNextBtn').disabled=(idx>=REPORT_PAGE_IDS.length-1);
   const fn=window['renderReportPage_'+id];
   if(typeof fn==='function'){ fn(); }
-  else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:#8A8F98;padding:30px 0">준비 중입니다.</div>`; }
+  else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:var(--txt3);padding:30px 0">준비 중입니다.</div>`; }
 }
-function reportPagePrev(){ const i=REPORT_PAGE_IDS.indexOf(_reportCurPage); if(i>0) gotoReportPage(REPORT_PAGE_IDS[i-1]); }
-function reportPageNext(){ const i=REPORT_PAGE_IDS.indexOf(_reportCurPage); if(i<REPORT_PAGE_IDS.length-1) gotoReportPage(REPORT_PAGE_IDS[i+1]); }
 // ── #addModal을 보고서입력 탭 안으로 옮겨 인라인으로 보여주는 재배치 메커니즘 ──
 // 기존 openAddModal/submitXForm/closeAddModal은 전부 document.getElementById로 필드를 읽고 쓰므로
 // 절대 새로 복제해 그리지 않는다 — 같은 DOM 노드를 그대로 옮겨 붙여서 로직을 100% 재사용한다.
