@@ -964,7 +964,7 @@ function buildTabFilterDd(tabId){
       yearMenu._bound=true;
       yearMenu.addEventListener('click',e=>{
         const opt=e.target.closest('.dd-opt'); if(!opt) return;
-        f.year=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
+        f.year=opt.dataset.val; _tabFilterUserPicked[tabId]=true; delete f._pendingViewActive; closeDd('ddYearMenu-'+tabId,'ddYearBtn-'+tabId); renderTabTable(tabId);
       });
     }
   }
@@ -979,7 +979,7 @@ function buildTabFilterDd(tabId){
       monthMenu._bound=true;
       monthMenu.addEventListener('click',e=>{
         const opt=e.target.closest('.dd-opt'); if(!opt) return;
-        f.month=opt.dataset.val; _tabFilterUserPicked[tabId]=true; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
+        f.month=opt.dataset.val; _tabFilterUserPicked[tabId]=true; delete f._pendingViewActive; closeDd('ddMonthMenu-'+tabId,'ddMonthBtn-'+tabId); renderTabTable(tabId);
       });
     }
   }
@@ -995,7 +995,7 @@ function buildTabFilterDd(tabId){
         tunnelMenu._bound=true;
         tunnelMenu.addEventListener('click',e=>{
           const opt=e.target.closest('.dd-opt'); if(!opt) return;
-          f.tunnel=opt.dataset.val; closeDd('ddTunnelMenu-'+tabId,'ddTunnelBtn-'+tabId); renderTabTable(tabId);
+          f.tunnel=opt.dataset.val; delete f._pendingViewActive; closeDd('ddTunnelMenu-'+tabId,'ddTunnelBtn-'+tabId); renderTabTable(tabId);
         });
       }
     }
@@ -1013,7 +1013,7 @@ function buildTabFilterDd(tabId){
         statusMenu._bound=true;
         statusMenu.addEventListener('click',e=>{
           const opt=e.target.closest('.dd-opt'); if(!opt) return;
-          f.status=opt.dataset.val; closeDd('ddStatusMenu-'+tabId,'ddStatusBtn-'+tabId); renderTabTable(tabId);
+          f.status=opt.dataset.val; delete f._pendingViewActive; closeDd('ddStatusMenu-'+tabId,'ddStatusBtn-'+tabId); renderTabTable(tabId);
         });
       }
     }
@@ -1030,10 +1030,19 @@ function filteredTabRecords(tabId){
   return recs;
 }
 // "미조치 N건" KPI 배지 클릭 — 연/월 필터를 전체로 풀고 상태를 미조치로 맞춰, 어느 달을 보고
-// 있었든 이월된 미조치 건을 바로 전부 볼 수 있게 한다(2026-07-29 사용자 요청).
+// 있었든 이월된 미조치 건을 바로 전부 볼 수 있게 한다(2026-07-29). 되돌아갈 방법이 없다는
+// 피드백으로 토글 방식으로 변경 — 같은 배지를 다시 누르면 누르기 전 필터로 복원한다.
 function showAllPendingRepairs(){
   const f=_tabFilters.repair;
-  f.year='ALL'; f.month='ALL'; f.status='미조치';
+  if(f._pendingViewActive){
+    const prev=f._prevBeforePending||{year:'ALL',month:'ALL',status:'ALL'};
+    f.year=prev.year; f.month=prev.month; f.status=prev.status;
+    delete f._pendingViewActive; delete f._prevBeforePending;
+  } else {
+    f._prevBeforePending={year:f.year, month:f.month, status:f.status};
+    f.year='ALL'; f.month='ALL'; f.status='미조치';
+    f._pendingViewActive=true;
+  }
   _tabFilterUserPicked.repair=true;
   renderTabTable('repair');
 }
@@ -1060,7 +1069,9 @@ function renderTabTable(tabId){
     const pendingEl=document.getElementById('pendingCount-repair');
     if(pendingEl){
       const pendingN=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일']).length;
-      pendingEl.textContent=`미조치 ${pendingN}건`;
+      const active=!!_tabFilters.repair._pendingViewActive;
+      pendingEl.textContent = active ? '◀ 이전 목록으로' : `미조치 ${pendingN}건`;
+      pendingEl.title = active ? '클릭하면 이전에 보던 필터로 돌아갑니다' : '클릭하면 전체 연/월의 미조치 건을 봅니다';
     }
   }
   const tbody=document.getElementById('tbody-'+tabId);
