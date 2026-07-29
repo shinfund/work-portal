@@ -93,16 +93,28 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .main{padding:10px 12px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 
-/* ── 보고서입력 탭: 필터+페이지 칩을 한 줄에 배치(스크롤), A4 용지 카드는 일반 카드처럼 다크/라이트 테마를 그대로 따름 ── */
-.report-toolbar{display:flex;align-items:center;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
-.report-toolbar .dd-wrap,.report-toolbar-sep{flex-shrink:0}
-.report-toolbar-sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
-.report-page-chips{display:flex;gap:6px;flex-shrink:0}
-.report-page-chip{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:16px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
-.report-page-chip.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
-.report-preview-bar{margin-bottom:10px}
-.report-preview-toggle{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-.report-preview-toggle.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
+/* ── 보고서입력 탭: 필터+페이지 칩을 한 줄에 배치, A4 용지 카드는 일반 카드처럼 다크/라이트 테마를 그대로 따름 ──
+   주의: overflow-x:auto를 .report-toolbar 자체에 걸면 CSS 스펙상 overflow-y도 자동으로 auto가 되어(둘 중
+   하나만 visible이 아니면 나머지도 clip됨) 터널·연·월 드롭다운(.dd-menu, 버튼 아래로 absolute 팝업)이
+   위쪽 컨테이너에 잘려서 이상하게 보이는 버그가 있었다(2026-07-29 사용자 제보로 발견). 그래서 가로
+   스크롤은 칩 묶음(.report-page-chips)에만 걸고, 드롭다운이 있는 .report-toolbar 자체는 잘리지 않게 둔다. */
+.report-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:nowrap}
+.report-toolbar .dd-wrap,.report-toolbar-sep,.report-preview-toggle{flex-shrink:0}
+/* 필터(터널·연·월, --sky 계열)와 구분되도록 굵고 진한 구분선(2026-07-29 사용자 요청 — 가독성 강화) */
+.report-toolbar-sep{width:2px;align-self:stretch;background:var(--gray200);border-radius:2px;margin:0 6px}
+.report-page-chips{display:flex;gap:6px;flex-shrink:1;min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+/* 보고서 페이지 칩은 필터 드롭다운(--sky)과 색을 분리해 한눈에 구분되게 --purple 계열 사용(앱 전체에서
+   "보고서 생성" 버튼에 이미 쓰이는 색과 통일), 모양도 완전 알약형(16px)에서 둥근 사각형(10px)으로 변경 */
+.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+/* 읽기전용 미리보기 표에서 라벨·값 가독성 강화(2026-07-29 사용자 요청 — 어두운 배경에서 라벨 글자가
+   흐릿하게 보인다는 피드백) — var(--txt3, 50% 흰색) 대신 더 진한 톤으로, 값은 굵게+거의 흰색으로 고정 */
+.report-preview-kv .k{color:var(--txt2);font-weight:600}
+.report-preview-kv .v{color:var(--txt);font-weight:700}
+/* 필터(--sky)·페이지칩(--purple)과도 겹치지 않게 --teal 계열로 구분(2026-07-29 사용자 요청).
+   툴바 한 줄 안에 표지 칩 바로 앞에 배치되므로(공간 절약 목적) flex-shrink:0 필수. */
+.report-preview-toggle{background:var(--teal50);border:1.5px solid var(--teal100);color:var(--teal600);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+.report-preview-toggle.active{background:var(--teal);color:#fff;border-color:var(--teal)}
 .report-preview-kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px 14px;margin-bottom:14px}
 .report-preview-kv .k{font-size:11.5px;color:var(--txt3);margin-bottom:2px}
 .report-preview-kv .v{font-size:13px;color:var(--txt)}
@@ -421,7 +433,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼(작업중)</button>
   <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
   <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
   <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
@@ -437,9 +449,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   <!-- ▸ 보고서입력(신설) — 실제 A4 보고서 지면 그대로의 모양으로 입력하는 대체 UI. 데이터는 아래 각 탭과 완전히 동일한 노션 레코드에 저장된다. -->
   <div class="panel active" id="panel-formEntry">
     <div class="sc report-toolbar" id="reportSelBar"></div>
-    <div class="report-preview-bar">
-      <button class="report-preview-toggle" id="reportPreviewToggle" onclick="toggleReportPreview()" style="display:none">👁 미리보기</button>
-    </div>
     <div class="report-paper" id="reportPaper"></div>
   </div>
 
@@ -5736,8 +5745,8 @@ async function renderReportPreview_generator(){
     html+=`<div class="report-section-hd">${esc(r['가동일자']||'')} · ${esc(r['점검자']||'')}</div>`;
     html+=previewKvGrid([['가동시간',r['가동시간']],['가동시간(min)',r['가동시간(min)']],['전압(V)',r['전압(V)']],
       ['전류(A)',r['전류(A)']],['전력(kW)',r['전력(kW)']],['주파수(Hz)',r['주파수(Hz)']],['역률(%)',r['역률(%)']],['비고',r['비고']]]);
-    if(r._fuel) html+=previewKvGrid([['유류종류',r._fuel.종류],['용량(L)',r._fuel['용량(L)']],['전일재고량(L)',r._fuel['전일재고량(L)']],
-      ['입고량(L)',r._fuel['입고량(L)']],['사용량(L)',r._fuel['사용량(L)']],['금일재고량(L)',r._fuel['금일재고량(L)']]]);
+    if(r._fuel) html+=previewKvGrid([['유류종류',r._fuel.종류],['용량(L)',r._fuel.용량],['전일재고량(L)',r._fuel.전일재고량],
+      ['입고량(L)',r._fuel.입고량],['사용량(L)',r._fuel.사용량],['금일재고량(L)',r._fuel.금일재고량]]);
     const notes=(r._chk||[]).filter(c=>c['특이사항']);
     if(notes.length) html+=`<div class="modal-hint" style="margin:0 0 10px">특이사항: ${notes.map(c=>esc((c['점검내용']||'')+': '+c['특이사항'])).join(' / ')}</div>`;
   });
@@ -5900,22 +5909,24 @@ function renderMonthlyFullCatalog(){
     map[it.구분].items.push(it);
   });
   let html=`<div class="modal-field" style="max-width:220px;margin-bottom:16px">
-    <label class="modal-label">점검일자 <span class="modal-required">*</span></label>
-    <input id="rpMonthlyDate" class="modal-input" type="date"/>
-    <div class="modal-hint">저장 시 변경된 항목들의 점검일자로 공통 사용됩니다.</div>
+    <label class="modal-label">일괄 채우기용 일자</label>
+    <input id="rpMonthlyDate" class="modal-input" type="date" onchange="fillBlankMonthlyDates(this.value)"/>
+    <div class="modal-hint">여기에 날짜를 넣으면 아직 비어있는 항목별 점검일자 칸에만 자동으로 채워집니다(이미 입력된 칸은 그대로 유지).</div>
   </div>`;
   groups.forEach(g=>{
     const gi=groups.indexOf(g);
     html+=`<div class="report-section-hd">${esc(g.구분)}</div>`;
     g.items.forEach((it,ii)=>{
       const rid='rpmc_'+gi+'_'+ii;
+      const did='rpmcd_'+gi+'_'+ii;
       const dated=monthlyDatedRecord(tunnel, it, ym);
       const label=(it.설비명?esc(it.설비명)+' · ':'')+esc(it.점검내용);
       const curVal=dated?dated['점검결과']:'';
       const opts=['','양호','-','불량','점검요'].map(v=>
         `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
       html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;flex-wrap:wrap;border-bottom:1px solid var(--border2)">
-        <span style="flex:1;min-width:220px;font-size:13px">${label}${dated?` <span style="color:var(--teal600);font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
+        <span style="flex:1;min-width:180px;font-size:13px">${label}${dated?` <span style="color:var(--teal600);font-size:11px">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`:''}</span>
+        <input type="date" id="${did}" class="modal-input" style="width:150px" value="${esc(dated?dated['점검일자']:'')}"/>
         <select id="${rid}" class="modal-select elec-grid-select" style="width:110px" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select>
       </div>`;
     });
@@ -5924,14 +5935,18 @@ function renderMonthlyFullCatalog(){
     <div class="modal-progress-wrap" id="rpMonthlyProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpMonthlyProgressBar"></div></div>`;
   wrap.innerHTML=html;
 }
+// 일괄 채우기용 일자 입력 시 아직 비어있는 항목별 점검일자 칸만 채운다(이미 입력된 칸은 보존).
+function fillBlankMonthlyDates(v){
+  if(!v) return;
+  document.querySelectorAll('#rpMonthlyBody input[id^="rpmcd_"]').forEach(el=>{ if(!el.value) el.value=v; });
+}
 async function submitMonthlyReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
   const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
-  const dateEl=document.getElementById('rpMonthlyDate');
-  const dateVal=dateEl?dateEl.value:'';
   const selects=[...document.querySelectorAll('#rpMonthlyBody select[id^="rpmc_"]')].filter(s=>s.value!=='');
   if(!selects.length){ alert('변경할 점검결과를 하나 이상 선택해주세요.'); return; }
-  if(!dateVal){ alert('점검일자를 입력해주세요.'); return; }
+  const missing=selects.find(sel=>{ const did='rpmcd_'+sel.id.slice(5); return !document.getElementById(did)?.value; });
+  if(missing){ alert('점검결과를 선택한 항목은 점검일자도 입력해주세요.'); return; }
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const btn=document.getElementById('rpMonthlySubmitBtn');
   btn.disabled=true; btn.textContent='저장 중...';
@@ -5941,6 +5956,7 @@ async function submitMonthlyReportForm(){
   const dbId=getTabDef('monthly').dbId;
   const tasks=selects.map(sel=>async ()=>{
     const item={구분:sel.dataset.gubun, 설비명:sel.dataset.seolbi, 점검내용:sel.dataset.content};
+    const dateVal=document.getElementById('rpmcd_'+sel.id.slice(5)).value;
     const existing=monthlyDatedRecord(tunnel, item, ym);
     const props={
       '터널명':buildPropValue('select', tunnel),
@@ -6306,6 +6322,8 @@ function initReportTab(){
         <div class="dd-menu" id="rpMonthMenu"></div>
       </div>
       <div class="report-toolbar-sep"></div>
+      <button class="report-preview-toggle" id="reportPreviewToggle" onclick="toggleReportPreview()" style="display:none">👁 미리보기</button>
+      <div class="report-toolbar-sep" id="reportPreviewSep" style="display:none"></div>
       <div class="report-page-chips" id="reportPageChips"></div>`;
     const curY=new Date().getFullYear();
     document.getElementById('rpYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
@@ -6369,7 +6387,9 @@ function gotoReportPage(id){
   REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
   const previewFn=window['renderReportPreview_'+id];
   const previewBtn=document.getElementById('reportPreviewToggle');
-  previewBtn.style.display = typeof previewFn==='function' ? '' : 'none'; // 표지/간지는 이미 읽기전용이라 토글 자체가 불필요
+  const hasPreview = typeof previewFn==='function';
+  previewBtn.style.display = hasPreview ? '' : 'none'; // 표지/간지는 이미 읽기전용이라 토글 자체가 불필요
+  document.getElementById('reportPreviewSep').style.display = hasPreview ? '' : 'none';
   const fn = (_reportPreviewMode && typeof previewFn==='function') ? previewFn : window['renderReportPage_'+id];
   if(typeof fn==='function'){ fn(); }
   else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:var(--txt3);padding:30px 0">준비 중입니다.</div>`; }
