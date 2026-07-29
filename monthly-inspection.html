@@ -107,6 +107,9 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
    "보고서 생성" 버튼에 이미 쓰이는 색과 통일), 모양도 완전 알약형(16px)에서 둥근 사각형(10px)으로 변경 */
 .report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+/* --purple는 --sky/--sky600과 달리 다크모드용 밝은 변형이 없어(:root에 고정값) 미선택 칩 글자가 어두운
+   배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서만 밝은 라벤더로 오버라이드. */
+html[data-theme="dark"] .report-page-chip{color:#CBC5F7}
 /* 읽기전용 미리보기 표에서 라벨·값 가독성 강화(2026-07-29 사용자 요청 — 어두운 배경에서 라벨 글자가
    흐릿하게 보인다는 피드백) — var(--txt3, 50% 흰색) 대신 더 진한 톤으로, 값은 굵게+거의 흰색으로 고정 */
 .report-preview-kv .k{color:var(--txt2);font-weight:600}
@@ -123,6 +126,14 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .report-title-band{text-align:center;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
 .report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
 .report-section-hd{font-size:13.5px;font-weight:800;background:var(--sky50);color:var(--sky800);padding:7px 12px;border-radius:6px;margin:16px 0 8px}
+/* 표지 페이지 — 실제 생성되는 엑셀 표지 시트를 열어 셀 정렬·행 위치 비율(27행 중 1/9/16/17행)을 그대로
+   재현(2026-07-29 사용자 요청). A4 세로 비율(210:297) 컨테이너 안에서 퍼센트 여백으로 간격을 잡는다. */
+.report-cover-a4{position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:210/297;padding:5% 7%;box-sizing:border-box}
+.rc-title{font-size:clamp(20px,4.6vw,30px);font-weight:900;text-align:left;line-height:1.3}
+.rc-date{font-size:clamp(17px,3.8vw,24px);font-weight:800;text-align:center;margin-top:22%}
+.rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:center;margin-top:18%;letter-spacing:6px}
+.rc-toc-list{margin-top:6%;max-width:78%;margin-left:auto;margin-right:auto;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
+@media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
 /* 재사용된 모달 필드(.modal-input/.modal-select 등)는 원래 16px(iOS 자동확대 방지용, 3-9 원칙)라
    보고서 페이지 안 다른 텍스트(13px대)보다 눈에 띄게 커 보인다(2026-07-29 사용자 피드백) — 이 탭
    안에서만 데스크톱 크기를 줄인다. 480px 이하는 절대 손대지 않아 iOS 자동확대 방지 규칙은 그대로 유지. */
@@ -5600,15 +5611,18 @@ function buildDailyLogDividerSheet(wb, tunnel, year, month){
 
 // ── 보고서입력 탭: 표지·간지 페이지 — buildCoverReportSheet/buildDailyLogDividerSheet와 동일한 텍스트 공식으로 화면 미리보기(읽기전용, DB 없음) ──
 function reportBaseTunnel(t){ return (t||'').replace(/\(주\)|\(부\)/,''); }
+// 실제 생성되는 엑셀 표지 시트(xlsx)를 직접 열어 셀 정렬·행 배분을 확인해 맞춤(2026-07-29 사용자 요청).
+// 원본: A1(제목, 전체폭 A:M 병합, **좌측정렬**)·A9(연월, 중앙정렬)·G16(목차 제목, 중앙정렬)·G17~G24(목차
+// 항목, 좌측정렬) — 27행 전체 중 1/9/16/17행 위치 비율로 세로 간격을 재현, A4 비율(210:297) 컨테이너 사용.
 function renderReportPage_cover(){
   const tunnel=reportBaseTunnel(REPORT_SEL.tunnel), year=REPORT_SEL.year, month=String(Number(REPORT_SEL.month));
   const letter=TUNNEL_REPORT_LETTER[tunnel]||'';
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band" style="font-size:26px">${letter?letter+'. ':''}${tunnel}</div>
-    <div style="text-align:center;font-weight:800;font-size:22px;margin:26px 0 34px">${year}년 ${month}월</div>
-    <div style="text-align:center;font-weight:800;font-size:17px;margin-bottom:14px">목&nbsp;&nbsp;&nbsp;&nbsp;차</div>
-    <div style="max-width:360px;margin:0 auto;font-size:15px;line-height:2.1">
-      ${UNIFIED_TOC_ITEMS.map(item=>`<div>${item}</div>`).join('')}
+    <div class="report-cover-a4">
+      <div class="rc-title">${letter?letter+'. ':''}${esc(tunnel)}</div>
+      <div class="rc-date">${year}년 ${month}월</div>
+      <div class="rc-toc-hd">목&nbsp;&nbsp;&nbsp;&nbsp;차</div>
+      <div class="rc-toc-list">${UNIFIED_TOC_ITEMS.map(item=>`<div>${esc(item)}</div>`).join('')}</div>
     </div>`;
 }
 function renderReportPage_divider(){
@@ -5908,10 +5922,16 @@ function renderMonthlyFullCatalog(){
     if(!map[it.구분]){ map[it.구분]={구분:it.구분,items:[]}; groups.push(map[it.구분]); }
     map[it.구분].items.push(it);
   });
-  let html=`<div class="modal-field" style="max-width:220px;margin-bottom:16px">
-    <label class="modal-label">일괄 채우기용 일자</label>
-    <input id="rpMonthlyDate" class="modal-input" type="date" onchange="fillBlankMonthlyDates(this.value)"/>
-    <div class="modal-hint">여기에 날짜를 넣으면 아직 비어있는 항목별 점검일자 칸에만 자동으로 채워집니다(이미 입력된 칸은 그대로 유지).</div>
+  // 연·월은 이미 상단 공유 필터(REPORT_SEL)로 고정돼 있으니 여기서는 "일"만 dd-btn으로 고르게 해서
+  // 일괄 채우기 필드를 간소화한다(2026-07-29 사용자 요청 — 날짜 재입력이 번거로움+서브 안내문구 삭제).
+  const lastDay=new Date(Number(REPORT_SEL.year), Number(REPORT_SEL.month), 0).getDate();
+  let html=`<div class="modal-field" style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+    <label class="modal-label" style="margin-bottom:0">일괄 채우기용 일자</label>
+    <div class="dd-wrap" id="rpMonthlyDayWrap">
+      <button class="dd-btn" id="rpMonthlyDayBtn" type="button" onclick="toggleDd('rpMonthlyDayMenu','rpMonthlyDayBtn')"><span id="rpMonthlyDayLabel">${Number(REPORT_SEL.month)}월 일 선택</span></button>
+      <div class="dd-menu" id="rpMonthlyDayMenu">${Array.from({length:lastDay},(_,i)=>i+1).map(d=>
+        `<div class="dd-opt" data-val="${d}" onclick="applyMonthlyBulkDay(${d})">${Number(REPORT_SEL.month)}월 ${d}일</div>`).join('')}</div>
+    </div>
   </div>`;
   groups.forEach(g=>{
     const gi=groups.indexOf(g);
@@ -5939,6 +5959,15 @@ function renderMonthlyFullCatalog(){
 function fillBlankMonthlyDates(v){
   if(!v) return;
   document.querySelectorAll('#rpMonthlyBody input[id^="rpmcd_"]').forEach(el=>{ if(!el.value) el.value=v; });
+}
+// "일괄 채우기용 일자" dd-btn — 연·월은 REPORT_SEL로 이미 고정돼 있어 "일"만 고르면 된다.
+function applyMonthlyBulkDay(d){
+  const dateStr=REPORT_SEL.year+'-'+REPORT_SEL.month+'-'+String(d).padStart(2,'0');
+  const lbl=document.getElementById('rpMonthlyDayLabel');
+  if(lbl) lbl.textContent=REPORT_SEL.month+'월 '+d+'일';
+  document.querySelectorAll('#rpMonthlyDayMenu .dd-opt').forEach(o=>o.classList.toggle('sel', Number(o.dataset.val)===d));
+  closeDd('rpMonthlyDayMenu','rpMonthlyDayBtn');
+  fillBlankMonthlyDates(dateStr);
 }
 async function submitMonthlyReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
@@ -6322,8 +6351,8 @@ function initReportTab(){
         <div class="dd-menu" id="rpMonthMenu"></div>
       </div>
       <div class="report-toolbar-sep"></div>
-      <button class="report-preview-toggle" id="reportPreviewToggle" onclick="toggleReportPreview()" style="display:none">👁 미리보기</button>
-      <div class="report-toolbar-sep" id="reportPreviewSep" style="display:none"></div>
+      <button class="report-preview-toggle" id="reportPreviewToggle" onclick="toggleReportPreview()">👁 미리보기</button>
+      <div class="report-toolbar-sep" id="reportPreviewSep"></div>
       <div class="report-page-chips" id="reportPageChips"></div>`;
     const curY=new Date().getFullYear();
     document.getElementById('rpYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
@@ -6385,11 +6414,10 @@ function gotoReportPage(id){
   unmountAddModalInline();
   _reportCurPage=id;
   REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
+  // 미리보기 버튼은 페이지 종류와 무관하게 항상 같은 자리에 보이게 유지한다(2026-07-29 사용자 피드백
+  // — 표지/간지처럼 숨겨지는 페이지가 있으면 "버튼이 안 보인다"고 오해하기 쉬움). 표지·간지는 애초에
+  // 읽기전용이라 미리보기 전용 렌더 함수가 따로 없는데, 그 경우엔 그냥 기존 렌더로 자연히 폴백된다.
   const previewFn=window['renderReportPreview_'+id];
-  const previewBtn=document.getElementById('reportPreviewToggle');
-  const hasPreview = typeof previewFn==='function';
-  previewBtn.style.display = hasPreview ? '' : 'none'; // 표지/간지는 이미 읽기전용이라 토글 자체가 불필요
-  document.getElementById('reportPreviewSep').style.display = hasPreview ? '' : 'none';
   const fn = (_reportPreviewMode && typeof previewFn==='function') ? previewFn : window['renderReportPage_'+id];
   if(typeof fn==='function'){ fn(); }
   else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:var(--txt3);padding:30px 0">준비 중입니다.</div>`; }
