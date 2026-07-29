@@ -130,6 +130,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+.detail-count.warn{background:var(--amber50);color:var(--amber800);border-color:var(--amber100)}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -432,6 +433,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_repair" onclick="deleteSelectedRows('repair')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-repair"></div>
+      <div class="detail-count warn" id="pendingCount-repair"></div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -908,7 +910,7 @@ document.addEventListener('click',e=>{
 });
 const _tabFilters={};
 const _tabFilterUserPicked={};
-TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:'', status:'ALL'}; _tabFilterUserPicked[t.id]=false; });
 // 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
 // (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
 function applyLatestFilterDefault(tabId){
@@ -943,6 +945,10 @@ function buildTabFilterDd(tabId){
       ${tunnelField?`<div class="dd-wrap" id="ddTunnelWrap-${tabId}">
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
+      </div>`:''}
+      ${tabId==='repair'?`<div class="dd-wrap" id="ddStatusWrap-${tabId}">
+        <button class="dd-btn" id="ddStatusBtn-${tabId}" type="button" onclick="toggleDd('ddStatusMenu-${tabId}','ddStatusBtn-${tabId}')" aria-haspopup="listbox" aria-label="조치상태 선택"><span id="ddStatusLabel-${tabId}">전체 상태</span></button>
+        <div class="dd-menu" id="ddStatusMenu-${tabId}"></div>
       </div>`:''}
     `;
   }
@@ -994,6 +1000,24 @@ function buildTabFilterDd(tabId){
       }
     }
   }
+  // 고장수리 전용 — 조치일 공란(미조치) 건은 발생월이 지나도 계속 이월되는데, 연/월 필터로는
+  // 지난 달 발생 건을 찾기 어려워 상태로 바로 걸러보는 필터를 추가(2026-07-29 사용자 요청).
+  if(tabId==='repair'){
+    const statusMenu=document.getElementById('ddStatusMenu-'+tabId);
+    if(statusMenu){
+      const opts=[{val:'ALL',label:'전체 상태'},{val:'미조치',label:'미조치'},{val:'조치완료',label:'조치완료'}];
+      statusMenu.innerHTML=opts.map(o=>`<div class="dd-opt${f.status===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+      document.getElementById('ddStatusLabel-'+tabId).textContent = f.status==='ALL'?'전체 상태':f.status;
+      document.getElementById('ddStatusBtn-'+tabId)?.classList.toggle('active', f.status!=='ALL');
+      if(!statusMenu._bound){
+        statusMenu._bound=true;
+        statusMenu.addEventListener('click',e=>{
+          const opt=e.target.closest('.dd-opt'); if(!opt) return;
+          f.status=opt.dataset.val; closeDd('ddStatusMenu-'+tabId,'ddStatusBtn-'+tabId); renderTabTable(tabId);
+        });
+      }
+    }
+  }
 }
 function filteredTabRecords(tabId){
   const tabDef=getTabDef(tabId);
@@ -1002,6 +1026,7 @@ function filteredTabRecords(tabId){
   if(flt.year!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').startsWith(flt.year));
   if(flt.month!=='ALL') recs=recs.filter(r=>(r[tabDef.dateKey]||'').slice(5,7)===flt.month);
   if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
+  if(tabId==='repair' && flt.status && flt.status!=='ALL') recs=recs.filter(r=>flt.status==='미조치' ? !r['조치일'] : !!r['조치일']);
   return recs;
 }
 function getVisibleRecords(tabId){
@@ -1021,6 +1046,15 @@ function renderTabTable(tabId){
   const recs=getVisibleRecords(tabId);
   const countEl=document.getElementById('count-'+tabId);
   if(countEl) countEl.textContent=`총 ${recs.length}건`;
+  // 미조치 KPI는 연/월/터널/상태 필터와 무관하게 전체 데이터 기준 이월 잔량을 항상 보여준다
+  // (필터로 좁혀 보는 중에도 놓치고 있는 미조치 건수를 바로 알 수 있게, 2026-07-29).
+  if(tabId==='repair'){
+    const pendingEl=document.getElementById('pendingCount-repair');
+    if(pendingEl){
+      const pendingN=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일']).length;
+      pendingEl.textContent=`미조치 ${pendingN}건`;
+    }
+  }
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
   const delMode=!!DELETE_MODE[tabId];
@@ -2499,21 +2533,29 @@ function exportElecInspReport(){
 // 고장수리 — 원본 템플릿처럼 터널 구분 없이 한 표에 전체 터널을 담는다(시트 분리 없음).
 function buildRepairReportRows(year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
-  // 원본 템플릿 실측(2026-07-24) — 전월 발생·해당 월 조치완료 건도 포함된다(예: 5월 발생·6월
-  // 조치 건이 6월 보고서에 실림). 발생일 또는 조치일 둘 중 하나라도 해당 월이면 포함.
-  const recs=(TAB_STATE.repair.records||[])
-    .filter(r=>(r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr));
+  const all=TAB_STATE.repair.records||[];
   // 노션 원본에 "예정"→"완료"로 갱신하면서 새 레코드를 추가한(기존 레코드 수정이 아니라) 사례가
   // 있어(터널명+발생일+이상발생내역이 같은 건), 보고서에는 더 진행된(조치내역이 채워진) 쪽만
   // 대표로 싣는다 — 원본 데이터 자체는 건드리지 않음, 화면용 대표 선정만.
-  const byKey={};
-  recs.forEach(r=>{
-    const key=(r['터널명']||'')+'|'+(r['발생일']||'')+'|'+(r['이상발생내역']||'');
-    const prev=byKey[key];
-    if(!prev || (!prev['조치내역'] && r['조치내역'])) byKey[key]=r;
-  });
-  return Object.values(byKey)
-    .sort((a,b)=>(a['발생일']||'').localeCompare(b['발생일']||''))
+  const dedupe=recs=>{
+    const byKey={};
+    recs.forEach(r=>{
+      const key=(r['터널명']||'')+'|'+(r['발생일']||'')+'|'+(r['이상발생내역']||'');
+      const prev=byKey[key];
+      if(!prev || (!prev['조치내역'] && r['조치내역'])) byKey[key]=r;
+    });
+    return Object.values(byKey);
+  };
+  // 조치일 미기재(미조치·진행중) 건은 발생월과 무관하게 매번 보고서 맨 위에 이월 표시한다 — 예전
+  // 달에 발생해 계속 진행 중인 건이 이번 달 실적에서 누락되지 않도록(2026-07-29 사용자 요청).
+  // 조치가 끝나 조치일이 채워지면 그때부터는 아래 "조치완료" 그룹으로 넘어간다.
+  const pending=dedupe(all.filter(r=>!r['조치일']))
+    .sort((a,b)=>(a['발생일']||'').localeCompare(b['발생일']||''));
+  // 조치완료 건은 기존과 동일하게 발생일 또는 조치일 둘 중 하나라도 해당 월이면 포함(예: 5월
+  // 발생·6월 조치 건이 6월 보고서에 실림, 2026-07-24 원본 템플릿 실측).
+  const done=dedupe(all.filter(r=>r['조치일'] && ((r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr))))
+    .sort((a,b)=>(a['발생일']||'').localeCompare(b['발생일']||''));
+  return [...pending, ...done]
     .map(r=>({터널명:r['터널명']||'', 발생일:r['발생일'], 이상발생내역:r['이상발생내역']||'', 조치일:r['조치일'], 조치내역:r['조치내역']||'', 작업자:r['작업자']||''}));
 }
 function buildRepairReportSheet(wb, rows){
