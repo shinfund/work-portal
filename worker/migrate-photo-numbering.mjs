@@ -83,11 +83,15 @@ async function main() {
     console.warn(`터널명/번호가 비어있는 레코드 ${pages.length - records.length}건은 건너뜁니다.`);
   }
 
-  // 3) (터널명, 연월) 조합별로 그룹을 나눈 뒤, 그룹 안에서 현재 번호(동률이면 생성시각) 순으로
-  // 재정렬해 1..n을 다시 매긴다. 오프셋(최소값) 빼기 방식은 한 그룹 안에 "이미 정상화된 소수"와
-  // "여전히 큰 값을 가진 오염된 레코드"가 섞여 있으면(2026-07-29 재발견 — 코드 수정 배포 전에
-  // 등록된 건들이 계속 누적된 큰 값을 가짐) 최소값이 이미 1이라 오염된 값을 못 고친다. 순위 기반
-  // 재배정은 절대값과 무관하게 상대 순서만 보존하므로 이런 혼재 상황에서도 항상 안전하다.
+  // 3) (터널명, 연월) 조합별로 그룹을 나눈 뒤, 그룹 안에서 일자(오래된 날짜부터) → 기존 번호 →
+  // 생성시각 순으로 재정렬해 1..n을 다시 매긴다. 한 달 점검이 여러 날짜에 나눠 진행된 경우
+  // (2026-07-29 재발견 — 예: 흥해터널 7월이 07-06/07-07/07-08 세 날짜로 나뉨) 번호가 등록
+  // 순서대로 뒤섞여 최근 날짜가 오히려 작은 번호를 갖는 문제가 있었다. 일자를 1순위로 넣으면
+  // 오래된 날짜가 항상 작은 번호를 갖도록 강제되고, 같은 날짜 안에서는 기존 번호 순서를 그대로
+  // 보존한다. 오프셋(최소값) 빼기 방식이 아니라 순위 기반인 이유 — 한 그룹 안에 "이미
+  // 정상화된 소수"와 "여전히 큰 값을 가진 오염된 레코드"가 섞여 있으면 최소값이 이미 1이라
+  // 오프셋 방식으로는 오염된 값을 못 고치지만, 순위 기반 재배정은 절대값과 무관하게 상대 순서만
+  // 보존하므로 항상 안전하다.
   const groupKey = (r) => `${r.tunnel}|${r.date.slice(0, 7)}`;
   const groups = {};
   records.forEach((r) => {
@@ -100,7 +104,7 @@ async function main() {
   Object.values(groups).forEach((group) => {
     const sorted = group
       .slice()
-      .sort((a, b) => a.num - b.num || a.createdTime.localeCompare(b.createdTime));
+      .sort((a, b) => a.date.localeCompare(b.date) || a.num - b.num || a.createdTime.localeCompare(b.createdTime));
     sorted.forEach((r, i) => {
       const newNum = i + 1;
       if (newNum !== r.num) updates.push({ ...r, newNum });
