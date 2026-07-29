@@ -1674,11 +1674,14 @@ function removePhotoFile(idx, fieldId){
 }
 // ── 점검사진 신규등록 다중행(번호·사진설명·사진) — 터널명+일자 선택 시 같은 터널의 가장 최근
 // 등록월 기록을 자동 참고해 행을 미리 채워주고, 사용자가 행을 추가/삭제/수정할 수 있게 한다.
-function suggestNextPhotoNum(dateStr){
-  if(!dateStr || TAB_STATE.photo.loadFailed) return null;
+// 번호는 터널별로 그 달 안에서 1부터 이어지는 순번이다(2026-07-29 사용자 요청으로 월 전체 통합
+// 연번에서 전환, worker/migrate-photo-numbering.mjs로 기존 데이터 재부여 완료) — 그러니 제안도
+// 반드시 터널명까지 필터링해야 한다(터널 인자 누락으로 두 차례 재발했던 버그, 2026-07-29).
+function suggestNextPhotoNum(dateStr, tunnel){
+  if(!dateStr || !tunnel || TAB_STATE.photo.loadFailed) return null;
   const ym=dateStr.slice(0,7);
   const nums=(TAB_STATE.photo.records||[])
-    .filter(r=>(r['일자']||'').startsWith(ym))
+    .filter(r=>(r['일자']||'').startsWith(ym) && r['터널명']===tunnel)
     .map(r=>parseInt(r['번호'],10)).filter(n=>!isNaN(n));
   return nums.length ? Math.max(...nums)+1 : 1;
 }
@@ -1736,7 +1739,8 @@ function _photoMultiSet(key, field, val){
 function addPhotoMultiRow(){
   const nums=_photoMultiRows.map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
   const dateVal=document.getElementById('ff_1')?.value;
-  const nextNum = nums.length ? Math.max(...nums)+1 : (suggestNextPhotoNum(dateVal)||1);
+  const tunnel=document.getElementById('ff_0')?.value;
+  const nextNum = nums.length ? Math.max(...nums)+1 : (suggestNextPhotoNum(dateVal, tunnel)||1);
   _photoMultiRows.push(newPhotoMultiRow(String(nextNum), ''));
   renderPhotoMultiRows();
 }
@@ -1789,7 +1793,7 @@ function loadPhotoMultiFromRecentMonth(silent){
   if(!recs.length){ if(!silent) toast('참고할 이전 등록 기록이 없습니다.'); return false; }
   const latestDate=recs.reduce((a,r)=>(!a||r['일자']>a)?r['일자']:a, null);
   const group=recs.filter(r=>r['일자']===latestDate).sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
-  let nextNum=suggestNextPhotoNum(dateVal)||1;
+  let nextNum=suggestNextPhotoNum(dateVal, tunnel)||1;
   _photoMultiRows=group.map(r=>{ const row=newPhotoMultiRow(String(nextNum), r['사진설명']||''); nextNum++; return row; });
   renderPhotoMultiRows();
   if(!silent) toast(latestDate.slice(0,7)+' 기준 '+group.length+'건 불러왔습니다. 사진은 각 행에서 다시 첨부해주세요.');
@@ -1803,7 +1807,7 @@ function refreshPhotoMultiRows(){
   const dateVal=document.getElementById('ff_1')?.value;
   if(!tunnel || !dateVal || _photoMultiRows.length){ renderPhotoMultiRows(); return; }
   if(!loadPhotoMultiFromRecentMonth(true)){
-    _photoMultiRows=[newPhotoMultiRow(String(suggestNextPhotoNum(dateVal)||1), '')];
+    _photoMultiRows=[newPhotoMultiRow(String(suggestNextPhotoNum(dateVal, tunnel)||1), '')];
     renderPhotoMultiRows();
   }
 }

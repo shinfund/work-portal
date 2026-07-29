@@ -2,12 +2,13 @@
 // 1~42 형태, 예: 흥해=1~6·청하=7~12·남정1·2=13~15...)에서 터널별로 1부터 시작하는 순번으로
 // 바꾸는 스크립트(2026-07-29 사용자 요청).
 //
-// 오프셋은 하드코딩하지 않고, (터널명, 연월) 조합별로 그 안의 최소 번호를 구해 자동 계산한다
-// (신규번호 = 기존번호 - 그룹내최소번호 + 1). 월 단위로 그룹을 나누는 이유 — 앱의 번호 자동
-// 제안 로직이 한동안 예전 방식(터널 구분 없이 그 달 전체 최대번호+1)으로 되돌아가 있어서
-// (2026-07-29 재발견) 이미 정상화된 달과 아직 안 된 달이 섞여 있을 수 있다. 터널 단위로만
-// 오프셋을 구하면 이미 고쳐진 달(최소값 1) 때문에 안 고쳐진 달의 오프셋이 0으로 잘못 계산되므로,
-// 반드시 (터널, 연월) 조합 단위로 그룹을 나눠야 한다.
+// (터널명, 연월) 조합별로 그룹을 나눈 뒤, 그룹 안에서 현재 번호(동률이면 생성시각) 순서를 그대로
+// 보존하며 1..n으로 재배정한다. 오프셋(최소값) 빼기 방식이 아니라 순위 기반인 이유 — 앱의 번호
+// 자동 제안 로직이 한동안 예전 방식(터널 구분 없이 그 달 전체 최대번호+1)으로 되돌아가 있어서
+// (2026-07-29 재발견), 같은 (터널,연월) 그룹 안에 "이미 정상화된 소수"와 "코드 수정 배포 전에
+// 등록돼 계속 누적된 큰 값"이 섞여 있는 경우가 있다. 이럴 때 최소값이 이미 1이라 오프셋 방식으로는
+// 오염된 큰 값을 못 고치지만, 순위 기반 재배정은 절대값과 무관하게 상대 순서만 보존하므로 항상
+// 안전하다.
 //
 // 사용법:
 //   node migrate-photo-numbering.mjs <WORKER_URL> <공용비밀번호> [시작일] [종료일(제외)]        → 미리보기만(쓰기 없음)
@@ -67,13 +68,14 @@ async function main() {
 
   console.log(`대상 레코드 ${pages.length}건 조회됨`);
 
-  // 2) 레코드 파싱 (터널명, 번호, id)
+  // 2) 레코드 파싱 (터널명, 번호, id, 생성시각)
   const records = pages
     .map((p) => ({
       id: p.id,
       tunnel: p.properties?.["터널명"]?.select?.name || "",
       date: p.properties?.["일자"]?.date?.start || "",
       num: p.properties?.["번호"]?.number,
+      createdTime: p.created_time || "",
     }))
     .filter((r) => r.tunnel && r.num != null);
 
@@ -81,23 +83,29 @@ async function main() {
     console.warn(`터널명/번호가 비어있는 레코드 ${pages.length - records.length}건은 건너뜁니다.`);
   }
 
-  // 3) (터널명, 연월) 조합별 최소 번호(오프셋) 계산 — 이미 정상화된 달과 안 된 달이 섞여
-  // 있어도 각 달을 독립적으로 취급하기 위해 터널만이 아니라 연월까지 키에 포함한다.
+  // 3) (터널명, 연월) 조합별로 그룹을 나눈 뒤, 그룹 안에서 현재 번호(동률이면 생성시각) 순으로
+  // 재정렬해 1..n을 다시 매긴다. 오프셋(최소값) 빼기 방식은 한 그룹 안에 "이미 정상화된 소수"와
+  // "여전히 큰 값을 가진 오염된 레코드"가 섞여 있으면(2026-07-29 재발견 — 코드 수정 배포 전에
+  // 등록된 건들이 계속 누적된 큰 값을 가짐) 최소값이 이미 1이라 오염된 값을 못 고친다. 순위 기반
+  // 재배정은 절대값과 무관하게 상대 순서만 보존하므로 이런 혼재 상황에서도 항상 안전하다.
   const groupKey = (r) => `${r.tunnel}|${r.date.slice(0, 7)}`;
-  const minByGroup = {};
+  const groups = {};
   records.forEach((r) => {
     const k = groupKey(r);
-    if (minByGroup[k] == null || r.num < minByGroup[k]) minByGroup[k] = r.num;
+    (groups[k] || (groups[k] = [])).push(r);
   });
-  console.log("터널·연월 조합별 기존 최소 번호(오프셋 기준):");
-  Object.entries(minByGroup)
-    .sort((a, b) => a[1] - b[1])
-    .forEach(([k, min]) => console.log(`  ${k}: ${min}`));
+  console.log(`대상 (터널명,연월) 그룹 ${Object.keys(groups).length}개`);
 
-  // 4) 새 번호 계산 + 실제로 바뀌는 것만 대상
-  const updates = records
-    .map((r) => ({ ...r, newNum: r.num - minByGroup[groupKey(r)] + 1 }))
-    .filter((r) => r.newNum !== r.num);
+  const updates = [];
+  Object.values(groups).forEach((group) => {
+    const sorted = group
+      .slice()
+      .sort((a, b) => a.num - b.num || a.createdTime.localeCompare(b.createdTime));
+    sorted.forEach((r, i) => {
+      const newNum = i + 1;
+      if (newNum !== r.num) updates.push({ ...r, newNum });
+    });
+  });
 
   console.log(`\n갱신 대상 ${updates.length}건 / 전체 ${records.length}건`);
 
