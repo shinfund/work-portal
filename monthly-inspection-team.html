@@ -851,7 +851,7 @@ async function loadTabData(tabId){
       body.sorts=[{property:tabDef.dateKey, direction:'descending'}];
       // 점검사진 탭 — 일자(내림차순) 다음으로 터널명(오름차순)·번호(오름차순) 순으로 정렬
       // (2026-07-29 사용자 요청 — 터널별 순번 전환 후 같은 날짜 여러 건이 뒤섞여 보이던 문제).
-      if(tabId==='photo') body.sorts.push({property:'터널명', direction:'ascending'}, {property:'번호', direction:'ascending'});
+      if(tabId==='photo') body.sorts.push({property:'터널명', direction:'ascending'}, {property:'번호', direction:'descending'});
     }
     const pages=await fetchAllPages(tabDef.dbId, body);
     st.records=pages.map(p=>parseRecord(tabDef,p));
