@@ -2686,12 +2686,21 @@ function exportRepairReport(){
 }
 
 // 점검사진 — 원본 템플릿처럼 터널 구분 없이 번호(해당 월 전체 일련번호) 순서로 6장씩 사진1~N 시트에 배치.
+// 예전에는 "번호"가 터널마다 고정 오프셋이 더해진 월 전체 연번(흥해=1~6·청하=7~12·...)이라
+// 번호 오름차순 정렬만으로도 터널 순서(흥해→청하→남정1·2~9→강구1~3)가 자동으로 맞았다. 번호를
+// 터널별 1부터 시작하는 순번으로 바꾸면서(2026-07-29) 번호만으로는 더 이상 터널 순서를 보장할
+// 수 없어, 터널명을 1순위로 명시 정렬하도록 변경 — 원본 템플릿 순서 그대로 유지.
+const PHOTO_TUNNEL_ORDER=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 function buildPhotoTeamReportRows(year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   return (TAB_STATE.photo.records||[])
     .filter(r=>(r['일자']||'').startsWith(ymStr) && r['번호']!=null)
     .slice()
-    .sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
+    .sort((a,b)=>{
+      const ta=PHOTO_TUNNEL_ORDER.indexOf(a['터널명']), tb=PHOTO_TUNNEL_ORDER.indexOf(b['터널명']);
+      if(ta!==tb) return (ta<0?999:ta)-(tb<0?999:tb);
+      return (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0);
+    });
 }
 // 2026-07-24 저녁 — 계산식 배율 실험을 되돌리고 안전관리 앱과 동일한 자동맞춤으로 복귀.
 function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
