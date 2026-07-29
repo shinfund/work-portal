@@ -884,6 +884,25 @@ function deleteRecord(pageId){
 /* ── 상세 모달 ── */
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
 function catBadgeClass(c){ return CANONICAL_CATEGORIES.indexOf(c)>=0 ? 'cat-'+c : 'cat-etc'; }
+// R2 공개 URL은 앱과 다른 오리진이라 <a download> 속성이 무시돼(브라우저 보안 정책), 원본
+// 첨부파일명 대신 R2 저장 키(타임스탬프-랜덤문자열.ext) 그대로 다운로드되는 문제가 있었다
+// (2026-07-29 사용자 요청). blob으로 받아 같은 오리진의 objectURL을 만들어 내려받으면
+// download 속성이 항상 적용된다.
+function downloadAttachment(url, name){
+  fetch(url).then(function(res){
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.blob();
+  }).then(function(blob){
+    var objUrl = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = objUrl; a.download = name || '첨부파일';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(objUrl); }, 4000);
+  }).catch(function(e){
+    toast('다운로드 실패: '+e.message+' — 새 탭에서 엽니다.');
+    window.open(url, '_blank');
+  });
+}
 function buildAttachmentPhotoHtml(a){
   var url = a.url;
   return '<div class="attach-photo-block">'
@@ -915,7 +934,7 @@ function buildAttachmentHtml(list){
     if(isImageUrl(a.url)) return buildAttachmentPhotoHtml(a);
     return '<div class="detail-attach-item">'
       + '<span class="detail-attach-name">📎 '+esc(a.name||a.url)+'</span>'
-      + '<a class="detail-attach-link plain" href="'+esc(a.url)+'" target="_blank" rel="noopener">열기/다운로드</a>'
+      + '<a class="detail-attach-link plain" href="javascript:void(0)" data-url="'+esc(a.url)+'" data-name="'+esc(a.name||'첨부파일')+'" onclick="downloadAttachment(this.dataset.url,this.dataset.name)">열기/다운로드</a>'
       + '</div>';
   }).join('');
   if(hasM365) html += '<div class="m365-hint">🔗 표시된 항목은 Microsoft 365 계정으로 로그인된 상태에서 여러 명이 동시에 실시간 편집할 수 있습니다.</div>';
