@@ -108,8 +108,9 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
 /* --purple는 --sky/--sky600과 달리 다크모드용 밝은 변형이 없어(:root에 고정값) 미선택 칩 글자가 어두운
-   배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서만 밝은 라벤더로 오버라이드. */
-html[data-theme="dark"] .report-page-chip{color:#CBC5F7}
+   배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서는 흰색으로 오버라이드(가독성 최우선,
+   사용자가 라벤더보다 흰색을 선호). */
+html[data-theme="dark"] .report-page-chip{color:#fff}
 /* 읽기전용 미리보기 표에서 라벨·값 가독성 강화(2026-07-29 사용자 요청 — 어두운 배경에서 라벨 글자가
    흐릿하게 보인다는 피드백) — var(--txt3, 50% 흰색) 대신 더 진한 톤으로, 값은 굵게+거의 흰색으로 고정 */
 .report-preview-kv .k{color:var(--txt2);font-weight:600}
