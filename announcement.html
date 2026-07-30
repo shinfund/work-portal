@@ -333,10 +333,13 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">작성자</label>
-        <select id="addAuthor" class="modal-select" onchange="onSelectChange(this,'addAuthorCustom')">
+        <select id="addAuthor" class="modal-select" onchange="onCustomSelectChange(this,'addAuthorCustom')" style="display:none">
           <option value="__custom__">직접입력</option>
         </select>
-        <input id="addAuthorCustom" class="modal-input" type="text" placeholder="예) 신종섭" style="margin-top:6px"/>
+        <div id="addAuthorRow" style="display:flex;gap:6px;align-items:center">
+          <input id="addAuthorCustom" class="modal-input" type="text" placeholder="예) 신종섭" style="flex:1;min-width:0"/>
+          <button type="button" id="addAuthorListBtn" class="attach-file-btn" style="display:none;padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown('addAuthor','addAuthorCustom')">목록</button>
+        </div>
       </div>
       <div class="modal-field">
         <label class="modal-label">첨부파일</label>
@@ -653,6 +656,42 @@ function setFixedSelectValue(selectId, customInputId, value){
   if(opts.indexOf(value)>=0){ sel.value=value; if(ci){ ci.value=''; ci.style.display='none'; } }
   else { sel.value='__custom__'; if(ci){ ci.value=value; ci.style.display=''; } }
 }
+/* ── 드롭다운 ↔ 직접입력, 한 번에 하나만 노출(회신 성명·작성자 전용) — 구분(카테고리)은
+   기존처럼 select+직접입력을 함께 보여주는 방식을 유지하므로 건드리지 않는다(2026-07-30).
+   "목록" 버튼 id는 관례상 customId에서 Custom을 ListBtn으로 바꾼 값(예: replyNameCustom→replyNameListBtn). ── */
+function customSelectListBtn(customId){
+  return document.getElementById(customId.replace(/Custom$/,'ListBtn'));
+}
+function onCustomSelectChange(selectEl, customInputId){
+  if(selectEl.value!=='__custom__') return;
+  selectEl.style.display='none';
+  var ci=document.getElementById(customInputId);
+  if(ci){ ci.style.display=''; ci.value=''; ci.focus(); }
+  var btn=customSelectListBtn(customInputId);
+  if(btn) btn.style.display='';
+}
+function showCustomSelectDropdown(selectId, customId){
+  var sel=document.getElementById(selectId), ci=document.getElementById(customId);
+  if(sel) sel.style.display='';
+  if(ci) ci.style.display='none';
+  var btn=customSelectListBtn(customId);
+  if(btn) btn.style.display='none';
+}
+function setCustomSelectValue(selectId, customId, value){
+  var sel=document.getElementById(selectId), ci=document.getElementById(customId);
+  if(!sel||!ci) return;
+  var opts = Array.prototype.map.call(sel.options, function(o){ return o.value; });
+  var btn=customSelectListBtn(customId);
+  if(value && opts.indexOf(value)>=0){
+    sel.value=value; sel.style.display='';
+    ci.value=''; ci.style.display='none';
+    if(btn) btn.style.display='none';
+  } else {
+    sel.value='__custom__'; sel.style.display='none';
+    ci.value=value||''; ci.style.display='';
+    if(btn) btn.style.display = (opts.length>1) ? '' : 'none';
+  }
+}
 function buildCategorySelectOpts(){
   var sel = document.getElementById('addCategory');
   var values = unionValues(CANONICAL_CATEGORIES, '카테고리');
@@ -665,6 +704,8 @@ function buildAuthorSelectOpts(){
   var values = getUniqueValues('작성자');
   sel.innerHTML = '<option value="__custom__">직접입력</option>'
     + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
+  var btn=document.getElementById('addAuthorListBtn');
+  if(btn) btn.style.display = values.length ? '' : 'none';
 }
 
 /* ── 첨부파일(파일 업로드 + M365 링크) ── */
@@ -812,6 +853,11 @@ function loadReplyNames(){
         + REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
       sel.value = (REPLY_NAMES.indexOf(cur)>=0) ? cur : '__custom__';
     }
+    // 처음 로드될 때 이름 이력이 없어 "목록" 버튼을 안 그렸던 경우, 로드 완료 후 이력이 생겼으면 버튼을 붙여준다.
+    if(REPLY_NAMES.length && !document.getElementById('replyNameListBtn')){
+      var row=document.getElementById('replyNameRow');
+      if(row) row.insertAdjacentHTML('beforeend', '<button type="button" id="replyNameListBtn" class="attach-file-btn" style="padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown(\'replyNameSelect\',\'replyNameCustom\')">목록</button>');
+    }
   }).catch(function(){ /* 자동완성 목록 로드 실패는 조용히 무시 — 직접입력은 항상 가능 */ });
 }
 function buildReplyListHtml(replies){
@@ -852,9 +898,7 @@ function loadReplies(noticeId){
 function resetReplyForm(){
   EDIT_REPLY_ID = null;
   document.getElementById('replyFormTitle').textContent='회신 등록';
-  document.getElementById('replyNameSelect').value='__custom__';
-  var replyNameCustomEl=document.getElementById('replyNameCustom');
-  replyNameCustomEl.value=''; replyNameCustomEl.style.display='';
+  setCustomSelectValue('replyNameSelect','replyNameCustom','');
   document.getElementById('replyContent').value='';
   REPLY_ATTACHMENTS=[];
   renderReplyAttachmentChips();
@@ -868,7 +912,7 @@ function editReply(replyId){
   if(!rp) return;
   EDIT_REPLY_ID = replyId;
   document.getElementById('replyFormTitle').textContent='회신 수정';
-  setFixedSelectValue('replyNameSelect','replyNameCustom', rp['성명']||'');
+  setCustomSelectValue('replyNameSelect','replyNameCustom', rp['성명']||'');
   document.getElementById('replyContent').value = rp['내용']||'';
   REPLY_ATTACHMENTS = (rp['회신파일']||[]).slice();
   renderReplyAttachmentChips();
@@ -1020,7 +1064,7 @@ function openAddModal(){
   buildCategorySelectOpts();
   setFixedSelectValue('addCategory','addCategoryCustom','');
   buildAuthorSelectOpts();
-  setFixedSelectValue('addAuthor','addAuthorCustom','');
+  setCustomSelectValue('addAuthor','addAuthorCustom','');
   document.getElementById('attachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
@@ -1046,7 +1090,7 @@ function openEditModal(pageId){
   buildCategorySelectOpts();
   setFixedSelectValue('addCategory','addCategoryCustom', r['카테고리']||'');
   buildAuthorSelectOpts();
-  setFixedSelectValue('addAuthor','addAuthorCustom', r['작성자']||'');
+  setCustomSelectValue('addAuthor','addAuthorCustom', r['작성자']||'');
   document.getElementById('attachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
@@ -1205,11 +1249,14 @@ function openDetailModal(id){
       '<div class="modal-field">'
       + '<div class="modal-label" id="replyFormTitle">회신 등록</div>'
       + '<div class="attach-box">'
-      +   '<select id="replyNameSelect" class="modal-select" onchange="onSelectChange(this,\'replyNameCustom\')" style="margin-bottom:8px;max-width:220px">'
+      +   '<select id="replyNameSelect" class="modal-select" onchange="onCustomSelectChange(this,\'replyNameCustom\')" style="display:none;margin-bottom:8px;max-width:220px">'
       +     '<option value="__custom__">직접입력</option>'
       +     REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('')
       +   '</select>'
-      +   '<input id="replyNameCustom" class="modal-input" type="text" placeholder="성명 입력" style="margin-bottom:8px;max-width:220px"/>'
+      +   '<div id="replyNameRow" style="display:flex;gap:6px;align-items:center;margin-bottom:8px;max-width:220px">'
+      +     '<input id="replyNameCustom" class="modal-input" type="text" placeholder="성명 입력" style="flex:1;min-width:0"/>'
+      +     (REPLY_NAMES.length ? '<button type="button" id="replyNameListBtn" class="attach-file-btn" style="padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown(\'replyNameSelect\',\'replyNameCustom\')">목록</button>' : '')
+      +   '</div>'
       +   '<textarea id="replyContent" class="modal-textarea" placeholder="회신 내용(선택)" style="margin-bottom:8px;min-height:60px"></textarea>'
       +   '<div class="attach-row">'
       +     '<button type="button" class="attach-file-btn" onclick="document.getElementById(\'replyAttachFile\').click()">파일 선택</button>'
