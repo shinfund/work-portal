@@ -5796,6 +5796,8 @@ function renderTransformerReportBody(){
     </div>
   </div>`;
 
+  html+=buildTransformerRefHtml();
+
   TRANSFORMER_TYPES.forEach(type=>{
     const capacity=(TUNNEL_TRANSFORMER_CAPACITY[tunnel]||{})[type]||'';
     html+=`<div class="report-section-hd">${esc(type)}${capacity?` (${esc(capacity)})`:''}</div>
@@ -5809,8 +5811,7 @@ function renderTransformerReportBody(){
     html+=`</tbody></table></div>`;
   });
 
-  html+=buildTransformerRefHtml()+
-    `<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTransSubmitBtn" onclick="submitTransformerReportForm()">저장</button></div>
+  html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTransSubmitBtn" onclick="submitTransformerReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpTransProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTransProgressBar"></div></div>`;
   wrap.innerHTML=html;
 }
