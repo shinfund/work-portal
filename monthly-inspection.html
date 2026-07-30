@@ -60,7 +60,7 @@ html[data-theme="dark"]{
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
-  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --amber:#D9A441;--amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
@@ -302,7 +302,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 /* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
 .form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
-.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
 /* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
@@ -795,6 +795,15 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// 월간점검 점검내용의 "(분기)/(반기)/(연차)" 표기 강조 — 실제 엑셀은 비고 컬럼에 이 값이 별도 셀 색상
+// (분기=파랑/반기=갈색/연차=자홍)으로 들어가지만, 앱은 점검내용 문구에 괄호로 포함돼 있어 그 부분만
+// 앱 공통 시맨틱 팔레트(다크/라이트 자동대응)로 색을 입힌다(2026-07-30, 엑셀과 동일 색상일 필요는 없음).
+function highlightChecklistTags(text){
+  return esc(text)
+    .replace(/\(분기\)/g, '<span style="color:var(--sky)">(분기)</span>')
+    .replace(/\(반기\)/g, '<span style="color:var(--amber)">(반기)</span>')
+    .replace(/\(연차\)/g, '<span style="color:var(--purple)">(연차)</span>');
+}
 // 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
 function titleWithMonth(dateStr, suffix){
   if(!dateStr) return null;
@@ -1264,18 +1273,20 @@ const TAB_DEFS=[
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'제목', dateKey:'점검일자',
     fields:[
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncElecTunnelDefaults()'},
+      {header:true, group:'가동정보'},
       {key:'점검일자', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['점검일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['점검일자'],'전기설비점검결과기록표'); return t?[t]:[]; },
         emptyHint:'먼저 점검일자를 선택하세요'},
-      {key:'점검종별', type:'select', options:['월간'], defaultValue:'월간'},
-      {key:'점검횟수', type:'text', uiType:'cascade-select', optionsFn:()=>['1회'], emptyHint:'선택'},
+      {header:true, group:'1. 기 본 사 항'},
       {key:'수전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>elecSpecOptions(dep['터널명'],'수전'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'발전전압/용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>elecSpecOptions(dep['터널명'],'발전'), emptyHint:'먼저 터널명을 선택하세요'},
       {key:'태양광용량', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
-        optionsFn:dep=>elecSpecOptions(dep['터널명'],'태양광'), emptyHint:'먼저 터널명을 선택하세요'}
+        optionsFn:dep=>elecSpecOptions(dep['터널명'],'태양광'), emptyHint:'먼저 터널명을 선택하세요'},
+      {key:'점검종별', type:'select', options:['월간'], defaultValue:'월간'},
+      {key:'점검횟수', type:'text', uiType:'cascade-select', optionsFn:()=>['1회'], emptyHint:'선택'}
     ],
     listCols:['터널명','점검일자','제목','수전전압/용량','발전전압/용량','태양광용량','점검종별','점검횟수']
   },
@@ -1312,7 +1323,7 @@ const TAB_DEFS=[
         emptyHint:'먼저 가동일자를 선택하세요'},
       {key:'점검자', type:'text', uiType:'cascade-select', dependsOn:['터널명'],
         optionsFn:dep=>generatorInspectorOptions(dep['터널명']), emptyHint:'먼저 터널명을 선택하세요'},
-      {header:true, group:'발전기운전'},
+      {header:true, group:'발 전 기 운 전'},
       {key:'가동시간', type:'text'},
       {key:'가동시간(min)', type:'number'},
       {key:'전압(V)', type:'number'},
@@ -2546,25 +2557,38 @@ async function submitMonthlyForm(){
 }
 // 전기설비기록 신규등록/수정 — 설비현황 32개 입력 그리드 마크업만 별도 함수로 분리(터널명 변경 시
 // syncElecTunnelDefaults()가 이 그리드를 다시 그려 최근 레코드 값으로 갱신하기 위함, buildGeneratorChkGridHtml과 동일 패턴)
-function buildElecChkGridHtml(chkSrc){
-  let html=`<div class="tbl-wrap"><table><thead><tr><th>설비구분</th><th>설비항목</th><th>판정</th><th>수량</th><th>증가</th><th>감소</th><th>부적합</th></tr></thead><tbody>`;
-  ELEC_CHECKLIST.forEach((c,i)=>{
+// 실제 보고서(전기설비 점검결과기록표) "2.점검내역" 구획은 저압설비(16)|특고(고압)설비(16)를 좌우
+// 2열로 나란히 보여준다 — ELEC_CHECKLIST가 이미 앞 16개=저압설비/뒤 16개=특고(고압)설비 순서라
+// 인덱스 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 chkr_i 등을 그대로 유지, 저장 로직 불변, 2026-07-30).
+function buildElecChkSideTable(chkSrc, items, startIdx, label){
+  let html=`<div class="tbl-wrap" style="flex:1;min-width:280px"><table><thead><tr><th colspan="6">${esc(label)}</th></tr>
+    <tr><th>설비항목</th><th style="width:44px">판정</th><th style="width:56px">수량</th><th style="width:50px">증가</th><th style="width:50px">감소</th><th style="width:56px">부적합</th></tr></thead><tbody>`;
+  items.forEach((c,i)=>{
+    const idx=startIdx+i;
     const rec=elecChkLookup(chkSrc, c);
     const cur=rec?rec.점검결과판정:'○';
-    html+=`<tr><td>${esc(c.설비구분)}</td><td>${esc(c.설비항목)}</td>
-      <td><select class="modal-select elec-grid-select" id="chkr_${i}">
+    html+=`<tr><td>${esc(c.설비항목)}</td>
+      <td><select class="modal-select elec-grid-select" style="width:44px" id="chkr_${idx}">
         <option value="○"${cur==='○'?' selected':''}>○</option>
         <option value="×"${cur==='×'?' selected':''}>×</option>
         <option value="/"${cur==='/'?' selected':''}>/</option>
       </select></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkc_${i}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chki_${i}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkd_${i}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
-      <td><input class="modal-input elec-grid-input" type="number" step="1" id="chkx_${i}" value="${rec&&rec.부적합!=null?rec.부적합:''}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:56px" type="number" step="1" id="chkc_${idx}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chki_${idx}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chkd_${idx}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:56px" type="number" step="1" id="chkx_${idx}" value="${rec&&rec.부적합!=null?rec.부적합:''}"/></td>
     </tr>`;
   });
   html+='</tbody></table></div>';
   return html;
+}
+function buildElecChkGridHtml(chkSrc){
+  const half=ELEC_CHECKLIST.length/2;
+  const left=ELEC_CHECKLIST.slice(0, half), right=ELEC_CHECKLIST.slice(half);
+  return `<div style="display:flex;gap:10px;flex-wrap:wrap">`
+    + buildElecChkSideTable(chkSrc, left, 0, '저 압 설 비')
+    + buildElecChkSideTable(chkSrc, right, half, '특고(고압)설비')
+    + `</div>`;
 }
 // 신규등록 시 "가장 최근 등록 값을 기본값으로 채웠습니다" 안내문 — 터널명 변경으로 기준 레코드가 바뀔 때마다
 // elecChkHintWrap을 다시 그려서 날짜·터널명 문구가 그리드 내용과 어긋나지 않게 한다(buildGeneratorChkHintHtml과 동일 패턴)
@@ -2574,9 +2598,9 @@ function buildElecChkHintHtml(chkSrc){
 }
 // 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
 function buildElecFormExtra(r){
-  let acbHtml='';
+  let acbHtml='<div class="form-group-hd">2. 점 검 내 역</div>';
   ACB_TYPES.forEach((t,ti)=>{
-    acbHtml+=`<div class="form-group-hd">${esc(t)} ACB</div>
+    acbHtml+=`<div class="form-group-hd" style="font-size:12px">측정개소 : ${esc(t)} ABC 2차</div>
       <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>위상</th><th>전압(V)</th><th>전류(A)</th><th>누설전류(mA)</th></tr></thead><tbody>`;
     ACB_PHASES.forEach(ph=>{
       const rec=elecAcbLookup(r, t, ph);
@@ -2592,7 +2616,7 @@ function buildElecFormExtra(r){
   // 속성이고, ACB 9건 전부 같은 값이 반복 저장되는 구조(2026-07-21 실스키마 확인) — 입력창은 1벌만
   // 두고 저장 시 9건 모두에 복사해서 쓴다. 대표값은 기존 ACB 레코드 중 첫 번째(_acb[0])에서 가져온다.
   const acb0 = (r && r._acb && r._acb[0]) || null;
-  const acbCommonHtml=`<div class="form-group-hd">측정값 요약(ACB 9건에 공통 저장)</div>
+  const acbCommonHtml=`<div class="form-group-hd" style="font-size:12px">구 분 (역률·전력량 요약)</div>
     <div class="form-group-grid">
       <div class="modal-field"><label class="modal-label">유효전력량(kWh)</label><input class="modal-input" id="ec_yuhyo" type="number" step="0.01" value="${acb0&&acb0.유효전력량!=null?acb0.유효전력량:''}"/></div>
       <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
@@ -2616,7 +2640,7 @@ function buildElecFormExtra(r){
   // 등록 레코드로 폴백하고, 실제 터널별 갱신은 extraOnChange(syncElecTunnelDefaults, DOM 삽입 후 발생)에
   // 맡긴다(2026-07-27 버그 수정).
   const chkSrc = r || TAB_STATE['elec'].records[0] || null;
-  let chkHtml=`<div class="form-group-hd">설비현황 점검표(32개)</div>`;
+  let chkHtml='';
   chkHtml+=`<div id="elecChkHintWrap">${!r ? buildElecChkHintHtml(chkSrc) : ''}</div>`;
   chkHtml+=`<div id="elecChkGridWrap">${buildElecChkGridHtml(chkSrc)}</div>`;
   // 점검담당자/점검확인자/종합의견도 elec1이 아니라 elec3(설비현황)DB 속성이고 32건 전부 같은 값이
@@ -2624,7 +2648,7 @@ function buildElecFormExtra(r){
   const chk0 = (r && r._chk && r._chk[0]) || null;
   // 종합의견을 먼저, 점검담당자/점검확인자(서명란 성격)는 맨 아래로(2026-07-29 사용자 요청 — 실제
   // 보고서 지면에서도 종합의견 다음에 확인자 서명이 오는 흐름과 맞춤).
-  const chkCommonHtml=`<div class="form-group-hd">확인·종합의견(설비현황 32건에 공통 저장)</div>
+  const chkCommonHtml=`<div class="form-group-hd">3. 종 합 의 견</div>
     <div class="modal-field"><label class="modal-label">종합의견</label><textarea class="modal-textarea" id="ec_jonghap">${esc(chk0?chk0.종합의견:'적합함')}</textarea></div>
     <div class="form-group-grid">
       <div class="modal-field"><label class="modal-label">점검담당자</label>
@@ -2692,17 +2716,29 @@ function generatorLatestForTunnel(tunnel){
 }
 // 발전기점검 신규등록/수정 — 점검체크리스트 20행 입력 그리드 마크업만 별도 함수로 분리(터널명 변경 시
 // syncGeneratorTunnelDefaults()가 이 그리드를 다시 그려 최근 레코드 값으로 갱신하기 위함)
-function buildGeneratorChkGridHtml(chkSrc){
-  let html='<div class="tbl-wrap"><table><thead><tr><th>점검구분</th><th>점검내용</th><th>결과</th><th>특이사항</th></tr></thead><tbody>';
-  GENERATOR_CHECKLIST.forEach((c,i)=>{
+// 실제 보고서(발전기점검표) "점검사항" 구획은 일반점검사항(10)|운전중점검사항(10)을 좌우 2열로 나란히
+// 보여준다 — GENERATOR_CHECKLIST가 이미 앞 10개=일반점검사항/뒤 10개=운전중점검사항 순서라 인덱스
+// 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 gchkr_i/gchks_i를 그대로 유지, 저장 로직 불변, 2026-07-30).
+function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
+  let html=`<div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:70px">결과</th><th style="width:90px">특이사항</th></tr></thead><tbody>`;
+  items.forEach((c,i)=>{
+    const idx=startIdx+i;
     const rec=generatorChkLookup(chkSrc, c);
-    html+=`<tr><td>${esc(c.점검구분)}</td><td>${esc(c.점검내용)}</td>
-      <td><input class="modal-input elec-grid-input" style="width:100px" type="text" id="gchkr_${i}" value="${esc(rec?rec.결과:'')}"/></td>
-      <td><input class="modal-input elec-grid-input" style="width:100px" type="text" id="gchks_${i}" value="${esc(rec?rec.특이사항:'')}"/></td>
+    html+=`<tr><td>${esc(c.점검내용)}</td>
+      <td><input class="modal-input elec-grid-input" style="width:64px" type="text" id="gchkr_${idx}" value="${esc(rec?rec.결과:'')}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:84px" type="text" id="gchks_${idx}" value="${esc(rec?rec.특이사항:'')}"/></td>
     </tr>`;
   });
   html+='</tbody></table></div>';
   return html;
+}
+function buildGeneratorChkGridHtml(chkSrc){
+  const half=GENERATOR_CHECKLIST.length/2;
+  const left=GENERATOR_CHECKLIST.slice(0, half), right=GENERATOR_CHECKLIST.slice(half);
+  return `<div style="display:flex;gap:10px;flex-wrap:wrap">`
+    + buildGeneratorChkSideTable(chkSrc, left, 0, '일반점검사항')
+    + buildGeneratorChkSideTable(chkSrc, right, half, '운전중점검사항')
+    + `</div>`;
 }
 // 발전기점검 신규등록/수정 — 유류현황 1건(단일 행 입력) + 점검체크리스트 20개 입력 그리드(부모 필드 뒤에 덧붙임)
 // 신규등록 시 체크리스트·유류 전일재고량은 해당 터널의 가장 최근 레코드 값을 기본값으로 채운다(거의 매번 같은
@@ -2714,17 +2750,17 @@ function buildGeneratorFormExtra(r){
   // 남아있는 stale 상태다. 신규등록 최초 렌더에는 가장 최근 레코드로 폴백하고, 터널별 갱신은
   // DOM 삽입 후 발생하는 extraOnChange(syncGeneratorTunnelDefaults)가 담당한다(2026-07-27 버그 수정).
   const chkSrc = r || TAB_STATE['generator'].records[0] || null;
-  let fuelHtml=`<div class="form-group-hd">유류현황(1건)</div>
+  let fuelHtml=`<div class="form-group-hd">유 류 사 용 량</div>
     <div class="modal-hint" style="margin:-2px 0 8px">※ 종류·용량(L)·전일재고량(L)은 터널명 선택 시 자동으로 채워집니다(필요하면 직접 수정 가능). 입고량·사용량을 입력하면 금일재고량(L) = 전일재고량 − 사용량 + 입고량 으로 자동 계산됩니다(계산 후에도 직접 수정 가능).</div>
     <div class="form-group-grid">
-      <div class="modal-field"><label class="modal-label">종류</label><input class="modal-input" id="gfuel_type" type="text" value="${esc(fuel?fuel.종류:'경유')}"/></div>
       <div class="modal-field"><label class="modal-label">용량(L)</label><input class="modal-input" id="gfuel_cap" type="number" step="1" value="${fuel&&fuel.용량!=null?fuel.용량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">종류</label><input class="modal-input" id="gfuel_type" type="text" value="${esc(fuel?fuel.종류:'경유')}"/></div>
       <div class="modal-field"><label class="modal-label">전일재고량(L)</label><input class="modal-input" id="gfuel_prev" type="number" step="1" value="${fuel&&fuel.전일재고량!=null?fuel.전일재고량:''}" oninput="recalcGeneratorFuelToday()"/></div>
       <div class="modal-field"><label class="modal-label">입고량(L)</label><input class="modal-input" id="gfuel_in" type="number" step="1" value="${fuel&&fuel.입고량!=null?fuel.입고량:''}" oninput="recalcGeneratorFuelToday()"/></div>
       <div class="modal-field"><label class="modal-label">사용량(L)</label><input class="modal-input" id="gfuel_use" type="number" step="1" value="${fuel&&fuel.사용량!=null?fuel.사용량:''}" oninput="recalcGeneratorFuelToday()"/></div>
       <div class="modal-field"><label class="modal-label">금일재고량(L)</label><input class="modal-input" id="gfuel_today" type="number" step="1" value="${fuel&&fuel.금일재고량!=null?fuel.금일재고량:''}"/></div>
     </div>`;
-  let chkHtml=`<div class="form-group-hd">점검체크리스트(20개)</div>`;
+  let chkHtml=`<div class="form-group-hd">점 검 사 항</div>`;
   chkHtml+=`<div id="generatorChkHintWrap">${!r ? buildGeneratorChkHintHtml(chkSrc) : ''}</div>`;
   chkHtml+=`<div id="generatorChkGridWrap">${buildGeneratorChkGridHtml(chkSrc)}</div>`;
   return fuelHtml+chkHtml;
@@ -5634,15 +5670,45 @@ function renderReportPage_divider(){
     <div style="text-align:center;color:var(--txt3);font-size:12px">${tunnel}</div>`;
 }
 
-// ── 보고서입력 탭: 점검사진 페이지 — buildPhotoMultiHtml(6슬롯 일괄등록)이 이미 보고서 지면과 1:1이라 얇은 래퍼만 필요 ──
-function renderReportPage_photo(){
+// ── 보고서입력 탭: 점검사진 페이지 — 실제 "점검사진대지"(#1~#6, 2열×3행: 번호/일자/사진설명+사진)
+// 지면과 동일한 모양으로 이번달 등록분을 미리보기 표시(2026-07-30, 조회 화면만 개선). 등록·수정 자체는
+// 기존 다중행 입력 카드(buildPhotoMultiHtml)를 그대로 아래에 둔다 — 업로드 로직은 건드리지 않음.
+async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">5. 운영관리 사진대지</div>
-    <div id="rpPhotoMount"></div>`;
+    <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpPhotoPreview"></div>
+    <div id="rpPhotoMount" style="margin-top:22px"></div>`;
+  await loadTabData('photo');
+  if(_reportCurPage!=='photo') return;
+  document.getElementById('rpLoading')?.remove();
+  renderPhotoReportPreview();
   mountAddModalInline('rpPhotoMount');
   openAddModal('photo');
   document.body.style.overflow='';
   reportPresetField('ff_0', REPORT_SEL.tunnel);
+}
+function renderPhotoReportPreview(){
+  const wrap=document.getElementById('rpPhotoPreview');
+  if(!wrap) return;
+  const tunnel=REPORT_SEL.tunnel;
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').slice(0,7)===ym);
+  const bySlot={};
+  recs.forEach(r=>{ const n=parseInt(r['번호'],10); if(n>=1 && n<=6 && !bySlot[n]) bySlot[n]=r; });
+  const cells=Array.from({length:6},(_,i)=>{
+    const n=i+1, r=bySlot[n];
+    const photo=(r&&r['점검사진']&&r['점검사진'][0]) || null;
+    return `<div style="border:1px solid var(--border);border-radius:6px;padding:8px;min-height:150px">
+        <div style="font-weight:800;font-size:12.5px;margin-bottom:4px">#${n}</div>
+        ${r ? `<div style="font-size:12px;color:var(--txt2)">일자: ${esc(r['일자']||'')}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">사진설명: ${esc(r['사진설명']||'')}</div>
+          ${photo ? `<img src="${esc(photo.url)}" alt="사진" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="color:var(--txt3);font-size:11px">사진 없음</div>`}`
+          : `<div style="color:var(--txt3);font-size:11px">미등록</div>`}
+      </div>`;
+  }).join('');
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${cells}</div>`;
 }
 // 필드에 REPORT_SEL 값을 미리 채운 뒤 실제 change 이벤트를 발생시켜 그 필드의 onchange(캐스케이드
 // 재계산·extraOnChange)를 사용자가 직접 선택했을 때와 100% 동일하게 실행시킨다.
@@ -5663,6 +5729,7 @@ async function findExistingRecordForSel(tabId, dateKey){
 async function renderReportPage_elec(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">2. 전기설비 점검결과기록표</div>
+    <div class="rc-monthly-sub">설비명(상호) : ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpElecMount"></div>`;
   const existing=await findExistingRecordForSel('elec','점검일자');
@@ -5678,6 +5745,7 @@ async function renderReportPage_elec(){
 async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">4. 비상발전기 점검 및 가동일지</div>
+    <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpGenMount"></div>
     <div id="rpGenList" style="margin-top:22px"></div>`;
@@ -5712,9 +5780,10 @@ function loadGeneratorDay(recordId){
 async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">7. 월간 업무처리사항</div>
+    <div class="rc-monthly-sub">□ ${esc(reportBaseTunnel(REPORT_SEL.tunnel))}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpTaskMount"></div>
-    <div id="rpTaskList" style="margin-top:22px"></div>`;
+    <div id="rpTaskList"></div>
+    <div id="rpTaskMount" style="margin-top:22px"></div>`;
   await loadTabData('task');
   if(_reportCurPage!=='task') return;
   document.getElementById('rpLoading')?.remove();
@@ -5724,6 +5793,9 @@ async function renderReportPage_task(){
   reportPresetField('ff_0', reportBaseTunnel(REPORT_SEL.tunnel));
   renderTaskMonthList();
 }
+// 실제 "7. 월간 업무처리사항" 보고서 지면(날짜/업무내용/조치사항/업체명/비고 flat table)과 동일한
+// 구조로 이번달 등록 건을 표로 보여준다(2026-07-30, 기존 칩 목록 대체). 행 클릭 시 기존 모달을
+// 수정 모드로 열어 편집 — 데이터 로직은 그대로, 조회 화면만 보고서 표로 재구성.
 function renderTaskMonthList(){
   const wrap=document.getElementById('rpTaskList');
   if(!wrap) return;
@@ -5731,15 +5803,24 @@ function renderTaskMonthList(){
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const recs=(TAB_STATE.task.records||[]).filter(r=>r['터널명']===tunnel && (r['날짜']||'').slice(0,7)===ym)
     .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''));
-  wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 업무처리 (${recs.length}건)</div>` +
-    (recs.length ? `<div style="display:flex;flex-direction:column;gap:6px">${recs.map(r=>
-      `<button class="report-page-chip" style="text-align:left;border-radius:8px" onclick="loadTaskRecord('${r.id}')">${esc((r['날짜']||'').slice(5))} · ${esc(r['업무내용']||'')}</button>`
-    ).join('')}</div>` : `<div style="color:var(--txt3);font-size:12px">아직 등록된 업무처리가 없습니다.</div>`);
+  const rows=recs.map(r=>`<tr onclick="loadTaskRecord('${r.id}')" style="cursor:pointer">
+      <td class="rc-monthly-gubun" style="white-space:nowrap">${esc(r['날짜']||'')}</td>
+      <td class="rc-monthly-content">${esc(r['업무내용']||'')}</td>
+      <td class="rc-monthly-content">${esc(r['조치사항']||'')}</td>
+      <td>${esc(r['업체명']||'')}</td>
+      <td>${esc(r['비고']||'')}</td>
+    </tr>`).join('');
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+      <thead><tr><th style="width:90px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:110px">업체명</th><th style="width:90px">비고</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="5" style="text-align:center;color:var(--txt3)">아직 등록된 업무처리가 없습니다.</td></tr>`}</tbody>
+    </table></div>
+    <div class="modal-hint" style="margin-top:6px">행을 클릭하면 수정, 아래 폼으로 신규 등록합니다.</div>`;
 }
 function loadTaskRecord(recordId){
   mountAddModalInline('rpTaskMount');
   openAddModal('task', recordId);
   document.body.style.overflow='';
+  document.getElementById('rpTaskMount')?.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ── 보고서입력 탭: 변압기온도 페이지 — 실제 변압기온도측정표 지면 구조를 그대로 재현(2026-07-30).
@@ -5939,13 +6020,10 @@ function renderMonthlyFullCatalog(){
         const curVal=latest?latest['점검결과']:'';
         const opts=['','양호','-','불량','점검요'].map(v=>
           `<option value="${v}"${curVal===v?' selected':''}>${v===''?'선택 안함':v}</option>`).join('');
-        let tag='';
-        if(dated) tag=`<span class="rc-monthly-dated">(이번달 ${esc(dated['점검일자'])} 입력됨)</span>`;
-        else if(latest) tag=`<span class="rc-monthly-dated" style="color:var(--txt3)">(최근값 자동선택 · ${esc(latest['점검일자'])})</span>`;
         html+='<tr>';
         if(!gubunPrinted){ html+=`<td rowspan="${g.items.length}" class="rc-monthly-gubun">${esc(g.구분)}</td>`; gubunPrinted=true; }
         if(k===0){ html+=`<td rowspan="${span}" class="rc-monthly-seolbi">${esc(seolbi)}</td>`; }
-        html+=`<td class="rc-monthly-content">${esc(it.점검내용)}${tag}</td>`;
+        html+=`<td class="rc-monthly-content">${highlightChecklistTags(it.점검내용)}</td>`;
         html+=`<td><select id="${rid}" class="modal-select elec-grid-select" style="width:100%" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select></td>`;
         html+=`<td><input type="date" id="${did}" class="modal-input" style="width:100%" value="${esc(dated?dated['점검일자']:'')}"></td>`;
         html+='</tr>';
@@ -6010,6 +6088,7 @@ function powerRecordLookup(tunnel, dateStr){
 async function renderReportPage_power(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">6. 전력데이터 분석</div>
+    <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPowerBody"></div>`;
   await loadTabData('power');
@@ -6045,7 +6124,7 @@ function renderPowerGrid(){
       <td><input class="modal-input pw-note" type="text" style="width:140px" value="${esc((rec&&rec['비고'])||'')}"></td>
     </tr>`;
   }
-  wrap.innerHTML=`<div class="tbl-wrap"><table><thead><tr><th>일자</th><th>MAIN(kWh)</th><th>조명용(kWh)</th><th>비고</th></tr></thead><tbody>${rows}</tbody></table></div>
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th>날짜</th><th>MAIN (kWh)</th><th>조명용 (kWh)</th><th>비고</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpPowerProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpPowerProgressBar"></div></div>`;
 }
