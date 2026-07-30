@@ -466,10 +466,16 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   </div>
 
   <!-- ▸ 보고서(신설, 2026-07-30) — 입력폼과 분리된 전용 보고서 생성 탭. 터널·연월 선택 후 시트별 체크박스로
-       선택 생성하거나 전체(통합) 생성, 각 시트는 입력폼의 해당 페이지로 이동해 미리보기 가능. -->
+       선택 생성하거나 전체(통합) 생성, 각 시트는 입력폼의 해당 페이지로 이동해 미리보기 가능.
+       터널·연월 드롭다운은 "보고서 생성" 제목과 한 줄에 배치(2026-07-30 사용자 요청 — 불필요한 줄 제거). -->
   <div class="panel" id="panel-report">
-    <div class="sc report-toolbar" id="reportGenSelBar"></div>
-    <div class="report-paper" id="reportGenPaper"></div>
+    <div class="report-paper" id="reportGenPaper">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+        <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">보고서 생성</div>
+        <div class="sc report-toolbar" id="reportGenSelBar" style="flex-shrink:0;width:auto"></div>
+      </div>
+      <div id="reportGenDynamic"></div>
+    </div>
   </div>
 
   <!-- ▸ 월간점검 -->
@@ -6690,7 +6696,7 @@ function previewReportGenSheet(key){
   gotoReportPage(key);
 }
 function renderReportGenBody(){
-  const wrap=document.getElementById('reportGenPaper');
+  const wrap=document.getElementById('reportGenDynamic');
   if(!wrap) return;
   const allChecked=REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length;
   const rows=REPORT_GEN_SHEETS.map(s=>`
@@ -6701,7 +6707,6 @@ function renderReportGenBody(){
       <button type="button" class="report-page-chip" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
     </div>`).join('');
   wrap.innerHTML=`
-    <div class="report-title-band">보고서 생성</div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)} · ${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
     <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
     <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:2px solid var(--border)">
