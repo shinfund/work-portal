@@ -2814,7 +2814,7 @@ function buildPhotoTeamReportSheet(wb, sheetRows, sheetIdx, showTitle){
       mc(`${cLbl}${lbl1}`, '일      자', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl1}`, REGION));
       mc(`${cVal1}${lbl1}:${cVal2}${lbl1}`, r?excelParseDate(r['일자']):null, F(10), LEFT_INDENT, 'yyyy"년" m"월" d"일";@', gridBorder(`${cVal1}${lbl1}:${cVal2}${lbl1}`, REGION));
       mc(`${cLbl}${lbl2}`, '사진설명', F(10), CENTER, undefined, gridBorder(`${cLbl}${lbl2}`, REGION));
-      mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, r?r['사진설명']:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, REGION));
+      mc(`${cVal1}${lbl2}:${cVal2}${lbl2}`, r?`${r['터널명']} ${r['사진설명']}`:null, F(10), LEFT_SHRINK, undefined, gridBorder(`${cVal1}${lbl2}:${cVal2}${lbl2}`, REGION));
     }
   }
   return Promise.all(photoTasks.map(t=>
