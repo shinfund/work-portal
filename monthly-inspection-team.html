@@ -674,8 +674,8 @@ const TAB_DEFS=[
   {
     id:'elecinsp', label:'전기시설점검', dbId:DB_IDS.elecinsp, titleKey:'제목', dateKey:'날짜',
     fields:[
-      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_ELEC, required:true, cascadeTrigger:true, extraOnChange:'refreshElecinspPlanHint()'},
-      {key:'날짜', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshElecinspPlanHint()'},
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_ELEC, required:true, cascadeTrigger:true},
+      {key:'날짜', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['날짜'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['날짜'],'전기시설점검표'); return t?[t]:[]; },
         emptyHint:'먼저 날짜를 선택하세요'},
@@ -1422,61 +1422,13 @@ function elecinspGubunOptions(){
 function buildElecinspGubunHtml(){
   const opts=elecinspGubunOptions();
   const boxes=opts.map((g,gi)=>`<label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600">
-      <input type="checkbox" id="eig_chk_${gi}" onchange="this.dataset.userTouched='1';refreshElecinspChecklist()"/> ${esc(g)}
+      <input type="checkbox" id="eig_chk_${gi}" onchange="refreshElecinspChecklist()"/> ${esc(g)}
     </label>`).join('');
   return `<div class="modal-field">
     <label class="modal-label">구분 <span class="modal-required">*</span></label>
     <div class="modal-hint" style="margin-top:0">오늘 점검한 구분을 모두 선택하세요. 구분마다 표준 점검항목 체크리스트가 아래에 나타납니다.</div>
-    <div id="elecinspPlanHint"></div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">${boxes}</div>
   </div>`;
-}
-// ── 점검계획서 참고자료(수자원 매달 공지사항 첨부 → project_inspection_plan_parse.mjs로
-// data/inspection-plan/{YYYY-MM}.json 변환, 2026-07-29) — 터널명·날짜 선택 시 이번달 계획상 그
-// 터널에 해당하는 구분을 자동으로 체크해주고, 참고 문구를 보여준다. 사용자가 구분 체크박스를 한 번
-// 이라도 직접 누르면(dataset.userTouched) 이후 이 자동채움이 값을 덮어쓰지 않는다.
-let PLAN_STATE={ym:null, data:null, loading:false, failed:false};
-async function loadInspectionPlan(ym){
-  if(PLAN_STATE.ym===ym && (PLAN_STATE.data || PLAN_STATE.failed)) return;
-  PLAN_STATE.ym=ym; PLAN_STATE.data=null; PLAN_STATE.failed=false; PLAN_STATE.loading=true;
-  try{
-    const res=await fetch(`inspection-plan/${ym}.json`);
-    if(!res.ok) throw new Error('no plan file');
-    PLAN_STATE.data=await res.json();
-  }catch(e){
-    PLAN_STATE.failed=true;
-  }finally{
-    PLAN_STATE.loading=false;
-  }
-}
-async function refreshElecinspPlanHint(){
-  const hintEl=document.getElementById('elecinspPlanHint');
-  if(!hintEl) return; // 체크리스트 신규등록 모드가 아니면(수정 모드 등) 없음
-  const tunnel=document.getElementById('ff_0')?.value;
-  const dateVal=document.getElementById('ff_1')?.value;
-  if(!tunnel){ hintEl.innerHTML=''; return; }
-  const ym=(dateVal||'').slice(0,7) || new Date().toISOString().slice(0,7);
-  await loadInspectionPlan(ym);
-  if(document.getElementById('ff_0')?.value!==tunnel || (document.getElementById('ff_1')?.value||'').slice(0,7)!==ym.slice(0,7)) return; // 로딩 중 값이 바뀌면 폐기
-  const plan=PLAN_STATE.data?.teamPlan?.[tunnel];
-  if(!plan){
-    hintEl.innerHTML = PLAN_STATE.failed
-      ? `<div class="modal-hint" style="margin-top:0">⚠ ${esc(ym)} 점검계획 자료가 없습니다 — 참고 없이 직접 선택하세요.</div>`
-      : '';
-    return;
-  }
-  const due=plan.appGubunDue||{};
-  const dueList=Object.keys(due);
-  hintEl.innerHTML = `<div class="modal-hint" style="margin-top:0">📋 ${esc(ym)} 점검계획 참고 — ${esc(tunnel)}${plan.점검일?` (점검일 ${esc(plan.점검일)})`:''}: 해당 구분 <b>${dueList.map(esc).join(', ')||'없음'}</b>을 아래에서 자동 체크했습니다. 실제와 다르면 직접 조정하세요.</div>`;
-  const opts=elecinspGubunOptions();
-  const userTouched=opts.some((g,gi)=>document.getElementById('eig_chk_'+gi)?.dataset.userTouched==='1');
-  if(!userTouched){
-    opts.forEach((g,gi)=>{
-      const chk=document.getElementById('eig_chk_'+gi);
-      if(chk) chk.checked=!!due[g];
-    });
-    refreshElecinspChecklist();
-  }
 }
 function elecinspCheckedGubuns(){
   const opts=elecinspGubunOptions();
@@ -1611,7 +1563,6 @@ function openAddModal(tabId, recordId){
   if(isElecinspChecklist){
     document.getElementById('elecinspGubunWrap').innerHTML=buildElecinspGubunHtml();
     refreshElecinspChecklist();
-    refreshElecinspPlanHint();
   }
   if(isPhotoMulti){
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
