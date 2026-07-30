@@ -6534,6 +6534,12 @@ const REPORT_GEN_SHEETS=[
   {key:'power', label:'6. 전력사용량'},
   {key:'task', label:'7. 업무처리'}
 ];
+// 표지·간지는 항상 포함되는 고정 시트라 체크박스 없이 "미리보기"만 제공(2026-07-30 사용자 요청 —
+// 선택 목록엔 없지만 보고서 탭에서도 보이고 확인할 수 있어야 함).
+const REPORT_GEN_FIXED_SHEETS={
+  cover:{key:'cover', label:'0. 표지'},
+  divider:{key:'divider', label:'8. 일일점검일지(간지)'}
+};
 let REPORT_GEN_SELECTED=new Set(REPORT_GEN_SHEETS.map(s=>s.key));
 let _reportGenInited=false;
 function initReportGenTab(){
@@ -6612,6 +6618,12 @@ function previewReportGenSheet(key){
   switchPanel('formEntry');
   gotoReportPage(key);
 }
+function reportGenFixedRow(s){
+  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-weight:600;color:var(--txt2)">${esc(s.label)} <span style="font-weight:600;color:var(--txt2);font-size:12px">(항상 포함)</span></span>
+      <button type="button" class="report-page-chip" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
+    </div>`;
+}
 function renderReportGenBody(){
   const wrap=document.getElementById('reportGenPaper');
   if(!wrap) return;
@@ -6626,29 +6638,28 @@ function renderReportGenBody(){
   wrap.innerHTML=`
     <div class="report-title-band">보고서 생성</div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)} · ${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
-    <div class="modal-hint" style="margin-bottom:10px">표지·일일점검일지(간지)는 항상 포함됩니다. 시트를 선택한 뒤 "선택 시트 생성"을 누르거나, 전체를 그대로 "통합 보고서 생성"으로 받으세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">표지·일일점검일지(간지)는 항상 포함됩니다. 아래에서 시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
+    ${reportGenFixedRow(REPORT_GEN_FIXED_SHEETS.cover)}
     <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:2px solid var(--border)">
       <label style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;font-weight:800">
         <input type="checkbox" ${allChecked?'checked':''} onchange="toggleReportGenSelectAll()"/> 전체 선택
       </label>
     </div>
     ${rows}
+    ${reportGenFixedRow(REPORT_GEN_FIXED_SHEETS.divider)}
     <div class="modal-btns" style="margin-top:18px;gap:10px">
-      <button class="add-submit-btn" id="reportGenSelBtn" onclick="generateSelectedReport()">
-        <span id="reportGenSelLbl">선택 시트 보고서 생성</span>
-      </button>
-      <button class="add-submit-btn" id="reportGenAllBtn" onclick="generateAllReport()" style="background:var(--purple)">
-        <span id="reportGenAllLbl">통합 보고서 생성</span>
+      <button class="add-submit-btn" id="reportGenSelBtn" onclick="generateSelectedReport()" style="background:var(--purple)">
+        <span id="reportGenSelLbl">보고서 생성</span>
       </button>
     </div>
     <div class="modal-progress-wrap" id="reportGenProgressWrap" style="display:none"><div class="modal-progress-bar" id="reportGenProgressBar"></div></div>`;
 }
+// 전체 선택 상태면 표지·간지가 항상 포함되는 것과 합쳐 사실상 "통합 보고서"와 동일한 결과물이라
+// 버튼을 하나로 통합했다(2026-07-30 사용자 확인) — 선택이 곧 통합 여부를 결정한다.
 async function generateSelectedReport(){
   if(!REPORT_GEN_SELECTED.size){ alert('생성할 시트를 하나 이상 선택해주세요.'); return; }
-  await runReportGenBuild(document.getElementById('reportGenSelBtn'), document.getElementById('reportGenSelLbl'), '선택 시트 보고서 생성', new Set(REPORT_GEN_SELECTED));
-}
-async function generateAllReport(){
-  await runReportGenBuild(document.getElementById('reportGenAllBtn'), document.getElementById('reportGenAllLbl'), '통합 보고서 생성', null);
+  const allSelected=REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length;
+  await runReportGenBuild(document.getElementById('reportGenSelBtn'), document.getElementById('reportGenSelLbl'), '보고서 생성', allSelected ? null : new Set(REPORT_GEN_SELECTED));
 }
 async function runReportGenBuild(btn, lbl, defaultLabel, sections){
   const tunnel=REPORT_SEL.tunnel, year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
