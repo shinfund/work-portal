@@ -16,6 +16,7 @@
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
   --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
+  --pink:#C2255C;
   --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
   /* 다크모드에서도 흰색 글자와 대비를 유지해야 하는 "채워진 배경"(active 드롭다운/토글 등) 전용
      불변 톤 — --sky800은 다크모드에서 밝은 텍스트용(#C8E1FF)으로 쓰이므로 배경엔 못 쓴다(2026-07-25, C3) */
@@ -63,6 +64,7 @@ html[data-theme="dark"]{
   --amber:#D9A441;--amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+  --pink:#FF6FA5;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
@@ -113,7 +115,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 html[data-theme="dark"] .report-page-chip{color:#fff}
 .report-paper{background:var(--card);color:var(--txt);max-width:800px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
 html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
-.report-title-band{text-align:center;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
+.report-title-band{text-align:left;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
 .report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
 .report-section-hd{font-size:13.5px;font-weight:800;background:var(--sky50);color:var(--sky800);padding:7px 12px;border-radius:6px;margin:16px 0 8px}
 /* 표지 페이지 — 실제 생성되는 엑셀 표지 시트를 열어 셀 정렬·행 위치 비율(27행 중 1/9/16/17행)을 그대로
@@ -796,13 +798,13 @@ function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // 월간점검 점검내용의 "(분기)/(반기)/(연차)" 표기 강조 — 실제 엑셀은 비고 컬럼에 이 값이 별도 셀 색상
-// (분기=파랑/반기=갈색/연차=자홍)으로 들어가지만, 앱은 점검내용 문구에 괄호로 포함돼 있어 그 부분만
-// 앱 공통 시맨틱 팔레트(다크/라이트 자동대응)로 색을 입힌다(2026-07-30, 엑셀과 동일 색상일 필요는 없음).
+// (분기=파랑/반기=갈색/연차=자홍)으로 들어가지만, 앱은 점검내용 문구 안에 괄호로 포함돼 있어 문구
+// 전체를 그 색으로 칠한다(2026-07-30, 앱 공통 시맨틱 팔레트 사용 — 엑셀과 동일 색상일 필요는 없음).
+const CHECKLIST_TAG_COLORS=[ [/\(분기\)/, 'var(--sky)'], [/\(반기\)/, 'var(--amber)'], [/\(연차\)/, 'var(--pink)'] ];
 function highlightChecklistTags(text){
-  return esc(text)
-    .replace(/\(분기\)/g, '<span style="color:var(--sky)">(분기)</span>')
-    .replace(/\(반기\)/g, '<span style="color:var(--amber)">(반기)</span>')
-    .replace(/\(연차\)/g, '<span style="color:var(--purple)">(연차)</span>');
+  const hit=CHECKLIST_TAG_COLORS.find(([re])=>re.test(text||''));
+  const escaped=esc(text);
+  return hit ? `<span style="color:${hit[1]}">${escaped}</span>` : escaped;
 }
 // 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
 function titleWithMonth(dateStr, suffix){
@@ -5975,7 +5977,7 @@ function monthlyLatestRecord(tunnel, item){
 }
 async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band" style="text-align:left">1. 월간 점검결과표</div>
+    <div class="report-title-band">1. 월간 점검결과표</div>
     <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpMonthlyBody"></div>`;
