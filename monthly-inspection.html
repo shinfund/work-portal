@@ -809,7 +809,9 @@ function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</
 // 월간점검 점검내용의 "(분기)/(반기)/(연차)" 표기 강조 — 실제 엑셀은 비고 컬럼에 이 값이 별도 셀 색상
 // (분기=파랑/반기=갈색/연차=자홍)으로 들어가지만, 앱은 점검내용 문구 안에 괄호로 포함돼 있어 문구
 // 전체를 그 색으로 칠한다(2026-07-30, 앱 공통 시맨틱 팔레트 사용 — 엑셀과 동일 색상일 필요는 없음).
-const CHECKLIST_TAG_COLORS=[ [/\(분기\)/, 'var(--sky)'], [/\(반기\)/, 'var(--amber)'], [/\(연차\)/, 'var(--pink)'] ];
+// "(분기, 필요시)"·"(연차, 필요시)"처럼 괄호 안에 부가문구가 붙는 변형도 잡히도록 분기/반기/연차
+// 뒤에 닫는 괄호까지 아무 문자나 허용(2026-07-30 사용자 제보 — 정확히 "(분기)"만 매칭되던 버그).
+const CHECKLIST_TAG_COLORS=[ [/\(분기[^)]*\)/, 'var(--sky)'], [/\(반기[^)]*\)/, 'var(--amber)'], [/\(연차[^)]*\)/, 'var(--pink)'] ];
 function highlightChecklistTags(text){
   const hit=CHECKLIST_TAG_COLORS.find(([re])=>re.test(text||''));
   const escaped=esc(text);
@@ -3166,34 +3168,32 @@ var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name
 function newPhotoMultiRow(num, desc){
   return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[] };
 }
+// 실제 "운영관리 사진대지" 지면(#1~#6, 2열×3행)과 동일한 그리드로 재구성(2026-07-30) — 번호는
+// 더 이상 select로 고르지 않고 박스 위치 자체가 번호이므로, 초기화 시 6칸을 항상 전부 만들어둔다.
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
-    <label class="modal-label">번호·사진설명 <span class="modal-required">*</span></label>
-    <div class="modal-hint">기본 1행(사진설명·사진)만 등록하며, 필요 시 "+ 행 추가"로 늘릴 수 있습니다.</div>
-    <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
-      <button type="button" class="tb-action-btn tb-add" onclick="addPhotoMultiRow()">+ 행 추가</button>
-    </div>
-    <div id="photoMultiRowsList"></div>
+    <label class="modal-label">사진대지(#1~#6) <span class="modal-required">*</span></label>
+    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다).</div>
+    <div id="photoMultiRowsList" style="margin-top:8px"></div>
   </div>`;
 }
 function renderPhotoMultiRows(){
   const wrap=document.getElementById('photoMultiRowsList');
   if(!wrap) return;
   if(!_photoMultiRows.length){
-    wrap.innerHTML='<div class="modal-hint">터널명·일자를 선택하면 첫 행이 자동 생성됩니다.</div>';
+    wrap.innerHTML='<div class="modal-hint">터널명·일자를 선택하면 6칸이 자동 생성됩니다.</div>';
     return;
   }
   const tunnelSel=document.getElementById('ff_0');
   const tunnel=tunnelSel ? (tunnelSel.value==='__custom__' ? '' : tunnelSel.value) : '';
-  wrap.innerHTML=_photoMultiRows.map(row=>{
-    const numOpts=['1','2','3','4','5','6'].map(n=>`<option value="${n}"${row.num===n?' selected':''}>${n}</option>`).join('');
+  const boxes=_photoMultiRows.slice().sort((a,b)=>Number(a.num)-Number(b.num)).map(row=>{
     // 사진설명은 해당 터널·번호 조합에서 과거에 입력된 값들을 select 드롭다운으로 제안(직접입력은
     // 다른 select 필드들과 동일하게 목록 맨 위 고정, 2026-07-28 사용자 요청 — 기존 datalist 방식은
     // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음).
     const descOptsArr=photoDescOptions(tunnel, row.num);
     // descCustom은 "직접입력" 선택 직후(아직 아무것도 안 쳤을 때도) 입력칸을 계속 보여주기 위한
     // 명시적 플래그 — row.desc만으로 판단하면 빈 문자열일 때 목록으로 되돌아가버리는 버그가 있었다
-    // (2026-07-28). 번호를 바꿔 목록이 달라졌는데 기존 값이 새 목록에 없는 경우도 직접입력으로 취급.
+    // (2026-07-28).
     const isCustomDesc=row.descCustom || (!!row.desc && !descOptsArr.includes(row.desc));
     const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
     const thumbs=row.files.map((f,fi)=>
@@ -3202,40 +3202,26 @@ function renderPhotoMultiRows(){
         <button type="button" onclick="removePhotoMultiFile(${row.key},${fi})" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer">✕</button>
       </div>`
     ).join('');
-    return `<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;border:1px solid var(--border);border-radius:var(--r8);padding:10px;margin-bottom:8px">
-      <div style="width:70px">
-        <div class="modal-hint" style="margin:0 0 4px">번호</div>
-        <select class="modal-select" style="padding:8px" onchange="_photoMultiSetNum(${row.key},this.value)">
-          <option value="">-</option>${numOpts}
-        </select>
-      </div>
-      <div style="flex:1;min-width:160px">
-        <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
-        <select class="modal-select" style="padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
-          <option value="">선택</option>
-          <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
-          ${descOpts}
-        </select>
-        <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
-      </div>
-      <div>
-        <div class="modal-hint" style="margin:0 0 4px">점검사진</div>
-        <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>
-        <input type="file" id="pmf_${row.key}" accept="image/*" multiple style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start">${thumbs}</div>
-      <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" style="align-self:center;width:24px;height:24px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
+    return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px">
+      <div style="font-weight:800;font-size:12.5px;margin-bottom:6px">#${esc(row.num)}</div>
+      <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
+      <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
+        <option value="">선택</option>
+        <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
+        ${descOpts}
+      </select>
+      <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px;width:100%" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+      <div class="modal-hint" style="margin:8px 0 4px">점검사진</div>
+      <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>
+      <input type="file" id="pmf_${row.key}" accept="image/*" multiple style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;margin-top:8px">${thumbs}</div>
     </div>`;
   }).join('');
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${boxes}</div>`;
 }
 function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row[field]=val;
-}
-function _photoMultiSetNum(key, val){
-  const row=_photoMultiRows.find(r=>r.key===key);
-  if(row) row.num=val;
-  renderPhotoMultiRows(); // 번호가 바뀌면 사진설명 select 제안 목록도 새 번호 기준으로 다시 계산
 }
 function _photoMultiDescChange(key, selEl){
   const row=_photoMultiRows.find(r=>r.key===key);
@@ -3248,15 +3234,6 @@ function _photoMultiDescChange(key, selEl){
     row.descCustom=false;
     row.desc=selEl.value;
   }
-}
-// 기본 1행에 더해 드물게 필요한 추가 촬영분을 위한 여분 행 — 번호는 비워둬 사용자가 직접 고른다.
-function addPhotoMultiRow(){
-  _photoMultiRows.push(newPhotoMultiRow('', ''));
-  renderPhotoMultiRows();
-}
-function removePhotoMultiRow(key){
-  _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
-  renderPhotoMultiRows();
 }
 function uploadPhotoMultiFile(input, key){
   const files=Array.from(input.files||[]);
@@ -3293,14 +3270,13 @@ function removePhotoMultiFile(key, fileIdx){
   row.files.splice(fileIdx,1);
   renderPhotoMultiRows();
 }
-// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 아직 행이 없으면 1번 슬롯 1행만 기본 표시한다
-// (2026-07-29 사용자 요청 — 이 탭은 한 날짜에 하나의 점검내용에 대한 사진만 등록하면 되므로,
-// team 앱과 달리 1~6번 슬롯을 한 번에 채울 필요가 없음). 여러 장이 필요하면 "+행 추가"로 늘린다.
+// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 실제 보고서 지면과 동일하게 #1~#6 6칸을 항상 전부
+// 만들어둔다(2026-07-30, 과거엔 1행만 만들고 "+행 추가"로 늘렸으나 보고서 모양과 맞추기 위해 변경).
 // 수정 모드·다른 탭에는 photoMultiRowsList가 없어 조용히 종료.
 function refreshPhotoMultiRows(){
   if(!document.getElementById('photoMultiRowsList')){ renderPhotoMultiRows(); return; }
   if(!_photoMultiRows.length){
-    _photoMultiRows=[newPhotoMultiRow('1','')];
+    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
   }
   renderPhotoMultiRows();
 }
@@ -3319,10 +3295,10 @@ async function submitPhotoMulti(){
     if(f.required && !v && !missing) missing=f.label||f.key;
   });
   if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
-  // 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28).
+  // 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28). 번호는
+  // 박스 위치로 항상 고정돼 있어(2026-07-30) 별도 필수값 검사가 필요 없다.
   const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
-  if(!usedRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
-  if(usedRows.some(row=>!String(row.num||'').trim())){ alert('사진설명·사진을 입력한 행에는 번호를 선택해주세요.'); return; }
+  if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
@@ -5810,52 +5786,103 @@ function loadGeneratorDay(recordId){
   document.body.style.overflow='';
 }
 
-// ── 보고서입력 탭: 업무처리 페이지 — generator 페이지와 동일 패턴(신규 입력폼 + 이번달 목록), 단일 레코드라 더 단순 ──
-// task는 터널명 옵션이 3개뿐(청하터널(주)/(부) 구분 없음) — reportBaseTunnel()로 접미사를 제거해야 매칭된다.
+// ── 보고서입력 탭: 업무처리 페이지 — 실제 "업무처리사항" 보고서(날짜/업무내용/조치사항/업체명/비고
+// flat table)와 동일하게 표 안에서 직접 입력·수정한다(2026-07-30, 기존 모달 방식 대체 — monthly/power
+// 페이지와 동일 패턴으로 자체 필드 id + notionFetch 직접 upsert). task는 터널명 옵션이 3개뿐
+// (청하터널(주)/(부) 구분 없음)이라 reportBaseTunnel()로 접미사를 제거해야 매칭된다. 기존 "업무처리"
+// 탭(모달 기반 CRUD)은 변경 없이 그대로 둔다.
+let _taskExtraRows=[];
+let _taskExtraNextKey=1;
 async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">7. 월간 업무처리사항</div>
     <div class="rc-monthly-sub">□ ${esc(reportBaseTunnel(REPORT_SEL.tunnel))}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpTaskList"></div>
-    <div id="rpTaskMount" style="margin-top:22px"></div>`;
+    <div id="rpTaskBody"></div>`;
   await loadTabData('task');
   if(_reportCurPage!=='task') return;
   document.getElementById('rpLoading')?.remove();
-  mountAddModalInline('rpTaskMount');
-  openAddModal('task');
-  document.body.style.overflow='';
-  reportPresetField('ff_0', reportBaseTunnel(REPORT_SEL.tunnel));
-  renderTaskMonthList();
+  _taskExtraRows=[];
+  renderTaskBody();
 }
-// 실제 "7. 월간 업무처리사항" 보고서 지면(날짜/업무내용/조치사항/업체명/비고 flat table)과 동일한
-// 구조로 이번달 등록 건을 표로 보여준다(2026-07-30, 기존 칩 목록 대체). 행 클릭 시 기존 모달을
-// 수정 모드로 열어 편집 — 데이터 로직은 그대로, 조회 화면만 보고서 표로 재구성.
-function renderTaskMonthList(){
-  const wrap=document.getElementById('rpTaskList');
+function taskAddRow(){
+  _taskExtraRows.push({key:_taskExtraNextKey++});
+  renderTaskBody();
+}
+function taskRemoveExtraRow(key){
+  _taskExtraRows=_taskExtraRows.filter(r=>r.key!==key);
+  renderTaskBody();
+}
+function renderTaskBody(){
+  const wrap=document.getElementById('rpTaskBody');
   if(!wrap) return;
   const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const recs=(TAB_STATE.task.records||[]).filter(r=>r['터널명']===tunnel && (r['날짜']||'').slice(0,7)===ym)
     .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''));
-  const rows=recs.map(r=>`<tr onclick="loadTaskRecord('${r.id}')" style="cursor:pointer">
-      <td class="rc-monthly-gubun" style="white-space:nowrap">${esc(r['날짜']||'')}</td>
-      <td class="rc-monthly-content">${esc(r['업무내용']||'')}</td>
-      <td class="rc-monthly-content">${esc(r['조치사항']||'')}</td>
-      <td>${esc(r['업체명']||'')}</td>
-      <td>${esc(r['비고']||'')}</td>
+  const cells=(dateVal, content, action, company, note)=>`
+      <td><input type="date" class="modal-input tk-date" style="width:100%" value="${esc(dateVal)}"></td>
+      <td><input type="text" class="modal-input tk-content" style="width:100%" value="${esc(content)}"></td>
+      <td><input type="text" class="modal-input tk-action" style="width:100%" value="${esc(action)}"></td>
+      <td><input type="text" class="modal-input tk-company" style="width:100%" value="${esc(company)}"></td>
+      <td><input type="text" class="modal-input tk-note" style="width:100%" value="${esc(note)}"></td>`;
+  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}<td></td></tr>`).join('');
+  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}
+      <td><button type="button" onclick="taskRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button></td>
     </tr>`).join('');
   wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
-      <thead><tr><th style="width:90px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:110px">업체명</th><th style="width:90px">비고</th></tr></thead>
-      <tbody>${rows || `<tr><td colspan="5" style="text-align:center;color:var(--txt3)">아직 등록된 업무처리가 없습니다.</td></tr>`}</tbody>
+      <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:120px">업체명</th><th style="width:100px">비고</th><th style="width:36px"></th></tr></thead>
+      <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
-    <div class="modal-hint" style="margin-top:6px">행을 클릭하면 수정, 아래 폼으로 신규 등록합니다.</div>`;
+    <div style="margin-top:10px"><button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">저장</button></div>
+    <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
 }
-function loadTaskRecord(recordId){
-  mountAddModalInline('rpTaskMount');
-  openAddModal('task', recordId);
-  document.body.style.overflow='';
-  document.getElementById('rpTaskMount')?.scrollIntoView({behavior:'smooth', block:'start'});
+async function submitTaskReportForm(){
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+  const tunnel=reportBaseTunnel(REPORT_SEL.tunnel);
+  const dbId=getTabDef('task').dbId;
+  const targets=[];
+  document.querySelectorAll('#rpTaskBody tbody tr').forEach(tr=>{
+    const date=tr.querySelector('.tk-date').value;
+    const content=tr.querySelector('.tk-content').value.trim();
+    const action=tr.querySelector('.tk-action').value;
+    const company=tr.querySelector('.tk-company').value;
+    const note=tr.querySelector('.tk-note').value;
+    if(!date && !content) return; // 완전히 빈 행은 건너뜀
+    targets.push({id:tr.dataset.id||null, date, content, action, company, note});
+  });
+  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  const missing=targets.find(t=>!t.date || !t.content);
+  if(missing){ alert('날짜와 업무내용은 필수입니다.'); return; }
+  const btn=document.getElementById('rpTaskSubmitBtn');
+  btn.disabled=true; btn.textContent='저장 중...';
+  const wrap=document.getElementById('rpTaskProgressWrap'), bar=document.getElementById('rpTaskProgressBar');
+  wrap.style.display=''; bar.style.width='0%';
+  let done=0, failed=0;
+  const tasks=targets.map(t=>async ()=>{
+    const props={
+      '터널명':buildPropValue('select', tunnel),
+      '날짜':buildPropValue('date', t.date),
+      '제목':buildPropValue('title', titleWithMonth(t.date,'업무처리사항')),
+      '업무내용':buildPropValue('text', t.content),
+      '조치사항':buildPropValue('text', t.action),
+      '업체명':buildPropValue('text', t.company),
+      '비고':buildPropValue('text', t.note)
+    };
+    try{
+      if(t.id) await notionFetch('/v1/pages/'+t.id, 'PATCH', {properties:props});
+      else await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
+    }catch(e){ failed++; console.error(e); }
+    done++; bar.style.width=Math.round(done/targets.length*100)+'%';
+  });
+  await runWithConcurrency(tasks, 6);
+  btn.disabled=false; btn.textContent='저장';
+  wrap.style.display='none';
+  await loadTabData('task');
+  _taskExtraRows=[];
+  toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
+  if(_reportCurPage==='task') renderTaskBody();
 }
 
 // ── 보고서입력 탭: 변압기온도 페이지 — 실제 변압기온도측정표 지면 구조를 그대로 재현(2026-07-30).
@@ -6037,7 +6064,7 @@ function renderMonthlyFullCatalog(){
     if(!map[it.구분]){ map[it.구분]={구분:it.구분,items:[]}; groups.push(map[it.구분]); }
     map[it.구분].items.push(it);
   });
-  let html=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:64px">구분</th><th style="width:74px">설비명</th><th>점검내용</th><th style="width:140px">점검결과</th><th style="width:150px">점검일자</th></tr></thead><tbody>`;
+  let html=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:64px">구분</th><th style="width:74px">설비명</th><th>점검내용</th><th style="width:140px">점검결과</th><th style="width:150px">점검일자</th><th style="width:110px">비고</th></tr></thead><tbody>`;
   groups.forEach(g=>{
     const gi=groups.indexOf(g);
     let gubunPrinted=false, si=0;
@@ -6050,6 +6077,7 @@ function renderMonthlyFullCatalog(){
         const it=g.items[ii];
         const rid='rpmc_'+gi+'_'+ii;
         const did='rpmcd_'+gi+'_'+ii;
+        const bid='rpmcb_'+gi+'_'+ii;
         const dated=monthlyDatedRecord(tunnel, it, ym);
         const latest=dated||monthlyLatestRecord(tunnel, it);
         const curVal=latest?latest['점검결과']:'';
@@ -6061,6 +6089,7 @@ function renderMonthlyFullCatalog(){
         html+=`<td class="rc-monthly-content">${highlightChecklistTags(it.점검내용)}</td>`;
         html+=`<td><select id="${rid}" class="modal-select elec-grid-select" style="width:100%" data-gubun="${esc(it.구분)}" data-seolbi="${esc(it.설비명||'')}" data-content="${esc(it.점검내용)}">${opts}</select></td>`;
         html+=`<td><input type="date" id="${did}" class="modal-input" style="width:100%" value="${esc(dated?dated['점검일자']:'')}"></td>`;
+        html+=`<td><input type="text" id="${bid}" class="modal-input" style="width:100%" value="${esc(dated?dated['비고']:'')}"></td>`;
         html+='</tr>';
       }
       si+=span;
@@ -6125,11 +6154,55 @@ async function renderReportPage_power(){
     <div class="report-title-band">6. 전력데이터 분석</div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpPowerChartWrap"></div>
     <div id="rpPowerBody"></div>`;
   await loadTabData('power');
   if(_reportCurPage!=='power') return;
   document.getElementById('rpLoading')?.remove();
   renderPowerGrid();
+  renderPowerChart();
+}
+// 실제 엑셀 보고서(전력사용량표)에도 표 위에 일별 MAIN/조명용 꺾은선 차트가 들어가 있어, 입력폼에도
+// 동일하게 표시(2026-07-30) — 보고서 생성용 renderPowerChartImage와 같은 Chart.js를 그대로 재사용하되,
+// 여긴 이미지로 굳지 않고 화면에 실시간으로 그리고 다크/라이트 테마 색을 그대로 따라간다.
+let _powerChartInstance=null;
+async function renderPowerChart(){
+  const wrap=document.getElementById('rpPowerChartWrap');
+  if(!wrap) return;
+  const tunnel=REPORT_SEL.tunnel, year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
+  const data=buildPowerReportData(tunnel, year, month);
+  if(!data){
+    wrap.innerHTML=`<div class="modal-hint" style="text-align:center;padding:16px 0">이번 달 등록된 전력 데이터가 없어 차트를 표시할 수 없습니다.</div>`;
+    return;
+  }
+  wrap.innerHTML=`<div style="height:280px;margin-bottom:16px"><canvas id="rpPowerCanvas"></canvas></div>`;
+  await loadChartLib();
+  if(_reportCurPage!=='power') return; // 로딩 중 다른 페이지로 이동했으면 중단
+  const canvas=document.getElementById('rpPowerCanvas');
+  if(!canvas) return;
+  if(_powerChartInstance){ _powerChartInstance.destroy(); _powerChartInstance=null; }
+  const cs=getComputedStyle(document.documentElement);
+  const txt=cs.getPropertyValue('--txt').trim()||'#24292E';
+  const border=cs.getPropertyValue('--border').trim()||'#E1E4E8';
+  const labels=data.days.map((_,i)=>String(i+1));
+  _powerChartInstance=new Chart(canvas, {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'MAIN(kWh)', data:data.days.map(d=>d?d.MAIN:null), borderColor:'#2563eb', backgroundColor:'#2563eb', spanGaps:true, tension:0.15, pointRadius:2, borderWidth:2},
+      {label:'조명용(kWh)', data:data.days.map(d=>d?d.조명:null), borderColor:'#f59e0b', backgroundColor:'#f59e0b', spanGaps:true, tension:0.15, pointRadius:2, borderWidth:2}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:false,
+      plugins:{
+        legend:{position:'top', labels:{color:txt}},
+        title:{display:true, text:`${tunnel} 일별 전력사용량 (${year}년 ${month}월)`, color:txt, font:{size:14, weight:'700'}}
+      },
+      scales:{
+        x:{title:{display:true, text:'일', color:txt}, ticks:{color:txt}, grid:{color:border}},
+        y:{title:{display:true, text:'kWh', color:txt}, ticks:{color:txt}, grid:{color:border}}
+      }
+    }
+  });
 }
 // 천단위 콤마 표시(2026-07-29 사용자 요청, 우선 전력사용량 그리드만) — focus 시 원값으로 풀고
 // blur 시 다시 콤마를 붙인다. 저장 시엔 항상 stripThousands로 콤마를 제거하고 숫자로 변환.
@@ -6201,7 +6274,7 @@ async function submitPowerReportForm(){
   wrap.style.display='none';
   await loadTabData('power');
   toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
-  if(_reportCurPage==='power') renderPowerGrid();
+  if(_reportCurPage==='power'){ renderPowerGrid(); renderPowerChart(); }
 }
 
 // 통합 보고서는 월간점검 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는 탭
@@ -6213,7 +6286,8 @@ async function ensureTabLoaded(id){
   await loadTabData(id);
 }
 // sections: 포함할 시트 키 Set(monthly/elec/transformer/generator/photo/power/task) — 생략 시 전체(통합 보고서).
-// 표지·간지(8.일일점검일지)는 원본 구성상 항상 포함(2026-07-30, "보고서" 탭의 시트별 선택 생성용으로 일반화).
+// sections 생략(undefined) 시 표지·간지도 포함해 전체 생성(기존 exportUnifiedReport 호출부와 호환).
+// "보고서" 탭에서는 표지·간지도 다른 시트와 동일하게 체크박스로 선택/해제 가능(2026-07-30).
 async function buildOneUnifiedReport(tunnel, year, month, sections){
   const on=key=>!sections || sections.has(key);
   await loadExcelLib(true);
@@ -6221,7 +6295,7 @@ async function buildOneUnifiedReport(tunnel, year, month, sections){
 
   const wb=new ExcelJS.Workbook();
   let hasData=false;
-  buildCoverReportSheet(wb, tunnel, year, month);
+  if(on('cover')) buildCoverReportSheet(wb, tunnel, year, month);
 
   // 1. 월간점검결과표(월간점검표1~3)
   if(on('monthly')){
@@ -6300,8 +6374,8 @@ async function buildOneUnifiedReport(tunnel, year, month, sections){
     if(taskRows.length){ buildTaskReportSheet(wb, taskRows, tunnel); hasData=true; }
   }
 
-  // 8. 일일점검일지(간지) — 항상 포함(간지 자체는 원본처럼 데이터 없이도 항상 존재)
-  buildDailyLogDividerSheet(wb, tunnel, year, month);
+  // 8. 일일점검일지(간지) — 데이터 없이도 항상 존재하는 고정 서식지라 hasData 판정 대상은 아님
+  if(on('divider')) buildDailyLogDividerSheet(wb, tunnel, year, month);
 
   if(!hasData) throw new Error('해당 터널·연월에 생성할 데이터가 없습니다.');
 
@@ -6525,21 +6599,18 @@ function unmountAddModalInline(){
 // ── 보고서(신설) 탭 — 입력폼과 분리된 전용 생성 화면(2026-07-30). 터널·연월은 입력폼과 같은 REPORT_SEL을
 // 공유해 두 탭을 오가도 값이 유지된다. 시트별 체크박스로 선택 생성하거나 전체(통합) 생성하고, 각 시트의
 // "미리보기"는 새로 만들지 않고 입력폼 탭의 해당 페이지로 이동해 보여준다(같은 로직 재사용, 중복 없음).
+// 라벨은 표지 목차(UNIFIED_TOC_ITEMS)와 동일한 문구를 그대로 사용 — 실제 엑셀 각 시트 1행 제목과 일치.
 const REPORT_GEN_SHEETS=[
-  {key:'monthly', label:'1. 월간점검'},
-  {key:'elec', label:'2. 전기설비기록'},
-  {key:'transformer', label:'3. 변압기온도'},
-  {key:'generator', label:'4. 발전기점검'},
-  {key:'photo', label:'5. 점검사진'},
-  {key:'power', label:'6. 전력사용량'},
-  {key:'task', label:'7. 업무처리'}
+  {key:'cover', label:'표지'},
+  {key:'monthly', label:UNIFIED_TOC_ITEMS[0]},
+  {key:'elec', label:UNIFIED_TOC_ITEMS[1]},
+  {key:'transformer', label:UNIFIED_TOC_ITEMS[2]},
+  {key:'generator', label:UNIFIED_TOC_ITEMS[3]},
+  {key:'photo', label:UNIFIED_TOC_ITEMS[4]},
+  {key:'power', label:UNIFIED_TOC_ITEMS[5]},
+  {key:'task', label:UNIFIED_TOC_ITEMS[6]},
+  {key:'divider', label:UNIFIED_TOC_ITEMS[7]}
 ];
-// 표지·간지는 항상 포함되는 고정 시트라 체크박스 없이 "미리보기"만 제공(2026-07-30 사용자 요청 —
-// 선택 목록엔 없지만 보고서 탭에서도 보이고 확인할 수 있어야 함).
-const REPORT_GEN_FIXED_SHEETS={
-  cover:{key:'cover', label:'0. 표지'},
-  divider:{key:'divider', label:'8. 일일점검일지(간지)'}
-};
 let REPORT_GEN_SELECTED=new Set(REPORT_GEN_SHEETS.map(s=>s.key));
 let _reportGenInited=false;
 function initReportGenTab(){
@@ -6618,12 +6689,6 @@ function previewReportGenSheet(key){
   switchPanel('formEntry');
   gotoReportPage(key);
 }
-function reportGenFixedRow(s){
-  return `<div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--border)">
-      <span style="flex:1;font-weight:600;color:var(--txt2)">${esc(s.label)} <span style="font-weight:600;color:var(--txt2);font-size:12px">(항상 포함)</span></span>
-      <button type="button" class="report-page-chip" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
-    </div>`;
-}
 function renderReportGenBody(){
   const wrap=document.getElementById('reportGenPaper');
   if(!wrap) return;
@@ -6638,15 +6703,13 @@ function renderReportGenBody(){
   wrap.innerHTML=`
     <div class="report-title-band">보고서 생성</div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)} · ${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
-    <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">표지·일일점검일지(간지)는 항상 포함됩니다. 아래에서 시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
-    ${reportGenFixedRow(REPORT_GEN_FIXED_SHEETS.cover)}
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
     <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:2px solid var(--border)">
       <label style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;font-weight:800">
         <input type="checkbox" ${allChecked?'checked':''} onchange="toggleReportGenSelectAll()"/> 전체 선택
       </label>
     </div>
     ${rows}
-    ${reportGenFixedRow(REPORT_GEN_FIXED_SHEETS.divider)}
     <div class="modal-btns" style="margin-top:18px;gap:10px">
       <button class="add-submit-btn" id="reportGenSelBtn" onclick="generateSelectedReport()" style="background:var(--purple)">
         <span id="reportGenSelLbl">보고서 생성</span>
