@@ -440,6 +440,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <th style="white-space:nowrap">작성자</th>
           <th style="white-space:nowrap">게시일</th>
           <th style="white-space:nowrap">첨부</th>
+          <th style="white-space:nowrap">회신</th>
         </tr></thead>
         <tbody id="detailTableBody"></tbody>
       </table>
@@ -451,6 +452,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 /* ── Worker/DB 연동 정보 (고정값 — 접근 제어는 로그인 토큰으로) ── */
 var WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 var DB_ID = '52f9d9a78e8641c598ee686f7466f5bf'; // 공지사항DB
+var REPLY_DB_ID = '99f747942c474dff9a8792fa2e7440cb'; // 회신DB(공지사항DB와 "공지" relation, 2026-07-30 신설) — 속성명(제목/공지/성명/회신파일/제출일자) 고정이라 공지사항DB처럼 classifyPropKey 매핑 불필요
 var CFG = { workerUrl: WORKER_URL, dbId: DB_ID, authToken:'', authExpires:0 };
 (function(){
   try{
@@ -769,6 +771,161 @@ function uploadAttachments(input){
     });
 }
 
+/* ── 회신(직원별 회신파일 제출) — 회신DB(공지사항DB와 "공지" relation), 속성명 고정 ── */
+var REPLY_ATTACHMENTS = [];
+var REPLY_NAMES = []; // 자동완성용 — 전체 회신에서 쓰인 성명 캐시(최초 상세모달 오픈 시 1회 로드)
+var REPLY_NAMES_LOADED = false;
+function parseReplyPage(page){
+  var props = page.properties||{};
+  return {
+    id: page.id,
+    '성명': getPropText(props['성명']),
+    '회신파일': getFileList(props['회신파일']),
+    '제출일자': getPropText(props['제출일자'])
+  };
+}
+function loadReplyNames(){
+  if(REPLY_NAMES_LOADED) return Promise.resolve();
+  return fetch(CFG.workerUrl+'/v1/databases/'+REPLY_DB_ID+'/query', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ page_size:100 })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    var names = (data.results||[]).map(function(p){ return getPropText((p.properties||{})['성명']); }).filter(Boolean);
+    REPLY_NAMES = Array.from(new Set(names)).sort();
+    REPLY_NAMES_LOADED = true;
+    var dl=document.getElementById('replyNameList');
+    if(dl) dl.innerHTML = REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'; }).join('');
+  }).catch(function(){ /* 자동완성 실패는 조용히 무시 — 직접 입력은 항상 가능 */ });
+}
+function buildReplyListHtml(replies){
+  if(!replies.length) return '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">등록된 회신이 없습니다</div>';
+  return replies.map(function(rp){
+    var fileHtml = rp['회신파일'].length
+      ? rp['회신파일'].map(function(a){
+          return '<a class="detail-attach-link plain" href="javascript:void(0)" data-url="'+esc(a.url)+'" data-name="'+esc(a.name||'회신파일')+'" onclick="downloadAttachment(this.dataset.url,this.dataset.name)">'+esc(a.name||'회신파일')+'</a>';
+        }).join(' ')
+      : '<span style="color:var(--txt3);font-size:12px">파일 없음</span>';
+    return '<div class="detail-attach-item">'
+      + '<span class="detail-attach-name">👤 '+esc(rp['성명']||'-')+' · '+esc(fmtDate(rp['제출일자'])||'-')+'</span>'
+      + '<span>'+fileHtml+'</span>'
+      + '</div>';
+  }).join('');
+}
+function loadReplies(noticeId){
+  var wrap=document.getElementById('replyListWrap');
+  if(!wrap) return;
+  fetch(CFG.workerUrl+'/v1/databases/'+REPLY_DB_ID+'/query', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ filter:{ property:'공지', relation:{ contains:noticeId } }, sorts:[{ property:'제출일자', direction:'descending' }] })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data && data.error) throw new Error(data.error.message||data.error);
+    var replies = (data.results||[]).map(parseReplyPage);
+    wrap.innerHTML = buildReplyListHtml(replies);
+  }).catch(function(e){
+    wrap.innerHTML = '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3)">회신 목록을 불러오지 못했습니다: '+esc(e.message)+'</div>';
+  });
+}
+function renderReplyAttachmentChips(){
+  var box=document.getElementById('replyAttachList');
+  if(!box) return;
+  box.innerHTML = REPLY_ATTACHMENTS.map(function(a,i){
+    return '<div class="attach-chip">'
+      + '<span class="ac-kind file">📎 파일</span>'
+      + '<span class="ac-name">'+esc(a.name||a.url)+'</span>'
+      + '<button type="button" class="ac-remove" onclick="removeReplyAttachment('+i+')" aria-label="제거">✕</button>'
+      + '</div>';
+  }).join('');
+}
+function removeReplyAttachment(i){
+  REPLY_ATTACHMENTS.splice(i,1);
+  renderReplyAttachmentChips();
+}
+function uploadReplyAttachments(input){
+  var files = Array.prototype.slice.call(input.files||[]);
+  if(!files.length) return;
+  if(!isAuthed()){
+    document.getElementById('replyAttachStatus').textContent='⚠ 로그인 필요';
+    document.getElementById('replyAttachStatus').className='attach-status err';
+    return;
+  }
+  var statusEl=document.getElementById('replyAttachStatus');
+  var done=0, total=files.length, failed=[];
+  statusEl.textContent='업로드 중... (0/'+total+')';
+  statusEl.className='attach-status';
+  function uploadOne(file){
+    var isImage = file.type && file.type.indexOf('image/')===0;
+    var prep = isImage
+      ? compressImageToLimit(file, IMAGE_MAX_BYTES)
+      : (file.size>FILE_MAX_BYTES ? Promise.reject(new Error('파일 용량 초과 (최대 '+FILE_MAX_LABEL+')')) : Promise.resolve(file));
+    return prep.then(function(outFile){
+      var formData = new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'notice');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(function(data){ REPLY_ATTACHMENTS.push({ name:file.name, url:data.url }); });
+    }).catch(function(e){
+      failed.push(file.name+' ('+e.message+')');
+    }).then(function(){
+      done++;
+      statusEl.textContent='업로드 중... ('+done+'/'+total+')';
+      renderReplyAttachmentChips();
+    });
+  }
+  files.reduce(function(p, file){ return p.then(function(){ return uploadOne(file); }); }, Promise.resolve())
+    .then(function(){
+      input.value='';
+      if(failed.length){
+        statusEl.textContent='⚠ '+(total-failed.length)+'/'+total+'건 업로드 완료, 실패: '+failed.join(', ');
+        statusEl.className='attach-status err';
+      } else {
+        statusEl.textContent='✓ 업로드 완료 ('+total+'건)';
+        statusEl.className='attach-status ok';
+      }
+    });
+}
+function submitReply(noticeId){
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+  var nameEl=document.getElementById('replyName');
+  var name=(nameEl.value||'').trim();
+  if(!name){ alert('성명을 입력해주세요.'); nameEl.focus(); return; }
+  var statusText=(document.getElementById('replyAttachStatus')||{}).textContent||'';
+  if(statusText.indexOf('업로드 중')===0){ alert('회신파일 업로드가 완료될 때까지 기다려주세요.'); return; }
+
+  var btn=document.getElementById('replySubmitBtn');
+  btn.disabled=true; btn.textContent='등록 중...';
+  var today=new Date();
+  var dateStr = today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
+  var properties = {
+    '제목': { title:[{ text:{ content:name+' 회신' } }] },
+    '공지': { relation:[{ id:noticeId }] },
+    '성명': { rich_text:[{ text:{ content:name } }] },
+    '제출일자': { date:{ start:dateStr } },
+    '회신파일': REPLY_ATTACHMENTS.length
+      ? { files: REPLY_ATTACHMENTS.map(function(a){ return { name:(a.name||'회신파일').slice(0,100), type:'external', external:{ url:a.url } }; }) }
+      : { files: [] }
+  };
+  fetch(CFG.workerUrl+'/v1/pages', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ parent:{ database_id:REPLY_DB_ID }, properties:properties })
+  }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(){
+      btn.disabled=false; btn.textContent='회신 등록';
+      nameEl.value='';
+      REPLY_ATTACHMENTS=[];
+      renderReplyAttachmentChips();
+      document.getElementById('replyAttachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
+      document.getElementById('replyAttachStatus').className='attach-status';
+      REPLY_NAMES_LOADED=false; // 새 성명이 추가됐을 수 있으니 다음 오픈 때 자동완성 목록 갱신
+      loadReplies(noticeId);
+      loadData();
+      toast('회신이 등록되었습니다.');
+    }).catch(function(e){
+      btn.disabled=false; btn.textContent='회신 등록';
+      alert('회신 등록 실패: '+e.message);
+      console.error(e);
+    });
+}
+
 /* ── 등록/수정 모달 ── */
 function openAddModal(){
   EDIT_PAGE_ID = null;
@@ -955,11 +1112,40 @@ function openDetailModal(id){
     + '</div>';
   var contentHtml = '<div class="modal-field"><div class="modal-label">내용</div><div class="content-box">'+esc(r['내용']||'-')+'</div></div>';
   var attachHtml = '<div class="modal-field"><div class="modal-label">첨부파일</div>'+buildAttachmentHtml(r['첨부파일']||[])+'</div>';
-  document.getElementById('detailModalBody').innerHTML = infoHtml + contentHtml + attachHtml;
+  var isReal = isRealPageId(id);
+  var replyHtml = '<div class="modal-field">'
+    + '<div class="modal-label">회신 현황</div>'
+    + '<div id="replyListWrap"><div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3)">'+(isReal?'불러오는 중...':'데모 데이터에는 회신 기능을 사용할 수 없습니다.')+'</div></div>'
+    + '</div>'
+    + (isReal ? (
+      '<div class="modal-field">'
+      + '<div class="modal-label">회신 등록</div>'
+      + '<div class="attach-box">'
+      +   '<input id="replyName" class="modal-input" type="text" placeholder="성명" list="replyNameList" style="margin-bottom:8px;max-width:220px"/>'
+      +   '<datalist id="replyNameList">'+REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'; }).join('')+'</datalist>'
+      +   '<div class="attach-row">'
+      +     '<button type="button" class="attach-file-btn" onclick="document.getElementById(\'replyAttachFile\').click()">파일 선택</button>'
+      +     '<span class="attach-status" id="replyAttachStatus">파일을 선택하세요 (여러 개 선택 가능)</span>'
+      +   '</div>'
+      +   '<input type="file" id="replyAttachFile" multiple style="display:none" onchange="uploadReplyAttachments(this)">'
+      +   '<div class="attach-list" id="replyAttachList"></div>'
+      + '</div>'
+      + '<div class="modal-btns" style="justify-content:flex-start;margin-top:10px">'
+      +   '<button class="add-submit-btn" id="replySubmitBtn" onclick="submitReply(\''+id+'\')">회신 등록</button>'
+      + '</div>'
+      + '</div>'
+    ) : '');
+  document.getElementById('detailModalBody').innerHTML = infoHtml + contentHtml + attachHtml + replyHtml;
   document.getElementById('detailModalActions').innerHTML =
     '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
     +'<button class="detail-act-btn detail-del-btn" onclick="deleteRecord(\''+id+'\')">삭제</button>';
   openModal('detailModal');
+  if(isReal){
+    REPLY_ATTACHMENTS = [];
+    renderReplyAttachmentChips();
+    loadReplies(id);
+    loadReplyNames();
+  }
 }
 function closeDetailModal(e){
   closeModal('detailModal', e);
@@ -1035,6 +1221,7 @@ function classifyPropKey(k){
   if(lk.indexOf('고정')>=0) return '고정';
   if(lk.indexOf('작성자')>=0||lk.indexOf('담당자')>=0) return '작성자';
   if(lk.indexOf('첨부')>=0||lk.indexOf('파일')>=0) return '첨부파일';
+  if(lk.indexOf('회신수')>=0) return '회신수'; // "회신"(relation) 프로퍼티와 구분 — "회신수"(rollup)만 매핑
   return null;
 }
 function buildNotionPropMap(props){
@@ -1059,6 +1246,13 @@ function getPropText(p){
   if(p.type==='checkbox') return !!p.checkbox;
   return '';
 }
+function getRollupCount(p){
+  if(!p || p.type!=='rollup') return 0;
+  var rl = p.rollup||{};
+  if(typeof rl.number==='number') return rl.number;
+  if(Array.isArray(rl.array)) return rl.array.length;
+  return 0;
+}
 function getFileList(p){
   if(!p || p.type!=='files' || !p.files) return [];
   return p.files.map(function(f){
@@ -1081,7 +1275,8 @@ function parseNotionPage(page){
     '게시일': date,
     '고정': !!getPropText(get('고정')),
     '작성자': getPropText(get('작성자')),
-    '첨부파일': getFileList(get('첨부파일'))
+    '첨부파일': getFileList(get('첨부파일')),
+    '회신수': getRollupCount(get('회신수'))
   };
 }
 
@@ -1187,7 +1382,7 @@ function renderList(){
   buildCategoryDd();
   var rows = sortedRows(filtered());
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
-  var colCount = 5 + (DELETE_MODE?1:0);
+  var colCount = 6 + (DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML = rows.length
     ? rows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 공지가 없습니다.','🔍')+'</td></tr>';
@@ -1198,12 +1393,14 @@ function buildDetailRow(r){
     ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
     : '';
   var attachCount = (r['첨부파일']||[]).length;
+  var replyCount = r['회신수']||0;
   return '<tr onclick="openDetailModal(\''+r.id+'\')" style="cursor:pointer">' + checkCell
     + '<td style="white-space:nowrap"><span class="cat-badge '+catBadgeClass(r['카테고리'])+'">'+esc(r['카테고리']||'-')+'</span></td>'
     + '<td><div class="title-cell">'+(r['고정']?'<span class="pin-badge">📌 고정</span>':'')+'<span class="title-text">'+esc(r['제목']||'-')+'</span></div></td>'
     + '<td style="white-space:nowrap">'+esc(r['작성자']||'-')+'</td>'
     + '<td style="white-space:nowrap">'+esc(fmtDate(r['게시일'])||'-')+'</td>'
     + '<td class="attach-count">'+(attachCount?attachCount+'건':'-')+'</td>'
+    + '<td class="attach-count">'+(replyCount?replyCount+'건':'-')+'</td>'
     + '</tr>';
 }
 /* ── 행 삭제(체크박스로 전체/개별 선택 후 일괄 삭제) ── */
@@ -1351,6 +1548,7 @@ var EXCEL_COLUMNS_NOTICE=[
   { key:'작성자', header:'작성자' },
   { key:'고정', header:'고정' },
   { key:'첨부수', header:'첨부' },
+  { key:'회신수', header:'회신' },
   { key:'내용', header:'내용', width:40, wrap:true, align:'left' }
 ];
 function excelCharWeight(ch){
@@ -1455,7 +1653,7 @@ function buildExcelReport(opts){
 }
 function exportNoticeExcel(){
   var rows = sortedRows(filtered()).map(function(r){
-    return Object.assign({}, r, { '고정': r['고정']?'고정':'', '첨부수': (r['첨부파일']||[]).length ? (r['첨부파일']||[]).length+'건' : '' });
+    return Object.assign({}, r, { '고정': r['고정']?'고정':'', '첨부수': (r['첨부파일']||[]).length ? (r['첨부파일']||[]).length+'건' : '', '회신수': r['회신수'] ? r['회신수']+'건' : '' });
   });
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
