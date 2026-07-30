@@ -136,7 +136,7 @@ tr:hover td{background:var(--sky50)}
 /* ── 고정 뱃지 ── */
 .pin-badge{display:inline-flex;align-items:center;gap:3px;background:#FFF4D6;color:#8a5a00;border:1px solid #F0D28A;border-radius:var(--r8);padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
 html[data-theme="dark"] .pin-badge{background:rgba(255,196,0,.18);color:#FFD166;border-color:rgba(255,196,0,.35)}
-.attach-count{font-size:11px;color:var(--txt3);white-space:nowrap}
+.attach-count{font-size:11px;color:var(--txt);white-space:nowrap}
 
 /* ── 첨부파일 UI ── */
 .attach-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg)}
@@ -180,7 +180,7 @@ html[data-theme="dark"] .attach-chip .ac-kind.link{background:rgba(52,168,110,.2
 .photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
 
 /* ── 본문 ── */
-.content-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r8);padding:14px;font-size:13.5px;color:var(--txt2);white-space:pre-wrap;word-break:break-word;line-height:1.75}
+.content-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r8);padding:14px;font-size:13.5px;color:var(--txt);white-space:pre-wrap;word-break:break-word;line-height:1.75}
 
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
@@ -333,7 +333,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">작성자</label>
-        <input id="addAuthor" class="modal-input" type="text" placeholder="예) 신종섭"/>
+        <select id="addAuthor" class="modal-select" onchange="onSelectChange(this,'addAuthorCustom')">
+          <option value="__custom__">직접입력</option>
+        </select>
+        <input id="addAuthorCustom" class="modal-input" type="text" placeholder="예) 신종섭" style="margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">첨부파일</label>
@@ -657,6 +660,12 @@ function buildCategorySelectOpts(){
     + '<option value="__custom__">직접입력</option>'
     + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
 }
+function buildAuthorSelectOpts(){
+  var sel = document.getElementById('addAuthor');
+  var values = getUniqueValues('작성자');
+  sel.innerHTML = '<option value="__custom__">직접입력</option>'
+    + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
+}
 
 /* ── 첨부파일(파일 업로드 + M365 링크) ── */
 var ADD_ATTACHMENTS = [];
@@ -775,11 +784,15 @@ function uploadAttachments(input){
 var REPLY_ATTACHMENTS = [];
 var REPLY_NAMES = []; // 자동완성용 — 전체 회신에서 쓰인 성명 캐시(최초 상세모달 오픈 시 1회 로드)
 var REPLY_NAMES_LOADED = false;
+var EDIT_REPLY_ID = null; // null이면 신규 등록, 값이 있으면 해당 회신을 수정 중
+var CURRENT_REPLIES = []; // 현재 열린 공지의 회신 목록 캐시(수정 클릭 시 값 복원용)
+var CURRENT_NOTICE_ID = null; // 현재 열린 공지 페이지 id(회신 삭제 후 목록 재조회용)
 function parseReplyPage(page){
   var props = page.properties||{};
   return {
     id: page.id,
     '성명': getPropText(props['성명']),
+    '내용': getPropText(props['내용']),
     '회신파일': getFileList(props['회신파일']),
     '제출일자': getPropText(props['제출일자'])
   };
@@ -792,9 +805,14 @@ function loadReplyNames(){
     var names = (data.results||[]).map(function(p){ return getPropText((p.properties||{})['성명']); }).filter(Boolean);
     REPLY_NAMES = Array.from(new Set(names)).sort();
     REPLY_NAMES_LOADED = true;
-    var dl=document.getElementById('replyNameList');
-    if(dl) dl.innerHTML = REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'; }).join('');
-  }).catch(function(){ /* 자동완성 실패는 조용히 무시 — 직접 입력은 항상 가능 */ });
+    var sel=document.getElementById('replyNameSelect');
+    if(sel){
+      var cur=sel.value;
+      sel.innerHTML = '<option value="__custom__">직접입력</option>'
+        + REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
+      sel.value = (REPLY_NAMES.indexOf(cur)>=0) ? cur : '__custom__';
+    }
+  }).catch(function(){ /* 자동완성 목록 로드 실패는 조용히 무시 — 직접입력은 항상 가능 */ });
 }
 function buildReplyListHtml(replies){
   if(!replies.length) return '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">등록된 회신이 없습니다</div>';
@@ -804,9 +822,16 @@ function buildReplyListHtml(replies){
           return '<a class="detail-attach-link plain" href="javascript:void(0)" data-url="'+esc(a.url)+'" data-name="'+esc(a.name||'회신파일')+'" onclick="downloadAttachment(this.dataset.url,this.dataset.name)">'+esc(a.name||'회신파일')+'</a>';
         }).join(' ')
       : '<span style="color:var(--txt3);font-size:12px">파일 없음</span>';
-    return '<div class="detail-attach-item">'
-      + '<span class="detail-attach-name">👤 '+esc(rp['성명']||'-')+' · '+esc(fmtDate(rp['제출일자'])||'-')+'</span>'
-      + '<span>'+fileHtml+'</span>'
+    var contentHtml = rp['내용'] ? '<div style="font-size:12.5px;color:var(--txt);margin-top:4px;white-space:pre-wrap">'+esc(rp['내용'])+'</div>' : '';
+    return '<div class="detail-attach-item" style="flex-direction:column;align-items:stretch;gap:4px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">'
+      +   '<span class="detail-attach-name" style="color:var(--txt)">👤 '+esc(rp['성명']||'-')+' · '+esc(fmtDate(rp['제출일자'])||'-')+'</span>'
+      +   '<span style="display:flex;align-items:center;gap:8px">'+fileHtml
+      +     '<button type="button" class="attach-file-btn" style="padding:3px 9px;font-size:11px" onclick="editReply(\''+rp.id+'\')">수정</button>'
+      +     '<button type="button" class="detail-del-btn" style="padding:3px 9px;font-size:11px" onclick="deleteReply(\''+rp.id+'\')">삭제</button>'
+      +   '</span>'
+      + '</div>'
+      + contentHtml
       + '</div>';
   }).join('');
 }
@@ -818,11 +843,59 @@ function loadReplies(noticeId){
     body:JSON.stringify({ filter:{ property:'공지', relation:{ contains:noticeId } }, sorts:[{ property:'제출일자', direction:'descending' }] })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data && data.error) throw new Error(data.error.message||data.error);
-    var replies = (data.results||[]).map(parseReplyPage);
-    wrap.innerHTML = buildReplyListHtml(replies);
+    CURRENT_REPLIES = (data.results||[]).map(parseReplyPage);
+    wrap.innerHTML = buildReplyListHtml(CURRENT_REPLIES);
   }).catch(function(e){
     wrap.innerHTML = '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3)">회신 목록을 불러오지 못했습니다: '+esc(e.message)+'</div>';
   });
+}
+function resetReplyForm(){
+  EDIT_REPLY_ID = null;
+  document.getElementById('replyFormTitle').textContent='회신 등록';
+  document.getElementById('replyNameSelect').value='__custom__';
+  var replyNameCustomEl=document.getElementById('replyNameCustom');
+  replyNameCustomEl.value=''; replyNameCustomEl.style.display='';
+  document.getElementById('replyContent').value='';
+  REPLY_ATTACHMENTS=[];
+  renderReplyAttachmentChips();
+  document.getElementById('replyAttachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
+  document.getElementById('replyAttachStatus').className='attach-status';
+  document.getElementById('replySubmitBtn').textContent='회신 등록';
+  document.getElementById('replyCancelEditBtn').style.display='none';
+}
+function editReply(replyId){
+  var rp = CURRENT_REPLIES.find(function(x){ return x.id===replyId; });
+  if(!rp) return;
+  EDIT_REPLY_ID = replyId;
+  document.getElementById('replyFormTitle').textContent='회신 수정';
+  setFixedSelectValue('replyNameSelect','replyNameCustom', rp['성명']||'');
+  document.getElementById('replyContent').value = rp['내용']||'';
+  REPLY_ATTACHMENTS = (rp['회신파일']||[]).slice();
+  renderReplyAttachmentChips();
+  document.getElementById('replyAttachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
+  document.getElementById('replyAttachStatus').className='attach-status';
+  document.getElementById('replySubmitBtn').textContent='회신 수정';
+  document.getElementById('replyCancelEditBtn').style.display='';
+  document.getElementById('replyFormTitle').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function cancelEditReply(){
+  resetReplyForm();
+}
+function deleteReply(replyId){
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
+  if(!confirm('이 회신을 삭제할까요?')) return;
+  var noticeId = CURRENT_NOTICE_ID;
+  fetch(CFG.workerUrl+'/v1/pages/'+replyId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(){
+      if(EDIT_REPLY_ID===replyId) resetReplyForm();
+      loadReplies(noticeId);
+      loadData();
+      toast('회신이 삭제되었습니다.');
+    }).catch(function(e){
+      alert('삭제 실패: '+e.message);
+      console.error(e);
+    });
 }
 function renderReplyAttachmentChips(){
   var box=document.getElementById('replyAttachList');
@@ -885,43 +958,51 @@ function uploadReplyAttachments(input){
 }
 function submitReply(noticeId){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
-  var nameEl=document.getElementById('replyName');
-  var name=(nameEl.value||'').trim();
-  if(!name){ alert('성명을 입력해주세요.'); nameEl.focus(); return; }
+  var name=getSelectValue('replyNameSelect','replyNameCustom').trim();
+  if(!name){
+    alert('성명을 입력해주세요.');
+    var sel=document.getElementById('replyNameSelect');
+    (sel && sel.value==='__custom__' ? document.getElementById('replyNameCustom') : sel).focus();
+    return;
+  }
+  var content=(document.getElementById('replyContent')||{}).value||'';
+  content=content.trim();
   var statusText=(document.getElementById('replyAttachStatus')||{}).textContent||'';
   if(statusText.indexOf('업로드 중')===0){ alert('회신파일 업로드가 완료될 때까지 기다려주세요.'); return; }
 
+  var isEdit = !!EDIT_REPLY_ID;
   var btn=document.getElementById('replySubmitBtn');
-  btn.disabled=true; btn.textContent='등록 중...';
-  var today=new Date();
-  var dateStr = today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
+  btn.disabled=true; btn.textContent = isEdit ? '수정 중...' : '등록 중...';
   var properties = {
     '제목': { title:[{ text:{ content:name+' 회신' } }] },
-    '공지': { relation:[{ id:noticeId }] },
     '성명': { rich_text:[{ text:{ content:name } }] },
-    '제출일자': { date:{ start:dateStr } },
+    '내용': content ? { rich_text:[{ text:{ content:content } }] } : { rich_text:[] },
     '회신파일': REPLY_ATTACHMENTS.length
       ? { files: REPLY_ATTACHMENTS.map(function(a){ return { name:(a.name||'회신파일').slice(0,100), type:'external', external:{ url:a.url } }; }) }
       : { files: [] }
   };
-  fetch(CFG.workerUrl+'/v1/pages', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ parent:{ database_id:REPLY_DB_ID }, properties:properties })
-  }).then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+  var reqUrl, reqBody;
+  if(isEdit){
+    reqUrl = CFG.workerUrl+'/v1/pages/'+EDIT_REPLY_ID;
+    reqBody = JSON.stringify({ properties:properties });
+  } else {
+    var today=new Date();
+    properties['공지'] = { relation:[{ id:noticeId }] };
+    properties['제출일자'] = { date:{ start: today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate()) } };
+    reqUrl = CFG.workerUrl+'/v1/pages';
+    reqBody = JSON.stringify({ parent:{ database_id:REPLY_DB_ID }, properties:properties });
+  }
+  fetch(reqUrl, { method: isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
     .then(function(){
-      btn.disabled=false; btn.textContent='회신 등록';
-      nameEl.value='';
-      REPLY_ATTACHMENTS=[];
-      renderReplyAttachmentChips();
-      document.getElementById('replyAttachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
-      document.getElementById('replyAttachStatus').className='attach-status';
-      REPLY_NAMES_LOADED=false; // 새 성명이 추가됐을 수 있으니 다음 오픈 때 자동완성 목록 갱신
+      resetReplyForm();
+      REPLY_NAMES_LOADED=false; // 새/변경된 성명이 있을 수 있으니 다음 오픈 때 자동완성 목록 갱신
       loadReplies(noticeId);
       loadData();
-      toast('회신이 등록되었습니다.');
+      toast(isEdit ? '회신이 수정되었습니다.' : '회신이 등록되었습니다.');
     }).catch(function(e){
-      btn.disabled=false; btn.textContent='회신 등록';
-      alert('회신 등록 실패: '+e.message);
+      btn.disabled=false; btn.textContent = isEdit ? '회신 수정' : '회신 등록';
+      alert((isEdit?'회신 수정':'회신 등록')+' 실패: '+e.message);
       console.error(e);
     });
 }
@@ -932,12 +1013,14 @@ function openAddModal(){
   ADD_ATTACHMENTS = [];
   document.getElementById('addModalTitleText').textContent='신규 공지 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
-  ['addTitle','addContent','addAuthor','addCategoryCustom'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['addTitle','addContent','addCategoryCustom'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('addPinned').checked=false;
   var today=new Date();
   document.getElementById('addDate').value = today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
   buildCategorySelectOpts();
   setFixedSelectValue('addCategory','addCategoryCustom','');
+  buildAuthorSelectOpts();
+  setFixedSelectValue('addAuthor','addAuthorCustom','');
   document.getElementById('attachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
@@ -958,11 +1041,12 @@ function openEditModal(pageId){
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addTitle').value = r['제목']||'';
   document.getElementById('addContent').value = r['내용']||'';
-  document.getElementById('addAuthor').value = r['작성자']||'';
   document.getElementById('addDate').value = r['게시일']||'';
   document.getElementById('addPinned').checked = !!r['고정'];
   buildCategorySelectOpts();
   setFixedSelectValue('addCategory','addCategoryCustom', r['카테고리']||'');
+  buildAuthorSelectOpts();
+  setFixedSelectValue('addAuthor','addAuthorCustom', r['작성자']||'');
   document.getElementById('attachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
@@ -984,7 +1068,7 @@ function submitAddForm(){
   var attachStatusText = (document.getElementById('attachStatus')||{}).textContent||'';
   if(attachStatusText.indexOf('업로드 중')===0){ alert('첨부파일 업로드가 완료될 때까지 기다려주세요.'); return; }
 
-  var author = document.getElementById('addAuthor').value.trim();
+  var author = getSelectValue('addAuthor','addAuthorCustom').trim();
   var pinned = document.getElementById('addPinned').checked;
 
   var btn=document.getElementById('addSubmitBtn'), lbl=document.getElementById('addSubmitLabel');
@@ -1119,10 +1203,14 @@ function openDetailModal(id){
     + '</div>'
     + (isReal ? (
       '<div class="modal-field">'
-      + '<div class="modal-label">회신 등록</div>'
+      + '<div class="modal-label" id="replyFormTitle">회신 등록</div>'
       + '<div class="attach-box">'
-      +   '<input id="replyName" class="modal-input" type="text" placeholder="성명" list="replyNameList" style="margin-bottom:8px;max-width:220px"/>'
-      +   '<datalist id="replyNameList">'+REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'; }).join('')+'</datalist>'
+      +   '<select id="replyNameSelect" class="modal-select" onchange="onSelectChange(this,\'replyNameCustom\')" style="margin-bottom:8px;max-width:220px">'
+      +     '<option value="__custom__">직접입력</option>'
+      +     REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('')
+      +   '</select>'
+      +   '<input id="replyNameCustom" class="modal-input" type="text" placeholder="성명 입력" style="margin-bottom:8px;max-width:220px"/>'
+      +   '<textarea id="replyContent" class="modal-textarea" placeholder="회신 내용(선택)" style="margin-bottom:8px;min-height:60px"></textarea>'
       +   '<div class="attach-row">'
       +     '<button type="button" class="attach-file-btn" onclick="document.getElementById(\'replyAttachFile\').click()">파일 선택</button>'
       +     '<span class="attach-status" id="replyAttachStatus">파일을 선택하세요 (여러 개 선택 가능)</span>'
@@ -1132,6 +1220,7 @@ function openDetailModal(id){
       + '</div>'
       + '<div class="modal-btns" style="justify-content:flex-start;margin-top:10px">'
       +   '<button class="add-submit-btn" id="replySubmitBtn" onclick="submitReply(\''+id+'\')">회신 등록</button>'
+      +   '<button class="modal-cancel" id="replyCancelEditBtn" style="display:none" onclick="cancelEditReply()">취소</button>'
       + '</div>'
       + '</div>'
     ) : '');
@@ -1141,6 +1230,8 @@ function openDetailModal(id){
     +'<button class="detail-act-btn detail-del-btn" onclick="deleteRecord(\''+id+'\')">삭제</button>';
   openModal('detailModal');
   if(isReal){
+    CURRENT_NOTICE_ID = id;
+    EDIT_REPLY_ID = null;
     REPLY_ATTACHMENTS = [];
     renderReplyAttachmentChips();
     loadReplies(id);
