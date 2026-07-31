@@ -2341,7 +2341,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      <div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
+      ${tabId==='elec' ? '' : `<div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>`}
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -2671,9 +2671,9 @@ function buildElecChkHintHtml(chkSrc){
 }
 // 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
 function buildElecFormExtra(r){
-  let acbHtml='<div class="form-group-hd">2. 점 검 내 역</div>';
+  let acbHtml='<div class="form-group-hd">2. 점 검 내 역</div><div id="elecAcbRow" style="display:flex;gap:14px;flex-wrap:wrap">';
   ACB_TYPES.forEach((t,ti)=>{
-    acbHtml+=`<div class="form-group-hd" style="font-size:12px">측정개소 : ${esc(t)} ABC 2차</div>
+    acbHtml+=`<div><div class="form-group-hd" style="font-size:12px">측정개소 : ${esc(t)} ABC 2차</div>
       <div class="tbl-wrap" style="margin-bottom:12px"><table><thead><tr><th>위상</th><th>전압(V)</th><th>전류(A)</th><th>누설전류(mA)</th></tr></thead><tbody>`;
     ACB_PHASES.forEach(ph=>{
       const rec=elecAcbLookup(r, t, ph);
@@ -2683,8 +2683,9 @@ function buildElecFormExtra(r){
         <td><input class="modal-input elec-grid-input" type="number" step="0.01" id="acbl_${ti}_${ph.key}" value="${rec&&rec.누설전류!=null?rec.누설전류:''}"/></td>
       </tr>`;
     });
-    acbHtml+='</tbody></table></div>';
+    acbHtml+='</tbody></table></div></div>';
   });
+  acbHtml+='</div>';
   // 유효전력량(kWh)/무효전력량(kVar)/최대전력(kW)/배율/역률(%)은 elec1(부모)이 아니라 elec2(ACB)DB
   // 속성이고, ACB 9건 전부 같은 값이 반복 저장되는 구조(2026-07-21 실스키마 확인) — 입력창은 1벌만
   // 두고 저장 시 9건 모두에 복사해서 쓴다. 대표값은 기존 ACB 레코드 중 첫 번째(_acb[0])에서 가져온다.
@@ -2774,6 +2775,35 @@ function syncElecTunnelDefaults(){
   if(hintWrap) hintWrap.innerHTML=buildElecChkHintHtml(latest);
   const chkWrap=document.getElementById('elecChkGridWrap');
   if(chkWrap) chkWrap.innerHTML=buildElecChkGridHtml(latest);
+  applyElecChkFlex();
+}
+// 저압/특고(고압)설비 표 2개를 elecFormWrap 폭(측정개소 기준) 전체에 맞춰 균등하게 늘린다 — 표 자체는
+// width:auto가 기본이라 별도로 flex:1 + table width:100%를 지정해야 폭을 채운다. elecChkGridWrap의
+// innerHTML이 터널 변경마다 새로 그려지므로(syncElecTunnelDefaults) 매번 다시 적용해야 한다.
+function applyElecChkFlex(){
+  const inner=document.querySelector('#elecChkGridWrap > div');
+  if(!inner) return;
+  inner.style.width='100%';
+  inner.querySelectorAll(':scope > .tbl-wrap').forEach(tw=>{
+    tw.style.flex='1 1 0'; tw.style.minWidth='0';
+    const tbl=tw.querySelector('table');
+    if(tbl) tbl.style.width='100%';
+  });
+}
+// 전기설비기록 입력폼 전체 폭 정렬 — 측정개소(조명/일반/동력 3개 표) 행의 실제 콘텐츠 폭을 기준으로
+// #elecFormWrap 너비를 맞춰서, 가동정보/기본사항/구분/종합의견 등 grid 영역은 그 폭 안으로 자연스럽게
+// 좁아지고(block 요소 기본 100% 채움), 저압/특고설비 표는 applyElecChkFlex()로 그 폭까지 늘려 전체
+// 섹션의 좌우 폭을 측정개소 표에 맞춰 통일한다(2026-07-31 사용자 요청).
+function syncElecFormWidth(){
+  const wrap=document.getElementById('elecFormWrap');
+  const acbRow=document.getElementById('elecAcbRow');
+  if(!wrap || !acbRow || !acbRow.children.length) return;
+  const contLeft=acbRow.getBoundingClientRect().left;
+  let maxRight=0;
+  Array.from(acbRow.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
+  if(maxRight<=0) return;
+  wrap.style.width=`min(${Math.ceil(maxRight)}px, 100%)`;
+  applyElecChkFlex();
 }
 // 발전기점검 탭 전용 — 특정 터널의 가장 최근 레코드(가동일자 내림차순으로 이미 정렬된 TAB_STATE 기준
 // 첫 매치) — 유류/운전값/체크리스트 기본값 채움에 공용으로 재사용
@@ -3055,7 +3085,8 @@ function openAddModal(tabId, recordId){
   if(tabId==='generator') html+=buildGeneratorFormExtra(r);
   if(tabId==='transformer') html+=buildTransformerRefHtml();
   if(tabId==='photo' && !r) html+='<div id="photoMultiWrap"></div>';
-  document.getElementById('addModalFields').innerHTML=html;
+  document.getElementById('addModalFields').innerHTML = tabId==='elec' ? ('<div id="elecFormWrap">'+html+'</div>') : html;
+  if(tabId==='elec') syncElecFormWidth();
   // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
   // 이미 넓게 확장돼 있었음. monthly(캐스케이드셀렉트 3개+장문 점검내용)와 task(장문 업무내용·
   // 조치사항)도 필드 수·입력폭이 비슷해 좁은 440px에서는 답답해 보인다는 피드백으로 함께 확장
