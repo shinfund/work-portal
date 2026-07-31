@@ -89,7 +89,17 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
 .top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
-.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+html[data-theme="dark"] .top-tab.active{color:#fff}
+/* 밑줄을 버튼 전체 폭 대비 %가 아니라 글자 자체(tt-label, 내용만큼만 넓어지는 inline-block)에
+   달아서, 글자가 길어질수록 밑줄이 상대적으로 짧아 보이던 문제를 없앤다(2026-07-31 사용자 지적). */
+.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab.active .tt-label{border-bottom-color:var(--sky)}
+/* 입력폼 탭의 구획 헤더("1.기본사항" 등)·표 컬럼 헤더("위상","전압(V)" 등) — 라이트모드는 기존
+   진한 남색+굵게 유지, 다크모드만 흰색+보통 굵기로 통일(2026-07-31 사용자 요청 — 다크모드 가독성 우선). */
+html[data-theme="dark"] .form-group-hd,
+html[data-theme="dark"] .report-section-hd,
+html[data-theme="dark"] th,
+html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 
 /* ── MAIN ── */
 .main{padding:10px 12px;max-width:1400px;margin:0 auto}
@@ -451,15 +461,15 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼(작업중)</button>
-  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')">보고서(작업중)</button>
-  <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
-  <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
-  <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
-  <button class="top-tab" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')">발전기점검</button>
-  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
-  <button class="top-tab" id="nav-power" role="tab" aria-selected="false" aria-controls="panel-power" onclick="switchPanel('power')">전력사용량</button>
-  <button class="top-tab" id="nav-task" role="tab" aria-selected="false" aria-controls="panel-task" onclick="switchPanel('task')">업무처리</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼(작업중)</span></button>
+  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서(작업중)</span></button>
+  <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')"><span class="tt-label">월간점검</span></button>
+  <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')"><span class="tt-label">전기설비기록</span></button>
+  <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')"><span class="tt-label">변압기온도</span></button>
+  <button class="top-tab" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')"><span class="tt-label">발전기점검</span></button>
+  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')"><span class="tt-label">점검사진</span></button>
+  <button class="top-tab" id="nav-power" role="tab" aria-selected="false" aria-controls="panel-power" onclick="switchPanel('power')"><span class="tt-label">전력사용량</span></button>
+  <button class="top-tab" id="nav-task" role="tab" aria-selected="false" aria-controls="panel-task" onclick="switchPanel('task')"><span class="tt-label">업무처리</span></button>
 </div>
 
 <!-- MAIN -->
@@ -480,7 +490,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">보고서 생성</div>
         <div class="sc report-toolbar" id="reportGenSelBar" style="flex-shrink:0;width:auto"></div>
       </div>
-      <div id="reportGenDynamic"></div>
+      <div id="reportGenDynamic" style="max-width:700px"></div>
     </div>
   </div>
 
@@ -2794,7 +2804,15 @@ function applyElecChkFlex(){
 // #elecFormWrap 너비를 맞춰서, 가동정보/기본사항/구분/종합의견 등 grid 영역은 그 폭 안으로 자연스럽게
 // 좁아지고(block 요소 기본 100% 채움), 저압/특고설비 표는 applyElecChkFlex()로 그 폭까지 늘려 전체
 // 섹션의 좌우 폭을 측정개소 표에 맞춰 통일한다(2026-07-31 사용자 요청).
+// 기준 카드 폭 정렬은 보고서입력 탭(#addModal이 report-paper 안에 인라인으로 옮겨진 상태, 폭이
+// 1400px까지 넓어짐)에서만 의미가 있다 — 같은 openAddModal을 재사용하는 클래식 신규등록 팝업(폭이
+// 이미 440~750px로 좁음)에서까지 실행되면 오히려 기준 카드보다 더 좁게 눌려 보이는 역효과가 난다
+// (예: 점검사진 신규등록 팝업이 사진 1칸 폭까지 눌림, 2026-07-31 사용자 지적으로 발견).
+function isInlineReportModal(){
+  return document.getElementById('addModal')?.classList.contains('modal-inline');
+}
 function syncElecFormWidth(){
+  if(!isInlineReportModal()) return;
   const wrap=document.getElementById('elecFormWrap');
   const acbRow=document.getElementById('elecAcbRow');
   if(!wrap || !acbRow || !acbRow.children.length) return;
@@ -2842,6 +2860,7 @@ function buildGeneratorChkGridHtml(chkSrc){
 // 맞춰지게 한다(block 요소 기본 100% 채움) — buildElecFormExtra의 syncElecFormWidth와 동일 원리
 // (2026-07-31 사용자 요청: 기준 카드를 먼저 정하고 나머지를 거기에 맞추는 방식).
 function syncGeneratorFormWidth(){
+  if(!isInlineReportModal()) return;
   const wrap=document.getElementById('generatorFormWrap');
   const chkRow=document.getElementById('generatorChkRow');
   if(!wrap || !chkRow || !chkRow.children.length) return;
@@ -3304,6 +3323,7 @@ function renderPhotoMultiRows(){
 // 줄바꿈 결과)를 기준 카드로 삼아, 위 기본정보(터널명/일자/제목) grid를 그 폭에 맞춘다 — 다른 탭의
 // 기준 카드 폭 정렬과 동일 원리(2026-07-31 사용자 요청).
 function syncPhotoFormWidth(){
+  if(!isInlineReportModal()) return;
   const wrap=document.getElementById('photoFormWrap');
   const gridRow=document.getElementById('photoMultiGridRow');
   if(!wrap || !gridRow || !gridRow.children.length) return;
@@ -5939,11 +5959,42 @@ function taskAddRow(){
   _taskExtraRows.push({key:_taskExtraNextKey++});
   renderTaskBody();
 }
-// 업체명 자유서술 입력에 과거 입력값을 목록으로 제안(datalist) — 직접입력도 그대로 가능(2026-07-31 사용자 요청).
-function taskCompanyOptions(){
+function taskToggleSelectAll(checked){
+  document.querySelectorAll('#rpTaskBody .task-row-chk').forEach(c=>{ c.checked=checked; });
+}
+// 체크된 행 일괄 삭제 — 저장된 레코드(data-id)는 노션 휴지통 이동, 아직 저장 안 된 빈 행(data-extra-key)은
+// 배열에서 제거만 한다(2026-07-31 사용자 요청 — 비고 컬럼 뒤 개별 삭제 버튼 대신 체크박스 방식 채택).
+async function taskDeleteSelected(){
+  const boxes=Array.from(document.querySelectorAll('#rpTaskBody .task-row-chk:checked'));
+  if(!boxes.length){ alert('삭제할 행을 선택해주세요.'); return; }
+  if(!confirm(boxes.length+'건을 삭제할까요? 저장된 기록은 되돌릴 수 없습니다.')) return;
+  const ids=boxes.map(c=>c.dataset.id).filter(Boolean);
+  const extraKeys=boxes.map(c=>c.dataset.extraKey).filter(Boolean).map(Number);
+  if(extraKeys.length) _taskExtraRows=_taskExtraRows.filter(r=>!extraKeys.includes(r.key));
+  if(ids.length){
+    if(!isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
+    try{
+      await runWithConcurrency(ids.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true})), 6);
+      await loadTabData('task');
+    }catch(e){ alert('일부 삭제 실패: '+e.message); console.error(e); }
+  }
+  toast((ids.length+extraKeys.length)+'건 삭제되었습니다.');
+  if(_reportCurPage==='task') renderTaskBody();
+}
+// 업체명 자유서술 입력에 과거 입력값을 목록으로 제안 — 전체 터널을 다 섞으면 관계없는 업체까지
+// 너무 많이 나온다는 지적(2026-07-31)으로 현재 페이지 터널의 기록만 후보로 좁힌다.
+function taskCompanyOptions(tunnel){
   const set=new Set();
-  (TAB_STATE.task.records||[]).forEach(r=>{ if(r['업체명']) set.add(r['업체명']); });
+  (TAB_STATE.task.records||[]).forEach(r=>{ if(r['업체명'] && r['터널명']===tunnel) set.add(r['업체명']); });
   return [...set].sort();
+}
+function selCustomValue(selectEl){
+  if(!selectEl) return '';
+  if(selectEl.value==='__custom__'){
+    const ci=selectEl.nextElementSibling;
+    return ci ? ci.value.trim() : '';
+  }
+  return selectEl.value;
 }
 function renderTaskBody(){
   const wrap=document.getElementById('rpTaskBody');
@@ -5955,23 +6006,37 @@ function renderTaskBody(){
   // 빈 화면으로 시작하면 "+ 행 추가"를 여러 번 눌러야 해서, 기존 건수와 합쳐 최소 10행은 항상
   // 보이게 빈 행을 미리 채워둔다(2026-07-31 사용자 요청).
   while(recs.length + _taskExtraRows.length < 10){ _taskExtraRows.push({key:_taskExtraNextKey++}); }
-  const cells=(dateVal, content, action, company, note)=>`
-      <td><input type="date" class="modal-input tk-date" style="width:100%" value="${esc(dateVal)}"></td>
+  const companyOpts=taskCompanyOptions(tunnel);
+  const cells=(rowKey, dateVal, content, action, company, note)=>{
+    const isCustomCompany=company && !companyOpts.includes(company);
+    return `<td><input type="date" class="modal-input tk-date" style="width:100%" value="${esc(dateVal)}"></td>
       <td><input type="text" class="modal-input tk-content" value="${esc(content)}"></td>
       <td><input type="text" class="modal-input tk-action" value="${esc(action)}"></td>
-      <td><input type="text" class="modal-input tk-company" value="${esc(company)}" list="taskCompanyList"></td>
+      <td>
+        <select class="modal-select tk-company" onchange="onSelectChange(this,'tkc_${rowKey}')">
+          <option value=""${company?'':' selected'}>선택</option>
+          <option value="__custom__"${isCustomCompany?' selected':''}>직접입력</option>
+          ${companyOpts.map(v=>`<option value="${esc(v)}"${v===company?' selected':''}>${esc(v)}</option>`).join('')}
+        </select>
+        <input id="tkc_${rowKey}" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomCompany?'':'none'};margin-top:4px" value="${isCustomCompany?esc(company):''}">
+      </td>
       <td><input type="text" class="modal-input tk-note" value="${esc(note)}"></td>`;
-  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`).join('');
-  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}</tr>`).join('');
-  wrap.innerHTML=`<datalist id="taskCompanyList">${taskCompanyOptions().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
-    <div class="tbl-wrap"><table class="rc-monthly-table">
-      <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th>업체명</th><th>비고</th></tr></thead>
+  };
+  const chk=(attr)=>`<td><input type="checkbox" class="task-row-chk" ${attr}></td>`;
+  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${cells('e'+r.id, r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`).join('');
+  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${cells('x'+String(row.key).replace('.','_'), '','','','','')}</tr>`).join('');
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+      <thead><tr><th style="width:34px"><input type="checkbox" id="taskDelAll" onchange="taskToggleSelectAll(this.checked)"></th><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:150px">업체명</th><th>비고</th></tr></thead>
       <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
-    <div style="margin-top:10px"><button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button></div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button>
+      <button type="button" class="tb-action-btn tb-delete" onclick="taskDeleteSelected()">선택 삭제</button>
+    </div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
-  autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-company':110, 'tk-note':90});
+  wrap.querySelectorAll('.tk-company').forEach(sel=>{ sel.style.width='100%'; });
+  autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-note':90});
 }
 // 표 형식 입력폼(업무처리/고장수리 등) 전용 — 컬럼별 실제 입력값 중 가장 긴 텍스트 폭을 caret 기준으로
 // 측정해 그 컬럼의 모든 입력창 너비를 맞춘다(스프레드시트의 "열 너비 자동맞춤"과 동일 개념). td에
@@ -5980,17 +6045,24 @@ function renderTaskBody(){
 function autoSizeTableColumns(wrap, colMinWidths){
   const probe=wrap.querySelector('.modal-input');
   if(!probe) return;
-  const cs=getComputedStyle(probe);
-  const canvas=autoSizeTableColumns._canvas||(autoSizeTableColumns._canvas=document.createElement('canvas'));
-  const ctx=canvas.getContext('2d');
-  ctx.font=`${cs.fontSize} ${cs.fontFamily}`;
+  // canvas measureText는 폰트 폴백이 실제 DOM 렌더링과 미세하게 달라 한글에서 실측보다 좁게
+  // 나와 여전히 잘리는 경우가 있었다(2026-07-31) — 화면 밖 숨김 span에 같은 클래스·폰트로
+  // 직접 렌더링해 실제 필요한 폭을 그대로 재는 방식으로 교체(브라우저 텍스트 레이아웃 엔진 그대로 사용).
+  const probeCs=getComputedStyle(probe);
+  const span=document.createElement('span');
+  span.style.cssText='position:absolute;visibility:hidden;white-space:pre;left:-9999px;top:-9999px;';
+  span.style.font=`${probeCs.fontWeight} ${probeCs.fontSize} ${probeCs.fontFamily}`;
+  span.style.letterSpacing=probeCs.letterSpacing;
+  document.body.appendChild(span);
+  const padBorder=(parseFloat(probeCs.paddingLeft)||0)+(parseFloat(probeCs.paddingRight)||0)+(parseFloat(probeCs.borderLeftWidth)||0)+(parseFloat(probeCs.borderRightWidth)||0);
   Object.entries(colMinWidths).forEach(([cls,minW])=>{
     const inputs=wrap.querySelectorAll('.'+cls);
     let max=0;
-    inputs.forEach(inp=>{ max=Math.max(max, ctx.measureText(inp.value||'').width); });
-    const w=Math.min(560, Math.max(minW, Math.ceil(max)+28));
+    inputs.forEach(inp=>{ span.textContent=inp.value||''; max=Math.max(max, span.getBoundingClientRect().width); });
+    const w=Math.min(560, Math.max(minW, Math.ceil(max+padBorder)+8));
     inputs.forEach(inp=>{ inp.style.width=w+'px'; });
   });
+  span.remove();
 }
 async function submitTaskReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
@@ -6001,7 +6073,7 @@ async function submitTaskReportForm(){
     const date=tr.querySelector('.tk-date').value;
     const content=tr.querySelector('.tk-content').value.trim();
     const action=tr.querySelector('.tk-action').value;
-    const company=tr.querySelector('.tk-company').value;
+    const company=selCustomValue(tr.querySelector('.tk-company'));
     const note=tr.querySelector('.tk-note').value;
     if(!date && !content) return; // 완전히 빈 행은 건너뜀
     targets.push({id:tr.dataset.id||null, date, content, action, company, note});
@@ -6428,13 +6500,16 @@ function renderPowerGrid(){
     const mainV=rec&&rec['MAIN(kWh)']!=null?rec['MAIN(kWh)']:'';
     const lightV=rec&&rec['조명용(kWh)']!=null?rec['조명용(kWh)']:'';
     rows+=`<tr data-date="${dateStr}">
-      <td style="padding:4px 8px;font-size:12.5px">${month}월 ${d}일</td>
-      <td><input class="modal-input pw-main" type="text" inputmode="decimal" style="width:100px" value="${formatThousands(mainV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
-      <td><input class="modal-input pw-light" type="text" inputmode="decimal" style="width:100px" value="${formatThousands(lightV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
-      <td><input class="modal-input pw-note" type="text" style="width:140px" value="${esc((rec&&rec['비고'])||'')}"></td>
+      <td style="padding:4px 8px;font-size:12.5px;text-align:center">${month}월 ${d}일</td>
+      <td><input class="modal-input pw-main" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(mainV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
+      <td><input class="modal-input pw-light" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(lightV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
+      <td><input class="modal-input pw-note" type="text" style="width:100%" value="${esc((rec&&rec['비고'])||'')}"></td>
     </tr>`;
   }
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th>날짜</th><th>MAIN (kWh)</th><th>조명용 (kWh)</th><th>비고</th></tr></thead><tbody>${rows}</tbody></table></div>
+  // 컬럼 폭 — 실제 A4 세로 엑셀 리포트(전력사용량표, buildPowerReportSheet)의 4개 컬럼이 모두
+  // 동일 폭(32.79 엑셀 단위 ≈ 230px)이라 입력폼도 동일 비율로 맞춘다(2026-07-31 사용자 지적 —
+  // 기존엔 표가 너무 좁아 A4 인쇄 폭과 안 맞았음). table-layout:fixed로 th 폭을 그대로 강제한다.
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table" style="table-layout:fixed;width:920px"><thead><tr><th style="width:230px">날짜</th><th style="width:230px">MAIN (kWh)</th><th style="width:230px">조명용 (kWh)</th><th style="width:230px">비고</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpPowerProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpPowerProgressBar"></div></div>`;
 }
@@ -6688,6 +6763,10 @@ const REPORT_TUNNELS=['청하터널(주)','청하터널(부)','흥해터널','�
 // 분리 유지하되, 엑셀 생성 시에는 "청하터널" 통합 옵션을 고르면 buildOneUnifiedReport의 기존
 // unifiedTunnelSplit 로직이 (주)+(부)를 시트 2개로 합쳐 파일 1개로 만들어준다(2026-07-31 사용자 요청).
 const REPORT_GEN_TUNNELS=['청하터널','청하터널(주)','청하터널(부)','흥해터널','남정5터널'];
+// "전체 터널" 배치 생성 시 파일 단위 목록 — 청하터널은 (주)/(부) 개별이 아니라 통합본 하나로 생성한다
+// (2026-07-31 사용자 요청: 청하터널(주)/(부)는 목록에 있지만 배치 대상이 아니라 개별 지정 전용).
+const REPORT_GEN_ALL_TUNNEL_LIST=['청하터널','흥해터널','남정5터널'];
+let REPORT_GEN_ALL_TUNNELS=false;
 // 입력폼 9페이지 중 실제로 (주)/(부) 설비 스펙이 갈리는 5페이지만 분리 선택하고, 나머지(표지·월간점검·
 // 업무처리·간지)는 애초에 노션 저장 값도 base tunnel(reportBaseTunnel)이라 "청하터널" 단일 옵션만
 // 보여준다(2026-07-31 사용자 요청 — 페이지 이동 시 드롭다운 옵션 자체를 갈아끼움).
@@ -6851,7 +6930,7 @@ function initReportGenTab(){
     document.getElementById('reportGenSelBar').innerHTML=
       `<div class="dd-wrap" id="rgTunnelWrap">
         <button class="dd-btn" id="rgTunnelBtn" type="button" onclick="toggleDd('rgTunnelMenu','rgTunnelBtn')" aria-haspopup="listbox" aria-label="터널 선택"><span id="rgTunnelLabel"></span></button>
-        <div class="dd-menu" id="rgTunnelMenu">${REPORT_GEN_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
+        <div class="dd-menu" id="rgTunnelMenu"><div class="dd-opt" data-val="__all__">전체 터널</div>${REPORT_GEN_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
       </div>
       <input id="rgTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접입력" style="display:none;width:130px;flex-shrink:0" onchange="onReportGenTunnelCustomChange(this.value)"/>
       <div class="dd-wrap" id="rgYearWrap">
@@ -6873,11 +6952,17 @@ function initReportGenTab(){
       const opt=e.target.closest('.dd-opt'); if(!opt) return;
       closeDd('rgTunnelMenu','rgTunnelBtn');
       if(opt.dataset.val==='__custom__'){
+        REPORT_GEN_ALL_TUNNELS=false;
         const ci=document.getElementById('rgTunnelCustom');
         ci.style.display=''; ci.value=REPORT_GEN_TUNNELS.includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
         return;
       }
       document.getElementById('rgTunnelCustom').style.display='none';
+      if(opt.dataset.val==='__all__'){
+        REPORT_GEN_ALL_TUNNELS=true; syncReportGenSelLabels(); renderReportGenBody();
+        return;
+      }
+      REPORT_GEN_ALL_TUNNELS=false;
       REPORT_SEL.tunnel=opt.dataset.val; syncReportGenSelLabels(); renderReportGenBody();
     });
     document.getElementById('rgYearMenu').addEventListener('click', e=>{
@@ -6895,14 +6980,15 @@ function initReportGenTab(){
 function onReportGenTunnelCustomChange(v){
   v=(v||'').trim();
   if(!v) return;
+  REPORT_GEN_ALL_TUNNELS=false;
   REPORT_SEL.tunnel=v;
   syncReportGenSelLabels();
   renderReportGenBody();
 }
 function syncReportGenSelLabels(){
-  const isCustomTunnel=!REPORT_GEN_TUNNELS.includes(REPORT_SEL.tunnel);
-  document.getElementById('rgTunnelLabel').textContent=REPORT_SEL.tunnel||'터널 선택';
-  document.querySelectorAll('#rgTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val==='__custom__'?isCustomTunnel:o.dataset.val===REPORT_SEL.tunnel));
+  const isCustomTunnel=!REPORT_GEN_ALL_TUNNELS && !REPORT_GEN_TUNNELS.includes(REPORT_SEL.tunnel);
+  document.getElementById('rgTunnelLabel').textContent=REPORT_GEN_ALL_TUNNELS ? '전체 터널' : (REPORT_SEL.tunnel||'터널 선택');
+  document.querySelectorAll('#rgTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', REPORT_GEN_ALL_TUNNELS ? o.dataset.val==='__all__' : (o.dataset.val==='__custom__'?isCustomTunnel:o.dataset.val===REPORT_SEL.tunnel)));
   document.getElementById('rgYearLabel').textContent=REPORT_SEL.year+'년';
   document.getElementById('rgMonthLabel').textContent=Number(REPORT_SEL.month)+'월';
   document.querySelectorAll('#rgYearMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.year));
@@ -6936,8 +7022,8 @@ function renderReportGenBody(){
       <button type="button" class="report-page-chip" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
     </div>`).join('');
   wrap.innerHTML=`
-    <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)} · ${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
-    <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
+    <div class="rc-monthly-sub">□ ${REPORT_GEN_ALL_TUNNELS?'전체 터널('+REPORT_GEN_ALL_TUNNEL_LIST.join('·')+')':esc(REPORT_SEL.tunnel)} · ${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.6">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.${REPORT_GEN_ALL_TUNNELS?' 전체 터널을 각각 별도 파일로 생성합니다.':''}</div>
     <div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:2px solid var(--border)">
       <label style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer;font-weight:800">
         <input type="checkbox" ${allChecked?'checked':''} onchange="toggleReportGenSelectAll()"/> 전체 선택
@@ -6951,7 +7037,28 @@ function renderReportGenBody(){
 async function generateSelectedReport(){
   if(!REPORT_GEN_SELECTED.size){ alert('생성할 시트를 하나 이상 선택해주세요.'); return; }
   const allSelected=REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length;
-  await runReportGenBuild(document.getElementById('reportGenSelBtn'), document.getElementById('reportGenSelLbl'), '보고서 생성', allSelected ? null : new Set(REPORT_GEN_SELECTED));
+  const sections=allSelected ? null : new Set(REPORT_GEN_SELECTED);
+  const btn=document.getElementById('reportGenSelBtn'), lbl=document.getElementById('reportGenSelLbl');
+  if(REPORT_GEN_ALL_TUNNELS){ await runReportGenBuildAllTunnels(btn, lbl, '보고서 생성', sections); return; }
+  await runReportGenBuild(btn, lbl, '보고서 생성', sections);
+}
+// "전체 터널" 배치 생성 — 터널별로 순차 생성(동시에 여러 파일 다운로드를 트리거하면 브라우저가 일부를
+// 막는 경우가 있어 순차 처리, 2026-07-31 사용자 요청).
+async function runReportGenBuildAllTunnels(btn, lbl, defaultLabel, sections){
+  const year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
+  btn.disabled=true;
+  const wrap=document.getElementById('reportGenProgressWrap'), bar=document.getElementById('reportGenProgressBar');
+  wrap.style.display=''; bar.style.width='0%';
+  let done=0, failed=[];
+  for(const tunnel of REPORT_GEN_ALL_TUNNEL_LIST){
+    lbl.textContent=`생성 중... (${tunnel} ${done+1}/${REPORT_GEN_ALL_TUNNEL_LIST.length})`;
+    try{ await buildOneUnifiedReport(tunnel, year, month, sections); }
+    catch(e){ failed.push(tunnel); console.error(e); }
+    done++; bar.style.width=Math.round(done/REPORT_GEN_ALL_TUNNEL_LIST.length*100)+'%';
+  }
+  if(failed.length){ alert('일부 터널 생성 실패: '+failed.join(', ')); lbl.textContent=defaultLabel; }
+  else lbl.textContent='완료!';
+  setTimeout(()=>{ lbl.textContent=defaultLabel; btn.disabled=false; wrap.style.display='none'; }, 1200);
 }
 async function runReportGenBuild(btn, lbl, defaultLabel, sections){
   const tunnel=REPORT_SEL.tunnel, year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);

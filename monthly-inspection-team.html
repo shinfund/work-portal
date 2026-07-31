@@ -83,7 +83,13 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
 .top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
-.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+html[data-theme="dark"] .top-tab.active{color:#fff}
+.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab.active .tt-label{border-bottom-color:var(--sky)}
+html[data-theme="dark"] .form-group-hd,
+html[data-theme="dark"] .report-section-hd,
+html[data-theme="dark"] th,
+html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 
 /* ── MAIN ── */
 .main{padding:10px 12px;max-width:1400px;margin:0 auto}
@@ -410,11 +416,11 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 </div>
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼(작업중)</button>
-  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')">보고서(작업중)</button>
-  <button class="top-tab" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
-  <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')">고장수리</button>
-  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼(작업중)</span></button>
+  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서(작업중)</span></button>
+  <button class="top-tab" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')"><span class="tt-label">전기시설점검</span></button>
+  <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')"><span class="tt-label">고장수리</span></button>
+  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')"><span class="tt-label">점검사진</span></button>
 </div>
 
 <!-- MAIN -->
@@ -780,7 +786,6 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
-      {header:true, group:'기본정보'},
       {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
@@ -808,7 +813,6 @@ const TAB_DEFS=[
           return '먼저 일자를 선택하세요';
         },
         emptyHint:'먼저 터널명·일자를 선택하세요'},
-      {header:true, group:'사진'},
       // 사진설명은 노션 실데이터 기준 252건 중 서로 다른 값이 50개(2026-07-24 확인)로, 사진마다
       // 내용이 제각각이라 고정 드롭다운 후보로 묶을 만큼 반복되지 않는다 — 직접입력 유지가 적합.
       {key:'사진설명', type:'text'},
@@ -1681,7 +1685,6 @@ function openAddModal(tabId, recordId){
   if(isPhotoMulti){
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
     renderPhotoMultiRows();
-    syncTeamPhotoFormWidth();
   }
 }
 function closeAddModal(e){
@@ -2759,7 +2762,6 @@ async function submitElecinspGridForm(){
 // ── 고장수리 — 자유 다중 행 입력(안전관리 앱 업무처리 페이지와 동일 패턴) ──
 let _repairExtraRows=[];
 function repairAddExtraRow(){ _repairExtraRows.push({key:Date.now()+Math.random()}); renderTeamRepairBody(); }
-function repairRemoveExtraRow(key){ _repairExtraRows=_repairExtraRows.filter(r=>r.key!==key); renderTeamRepairBody(); }
 async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
@@ -2774,14 +2776,40 @@ async function renderReportPage_repair(){
   _repairExtraRows=[];
   renderTeamRepairBody();
 }
-function repairRowCells(tunnel, occur, issue, fixDate, fixNote, worker){
+// 터널명·작업자 select에도 다른 캐스케이드 select와 동일하게 맨 위 "직접입력" 옵션을 둔다(2026-07-31
+// 사용자 요청) — select 바로 다음 형제 input이 직접입력 칸이라는 규칙으로 selCustomValue()가 값을 읽는다.
+function repairRowCells(rowKey, tunnel, occur, issue, fixDate, fixNote, worker){
+  const isCustomTunnel=tunnel && !TUNNEL_OPTIONS_STD.includes(tunnel);
   const tunnelOpts=TUNNEL_OPTIONS_STD.map(t=>`<option value="${esc(t)}"${t===tunnel?' selected':''}>${esc(t)}</option>`).join('');
-  return `<td><select class="modal-select rp-tunnel" style="width:100%">${tunnelOpts}</select></td>
+  const isCustomWorker=worker && !REPAIR_WORKER_OPTIONS.includes(worker);
+  const workerOpts=REPAIR_WORKER_OPTIONS.map(w=>`<option value="${esc(w)}"${w===worker?' selected':''}>${esc(w)}</option>`).join('');
+  return `<td>
+        <select class="modal-select rp-tunnel" onchange="onSelectChange(this,'rpt_${rowKey}')">
+          <option value="__custom__"${isCustomTunnel?' selected':''}>직접입력</option>
+          ${tunnelOpts}
+        </select>
+        <input id="rpt_${rowKey}" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomTunnel?'':'none'};margin-top:4px" value="${isCustomTunnel?esc(tunnel):''}">
+      </td>
       <td><input type="date" class="modal-input rp-occur" style="width:100%" value="${esc(occur)}"></td>
-      <td><input type="text" class="modal-input rp-issue" style="width:100%" value="${esc(issue)}"></td>
+      <td><input type="text" class="modal-input rp-issue" value="${esc(issue)}"></td>
       <td><input type="date" class="modal-input rp-fixdate" style="width:100%" value="${esc(fixDate)}"></td>
-      <td><input type="text" class="modal-input rp-fixnote" style="width:100%" value="${esc(fixNote)}"></td>
-      <td><input type="text" class="modal-input rp-worker" style="width:100%" value="${esc(worker)}" list="repairWorkerList"></td>`;
+      <td><input type="text" class="modal-input rp-fixnote" value="${esc(fixNote)}"></td>
+      <td>
+        <select class="modal-select rp-worker" onchange="onSelectChange(this,'rpw_${rowKey}')">
+          <option value=""${worker?'':' selected'}>선택</option>
+          <option value="__custom__"${isCustomWorker?' selected':''}>직접입력</option>
+          ${workerOpts}
+        </select>
+        <input id="rpw_${rowKey}" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomWorker?'':'none'};margin-top:4px" value="${isCustomWorker?esc(worker):''}">
+      </td>`;
+}
+function selCustomValue(selectEl){
+  if(!selectEl) return '';
+  if(selectEl.value==='__custom__'){
+    const ci=selectEl.nextElementSibling;
+    return ci ? ci.value.trim() : '';
+  }
+  return selectEl.value;
 }
 function renderTeamRepairBody(){
   const wrap=document.getElementById('rpRepairBody'); if(!wrap) return;
@@ -2792,32 +2820,81 @@ function renderTeamRepairBody(){
   // 빈 화면으로 시작하면 "+ 행 추가"를 여러 번 눌러야 해서, 기존 건수와 합쳐 최소 10행은 항상
   // 보이게 빈 행을 미리 채워둔다(안전관리 앱 업무처리 페이지와 동일, 2026-07-31 사용자 요청).
   while(recs.length + _repairExtraRows.length < 10){ _repairExtraRows.push({key:Date.now()+Math.random()}); }
-  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${repairRowCells(r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}<td></td></tr>`).join('');
-  const extraRows=_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${repairRowCells('','','','','','')}
-      <td><button type="button" onclick="repairRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
-    </tr>`).join('');
-  wrap.innerHTML=`<datalist id="repairWorkerList">${REPAIR_WORKER_OPTIONS.map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
-    <div class="tbl-wrap"><table class="rc-monthly-table">
-      <thead><tr><th style="width:120px">터널명</th><th style="width:120px">발생일</th><th>이상발생내역</th><th style="width:120px">조치일</th><th>조치내역</th><th style="width:110px">작업자</th><th style="width:36px"></th></tr></thead>
+  const chk=(attr)=>`<td><input type="checkbox" class="repair-row-chk" ${attr}></td>`;
+  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${repairRowCells('e'+r.id, r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}</tr>`).join('');
+  const extraRows=_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${repairRowCells('x'+String(row.key).replace('.','_'), '','','','','','')}</tr>`).join('');
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+      <thead><tr><th style="width:34px"><input type="checkbox" id="repairDelAll" onchange="repairToggleSelectAll(this.checked)"></th><th style="width:130px">터널명</th><th style="width:120px">발생일</th><th>이상발생내역</th><th style="width:120px">조치일</th><th>조치내역</th><th style="width:130px">작업자</th></tr></thead>
       <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
-    <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="repairAddExtraRow()">+ 행 추가</button>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="tb-action-btn tb-add" onclick="repairAddExtraRow()">+ 행 추가</button>
+      <button type="button" class="tb-action-btn tb-delete" onclick="repairDeleteSelected()">선택 삭제</button>
+    </div>
     <div class="modal-btns" style="margin-top:16px">
       <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">저장</button>
     </div>
     <div class="modal-progress-wrap" id="rpRepairProgressWrap" style="display:none;margin-top:10px"><div class="modal-progress-bar" id="rpRepairProgressBar"></div></div>`;
+  wrap.querySelectorAll('.rp-tunnel, .rp-worker').forEach(sel=>{ sel.style.width='100%'; });
+  autoSizeTableColumns(wrap, {'rp-issue':160, 'rp-fixnote':160});
+}
+function repairToggleSelectAll(checked){
+  document.querySelectorAll('#rpRepairBody .repair-row-chk').forEach(c=>{ c.checked=checked; });
+}
+// 체크된 행 일괄 삭제 — 저장된 레코드(data-id)는 노션 휴지통 이동, 아직 저장 안 된 빈 행(data-extra-key)은
+// 배열에서 제거만 한다(안전관리 앱 업무처리 페이지와 동일 패턴, 2026-07-31 사용자 요청).
+async function repairDeleteSelected(){
+  const boxes=Array.from(document.querySelectorAll('#rpRepairBody .repair-row-chk:checked'));
+  if(!boxes.length){ alert('삭제할 행을 선택해주세요.'); return; }
+  if(!confirm(boxes.length+'건을 삭제할까요? 저장된 기록은 되돌릴 수 없습니다.')) return;
+  const ids=boxes.map(c=>c.dataset.id).filter(Boolean);
+  const extraKeys=boxes.map(c=>c.dataset.extraKey).filter(Boolean).map(Number);
+  if(extraKeys.length) _repairExtraRows=_repairExtraRows.filter(r=>!extraKeys.includes(r.key));
+  if(ids.length){
+    if(!isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
+    try{
+      await runWithConcurrency(ids.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true})), 6);
+      await loadTabData('repair');
+    }catch(e){ alert('일부 삭제 실패: '+e.message); console.error(e); }
+  }
+  toast((ids.length+extraKeys.length)+'건 삭제되었습니다.');
+  if(_reportCurPage==='repair') renderTeamRepairBody();
+}
+// 표 형식 입력폼(고장수리 등) 전용 — 컬럼별 실제 입력값 중 가장 긴 텍스트 폭을 caret 기준으로 측정해
+// 그 컬럼의 모든 입력창 너비를 맞춘다(안전관리 앱 업무처리 페이지와 동일 패턴, 2026-07-31 사용자 요청).
+function autoSizeTableColumns(wrap, colMinWidths){
+  const probe=wrap.querySelector('.modal-input');
+  if(!probe) return;
+  // canvas measureText는 폰트 폴백이 실제 DOM 렌더링과 미세하게 달라 한글에서 실측보다 좁게
+  // 나와 여전히 잘리는 경우가 있었다(2026-07-31) — 화면 밖 숨김 span에 같은 클래스·폰트로
+  // 직접 렌더링해 실제 필요한 폭을 그대로 재는 방식으로 교체(브라우저 텍스트 레이아웃 엔진 그대로 사용).
+  const probeCs=getComputedStyle(probe);
+  const span=document.createElement('span');
+  span.style.cssText='position:absolute;visibility:hidden;white-space:pre;left:-9999px;top:-9999px;';
+  span.style.font=`${probeCs.fontWeight} ${probeCs.fontSize} ${probeCs.fontFamily}`;
+  span.style.letterSpacing=probeCs.letterSpacing;
+  document.body.appendChild(span);
+  const padBorder=(parseFloat(probeCs.paddingLeft)||0)+(parseFloat(probeCs.paddingRight)||0)+(parseFloat(probeCs.borderLeftWidth)||0)+(parseFloat(probeCs.borderRightWidth)||0);
+  Object.entries(colMinWidths).forEach(([cls,minW])=>{
+    const inputs=wrap.querySelectorAll('.'+cls);
+    let max=0;
+    inputs.forEach(inp=>{ span.textContent=inp.value||''; max=Math.max(max, span.getBoundingClientRect().width); });
+    const w=Math.min(560, Math.max(minW, Math.ceil(max+padBorder)+8));
+    inputs.forEach(inp=>{ inp.style.width=w+'px'; });
+  });
+  span.remove();
 }
 async function submitTeamRepairForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
   const dbId=getTabDef('repair').dbId;
   const targets=[];
   document.querySelectorAll('#rpRepairBody tbody tr').forEach(tr=>{
-    const tunnel=tr.querySelector('.rp-tunnel').value;
+    const tunnel=selCustomValue(tr.querySelector('.rp-tunnel'));
     const occur=tr.querySelector('.rp-occur').value;
     const issue=tr.querySelector('.rp-issue').value.trim();
     const fixDate=tr.querySelector('.rp-fixdate').value;
     const fixNote=tr.querySelector('.rp-fixnote').value;
-    const worker=tr.querySelector('.rp-worker').value;
+    const worker=selCustomValue(tr.querySelector('.rp-worker'));
     if(!occur && !issue) return; // 완전히 빈 행은 건너뜀
     targets.push({id:tr.dataset.id||null, tunnel, occur, issue, fixDate, fixNote, worker});
   });
@@ -2896,21 +2973,6 @@ function renderTeamPhotoPreview(){
   }).join('');
   wrap.innerHTML=`<div id="rpPhotoPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,260px));gap:10px">${cells}</div>`;
 }
-// 점검사진 입력폼 폭 정렬 — 아래 "등록 현황" 미리보기 그리드(실제 몇 장씩 한 줄에 배치되는지)를
-// 기준 카드로 삼아 위 기본정보(터널명/일자/제목) grid 폭을 맞춘다 — 안전관리 앱의 기준 카드 폭
-// 정렬과 동일 원리(2026-07-31 사용자 요청). 클래식 신규등록 모달(리스트탭)에는 미리보기 그리드가
-// 없으므로 그 경우엔 조용히 아무것도 하지 않는다.
-function syncTeamPhotoFormWidth(){
-  const grid=document.querySelector('#addModalFields > .form-group-grid');
-  const previewGrid=document.getElementById('rpPhotoPreviewGrid');
-  if(!grid || !previewGrid || !previewGrid.children.length) return;
-  const contLeft=previewGrid.getBoundingClientRect().left;
-  let maxRight=0;
-  Array.from(previewGrid.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
-  if(maxRight<=0) return;
-  grid.style.maxWidth=Math.ceil(maxRight)+'px';
-}
-
 // ── 보고서 생성 탭 — 시트별 체크박스 선택 생성(안전관리 앱과 동일 패턴) ──
 const REPORT_GEN_SHEETS=[
   {key:'cover', label:'표지'},
