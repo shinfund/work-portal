@@ -659,6 +659,7 @@ function setFixedSelectValue(selectId, customInputId, value){
 }
 /* ── 드롭다운 ↔ 직접입력, 한 번에 하나만 노출(회신 성명·작성자 전용) — 구분(카테고리)은
    기존처럼 select+직접입력을 함께 보여주는 방식을 유지하므로 건드리지 않는다(2026-07-30).
+   이력이 있으면 드롭다운이 기본, 이력이 없으면 직접입력이 기본(applyCustomSelectDefault, 2026-07-31).
    "목록" 버튼 id는 관례상 customId에서 Custom을 ListBtn으로 바꾼 값(예: replyNameCustom→replyNameListBtn). ── */
 function customSelectListBtn(customId){
   return document.getElementById(customId.replace(/Custom$/,'ListBtn'));
@@ -700,13 +701,27 @@ function buildCategorySelectOpts(){
     + '<option value="__custom__">직접입력</option>'
     + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
 }
+/* 이력이 있으면 드롭다운을 기본으로, 없으면 직접입력을 기본으로(회신 성명·작성자 전용, 2026-07-31) */
+function applyCustomSelectDefault(selectId, customId, hasValues){
+  var sel=document.getElementById(selectId), ci=document.getElementById(customId);
+  if(!sel||!ci) return;
+  var btn=customSelectListBtn(customId);
+  if(hasValues){
+    sel.value=''; sel.style.display='';
+    ci.value=''; ci.style.display='none';
+  } else {
+    sel.value='__custom__'; sel.style.display='none';
+    ci.value=''; ci.style.display='';
+  }
+  if(btn) btn.style.display='none';
+}
 function buildAuthorSelectOpts(){
   var sel = document.getElementById('addAuthor');
   var values = getUniqueValues('작성자');
-  sel.innerHTML = '<option value="__custom__">직접입력</option>'
+  sel.innerHTML = '<option value="">선택</option>'
+    + '<option value="__custom__">직접입력</option>'
     + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
-  var btn=document.getElementById('addAuthorListBtn');
-  if(btn) btn.style.display = values.length ? '' : 'none';
+  applyCustomSelectDefault('addAuthor','addAuthorCustom', values.length>0);
 }
 
 /* ── 첨부파일(파일 업로드 + M365 링크) ── */
@@ -848,16 +863,14 @@ function loadReplyNames(){
     REPLY_NAMES = Array.from(new Set(names)).sort();
     REPLY_NAMES_LOADED = true;
     var sel=document.getElementById('replyNameSelect');
-    if(sel){
-      var cur=sel.value;
-      sel.innerHTML = '<option value="__custom__">직접입력</option>'
+    var ci=document.getElementById('replyNameCustom');
+    if(sel && ci){
+      sel.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
         + REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
-      sel.value = (REPLY_NAMES.indexOf(cur)>=0) ? cur : '__custom__';
-    }
-    // 처음 로드될 때 이름 이력이 없어 "목록" 버튼을 안 그렸던 경우, 로드 완료 후 이력이 생겼으면 버튼을 붙여준다.
-    if(REPLY_NAMES.length && !document.getElementById('replyNameListBtn')){
-      var row=document.getElementById('replyNameRow');
-      if(row) row.insertAdjacentHTML('beforeend', '<button type="button" id="replyNameListBtn" class="attach-file-btn" style="padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown(\'replyNameSelect\',\'replyNameCustom\')">목록</button>');
+      // 로드 완료 전에 이미 성명을 입력/수정 중이면 값을 건드리지 않는다.
+      if(EDIT_REPLY_ID===null && !ci.value){
+        applyCustomSelectDefault('replyNameSelect','replyNameCustom', REPLY_NAMES.length>0);
+      }
     }
   }).catch(function(){ /* 자동완성 목록 로드 실패는 조용히 무시 — 직접입력은 항상 가능 */ });
 }
@@ -899,7 +912,7 @@ function loadReplies(noticeId){
 function resetReplyForm(){
   EDIT_REPLY_ID = null;
   document.getElementById('replyFormTitle').textContent='회신 등록';
-  setCustomSelectValue('replyNameSelect','replyNameCustom','');
+  applyCustomSelectDefault('replyNameSelect','replyNameCustom', REPLY_NAMES.length>0);
   document.getElementById('replyContent').value='';
   REPLY_ATTACHMENTS=[];
   renderReplyAttachmentChips();
@@ -1065,7 +1078,6 @@ function openAddModal(){
   buildCategorySelectOpts();
   setFixedSelectValue('addCategory','addCategoryCustom','');
   buildAuthorSelectOpts();
-  setCustomSelectValue('addAuthor','addAuthorCustom','');
   document.getElementById('attachStatus').textContent='파일을 선택하세요 (여러 개 선택 가능)';
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
@@ -1250,13 +1262,14 @@ function openDetailModal(id){
       '<div class="modal-field">'
       + '<div class="modal-label" id="replyFormTitle">회신 등록</div>'
       + '<div class="attach-box">'
-      +   '<select id="replyNameSelect" class="modal-select" onchange="onCustomSelectChange(this,\'replyNameCustom\')" style="display:none;margin-bottom:8px;max-width:220px">'
+      +   '<select id="replyNameSelect" class="modal-select" onchange="onCustomSelectChange(this,\'replyNameCustom\')" style="margin-bottom:8px;max-width:220px">'
+      +     '<option value="">선택</option>'
       +     '<option value="__custom__">직접입력</option>'
       +     REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('')
       +   '</select>'
       +   '<div id="replyNameRow" style="display:flex;gap:6px;align-items:center;margin-bottom:8px;max-width:220px">'
-      +     '<input id="replyNameCustom" class="modal-input" type="text" placeholder="성명 입력" style="flex:1;min-width:0"/>'
-      +     (REPLY_NAMES.length ? '<button type="button" id="replyNameListBtn" class="attach-file-btn" style="padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown(\'replyNameSelect\',\'replyNameCustom\')">목록</button>' : '')
+      +     '<input id="replyNameCustom" class="modal-input" type="text" placeholder="성명 입력" style="flex:1;min-width:0;display:none"/>'
+      +     '<button type="button" id="replyNameListBtn" class="attach-file-btn" style="display:none;padding:0 10px;height:38px;font-size:11px;white-space:nowrap" onclick="showCustomSelectDropdown(\'replyNameSelect\',\'replyNameCustom\')">목록</button>'
       +   '</div>'
       +   '<textarea id="replyContent" class="modal-textarea" placeholder="회신 내용(선택)" style="margin-bottom:8px;min-height:60px"></textarea>'
       +   '<div class="attach-row">'
@@ -1282,6 +1295,7 @@ function openDetailModal(id){
     EDIT_REPLY_ID = null;
     REPLY_ATTACHMENTS = [];
     renderReplyAttachmentChips();
+    applyCustomSelectDefault('replyNameSelect','replyNameCustom', REPLY_NAMES.length>0);
     loadReplies(id);
     loadReplyNames();
   }
