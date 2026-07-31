@@ -306,7 +306,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 /* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
 .form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
-.form-group-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
+.form-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
 /* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
@@ -924,10 +924,14 @@ window.addEventListener('storage',e=>{
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
-    if(isAuthed()) loadTabData(_activePanel);
+    if(isAuthed()){
+      if(_activePanel==='formEntry') initReportTab();
+      else if(_activePanel==='report') initReportGenTab();
+      else loadTabData(_activePanel);
+    }
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();if(!document.getElementById('addModal').classList.contains('modal-inline')) closeAddModal();closeDetailModal();}});
 
 // ══════════════════════════════════════════════════════
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-13 notion-fetch로 실스키마 확인 후 하드코딩,
@@ -1016,7 +1020,7 @@ const MONTHLY_CHECKLIST=[
   {구분:'직무고시',설비명:'고압설비',점검내용:'절연내력 측정(연차)'},
   {구분:'직무고시',설비명:'고압설비',점검내용:'절연저항 측정(연차)'},
   {구분:'직무고시',설비명:'고압설비',점검내용:'접지저항 측정(연차)'},
-  {구분:'직무고시',설비명:'변압기점검',점검내용:'절연내역, 산가도 측정(연차, 필요시)'},
+  {구분:'직무고시',설비명:'변압기점검',점검내용:'절연내력, 산가도 측정(연차, 필요시)'},
   {구분:'직무고시',설비명:'변압기점검',점검내용:'절연저항 점검(연차)'},
   {구분:'직무고시',설비명:'예비발전설비',점검내용:'발전기 무부하 또는 부하시험(분기)'},
   {구분:'직무고시',설비명:'예비발전설비',점검내용:'절연 및 접지저항 측정(반기)'},
@@ -1035,7 +1039,7 @@ const MONTHLY_CHECKLIST=[
   {구분:'특고압설비',설비명:'기타',점검내용:'냉각팬 및 히터 동작상태 (분기)'},
   {구분:'특고압설비',설비명:'기타',점검내용:'적외선 열화상 측정 (분기)'},
   {구분:'특고압설비',설비명:'기타',점검내용:'전원품질분석 (연차)'},
-  {구분:'특고압설비',설비명:'기타',점검내용:'절연내역 측정 (연차)'},
+  {구분:'특고압설비',설비명:'기타',점검내용:'절연내력 측정 (연차)'},
   {구분:'특고압설비',설비명:'기타',점검내용:'절연저항 측정 (연차)'},
   {구분:'특고압설비',설비명:'기타',점검내용:'접지저항 측정 (연차)'},
   {구분:'특고압설비',설비명:'기타',점검내용:'특고압반 기기별 열화 및 모선지지물 상태'},
@@ -1424,9 +1428,14 @@ function getText(p){
   return '';
 }
 function getNum(p){
-  if(!p) return 0;
-  if(p.type==='number') return Number(p.number)||0;
-  return parseFloat(getText(p))||0;
+  // 미입력을 0과 구분해야 한다 — 이전엔 항상 0을 반환해 "x!=null" 가드가 늘 참이 되고, 수정 폼에도
+  // 0이 프리필된 채 그대로 재저장되는 문제가 있었다(2026-07-31 버그 수정).
+  if(!p) return null;
+  if(p.type==='number') return (p.number===null||p.number===undefined) ? null : Number(p.number);
+  const t=getText(p);
+  if(t==null || t==='') return null;
+  const n=parseFloat(t);
+  return isNaN(n) ? null : n;
 }
 function getDateStr(p){
   if(!p) return '';
@@ -2149,12 +2158,25 @@ async function deleteSelectedRows(tabId){
   if(!set || !set.size) return;
   if(!confirm(set.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
   const ids=[...set];
+  // elec/generator는 부모 1건당 하위 자식 레코드(ACB/설비현황, 유류현황/체크리스트)가 딸려 있어
+  // 부모만 지우면 자식이 고아로 노션에 남는다 — deleteElecRecord/deleteGeneratorRecord와 동일하게
+  // 함께 삭제할 자식 id를 미리 모아 한 번에 처리한다(2026-07-31 버그 수정).
+  let allIds=ids;
+  if(tabId==='elec' || tabId==='generator'){
+    allIds=ids.slice();
+    ids.forEach(id=>{
+      const r=TAB_STATE[tabId].records.find(x=>x.id===id);
+      if(!r) return;
+      if(tabId==='elec') allIds.push(...(r['_acb']||[]).map(x=>x.id), ...(r['_chk']||[]).map(x=>x.id));
+      else allIds.push(...(r._fuel?[r._fuel.id]:[]), ...(r['_chk']||[]).map(x=>x.id));
+    });
+  }
   const confirmBtn=document.getElementById('delConfirmBtn_'+tabId);
   if(confirmBtn) confirmBtn.disabled=true;
   let done=0;
-  const tasks=ids.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true}).then(()=>{
+  const tasks=allIds.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true}).then(()=>{
     done++;
-    if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+ids.length+')';
+    if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+allIds.length+')';
   }));
   try{
     await runWithConcurrency(tasks, 6);
@@ -3315,6 +3337,9 @@ async function submitPhotoMulti(){
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
+  // 같은 터널·월·번호(슬롯)에 이미 저장된 레코드가 있으면 새로 만들지 않고 그 레코드를 수정한다
+  // (2026-07-31 버그 수정 — 기존엔 항상 신규 생성이라 같은 슬롯을 두 번 저장하면 중복 레코드가 생겼음).
+  const ym=(shared['일자']||'').slice(0,7);
   const tasks=usedRows.map(row=>()=>{
     const properties={
       '터널명':buildPropValue('select', shared['터널명']),
@@ -3324,7 +3349,11 @@ async function submitPhotoMulti(){
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    return notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties}).then(page=>{ progress(); return page; });
+    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===shared['터널명'] && (r['일자']||'').slice(0,7)===ym && parseInt(r['번호'],10)===row.num);
+    const req=existing
+      ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
+      : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
+    return req.then(page=>{ progress(); return page; });
   });
 
   try{
@@ -3524,8 +3553,8 @@ async function submitElecForm(){
     await Promise.all(waits);
 
     btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    await loadTabData('elec');
     closeAddModal();
-    loadTabData('elec');
     toast((isEdit?'수정':'등록')+'되었습니다. (기본정보 + ACB 9건 + 설비현황 32건)');
   }catch(e){
     btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
@@ -3624,8 +3653,8 @@ async function submitGeneratorForm(){
     await Promise.all(waits);
 
     btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    await loadTabData('generator');
     closeAddModal();
-    loadTabData('generator');
     toast((isEdit?'수정':'등록')+'되었습니다. (기본정보 + 유류현황 1건 + 점검체크리스트 20건)');
   }catch(e){
     btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
@@ -5696,8 +5725,9 @@ async function renderReportPage_photo(){
     <div class="report-title-band">5. 운영관리 사진대지</div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpPhotoPreview"></div>
-    <div id="rpPhotoMount" style="margin-top:22px"></div>`;
+    <div id="rpPhotoMount"></div>
+    <div class="report-section-hd" style="margin-top:22px">등록 현황</div>
+    <div id="rpPhotoPreview"></div>`;
   await loadTabData('photo');
   if(_reportCurPage!=='photo') return;
   document.getElementById('rpLoading')?.remove();
@@ -5733,6 +5763,13 @@ function renderPhotoReportPreview(){
 function reportPresetField(id, value){
   const el=document.getElementById(id);
   if(!el) return;
+  // <select>인데 value가 옵션 목록에 없으면(터널명 직접입력 등) 그냥 대입 시 빈 값으로 떨어진다 —
+  // 선택 가능하도록 옵션을 하나 끼워 넣는다(2026-07-31 버그 수정).
+  if(el.tagName==='SELECT' && ![...el.options].some(o=>o.value===value)){
+    const opt=document.createElement('option');
+    opt.value=value; opt.textContent=value;
+    el.insertBefore(opt, el.firstChild);
+  }
   el.value=value;
   el.dispatchEvent(new Event('change'));
 }
@@ -6298,20 +6335,24 @@ async function ensureTabLoaded(id){
 async function buildOneUnifiedReport(tunnel, year, month, sections){
   const on=key=>!sections || sections.has(key);
   await loadExcelLib(true);
-  await Promise.all(['elec','transformer','generator','photo','power','task'].map(ensureTabLoaded));
+  await Promise.all(['monthly','elec','transformer','generator','photo','power','task'].map(ensureTabLoaded));
 
   const wb=new ExcelJS.Workbook();
   let hasData=false;
-  if(on('cover')) buildCoverReportSheet(wb, tunnel, year, month);
+  // 표지·월간점검·업무처리·간지는 노션에 base 터널명("청하터널")으로 저장되므로, 드롭다운에서
+  // 청하터널(주)/(부)를 선택해도 reportBaseTunnel()로 접미어를 뗀 값으로 조회해야 데이터가 잡힌다
+  // (2026-07-31 버그 수정 — 이전엔 (주)/(부) 선택 시 이 4개 시트가 조용히 비어 있었음).
+  const baseTunnel=reportBaseTunnel(tunnel);
+  if(on('cover')) buildCoverReportSheet(wb, baseTunnel, year, month);
 
   // 1. 월간점검결과표(월간점검표1~3)
   if(on('monthly')){
-    const monthlyRows=buildMonthlyReportRows(tunnel, year, month);
+    const monthlyRows=buildMonthlyReportRows(baseTunnel, year, month);
     let titleShown=false;
     REPORT_SHEET_GROUPS.forEach(g=>{
       const sheetRows=monthlyRows.filter(r=>g.gubuns.includes(r.구분));
       if(!sheetRows.length) return;
-      buildMonthlyReportSheet(wb, g.name, sheetRows, tunnel, !titleShown);
+      buildMonthlyReportSheet(wb, g.name, sheetRows, baseTunnel, !titleShown);
       titleShown=true; hasData=true;
     });
   }
@@ -6377,14 +6418,14 @@ async function buildOneUnifiedReport(tunnel, year, month, sections){
 
   // 7. 월간 업무처리사항
   if(on('task')){
-    const taskRows=buildTaskReportRows(tunnel, year, month);
-    if(taskRows.length){ buildTaskReportSheet(wb, taskRows, tunnel); hasData=true; }
+    const taskRows=buildTaskReportRows(baseTunnel, year, month);
+    if(taskRows.length){ buildTaskReportSheet(wb, taskRows, baseTunnel); hasData=true; }
   }
 
   // 8. 일일점검일지(간지) — 데이터 없이도 항상 존재하는 고정 서식지라 hasData 판정 대상은 아님
-  if(on('divider')) buildDailyLogDividerSheet(wb, tunnel, year, month);
+  if(on('divider')) buildDailyLogDividerSheet(wb, baseTunnel, year, month);
 
-  if(!hasData) throw new Error('해당 터널·연월에 생성할 데이터가 없습니다.');
+  if(!hasData && !on('cover') && !on('divider')) throw new Error('해당 터널·연월에 생성할 데이터가 없습니다.');
 
   const buf=await wb.xlsx.writeBuffer();
   const blob=await excelUnlockAspectRatio(buf);
@@ -6666,7 +6707,7 @@ function initReportGenTab(){
     const curY=new Date().getFullYear();
     document.getElementById('rgYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
     document.getElementById('rgMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
-    if(!REPORT_SEL.tunnel) REPORT_SEL.tunnel=REPORT_TUNNELS[0];
+    if(!REPORT_SEL.tunnel) REPORT_SEL.tunnel=REPORT_GEN_TUNNELS[0];
     document.getElementById('rgTunnelMenu').addEventListener('click', e=>{
       const opt=e.target.closest('.dd-opt'); if(!opt) return;
       closeDd('rgTunnelMenu','rgTunnelBtn');
