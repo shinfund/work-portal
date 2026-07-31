@@ -5760,6 +5760,15 @@ function renderPhotoReportPreview(){
 }
 // 필드에 REPORT_SEL 값을 미리 채운 뒤 실제 change 이벤트를 발생시켜 그 필드의 onchange(캐스케이드
 // 재계산·extraOnChange)를 사용자가 직접 선택했을 때와 100% 동일하게 실행시킨다.
+// 저장하려는 날짜가 현재 화면에 선택된 연월과 다르면 저장 후 목록에서 사라져(다른 달로 필터링되어)
+// "저장이 안 된 것"처럼 보일 수 있다 — 저장 자체는 막지 않고 경고만 띄운다(2026-07-31 사용자 확인 —
+// 다른 달 기록을 남겨야 하는 경우도 있어 하드 차단은 하지 않기로 함).
+function confirmDateOutOfMonth(dates, ym){
+  const bad=dates.some(d=>d && d.slice(0,7)!==ym);
+  if(!bad) return true;
+  const [y,m]=ym.split('-');
+  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 저장하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
+}
 function reportPresetField(id, value){
   const el=document.getElementById(id);
   if(!el) return;
@@ -5899,6 +5908,7 @@ async function submitTaskReportForm(){
   if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
   const missing=targets.find(t=>!t.date || !t.content);
   if(missing){ alert('날짜와 업무내용은 필수입니다.'); return; }
+  if(!confirmDateOutOfMonth(targets.map(t=>t.date), REPORT_SEL.year+'-'+REPORT_SEL.month)) return;
   const btn=document.getElementById('rpTaskSubmitBtn');
   btn.disabled=true; btn.textContent='저장 중...';
   const wrap=document.getElementById('rpTaskProgressWrap'), bar=document.getElementById('rpTaskProgressBar');
@@ -6023,6 +6033,7 @@ async function submitTransformerReportForm(){
     }
   });
   if(!targets.length){ alert('온도(℃)를 하나 이상 입력해주세요.'); return; }
+  if(!confirmDateOutOfMonth([dateVal], ym)) return;
 
   const btn=document.getElementById('rpTransSubmitBtn');
   btn.disabled=true; btn.textContent='저장 중...';
@@ -6154,6 +6165,7 @@ async function submitMonthlyReportForm(){
   const missing=dateInputs.find(inp=>{ const sid='rpmc_'+inp.id.slice(6); return !document.getElementById(sid)?.value; });
   if(missing){ alert('점검일자를 입력한 항목은 점검결과도 선택해주세요.'); return; }
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  if(!confirmDateOutOfMonth(dateInputs.map(inp=>inp.value), ym)) return;
   const btn=document.getElementById('rpMonthlySubmitBtn');
   btn.disabled=true; btn.textContent='저장 중...';
   const wrap=document.getElementById('rpMonthlyProgressWrap'), bar=document.getElementById('rpMonthlyProgressBar');
