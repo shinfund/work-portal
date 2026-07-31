@@ -114,7 +114,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
    배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서는 흰색으로 오버라이드(가독성 최우선,
    사용자가 라벤더보다 흰색을 선호). */
 html[data-theme="dark"] .report-page-chip{color:#fff}
-.report-paper{background:var(--card);color:var(--txt);max-width:800px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
+.report-paper{background:var(--card);color:var(--txt);max-width:1400px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
 html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .report-title-band{text-align:left;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
 .report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
@@ -321,7 +321,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 #addModal.modal-inline{display:block!important;position:static}
 #addModal.modal-inline .modal-backdrop{position:static;background:none;padding:0;display:block;inset:auto}
 #addModal.modal-inline .modal-box{max-width:none!important;width:100%;box-shadow:none;border-radius:0;padding:0;background:transparent;max-height:none;overflow:visible}
-#addModal.modal-inline .detail-modal-hd{cursor:default}
+#addModal.modal-inline .detail-modal-hd{display:none}
 
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
