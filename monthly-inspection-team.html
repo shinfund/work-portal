@@ -251,6 +251,46 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .theme-swatch-dark .ts-side{background:#24292E;border-right:1px solid rgba(255,255,255,.08);}
 .theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
 
+/* ── 보고서입력/보고서 탭(안전관리 앱과 동일 패턴, 2026-07-31) ── */
+.report-toolbar{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.report-toolbar .dd-wrap,.report-toolbar-sep{flex-shrink:0}
+.report-toolbar-sep{width:2px;align-self:stretch;background:var(--gray200);border-radius:2px;margin:0 6px}
+.report-page-chips{display:flex;gap:6px;flex-shrink:0}
+.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
+html[data-theme="dark"] .report-page-chip{color:#fff}
+.report-paper{background:var(--card);color:var(--txt);max-width:1400px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
+html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
+.report-title-band{text-align:left;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
+.report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
+.report-section-hd{font-size:13.5px;font-weight:800;background:var(--sky50);color:var(--sky800);padding:7px 12px;border-radius:6px;margin:16px 0 8px}
+.report-cover-a4{position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:210/297;padding:5% 7%;box-sizing:border-box}
+.rc-title{font-size:clamp(20px,4.6vw,30px);font-weight:900;text-align:left;line-height:1.3}
+.rc-date{font-size:clamp(17px,3.8vw,24px);font-weight:800;text-align:center;margin-top:22%}
+.rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:center;margin-top:18%;letter-spacing:6px}
+.rc-toc-list{margin-top:6%;max-width:78%;margin-left:auto;margin-right:auto;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
+@media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
+.rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
+.rc-monthly-table{border-collapse:collapse;width:100%;font-size:13px}
+.rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
+.rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
+.rc-monthly-gubun{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
+.rc-monthly-content{text-align:left}
+@media(min-width:481px){
+  .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
+  .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
+  .report-paper .modal-label{font-size:12.5px}
+  .report-paper .modal-hint{font-size:11px}
+  .report-paper .detail-modal-hd h3{font-size:14px}
+}
+.report-paper input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
+.report-paper input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
+@media(max-width:480px){ .report-paper{padding:16px 12px} }
+#addModal.modal-inline{display:block!important;position:static}
+#addModal.modal-inline .modal-backdrop{position:static;background:none;padding:0;display:block;inset:auto}
+#addModal.modal-inline .modal-box{max-width:none!important;width:100%;box-shadow:none;border-radius:0;padding:0;background:transparent;max-height:none;overflow:visible}
+#addModal.modal-inline .detail-modal-hd{display:none}
+
 @media(max-width:480px){
   .main{padding:10px 10px}
   .header{padding:11px 12px}
@@ -315,6 +355,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     </div>
   </div>
 </div>
+<!-- #addModal의 원래 위치 — 입력폼 탭에서 인라인으로 옮겼다가 되돌릴 때 사용(mountAddModalInline/unmountAddModalInline) -->
+<div id="addModalHome" style="display:none"></div>
 
 <!-- MODAL: 상세조회(수정/삭제) -->
 <div id="detailModal">
@@ -357,7 +399,9 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 </div>
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-elecinsp" role="tab" aria-selected="true" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')">입력폼(작업중)</button>
+  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')">보고서(작업중)</button>
+  <button class="top-tab" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
   <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')">고장수리</button>
   <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
 </div>
@@ -365,8 +409,20 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 <!-- MAIN -->
 <div class="main">
 
+  <!-- ▸ 입력폼(작업중) -->
+  <div class="panel active" id="panel-formEntry">
+    <div class="report-toolbar" id="reportSelBar"></div>
+    <div id="reportPaper" class="report-paper"></div>
+  </div>
+
+  <!-- ▸ 보고서(작업중) -->
+  <div class="panel" id="panel-report">
+    <div class="report-toolbar" id="reportGenSelBar"></div>
+    <div id="reportGenBody" class="report-paper"></div>
+  </div>
+
   <!-- ▸ 전기시설점검 -->
-  <div class="panel active" id="panel-elecinsp">
+  <div class="panel" id="panel-elecinsp">
     <div class="filter-row">
       <div id="filterDd-elecinsp" style="display:contents"></div>
       <input class="search-box" id="search-elecinsp" placeholder="🔍 제목·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('elecinsp')"/>
@@ -381,10 +437,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <button class="tb-action-btn tb-report" id="reportBtn_elecinsp" onclick="exportElecInspReport()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="reportLbl_elecinsp">보고서 생성</span>
-      </button>
-      <button class="tb-action-btn tb-unified" id="unifiedReportBtn" onclick="exportTeamUnifiedReport()" title="표지+전기시설점검표+고장수리실적+점검사진대지+간지를 한 파일로 묶어 생성">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-        <span id="unifiedReportLbl">통합 보고서 생성</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -625,13 +677,17 @@ window.addEventListener('storage',e=>{
     syncThemeOptUI();
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();closeAddModal();closeDetailModal();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();if(!document.getElementById('addModal').classList.contains('modal-inline')) closeAddModal();closeDetailModal();}});
 window.addEventListener('storage',e=>{
   if(e.key==='wp_authToken'){
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
-    if(isAuthed()) loadTabData(_activePanel);
+    if(isAuthed()){
+      if(_activePanel==='formEntry') initReportTab();
+      else if(_activePanel==='report') initReportGenTab();
+      else loadTabData(_activePanel);
+    }
   }
 });
 
@@ -1572,6 +1628,12 @@ function openAddModal(tabId, recordId){
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
+  // 입력폼 탭에서 인라인으로 떠 있는 동안은 모달을 닫는 대신 원래 자리로 되돌리고 현재 보고서
+  // 페이지를 다시 그린다(안전관리 앱과 동일 패턴, 2026-07-31).
+  if(document.getElementById('addModal').classList.contains('modal-inline')){
+    gotoReportPage(_reportCurPage);
+    return;
+  }
   document.getElementById('addModal').classList.remove('modal-open');
   document.body.style.overflow='';
   resetModalDragPos('addModal');
@@ -1865,6 +1927,9 @@ async function submitPhotoMulti(){
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
+  // 같은 터널·월·번호(슬롯)에 이미 저장된 레코드가 있으면 새로 만들지 않고 그 레코드를 수정한다
+  // (안전관리 앱 B8과 동일 수정, 2026-07-31 — 입력폼 탭에서 같은 달을 재방문해 저장하면 중복 생성되던 문제).
+  const ym=(shared['일자']||'').slice(0,7);
   const tasks=_photoMultiRows.map(row=>()=>{
     const properties={
       '터널명':buildPropValue('select', shared['터널명']),
@@ -1874,13 +1939,21 @@ async function submitPhotoMulti(){
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    return notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties}).then(page=>{ progress(); return page; });
+    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===shared['터널명'] && (r['일자']||'').slice(0,7)===ym && parseInt(r['번호'],10)===parseInt(row.num,10));
+    const req=existing
+      ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
+      : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
+    return req.then(page=>{ progress(); return {page, existingId:existing?existing.id:null}; });
   });
 
   try{
-    const pages=await runWithConcurrency(tasks, 6);
+    const results=await runWithConcurrency(tasks, 6);
     const arr=TAB_STATE['photo'].records;
-    pages.forEach(page=>{ arr.push(parseRecord(tabDef, page)); });
+    results.forEach(({page,existingId})=>{
+      const parsed=parseRecord(tabDef, page);
+      const idx=existingId ? arr.findIndex(r=>r.id===existingId) : -1;
+      if(idx>=0) arr[idx]=parsed; else arr.push(parsed);
+    });
     applyLatestFilterDefault('photo');
     renderTabTable('photo');
     updateLastUpdate();
@@ -2375,6 +2448,380 @@ function colLetter(n){ let s=''; while(n>0){ const m=(n-1)%26; s=String.fromChar
 // 터널당 1시트(13개 시트)로 구조 변경. 묶음 시트는 터널마다 총 행수가 달라 인쇄배율도
 // 시트마다 다르고(원본 템플릿 실측 64~80%), 계산식 배율(excelDynamicScale) 실험은 여백 과다·
 // 2페이지 잘림이 번갈아 재발해 안전관리 앱과 동일한 fitToPage 자동맞춤으로 되돌렸다(2026-07-24 저녁).
+// ══════════════════════════════════════════════════════
+// ── 입력폼/보고서 탭(안전관리 앱과 동일 패턴, 2026-07-31) ──
+// ══════════════════════════════════════════════════════
+let REPORT_SEL={year:String(new Date().getFullYear()), month:String(new Date().getMonth()+1).padStart(2,'0')};
+const REPORT_PAGE_IDS=['cover','elecinsp','repair','photo','divider'];
+const REPORT_PAGE_LABELS={cover:'표지', elecinsp:'전기시설점검', repair:'고장수리', photo:'점검사진', divider:'일지간지'};
+let _reportCurPage='cover';
+let _reportInited=false;
+function initReportTab(){
+  if(!_reportInited){
+    _reportInited=true;
+    document.getElementById('reportSelBar').innerHTML=
+      `<div class="dd-wrap" id="rpYearWrap">
+        <button class="dd-btn" id="rpYearBtn" type="button" onclick="toggleDd('rpYearMenu','rpYearBtn')" aria-haspopup="listbox" aria-label="연도 선택"><span id="rpYearLabel"></span></button>
+        <div class="dd-menu" id="rpYearMenu"></div>
+      </div>
+      <div class="dd-wrap" id="rpMonthWrap">
+        <button class="dd-btn" id="rpMonthBtn" type="button" onclick="toggleDd('rpMonthMenu','rpMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rpMonthLabel"></span></button>
+        <div class="dd-menu" id="rpMonthMenu"></div>
+      </div>
+      <div class="report-toolbar-sep"></div>
+      <div class="report-page-chips" id="reportPageChips"></div>`;
+    const curY=new Date().getFullYear();
+    document.getElementById('rpYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
+    document.getElementById('rpMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
+    document.getElementById('rpYearMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.year=opt.dataset.val; closeDd('rpYearMenu','rpYearBtn'); syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
+    document.getElementById('rpMonthMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.month=opt.dataset.val; closeDd('rpMonthMenu','rpMonthBtn'); syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
+    document.getElementById('reportPageChips').innerHTML=REPORT_PAGE_IDS.map(id=>
+      `<button class="report-page-chip" id="chip-${id}" onclick="gotoReportPage('${id}')">${REPORT_PAGE_LABELS[id]}</button>`
+    ).join('');
+    syncReportSelLabels();
+  }
+  gotoReportPage(_reportCurPage);
+}
+function syncReportSelLabels(){
+  document.getElementById('rpYearLabel').textContent=REPORT_SEL.year+'년';
+  document.getElementById('rpMonthLabel').textContent=Number(REPORT_SEL.month)+'월';
+  document.querySelectorAll('#rpYearMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.year));
+  document.querySelectorAll('#rpMonthMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.month));
+  ['rpYearBtn','rpMonthBtn'].forEach(id=>document.getElementById(id)?.classList.add('active'));
+}
+function gotoReportPage(id){
+  unmountAddModalInline();
+  _reportCurPage=id;
+  REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
+  const fn=window['renderReportPage_'+id];
+  if(typeof fn==='function'){ fn(); }
+  else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:var(--txt3);padding:30px 0">준비 중입니다.</div>`; }
+}
+// ── #addModal을 입력폼 탭 안으로 옮겨 인라인으로 보여주는 재배치 메커니즘(안전관리 앱과 동일) ──
+let _reportModalDragGuardAttached=false;
+function _reportInstallModalDragGuard(){
+  if(_reportModalDragGuardAttached) return;
+  _reportModalDragGuardAttached=true;
+  const modal=document.getElementById('addModal');
+  ['mousedown','touchstart'].forEach(evt=>{
+    modal.addEventListener(evt, e=>{
+      if(modal.classList.contains('modal-inline') && e.target.closest('.detail-modal-hd')) e.stopPropagation();
+    }, true);
+  });
+}
+function mountAddModalInline(containerId){
+  _reportInstallModalDragGuard();
+  const modal=document.getElementById('addModal');
+  document.getElementById(containerId).appendChild(modal);
+  modal.classList.add('modal-inline');
+}
+function unmountAddModalInline(){
+  const modal=document.getElementById('addModal');
+  if(!modal.classList.contains('modal-inline')) return;
+  const home=document.getElementById('addModalHome');
+  home.parentNode.insertBefore(modal, home);
+  modal.classList.remove('modal-inline','modal-open');
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+  hideAddModalProgress();
+  EDIT_TAB=null; EDIT_PAGE_ID=null;
+  _photoFiles=[]; _photoMultiRows=[];
+}
+function reportPresetField(id, value){
+  const el=document.getElementById(id);
+  if(!el) return;
+  if(el.tagName==='SELECT' && ![...el.options].some(o=>o.value===value)){
+    const opt=document.createElement('option');
+    opt.value=value; opt.textContent=value;
+    el.insertBefore(opt, el.firstChild);
+  }
+  el.value=value;
+  el.dispatchEvent(new Event('change'));
+}
+// 저장하려는 날짜가 현재 화면에 선택된 연월과 다르면 저장 후 목록에서 사라져 "저장이 안 된 것"처럼
+// 보일 수 있다 — 저장 자체는 막지 않고 경고만 띄운다(안전관리 앱 B12와 동일 패턴).
+function confirmDateOutOfMonth(dates, ym){
+  const bad=dates.some(d=>d && d.slice(0,7)!==ym);
+  if(!bad) return true;
+  const [y,m]=ym.split('-');
+  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 저장하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
+}
+
+// ── 표지 ──
+function renderReportPage_cover(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-cover-a4">
+      <div class="rc-title">2. 점검팀</div>
+      <div class="rc-date">${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
+      <div class="rc-toc-hd">목&nbsp;&nbsp;&nbsp;&nbsp;차</div>
+      <div class="rc-toc-list">${TEAM_TOC_ITEMS.map(t=>`<div>${esc(t)}</div>`).join('')}</div>
+    </div>`;
+}
+// ── 일지간지 ──
+function renderReportPage_divider(){
+  const y=Number(REPORT_SEL.year), m=Number(REPORT_SEL.month);
+  const lastDay=new Date(y, m, 0).getDate();
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">4. 터널시설점검일지</div>
+    <div style="text-align:center;padding:60px 0;font-size:16px;font-weight:700;color:var(--txt)">
+      기간 : ${y}년 ${m}월 1일 ~ ${y}년 ${m}월 ${lastDay}일
+    </div>`;
+}
+// ── 전기시설점검 — 13개 구간 중 하나를 골라 그 구간의 체크리스트를 신규 등록(기존 모달 재사용) ──
+let _teamElecTunnel=TUNNEL_OPTIONS_ELEC[0];
+async function renderReportPage_elecinsp(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">1. 터널전기시설 점검표</div>
+    <div class="dd-wrap" id="eiTunnelWrap" style="margin-bottom:14px">
+      <button class="dd-btn" id="eiTunnelBtn" type="button" onclick="toggleDd('eiTunnelMenu','eiTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="eiTunnelLabel"></span></button>
+      <div class="dd-menu" id="eiTunnelMenu">${TUNNEL_OPTIONS_ELEC.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
+    </div>
+    <div id="rpElecinspMount"></div>`;
+  document.getElementById('eiTunnelMenu').addEventListener('click', e=>{
+    const opt=e.target.closest('.dd-opt'); if(!opt) return;
+    closeDd('eiTunnelMenu','eiTunnelBtn');
+    _teamElecTunnel=opt.dataset.val;
+    gotoReportPage('elecinsp');
+  });
+  syncTeamElecTunnelLabel();
+  mountAddModalInline('rpElecinspMount');
+  openAddModal('elecinsp');
+  document.body.style.overflow='';
+  reportPresetField('ff_0', _teamElecTunnel);
+}
+function syncTeamElecTunnelLabel(){
+  document.getElementById('eiTunnelLabel').textContent=_teamElecTunnel;
+  document.querySelectorAll('#eiTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===_teamElecTunnel));
+  document.getElementById('eiTunnelBtn')?.classList.add('active');
+}
+// ── 고장수리 — 자유 다중 행 입력(안전관리 앱 업무처리 페이지와 동일 패턴) ──
+let _repairExtraRows=[];
+function repairAddExtraRow(){ _repairExtraRows.push({key:Date.now()+Math.random()}); renderTeamRepairBody(); }
+function repairRemoveExtraRow(key){ _repairExtraRows=_repairExtraRows.filter(r=>r.key!==key); renderTeamRepairBody(); }
+async function renderReportPage_repair(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">2. 고장수리실적</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpRepairBody"></div>`;
+  if(!TAB_STATE.repair.loaded) await loadTabData('repair');
+  if(_reportCurPage!=='repair') return;
+  document.getElementById('rpLoading')?.remove();
+  _repairExtraRows=[];
+  renderTeamRepairBody();
+}
+function repairRowCells(tunnel, occur, issue, fixDate, fixNote, worker){
+  const tunnelOpts=TUNNEL_OPTIONS_STD.map(t=>`<option value="${esc(t)}"${t===tunnel?' selected':''}>${esc(t)}</option>`).join('');
+  return `<td><select class="modal-select rp-tunnel" style="width:100%">${tunnelOpts}</select></td>
+      <td><input type="date" class="modal-input rp-occur" style="width:100%" value="${esc(occur)}"></td>
+      <td><input type="text" class="modal-input rp-issue" style="width:100%" value="${esc(issue)}"></td>
+      <td><input type="date" class="modal-input rp-fixdate" style="width:100%" value="${esc(fixDate)}"></td>
+      <td><input type="text" class="modal-input rp-fixnote" style="width:100%" value="${esc(fixNote)}"></td>
+      <td><input type="text" class="modal-input rp-worker" style="width:100%" value="${esc(worker)}"></td>`;
+}
+function renderTeamRepairBody(){
+  const wrap=document.getElementById('rpRepairBody'); if(!wrap) return;
+  const ymStr=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  // 조치일 미기재 건은 이월(발생월 무관 항상 표시), 조치완료 건은 발생일·조치일 중 하나라도 이번
+  // 달이면 표시 — buildRepairReportRows와 동일한 포함 기준(2026-07-31).
+  const recs=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일'] || (r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr));
+  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${repairRowCells(r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}<td></td></tr>`).join('');
+  const extraRows=_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${repairRowCells('','','','','','')}
+      <td><button type="button" onclick="repairRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
+    </tr>`).join('');
+  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+      <thead><tr><th style="width:120px">터널명</th><th style="width:120px">발생일</th><th>이상발생내역</th><th style="width:120px">조치일</th><th>조치내역</th><th style="width:110px">작업자</th><th style="width:36px"></th></tr></thead>
+      <tbody>${existingRows}${extraRows}</tbody>
+    </table></div>
+    <button type="button" class="tb-action-btn" style="margin-top:10px" onclick="repairAddExtraRow()">+ 행 추가</button>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">저장</button>
+    </div>
+    <div class="modal-progress-wrap" id="rpRepairProgressWrap" style="display:none;margin-top:10px"><div class="modal-progress-bar" id="rpRepairProgressBar"></div></div>`;
+}
+async function submitTeamRepairForm(){
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+  const dbId=getTabDef('repair').dbId;
+  const targets=[];
+  document.querySelectorAll('#rpRepairBody tbody tr').forEach(tr=>{
+    const tunnel=tr.querySelector('.rp-tunnel').value;
+    const occur=tr.querySelector('.rp-occur').value;
+    const issue=tr.querySelector('.rp-issue').value.trim();
+    const fixDate=tr.querySelector('.rp-fixdate').value;
+    const fixNote=tr.querySelector('.rp-fixnote').value;
+    const worker=tr.querySelector('.rp-worker').value;
+    if(!occur && !issue) return; // 완전히 빈 행은 건너뜀
+    targets.push({id:tr.dataset.id||null, tunnel, occur, issue, fixDate, fixNote, worker});
+  });
+  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  const missing=targets.find(t=>!t.tunnel || !t.occur || !t.issue);
+  if(missing){ alert('터널명·발생일·이상발생내역은 필수입니다.'); return; }
+  if(!confirmDateOutOfMonth(targets.map(t=>t.occur), REPORT_SEL.year+'-'+REPORT_SEL.month)) return;
+  const btn=document.getElementById('rpRepairSubmitBtn');
+  btn.disabled=true; btn.textContent='저장 중...';
+  const wrap=document.getElementById('rpRepairProgressWrap'), bar=document.getElementById('rpRepairProgressBar');
+  wrap.style.display=''; bar.style.width='0%';
+  let done=0, failed=0;
+  const tasks=targets.map(t=>async ()=>{
+    const props={
+      '터널명':buildPropValue('select', t.tunnel),
+      '발생일':buildPropValue('date', t.occur),
+      '제목':buildPropValue('title', titleWithMonth(t.occur,'고장수리실적')),
+      '이상발생내역':buildPropValue('text', t.issue),
+      '조치일':buildPropValue('date', t.fixDate),
+      '조치내역':buildPropValue('text', t.fixNote),
+      '작업자':buildPropValue('text', t.worker)
+    };
+    try{
+      const page=t.id
+        ? await notionFetch('/v1/pages/'+t.id, 'PATCH', {properties:props})
+        : await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
+      done++; bar.style.width=Math.round(done/targets.length*100)+'%';
+      return page;
+    }catch(e){ failed++; throw e; }
+  });
+  try{
+    await runWithConcurrency(tasks, 6);
+    await loadTabData('repair');
+    btn.disabled=false; btn.textContent='저장';
+    toast(targets.length+'건 저장되었습니다.');
+    if(_reportCurPage==='repair') renderReportPage_repair();
+  }catch(e){
+    btn.disabled=false; btn.textContent='저장';
+    alert('저장 실패: '+e.message+(failed?' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.':''));
+    console.error(e);
+  }
+}
+// ── 점검사진 — 기존 모달 재사용(입력폼이 위, 이번 달 등록 현황은 아래, 2026-07-31 사용자 요청과 동일 순서) ──
+async function renderReportPage_photo(){
+  document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">3. 운영관리 사진대지</div>
+    <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
+    <div id="rpPhotoMount"></div>
+    <div class="report-section-hd" style="margin-top:22px">등록 현황</div>
+    <div id="rpPhotoPreview"></div>`;
+  if(!TAB_STATE.photo.loaded) await loadTabData('photo');
+  if(_reportCurPage!=='photo') return;
+  document.getElementById('rpLoading')?.remove();
+  renderTeamPhotoPreview();
+  mountAddModalInline('rpPhotoMount');
+  openAddModal('photo');
+  document.body.style.overflow='';
+}
+function renderTeamPhotoPreview(){
+  const wrap=document.getElementById('rpPhotoPreview');
+  if(!wrap) return;
+  const ymStr=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(ymStr))
+    .sort((a,b)=>(a['터널명']||'').localeCompare(b['터널명']||'') || (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
+  if(!recs.length){ wrap.innerHTML=`<div style="color:var(--txt3);font-size:12px">이번 달 등록된 사진이 없습니다.</div>`; return; }
+  const cells=recs.map(r=>{
+    const photo=(r['점검사진']&&r['점검사진'][0]) || null;
+    return `<div style="border:1px solid var(--border);border-radius:6px;padding:8px;min-height:150px">
+        <div style="font-weight:800;font-size:12.5px;margin-bottom:4px">${esc(r['터널명']||'')} #${esc(r['번호']||'')}</div>
+        <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">${esc(r['사진설명']||'')}</div>
+        ${photo ? `<img src="${esc(photo.url)}" alt="사진" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="color:var(--txt3);font-size:11px">사진 없음</div>`}
+      </div>`;
+  }).join('');
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">${cells}</div>`;
+}
+
+// ── 보고서 생성 탭 — 시트별 체크박스 선택 생성(안전관리 앱과 동일 패턴) ──
+const REPORT_GEN_SHEETS=[
+  {key:'cover', label:'표지'},
+  {key:'elecinsp', label:'1. 터널전기시설 점검표'},
+  {key:'repair', label:'2. 고장수리실적'},
+  {key:'photo', label:'3. 운영관리 사진대지'},
+  {key:'divider', label:'4. 터널시설점검일지'}
+];
+let REPORT_GEN_SELECTED=new Set(REPORT_GEN_SHEETS.map(s=>s.key));
+let _reportGenInited=false;
+function initReportGenTab(){
+  if(!_reportGenInited){
+    _reportGenInited=true;
+    document.getElementById('reportGenSelBar').innerHTML=
+      `<div class="dd-wrap" id="rgYearWrap">
+        <button class="dd-btn" id="rgYearBtn" type="button" onclick="toggleDd('rgYearMenu','rgYearBtn')" aria-haspopup="listbox" aria-label="연도 선택"><span id="rgYearLabel"></span></button>
+        <div class="dd-menu" id="rgYearMenu"></div>
+      </div>
+      <div class="dd-wrap" id="rgMonthWrap">
+        <button class="dd-btn" id="rgMonthBtn" type="button" onclick="toggleDd('rgMonthMenu','rgMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rgMonthLabel"></span></button>
+        <div class="dd-menu" id="rgMonthMenu"></div>
+      </div>`;
+    const curY=new Date().getFullYear();
+    document.getElementById('rgYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
+    document.getElementById('rgMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
+    document.getElementById('rgYearMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.year=opt.dataset.val; closeDd('rgYearMenu','rgYearBtn'); syncReportGenSelLabels(); renderReportGenBody();
+    });
+    document.getElementById('rgMonthMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      REPORT_SEL.month=opt.dataset.val; closeDd('rgMonthMenu','rgMonthBtn'); syncReportGenSelLabels(); renderReportGenBody();
+    });
+  }
+  syncReportGenSelLabels();
+  renderReportGenBody();
+}
+function syncReportGenSelLabels(){
+  document.getElementById('rgYearLabel').textContent=REPORT_SEL.year+'년';
+  document.getElementById('rgMonthLabel').textContent=Number(REPORT_SEL.month)+'월';
+  document.querySelectorAll('#rgYearMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.year));
+  document.querySelectorAll('#rgMonthMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.month));
+  ['rgYearBtn','rgMonthBtn'].forEach(id=>document.getElementById(id)?.classList.add('active'));
+}
+function toggleReportGenSheet(key){
+  if(REPORT_GEN_SELECTED.has(key)) REPORT_GEN_SELECTED.delete(key); else REPORT_GEN_SELECTED.add(key);
+  renderReportGenBody();
+}
+function toggleReportGenSelectAll(){
+  if(REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length) REPORT_GEN_SELECTED.clear();
+  else REPORT_GEN_SHEETS.forEach(s=>REPORT_GEN_SELECTED.add(s.key));
+  renderReportGenBody();
+}
+function previewReportGenSheet(key){
+  switchPanel('formEntry');
+  gotoReportPage(key);
+}
+function renderReportGenBody(){
+  const wrap=document.getElementById('reportGenBody'); if(!wrap) return;
+  const allChecked=REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length;
+  wrap.innerHTML=`
+    <div class="report-title-band">보고서 생성</div>
+    <div style="font-size:12.5px;color:var(--txt3);margin-bottom:14px">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
+    <label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:10px;cursor:pointer"><input type="checkbox" ${allChecked?'checked':''} onchange="toggleReportGenSelectAll()"> 전체 선택</label>
+    ${REPORT_GEN_SHEETS.map(s=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border2)">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ${REPORT_GEN_SELECTED.has(s.key)?'checked':''} onchange="toggleReportGenSheet('${s.key}')"> ${esc(s.label)}</label>
+        <button class="tb-action-btn" style="padding:4px 10px;font-size:11px" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
+      </div>`).join('')}
+    <div style="margin-top:18px"><button class="add-submit-btn" id="teamReportGenBtn" onclick="generateTeamReport()"><span id="teamReportGenLbl">보고서 생성</span></button></div>`;
+}
+function generateTeamReport(){
+  if(!isAuthed()){ openLoginModal(); return; }
+  if(!REPORT_GEN_SELECTED.size){ alert('시트를 하나 이상 선택해주세요.'); return; }
+  const btn=document.getElementById('teamReportGenBtn'), lbl=document.getElementById('teamReportGenLbl');
+  btn.disabled=true; lbl.textContent='생성 중...';
+  buildOneTeamUnifiedReport(Number(REPORT_SEL.year), Number(REPORT_SEL.month), REPORT_GEN_SELECTED).then(({blob, year, month})=>{
+    const url=URL.createObjectURL(blob);
+    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검결과보고서_점검팀.xlsx`;
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+  }).catch(e=>{
+    alert('보고서 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent='보고서 생성'; btn.disabled=false;
+  });
+}
+
 const ELECINSP_SHEET_GROUPS=TUNNEL_OPTIONS_ELEC.map(t=>({name:tunnelFnameAbbr(t), tunnels:[t]}));
 const ELECINSP_GUBUN_ORDER=['자동제어','조명설비','방재설비','관리동설비','터널진입차단설비'];
 function elecInspTunnelRecs(tunnel, year, month){
@@ -2923,7 +3370,7 @@ function buildTeamDailyLogDividerSheet(wb, year, month){
 
   for(let r=15; r<=25; r++) ws.getRow(r).height=30;
 }
-// 통합 보고서는 전기시설점검 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는
+// 통합 보고서는 "보고서" 탭에서 트리거되므로, 아직 방문 안 해서 TAB_STATE가 비어있는
 // 탭(고장수리/점검사진)은 먼저 로드해줘야 한다 — 안 그러면 "해당 월에 데이터가 없어서"가
 // 아니라 "탭을 안 열어봐서" 빠지는 조용한 누락이 생긴다.
 async function ensureTabLoaded(id){
@@ -2934,69 +3381,57 @@ async function ensureTabLoaded(id){
     throw new Error(`'${tabDef?tabDef.label:id}' 탭 데이터 로드에 실패하여 보고서 생성을 중단합니다.`);
   }
 }
-async function buildOneTeamUnifiedReport(year, month){
+// sections: 포함할 시트 키 Set(cover/elecinsp/repair/photo/divider) — 생략 시 전체(통합 보고서) 생성.
+// "보고서" 탭에서 체크박스로 선택/해제 가능(2026-07-31, 안전관리 앱과 동일 패턴).
+async function buildOneTeamUnifiedReport(year, month, sections){
+  const on=key=>!sections || sections.has(key);
   await loadExcelLib(true);
   await Promise.all(['elecinsp','repair','photo'].map(ensureTabLoaded));
 
   const wb=new ExcelJS.Workbook();
   let hasData=false;
-  buildTeamCoverReportSheet(wb, year, month);
+  if(on('cover')) buildTeamCoverReportSheet(wb, year, month);
 
   // 1. 터널전기시설 점검표 — 그룹(시트)당 데이터 있는 터널만 그려진다(buildElecInspReportSheet 내부 처리)
-  let titleShown=false;
-  ELECINSP_SHEET_GROUPS.forEach(g=>{
-    const ok=buildElecInspReportSheet(wb, g, year, month, !titleShown);
-    if(ok){ titleShown=true; hasData=true; }
-  });
+  if(on('elecinsp')){
+    let titleShown=false;
+    ELECINSP_SHEET_GROUPS.forEach(g=>{
+      const ok=buildElecInspReportSheet(wb, g, year, month, !titleShown);
+      if(ok){ titleShown=true; hasData=true; }
+    });
+  }
 
   // 2. 고장수리실적
-  const repairRows=buildRepairReportRows(year, month);
-  if(repairRows.length){ buildRepairReportSheet(wb, repairRows); hasData=true; }
+  if(on('repair')){
+    const repairRows=buildRepairReportRows(year, month);
+    if(repairRows.length){ buildRepairReportSheet(wb, repairRows); hasData=true; }
+  }
 
   // 3. 운영관리 사진대지 — 6장씩 사진1~N 시트
-  const photoRows=buildPhotoTeamReportRows(year, month);
-  if(photoRows.length){
-    const sheetCount=Math.ceil(photoRows.length/6);
-    for(let s=0; s<sheetCount; s++){
-      const sheetRows=photoRows.slice(s*6, s*6+6);
-      await buildPhotoTeamReportSheet(wb, sheetRows, s+1, s===0);
+  if(on('photo')){
+    const photoRows=buildPhotoTeamReportRows(year, month);
+    if(photoRows.length){
+      const sheetCount=Math.ceil(photoRows.length/6);
+      for(let s=0; s<sheetCount; s++){
+        const sheetRows=photoRows.slice(s*6, s*6+6);
+        await buildPhotoTeamReportSheet(wb, sheetRows, s+1, s===0);
+      }
+      hasData=true;
     }
-    hasData=true;
   }
 
   // 4. 터널시설점검일지(간지) — 원본처럼 데이터 없이도 항상 포함
-  buildTeamDailyLogDividerSheet(wb, year, month);
+  if(on('divider')) buildTeamDailyLogDividerSheet(wb, year, month);
 
-  if(!hasData) throw new Error('해당 연월에 생성할 데이터가 없습니다.');
+  if(!hasData && !on('cover') && !on('divider')) throw new Error('해당 연월에 생성할 데이터가 없습니다.');
 
   const buf=await wb.xlsx.writeBuffer();
   const blob=await excelUnlockAspectRatio(buf);
   return {blob, year, month};
 }
-function exportTeamUnifiedReport(){
-  if(!isAuthed()){ openLoginModal(); return; }
-  const btn=document.getElementById('unifiedReportBtn');
-  const lbl=document.getElementById('unifiedReportLbl');
-  const ym=resolveTabYearMonth('elecinsp', '날짜');
-  if(!ym){ alert('보고서를 생성할 데이터가 없습니다.'); return; }
-  btn.disabled=true; lbl.textContent='생성 중...';
-  buildOneTeamUnifiedReport(ym.year, ym.month).then(({blob, year, month})=>{
-    const url=URL.createObjectURL(blob);
-    const fname=`${year}년 ${String(month).padStart(2,'0')}월 점검결과보고서_점검팀.xlsx`;
-    const a=document.createElement('a'); a.href=url; a.download=fname;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 4000);
-    lbl.textContent='완료!';
-    setTimeout(()=>{ lbl.textContent='통합 보고서 생성'; btn.disabled=false; }, 1500);
-  }).catch(e=>{
-    alert('통합 보고서 생성 실패: '+e.message);
-    console.error(e);
-    lbl.textContent='통합 보고서 생성'; btn.disabled=false;
-  });
-}
 
 // ── 하단 탭 전환 ──
-const PANEL_IDS=TAB_DEFS.map(t=>t.id);
+const PANEL_IDS=['formEntry','report',...TAB_DEFS.map(t=>t.id)];
 let _activePanel=PANEL_IDS[0];
 function switchPanel(id){
   if(id===_activePanel) return;
@@ -3007,12 +3442,15 @@ function switchPanel(id){
     if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
   });
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+  if(id==='formEntry'){ initReportTab(); }
+  else if(id==='report'){ initReportGenTab(); unmountAddModalInline(); }
+  else { unmountAddModalInline(); }
   const tabDef=getTabDef(id);
   if(tabDef && tabDef.fields && !TAB_STATE[id].loaded && isAuthed()) loadTabData(id);
 }
 
 // ── 초기화 ──
-if(isAuthed()){ loadTabData('elecinsp'); }
+if(isAuthed()){ initReportTab(); }
 else { openLoginModal(); }
 </script>
 </div>
