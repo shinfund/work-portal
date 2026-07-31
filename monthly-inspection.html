@@ -3272,9 +3272,22 @@ function newPhotoMultiRow(num, desc){
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
     <label class="modal-label">사진대지(#1~#6) <span class="modal-required">*</span></label>
-    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다).</div>
+    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다). 6장을 넘으면 "+ 행 추가"로 늘릴 수 있습니다(단, 실제 엑셀 보고서 서식은 6칸 고정이라 7번째부터는 노션에는 저장되지만 보고서 생성 시에는 반영되지 않습니다).</div>
     <div id="photoMultiRowsList" style="margin-top:8px"></div>
+    <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="photoMultiAddRow()">+ 행 추가</button>
   </div>`;
+}
+function photoMultiAddRow(){
+  const nums=_photoMultiRows.map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
+  const next=nums.length?Math.max(...nums)+1:(_photoMultiRows.length+1);
+  const row=newPhotoMultiRow(String(next), '');
+  row.extra=true;
+  _photoMultiRows.push(row);
+  renderPhotoMultiRows();
+}
+function photoMultiRemoveExtraRow(key){
+  _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
+  renderPhotoMultiRows();
 }
 function renderPhotoMultiRows(){
   const wrap=document.getElementById('photoMultiRowsList');
@@ -3301,7 +3314,8 @@ function renderPhotoMultiRows(){
         <button type="button" onclick="removePhotoMultiFile(${row.key},${fi})" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer">✕</button>
       </div>`
     ).join('');
-    return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px">
+    return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
+      ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
       <div style="font-weight:800;font-size:12.5px;margin-bottom:6px">#${esc(row.num)}</div>
       <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
       <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
@@ -5896,41 +5910,62 @@ async function renderReportPage_elec(){
   if(!existing) reportPresetField('ff_1', REPORT_SEL.tunnel);
 }
 
-// ── 보고서입력 탭: 발전기점검 페이지 — 1레코드=1가동일(buildGeneratorFormExtra/submitGeneratorForm 그대로 재사용) + 이번달 등록된 가동일 목록 ──
+// ── 보고서입력 탭: 발전기점검 페이지 — 1레코드=1가동일(buildGeneratorFormExtra/submitGeneratorForm 그대로 재사용).
+// 전기설비기록·변압기온도와 달리 한 달에 가동일이 여러 번 생길 수 있어(비상발전기를 실제 가동한
+// 날마다 1건) 터널+월만으로는 "그 달의 데이터" 1건이 확정되지 않는다 — 기본값으로 그 달 가장 최근
+// 가동일을 불러오고, 상단 "가동일자" 드롭다운으로 다른 날짜를 선택하거나 "+ 신규 입력"으로 새 날짜를
+// 추가할 수 있게 한다(2026-07-31 사용자 요청 — 기존 "빈 새 입력폼 기본 + 하단 목록" 방식 대체).
 async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">4. 비상발전기 점검 및 가동일지</div>
       <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
     </div>
-    <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 16px">
+      <div class="rc-monthly-sub" style="margin:0">□ ${esc(REPORT_SEL.tunnel)}</div>
+      <div class="dd-wrap" id="genDaySelWrap">
+        <button class="dd-btn" id="genDaySelBtn" type="button" onclick="toggleDd('genDaySelMenu','genDaySelBtn')" aria-haspopup="listbox" aria-label="가동일자 선택"><span id="genDaySelLabel">가동일자</span></button>
+        <div class="dd-menu" id="genDaySelMenu"></div>
+      </div>
+    </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpGenMount"></div>
-    <div id="rpGenList" style="margin-top:22px"></div>`;
+    <div id="rpGenMount"></div>`;
   await loadTabData('generator'); // 저장 직후 재방문 시에도 목록이 항상 최신이도록 매번 새로 불러온다
   if(_reportCurPage!=='generator') return; // 로딩 중 다른 페이지로 이동했으면 중단
   document.getElementById('rpLoading')?.remove();
+  const recs=generatorMonthRecs();
+  const latest=recs.length ? recs[recs.length-1] : null;
+  renderGeneratorDayMenu(recs, latest?latest.id:null);
   mountAddModalInline('rpGenMount');
-  openAddModal('generator');
+  openAddModal('generator', latest?latest.id:null);
   document.body.style.overflow='';
-  reportPresetField('ff_1', REPORT_SEL.tunnel);
-  renderGeneratorMonthList();
+  if(!latest) reportPresetField('ff_1', REPORT_SEL.tunnel);
 }
-function renderGeneratorMonthList(){
-  const wrap=document.getElementById('rpGenList');
-  if(!wrap) return;
+function generatorMonthRecs(){
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
-  const recs=(TAB_STATE.generator.records||[]).filter(r=>r['터널명']===REPORT_SEL.tunnel && (r['가동일자']||'').slice(0,7)===ym)
+  return (TAB_STATE.generator.records||[]).filter(r=>r['터널명']===REPORT_SEL.tunnel && (r['가동일자']||'').slice(0,7)===ym)
     .sort((a,b)=>(a['가동일자']||'').localeCompare(b['가동일자']||''));
-  wrap.innerHTML = `<div class="report-section-hd">이번 달 등록된 가동일 (${recs.length}건)</div>` +
-    (recs.length ? `<div style="display:flex;flex-wrap:wrap;gap:8px">${recs.map(r=>
-      `<button class="report-page-chip" onclick="loadGeneratorDay('${r.id}')">${esc((r['가동일자']||'').slice(5))} 수정</button>`
-    ).join('')}</div>` : `<div style="color:var(--txt3);font-size:12px">아직 등록된 가동일이 없습니다.</div>`);
+}
+function renderGeneratorDayMenu(recs, selectedId){
+  const menu=document.getElementById('genDaySelMenu'), btn=document.getElementById('genDaySelBtn'), lbl=document.getElementById('genDaySelLabel');
+  if(!menu) return;
+  menu.innerHTML=[`<div class="dd-opt${!selectedId?' sel':''}" data-id="">+ 신규 입력</div>`]
+    .concat(recs.map(r=>`<div class="dd-opt${r.id===selectedId?' sel':''}" data-id="${r.id}">${esc((r['가동일자']||'').slice(5))}</div>`)).join('');
+  menu.onclick=e=>{
+    const opt=e.target.closest('.dd-opt'); if(!opt) return;
+    closeDd('genDaySelMenu','genDaySelBtn');
+    loadGeneratorDay(opt.dataset.id||null);
+  };
+  const cur=selectedId && recs.find(r=>r.id===selectedId);
+  lbl.textContent=cur ? (cur['가동일자']||'').slice(5)+' 수정' : '+ 신규 입력';
+  btn.classList.add('active');
 }
 function loadGeneratorDay(recordId){
   mountAddModalInline('rpGenMount');
-  openAddModal('generator', recordId);
+  openAddModal('generator', recordId||null);
   document.body.style.overflow='';
+  renderGeneratorDayMenu(generatorMonthRecs(), recordId||null);
+  if(!recordId) reportPresetField('ff_1', REPORT_SEL.tunnel);
 }
 
 // ── 보고서입력 탭: 업무처리 페이지 — 실제 "업무처리사항" 보고서(날짜/업무내용/조치사항/업체명/비고
