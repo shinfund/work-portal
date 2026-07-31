@@ -210,6 +210,9 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
+.form-group-hd{font-size:13px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
+.form-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
+.form-group-grid .modal-field{margin-bottom:0}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 .detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
@@ -271,11 +274,11 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .rc-toc-list{margin-top:6%;max-width:78%;margin-left:auto;margin-right:auto;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
 @media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
 .rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
-.rc-monthly-table{border-collapse:collapse;width:100%;font-size:13px}
+.rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
 .rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
 .rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rc-monthly-gubun{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
-.rc-monthly-content{text-align:left}
+.rc-monthly-content{text-align:left;max-width:520px}
 .elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
 .elec-grid-select{width:64px;padding:4px 4px;font-size:13px}
 @media(max-width:480px){ .elec-grid-input,.elec-grid-select{font-size:16px} }
@@ -302,6 +305,7 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
   th{padding:9px 10px}
   /* iOS Safari가 16px 미만 입력창 포커스 시 자동 확대하는 것 방지 */
   .search-box{font-size:16px}
+  .form-group-grid{grid-template-columns:1fr}
 }
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100vw - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;box-sizing:border-box}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -420,8 +424,13 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 
   <!-- ▸ 보고서(작업중) -->
   <div class="panel" id="panel-report">
-    <div class="report-toolbar" id="reportGenSelBar"></div>
-    <div id="reportGenBody" class="report-paper"></div>
+    <div class="report-paper" id="reportGenPaper">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+        <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">보고서 생성</div>
+        <div class="report-toolbar" id="reportGenSelBar" style="flex-shrink:0;width:auto"></div>
+      </div>
+      <div id="reportGenBody"></div>
+    </div>
   </div>
 
   <!-- ▸ 전기시설점검 -->
@@ -767,6 +776,7 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
+      {header:true, group:'기본정보'},
       {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
@@ -794,6 +804,7 @@ const TAB_DEFS=[
           return '먼저 일자를 선택하세요';
         },
         emptyHint:'먼저 터널명·일자를 선택하세요'},
+      {header:true, group:'사진'},
       // 사진설명은 노션 실데이터 기준 252건 중 서로 다른 값이 50개(2026-07-24 확인)로, 사진마다
       // 내용이 제각각이라 고정 드롭다운 후보로 묶을 만큼 반복되지 않는다 — 직접입력 유지가 적합.
       {key:'사진설명', type:'text'},
@@ -958,10 +969,23 @@ function toggleDd(menuId,btnId){
   const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
   if(!menu||!btn) return;
   if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
-  else { menu.classList.add('open'); btn.classList.add('active'); }
+  else {
+    // .report-toolbar는 가로 스크롤(overflow-x:auto)이 걸려 있는데 CSS 스펙상 overflow-y도
+    // 같이 auto가 돼 absolute 팝업이 표에 가려 잘려 보인다 — 열릴 때 좌표를 계산해 position:fixed로
+    // 붙여서 스크롤 컨테이너의 clip 영향을 아예 안 받게 한다(안전관리 앱과 동일 수정, 2026-07-31).
+    if(btn.closest('.report-toolbar')){
+      const r=btn.getBoundingClientRect();
+      menu.style.position='fixed';
+      menu.style.top=(r.bottom+6)+'px';
+      menu.style.left=r.left+'px';
+    }
+    menu.classList.add('open'); btn.classList.add('active');
+  }
 }
 function closeDd(menuId,btnId){
-  document.getElementById(menuId)?.classList.remove('open');
+  const menu=document.getElementById(menuId);
+  menu?.classList.remove('open');
+  if(menu){ menu.style.position=''; menu.style.top=''; menu.style.left=''; }
   document.getElementById(btnId)?.classList.remove('active');
 }
 document.addEventListener('click',e=>{
@@ -969,6 +993,7 @@ document.addEventListener('click',e=>{
     const wrap=menu.closest('.dd-wrap');
     if(wrap && !wrap.contains(e.target)){
       menu.classList.remove('open');
+      menu.style.position=''; menu.style.top=''; menu.style.left='';
       wrap.querySelector('.dd-btn')?.classList.remove('active');
     }
   });
@@ -1593,8 +1618,17 @@ function openAddModal(tabId, recordId){
   // 사진 구성이 매달 비슷해 최근월 기록을 참고해 초기값을 채워줄 수 있게 한다.
   const isPhotoMulti = tabId==='photo' && !r;
   if(isPhotoMulti){ _photoMultiRows=[]; _photoMultiNextKey=1; }
+  // 필드 배열 순서대로 렌더링 — {header:true} 마커를 만나면 이전 그룹 grid div를 닫고 새로 연다
+  // (안전관리 앱과 동일 패턴, 2026-07-31 이식 — 그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다).
   let html='';
+  let groupOpen=false;
   tabDef.fields.forEach((f,idx)=>{
+    if(f.header){
+      if(groupOpen) html+='</div>';
+      html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
+      groupOpen=true;
+      return;
+    }
     if(isElecinspChecklist && (f.key==='구분' || f.key==='점검내용' || f.key==='점검방법' || f.key==='점검결과')){
       if(f.key==='구분') html+='<div id="elecinspGubunWrap"></div><div id="elecinspChecklistWrap"></div>';
       return;
@@ -1606,6 +1640,7 @@ function openAddModal(tabId, recordId){
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
   });
+  if(groupOpen) html+='</div>';
   document.getElementById('addModalFields').innerHTML=html;
   document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elecinsp' || tabId==='repair' || isPhotoMulti);
   document.getElementById('addModal').classList.add('modal-open');
@@ -2583,7 +2618,10 @@ function renderReportPage_divider(){
 let _teamElecTunnel=TUNNEL_OPTIONS_ELEC[0];
 async function renderReportPage_elecinsp(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">1. 터널전기시설 점검표</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 터널전기시설 점검표</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpElecinspSubmitBtn').click()">저장</button>
+    </div>
     <div class="dd-wrap" id="eiTunnelWrap" style="margin-bottom:14px">
       <button class="dd-btn" id="eiTunnelBtn" type="button" onclick="toggleDd('eiTunnelMenu','eiTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="eiTunnelLabel"></span></button>
       <div class="dd-menu" id="eiTunnelMenu">${TUNNEL_OPTIONS_ELEC.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
@@ -2704,7 +2742,10 @@ function repairAddExtraRow(){ _repairExtraRows.push({key:Date.now()+Math.random(
 function repairRemoveExtraRow(key){ _repairExtraRows=_repairExtraRows.filter(r=>r.key!==key); renderTeamRepairBody(); }
 async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">2. 고장수리실적</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 고장수리실적</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpRepairSubmitBtn').click()">저장</button>
+    </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpRepairBody"></div>`;
   if(!TAB_STATE.repair.loaded) await loadTabData('repair');
@@ -2720,7 +2761,7 @@ function repairRowCells(tunnel, occur, issue, fixDate, fixNote, worker){
       <td><input type="text" class="modal-input rp-issue" style="width:100%" value="${esc(issue)}"></td>
       <td><input type="date" class="modal-input rp-fixdate" style="width:100%" value="${esc(fixDate)}"></td>
       <td><input type="text" class="modal-input rp-fixnote" style="width:100%" value="${esc(fixNote)}"></td>
-      <td><input type="text" class="modal-input rp-worker" style="width:100%" value="${esc(worker)}"></td>`;
+      <td><input type="text" class="modal-input rp-worker" style="width:100%" value="${esc(worker)}" list="repairWorkerList"></td>`;
 }
 function renderTeamRepairBody(){
   const wrap=document.getElementById('rpRepairBody'); if(!wrap) return;
@@ -2728,15 +2769,19 @@ function renderTeamRepairBody(){
   // 조치일 미기재 건은 이월(발생월 무관 항상 표시), 조치완료 건은 발생일·조치일 중 하나라도 이번
   // 달이면 표시 — buildRepairReportRows와 동일한 포함 기준(2026-07-31).
   const recs=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일'] || (r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr));
+  // 빈 화면으로 시작하면 "+ 행 추가"를 여러 번 눌러야 해서, 기존 건수와 합쳐 최소 10행은 항상
+  // 보이게 빈 행을 미리 채워둔다(안전관리 앱 업무처리 페이지와 동일, 2026-07-31 사용자 요청).
+  while(recs.length + _repairExtraRows.length < 10){ _repairExtraRows.push({key:Date.now()+Math.random()}); }
   const existingRows=recs.map(r=>`<tr data-id="${r.id}">${repairRowCells(r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}<td></td></tr>`).join('');
   const extraRows=_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${repairRowCells('','','','','','')}
       <td><button type="button" onclick="repairRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
     </tr>`).join('');
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+  wrap.innerHTML=`<datalist id="repairWorkerList">${REPAIR_WORKER_OPTIONS.map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
+    <div class="tbl-wrap"><table class="rc-monthly-table">
       <thead><tr><th style="width:120px">터널명</th><th style="width:120px">발생일</th><th>이상발생내역</th><th style="width:120px">조치일</th><th>조치내역</th><th style="width:110px">작업자</th><th style="width:36px"></th></tr></thead>
       <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
-    <button type="button" class="tb-action-btn" style="margin-top:10px" onclick="repairAddExtraRow()">+ 행 추가</button>
+    <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="repairAddExtraRow()">+ 행 추가</button>
     <div class="modal-btns" style="margin-top:16px">
       <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">저장</button>
     </div>
@@ -2798,7 +2843,10 @@ async function submitTeamRepairForm(){
 // ── 점검사진 — 기존 모달 재사용(입력폼이 위, 이번 달 등록 현황은 아래, 2026-07-31 사용자 요청과 동일 순서) ──
 async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">3. 운영관리 사진대지</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 운영관리 사진대지</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+    </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPhotoMount"></div>
     <div class="report-section-hd" style="margin-top:22px">등록 현황</div>
@@ -2850,7 +2898,8 @@ function initReportGenTab(){
       <div class="dd-wrap" id="rgMonthWrap">
         <button class="dd-btn" id="rgMonthBtn" type="button" onclick="toggleDd('rgMonthMenu','rgMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rgMonthLabel"></span></button>
         <div class="dd-menu" id="rgMonthMenu"></div>
-      </div>`;
+      </div>
+      <button class="add-submit-btn" id="teamReportGenBtn" onclick="generateTeamReport()" style="margin-left:4px"><span id="teamReportGenLbl">보고서 생성</span></button>`;
     const curY=new Date().getFullYear();
     document.getElementById('rgYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
     document.getElementById('rgMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
@@ -2890,15 +2939,13 @@ function renderReportGenBody(){
   const wrap=document.getElementById('reportGenBody'); if(!wrap) return;
   const allChecked=REPORT_GEN_SELECTED.size===REPORT_GEN_SHEETS.length;
   wrap.innerHTML=`
-    <div class="report-title-band">보고서 생성</div>
     <div style="font-size:12.5px;color:var(--txt3);margin-bottom:14px">시트를 선택(기본 전체)한 뒤 "보고서 생성"을 누르세요. "미리보기"는 입력폼 탭의 해당 페이지를 보여줍니다.</div>
     <label style="display:flex;align-items:center;gap:8px;font-weight:700;margin-bottom:10px;cursor:pointer"><input type="checkbox" ${allChecked?'checked':''} onchange="toggleReportGenSelectAll()"> 전체 선택</label>
     ${REPORT_GEN_SHEETS.map(s=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border2)">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" ${REPORT_GEN_SELECTED.has(s.key)?'checked':''} onchange="toggleReportGenSheet('${s.key}')"> ${esc(s.label)}</label>
-        <button class="tb-action-btn" style="padding:4px 10px;font-size:11px" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
-      </div>`).join('')}
-    <div style="margin-top:18px"><button class="add-submit-btn" id="teamReportGenBtn" onclick="generateTeamReport()"><span id="teamReportGenLbl">보고서 생성</span></button></div>`;
+        <button type="button" class="report-page-chip" onclick="previewReportGenSheet('${s.key}')">미리보기</button>
+      </div>`).join('')}`;
 }
 function generateTeamReport(){
   if(!isAuthed()){ openLoginModal(); return; }

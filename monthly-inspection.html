@@ -129,7 +129,8 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 @media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
 /* 월간점검 페이지 — 실제 엑셀 시트(월간점검표1~3)의 표 구조(구분·설비명 세로병합) 재현 */
 .rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
-.rc-monthly-table{border-collapse:collapse;width:100%;font-size:13px}
+.rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
+.rc-monthly-content{max-width:520px}
 .rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
 .rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rc-monthly-gubun,.rc-monthly-seolbi{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
@@ -1296,8 +1297,8 @@ const TAB_DEFS=[
     // "공통값" 섹션(자식 upsert 시 반복 저장)으로 이동. [[project_monthly_inspection_app]]
     id:'elec', label:'전기설비기록', dbId:DB_IDS.elec, titleKey:'제목', dateKey:'점검일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncElecTunnelDefaults()'},
       {header:true, group:'가동정보'},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncElecTunnelDefaults()'},
       {key:'점검일자', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['점검일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['점검일자'],'전기설비점검결과기록표'); return t?[t]:[]; },
@@ -1339,8 +1340,8 @@ const TAB_DEFS=[
   {
     id:'generator', label:'발전기점검', dbId:DB_IDS.generator, titleKey:'제목', dateKey:'가동일자',
     fields:[
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncGeneratorTunnelDefaults()'},
       {header:true, group:'가동정보'},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'syncGeneratorTunnelDefaults()'},
       {key:'가동일자', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['가동일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['가동일자'],'발전기운전'); return t?[t]:[]; },
@@ -1362,12 +1363,14 @@ const TAB_DEFS=[
   {
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
+      {header:true, group:'기본정보'},
       {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
         emptyHint:'먼저 일자를 선택하세요'},
       {key:'번호', type:'number', uiType:'fixed-select', options:['1','2','3','4','5','6'], required:true, cascadeTrigger:true},
+      {header:true, group:'사진'},
       {key:'사진설명', type:'text', uiType:'cascade-select', dependsOn:['터널명','번호'],
         optionsFn:dep=>photoDescOptions(dep['터널명'], dep['번호']),
         emptyHint:'먼저 터널명·번호를 선택하세요'},
@@ -5722,7 +5725,10 @@ function renderReportPage_divider(){
 // 기존 다중행 입력 카드(buildPhotoMultiHtml)를 그대로 아래에 둔다 — 업로드 로직은 건드리지 않음.
 async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">5. 운영관리 사진대지</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">5. 운영관리 사진대지</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPhotoMount"></div>
@@ -5735,7 +5741,7 @@ async function renderReportPage_photo(){
   mountAddModalInline('rpPhotoMount');
   openAddModal('photo');
   document.body.style.overflow='';
-  reportPresetField('ff_0', REPORT_SEL.tunnel);
+  reportPresetField('ff_1', REPORT_SEL.tunnel);
 }
 function renderPhotoReportPreview(){
   const wrap=document.getElementById('rpPhotoPreview');
@@ -5792,7 +5798,10 @@ async function findExistingRecordForSel(tabId, dateKey){
 // ── 보고서입력 탭: 전기설비기록 페이지 — buildElecFormExtra(1.기본사항/2.점검내역/3.종합의견)가 이미 보고서 구조와 거의 1:1이라 얇은 래퍼만 필요 ──
 async function renderReportPage_elec(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">2. 전기설비 점검결과기록표</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 전기설비 점검결과기록표</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">설비명(상호) : ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpElecMount"></div>`;
@@ -5802,13 +5811,16 @@ async function renderReportPage_elec(){
   mountAddModalInline('rpElecMount');
   openAddModal('elec', existing?existing.id:null);
   document.body.style.overflow='';
-  if(!existing) reportPresetField('ff_0', REPORT_SEL.tunnel);
+  if(!existing) reportPresetField('ff_1', REPORT_SEL.tunnel);
 }
 
 // ── 보고서입력 탭: 발전기점검 페이지 — 1레코드=1가동일(buildGeneratorFormExtra/submitGeneratorForm 그대로 재사용) + 이번달 등록된 가동일 목록 ──
 async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">4. 비상발전기 점검 및 가동일지</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">4. 비상발전기 점검 및 가동일지</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpGenMount"></div>
@@ -5819,7 +5831,7 @@ async function renderReportPage_generator(){
   mountAddModalInline('rpGenMount');
   openAddModal('generator');
   document.body.style.overflow='';
-  reportPresetField('ff_0', REPORT_SEL.tunnel);
+  reportPresetField('ff_1', REPORT_SEL.tunnel);
   renderGeneratorMonthList();
 }
 function renderGeneratorMonthList(){
@@ -5848,7 +5860,10 @@ let _taskExtraRows=[];
 let _taskExtraNextKey=1;
 async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">7. 월간 업무처리사항</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">7. 월간 업무처리사항</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTaskSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ ${esc(reportBaseTunnel(REPORT_SEL.tunnel))}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpTaskBody"></div>`;
@@ -5866,6 +5881,12 @@ function taskRemoveExtraRow(key){
   _taskExtraRows=_taskExtraRows.filter(r=>r.key!==key);
   renderTaskBody();
 }
+// 업체명 자유서술 입력에 과거 입력값을 목록으로 제안(datalist) — 직접입력도 그대로 가능(2026-07-31 사용자 요청).
+function taskCompanyOptions(){
+  const set=new Set();
+  (TAB_STATE.task.records||[]).forEach(r=>{ if(r['업체명']) set.add(r['업체명']); });
+  return [...set].sort();
+}
 function renderTaskBody(){
   const wrap=document.getElementById('rpTaskBody');
   if(!wrap) return;
@@ -5873,17 +5894,21 @@ function renderTaskBody(){
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const recs=(TAB_STATE.task.records||[]).filter(r=>r['터널명']===tunnel && (r['날짜']||'').slice(0,7)===ym)
     .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''));
+  // 빈 화면으로 시작하면 "+ 행 추가"를 여러 번 눌러야 해서, 기존 건수와 합쳐 최소 10행은 항상
+  // 보이게 빈 행을 미리 채워둔다(2026-07-31 사용자 요청).
+  while(recs.length + _taskExtraRows.length < 10){ _taskExtraRows.push({key:_taskExtraNextKey++}); }
   const cells=(dateVal, content, action, company, note)=>`
       <td><input type="date" class="modal-input tk-date" style="width:100%" value="${esc(dateVal)}"></td>
       <td><input type="text" class="modal-input tk-content" style="width:100%" value="${esc(content)}"></td>
       <td><input type="text" class="modal-input tk-action" style="width:100%" value="${esc(action)}"></td>
-      <td><input type="text" class="modal-input tk-company" style="width:100%" value="${esc(company)}"></td>
+      <td><input type="text" class="modal-input tk-company" style="width:100%" value="${esc(company)}" list="taskCompanyList"></td>
       <td><input type="text" class="modal-input tk-note" style="width:100%" value="${esc(note)}"></td>`;
   const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}<td></td></tr>`).join('');
   const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}
       <td><button type="button" onclick="taskRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
     </tr>`).join('');
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+  wrap.innerHTML=`<datalist id="taskCompanyList">${taskCompanyOptions().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
+    <div class="tbl-wrap"><table class="rc-monthly-table">
       <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:120px">업체명</th><th style="width:100px">비고</th><th style="width:36px"></th></tr></thead>
       <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
@@ -5947,7 +5972,10 @@ async function submitTaskReportForm(){
 const TRANSFORMER_TYPES=['조명용','일반용','동력용'];
 async function renderReportPage_transformer(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">3. 변압기 온도측정표</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 변압기 온도측정표</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTransSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpTransBody"></div>`;
@@ -6092,7 +6120,10 @@ function monthlyLatestRecord(tunnel, item){
 }
 async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">1. 월간 점검결과표</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 월간 점검결과표</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpMonthlySubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpMonthlyBody"></div>`;
@@ -6207,7 +6238,10 @@ function powerRecordLookup(tunnel, dateStr){
 }
 async function renderReportPage_power(){
   document.getElementById('reportPaper').innerHTML=`
-    <div class="report-title-band">6. 전력데이터 분석</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+      <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">6. 전력데이터 분석</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpPowerSubmitBtn').click()">저장</button>
+    </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPowerChartWrap"></div>
@@ -6715,7 +6749,10 @@ function initReportGenTab(){
       <div class="dd-wrap" id="rgMonthWrap">
         <button class="dd-btn" id="rgMonthBtn" type="button" onclick="toggleDd('rgMonthMenu','rgMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rgMonthLabel"></span></button>
         <div class="dd-menu" id="rgMonthMenu"></div>
-      </div>`;
+      </div>
+      <button class="add-submit-btn" id="reportGenSelBtn" onclick="generateSelectedReport()" style="background:var(--purple);margin-left:4px">
+        <span id="reportGenSelLbl">보고서 생성</span>
+      </button>`;
     const curY=new Date().getFullYear();
     document.getElementById('rgYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
     document.getElementById('rgMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
@@ -6795,12 +6832,7 @@ function renderReportGenBody(){
       </label>
     </div>
     ${rows}
-    <div class="modal-btns" style="margin-top:18px;gap:10px">
-      <button class="add-submit-btn" id="reportGenSelBtn" onclick="generateSelectedReport()" style="background:var(--purple)">
-        <span id="reportGenSelLbl">보고서 생성</span>
-      </button>
-    </div>
-    <div class="modal-progress-wrap" id="reportGenProgressWrap" style="display:none"><div class="modal-progress-bar" id="reportGenProgressBar"></div></div>`;
+    <div class="modal-progress-wrap" id="reportGenProgressWrap" style="display:none;margin-top:14px"><div class="modal-progress-bar" id="reportGenProgressBar"></div></div>`;
 }
 // 전체 선택 상태면 표지·간지가 항상 포함되는 것과 합쳐 사실상 "통합 보고서"와 동일한 결과물이라
 // 버튼을 하나로 통합했다(2026-07-30 사용자 확인) — 선택이 곧 통합 여부를 결정한다.
