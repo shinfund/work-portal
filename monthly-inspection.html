@@ -2817,13 +2817,13 @@ function generatorLatestForTunnel(tunnel){
 // 보여준다 — GENERATOR_CHECKLIST가 이미 앞 10개=일반점검사항/뒤 10개=운전중점검사항 순서라 인덱스
 // 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 gchkr_i/gchks_i를 그대로 유지, 저장 로직 불변, 2026-07-30).
 function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
-  let html=`<div class="tbl-wrap" style="min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:70px">결과</th><th style="width:90px">특이사항</th></tr></thead><tbody>`;
+  let html=`<div class="tbl-wrap" style="min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:96px">결과</th><th style="width:130px">특이사항</th></tr></thead><tbody>`;
   items.forEach((c,i)=>{
     const idx=startIdx+i;
     const rec=generatorChkLookup(chkSrc, c);
     html+=`<tr><td>${esc(c.점검내용)}</td>
-      <td><input class="modal-input elec-grid-input" style="width:64px" type="text" id="gchkr_${idx}" value="${esc(rec?rec.결과:'')}"/></td>
-      <td><input class="modal-input elec-grid-input" style="width:84px" type="text" id="gchks_${idx}" value="${esc(rec?rec.특이사항:'')}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:88px" type="text" id="gchkr_${idx}" value="${esc(rec?rec.결과:'')}"/></td>
+      <td><input class="modal-input elec-grid-input" style="width:120px" type="text" id="gchks_${idx}" value="${esc(rec?rec.특이사항:'')}"/></td>
     </tr>`;
   });
   html+='</tbody></table></div>';
@@ -2832,10 +2832,24 @@ function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
 function buildGeneratorChkGridHtml(chkSrc){
   const half=GENERATOR_CHECKLIST.length/2;
   const left=GENERATOR_CHECKLIST.slice(0, half), right=GENERATOR_CHECKLIST.slice(half);
-  return `<div style="display:flex;gap:10px;flex-wrap:wrap">`
+  return `<div id="generatorChkRow" style="display:flex;gap:14px;flex-wrap:wrap">`
     + buildGeneratorChkSideTable(chkSrc, left, 0, '일반점검사항')
     + buildGeneratorChkSideTable(chkSrc, right, half, '운전중점검사항')
     + `</div>`;
+}
+// 발전기점검 입력폼 전체 폭 정렬 — 점검사항(일반점검사항/운전중점검사항 2개 표) 행의 실제 콘텐츠 폭을
+// 기준으로 #generatorFormWrap 너비를 맞춰, 가동정보·유류사용량 등 grid 영역이 그 폭 안으로 자연스럽게
+// 맞춰지게 한다(block 요소 기본 100% 채움) — buildElecFormExtra의 syncElecFormWidth와 동일 원리
+// (2026-07-31 사용자 요청: 기준 카드를 먼저 정하고 나머지를 거기에 맞추는 방식).
+function syncGeneratorFormWidth(){
+  const wrap=document.getElementById('generatorFormWrap');
+  const chkRow=document.getElementById('generatorChkRow');
+  if(!wrap || !chkRow || !chkRow.children.length) return;
+  const contLeft=chkRow.getBoundingClientRect().left;
+  let maxRight=0;
+  Array.from(chkRow.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
+  if(maxRight<=0) return;
+  wrap.style.width=`min(${Math.ceil(maxRight)}px, 100%)`;
 }
 // 발전기점검 신규등록/수정 — 유류현황 1건(단일 행 입력) + 점검체크리스트 20개 입력 그리드(부모 필드 뒤에 덧붙임)
 // 신규등록 시 체크리스트·유류 전일재고량은 해당 터널의 가장 최근 레코드 값을 기본값으로 채운다(거의 매번 같은
@@ -3020,10 +3034,10 @@ async function submitTransformerForm(){
 function buildTransformerRefHtml(){
   return `<div class="form-group-hd">측정지점 참고사진(고정)</div>
     <div class="modal-hint" style="margin-bottom:8px">※ 지점번호 ①~⑮ 위치 확인용 참고사진입니다(모든 터널·변압기종류 공통). 클릭하면 크게 볼 수 있고, 등록 데이터에는 저장되지 않습니다.</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+    <div id="trfRefRow" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       ${TRANSFORMER_REF_IMAGES.map(img=>`
         <div style="width:340px;max-width:100%">
-          <img src="${esc(img.src)}" alt="${esc(img.label)}" style="width:100%;border-radius:var(--r10);border:1px solid var(--border);cursor:zoom-in;display:block" onclick="window.open('${esc(img.src)}','_blank')"/>
+          <img src="${esc(img.src)}" alt="${esc(img.label)}" style="width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:var(--r10);border:1px solid var(--border);cursor:zoom-in;display:block" onclick="window.open('${esc(img.src)}','_blank')"/>
           <div style="text-align:center;font-size:11.5px;color:var(--txt3);margin-top:4px">${esc(img.label)}</div>
         </div>`).join('')}
     </div>`;
@@ -3085,8 +3099,10 @@ function openAddModal(tabId, recordId){
   if(tabId==='generator') html+=buildGeneratorFormExtra(r);
   if(tabId==='transformer') html+=buildTransformerRefHtml();
   if(tabId==='photo' && !r) html+='<div id="photoMultiWrap"></div>';
-  document.getElementById('addModalFields').innerHTML = tabId==='elec' ? ('<div id="elecFormWrap">'+html+'</div>') : html;
+  const WRAP_ID = tabId==='photo' ? (!r ? 'photoFormWrap' : null) : {elec:'elecFormWrap', generator:'generatorFormWrap'}[tabId];
+  document.getElementById('addModalFields').innerHTML = WRAP_ID ? (`<div id="${WRAP_ID}">`+html+'</div>') : html;
   if(tabId==='elec') syncElecFormWidth();
+  if(tabId==='generator') syncGeneratorFormWidth();
   // 신규등록/수정 팝업 너비 — elec/generator/transformer는 form-group-grid(3열) 하위 표가 있어
   // 이미 넓게 확장돼 있었음. monthly(캐스케이드셀렉트 3개+장문 점검내용)와 task(장문 업무내용·
   // 조치사항)도 필드 수·입력폭이 비슷해 좁은 440px에서는 답답해 보인다는 피드백으로 함께 확장
@@ -3278,7 +3294,21 @@ function renderPhotoMultiRows(){
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;margin-top:8px">${thumbs}</div>
     </div>`;
   }).join('');
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${boxes}</div>`;
+  wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${boxes}</div>`;
+  syncPhotoFormWidth();
+}
+// 점검사진 입력폼 폭 정렬 — 사진대지(#1~#6) 그리드가 실제로 몇 칸씩 배치되는지(현재 폭 기준 자연스러운
+// 줄바꿈 결과)를 기준 카드로 삼아, 위 기본정보(터널명/일자/제목) grid를 그 폭에 맞춘다 — 다른 탭의
+// 기준 카드 폭 정렬과 동일 원리(2026-07-31 사용자 요청).
+function syncPhotoFormWidth(){
+  const wrap=document.getElementById('photoFormWrap');
+  const gridRow=document.getElementById('photoMultiGridRow');
+  if(!wrap || !gridRow || !gridRow.children.length) return;
+  const contLeft=gridRow.getBoundingClientRect().left;
+  let maxRight=0;
+  Array.from(gridRow.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
+  if(maxRight<=0) return;
+  wrap.style.width=`min(${Math.ceil(maxRight)}px, 100%)`;
 }
 function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
@@ -5906,10 +5936,6 @@ function taskAddRow(){
   _taskExtraRows.push({key:_taskExtraNextKey++});
   renderTaskBody();
 }
-function taskRemoveExtraRow(key){
-  _taskExtraRows=_taskExtraRows.filter(r=>r.key!==key);
-  renderTaskBody();
-}
 // 업체명 자유서술 입력에 과거 입력값을 목록으로 제안(datalist) — 직접입력도 그대로 가능(2026-07-31 사용자 요청).
 function taskCompanyOptions(){
   const set=new Set();
@@ -5928,22 +5954,40 @@ function renderTaskBody(){
   while(recs.length + _taskExtraRows.length < 10){ _taskExtraRows.push({key:_taskExtraNextKey++}); }
   const cells=(dateVal, content, action, company, note)=>`
       <td><input type="date" class="modal-input tk-date" style="width:100%" value="${esc(dateVal)}"></td>
-      <td><input type="text" class="modal-input tk-content" style="width:100%" value="${esc(content)}"></td>
-      <td><input type="text" class="modal-input tk-action" style="width:100%" value="${esc(action)}"></td>
-      <td><input type="text" class="modal-input tk-company" style="width:100%" value="${esc(company)}" list="taskCompanyList"></td>
-      <td><input type="text" class="modal-input tk-note" style="width:100%" value="${esc(note)}"></td>`;
-  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}<td></td></tr>`).join('');
-  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}
-      <td><button type="button" onclick="taskRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
-    </tr>`).join('');
+      <td><input type="text" class="modal-input tk-content" value="${esc(content)}"></td>
+      <td><input type="text" class="modal-input tk-action" value="${esc(action)}"></td>
+      <td><input type="text" class="modal-input tk-company" value="${esc(company)}" list="taskCompanyList"></td>
+      <td><input type="text" class="modal-input tk-note" value="${esc(note)}"></td>`;
+  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`).join('');
+  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}</tr>`).join('');
   wrap.innerHTML=`<datalist id="taskCompanyList">${taskCompanyOptions().map(v=>`<option value="${esc(v)}">`).join('')}</datalist>
     <div class="tbl-wrap"><table class="rc-monthly-table">
-      <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:120px">업체명</th><th style="width:100px">비고</th><th style="width:36px"></th></tr></thead>
+      <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th>업체명</th><th>비고</th></tr></thead>
       <tbody>${existingRows}${extraRows}</tbody>
     </table></div>
     <div style="margin-top:10px"><button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button></div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
+  autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-company':110, 'tk-note':90});
+}
+// 표 형식 입력폼(업무처리/고장수리 등) 전용 — 컬럼별 실제 입력값 중 가장 긴 텍스트 폭을 caret 기준으로
+// 측정해 그 컬럼의 모든 입력창 너비를 맞춘다(스프레드시트의 "열 너비 자동맞춤"과 동일 개념). td에
+// width:100%를 주지 않고 이 함수로만 폭을 정하므로, table이 필요한 만큼만 넓어지고(.tbl-wrap이
+// overflow-x:auto라 넘치면 가로 스크롤) 나머지는 좁게 유지된다(2026-07-31 사용자 요청).
+function autoSizeTableColumns(wrap, colMinWidths){
+  const probe=wrap.querySelector('.modal-input');
+  if(!probe) return;
+  const cs=getComputedStyle(probe);
+  const canvas=autoSizeTableColumns._canvas||(autoSizeTableColumns._canvas=document.createElement('canvas'));
+  const ctx=canvas.getContext('2d');
+  ctx.font=`${cs.fontSize} ${cs.fontFamily}`;
+  Object.entries(colMinWidths).forEach(([cls,minW])=>{
+    const inputs=wrap.querySelectorAll('.'+cls);
+    let max=0;
+    inputs.forEach(inp=>{ max=Math.max(max, ctx.measureText(inp.value||'').width); });
+    const w=Math.min(560, Math.max(minW, Math.ceil(max)+28));
+    inputs.forEach(inp=>{ inp.style.width=w+'px'; });
+  });
 }
 async function submitTaskReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
@@ -6038,7 +6082,7 @@ function renderTransformerReportBody(){
   const latestDate=monthRecs.length ? monthRecs.reduce((a,b)=>(a['측정일자']>b['측정일자']?a:b))['측정일자'] : '';
   const latestInspector=(monthRecs.find(r=>r['점검자'])||{})['점검자'] || '';
 
-  let html=`<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
+  let html=`<div id="trfTopRow" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
     <div class="modal-field" style="flex:1;min-width:160px;margin-bottom:0">
       <label class="modal-label">측정일자 <span class="modal-required">*</span></label>
       <input id="trfDate" class="modal-input" type="date" value="${esc(latestDate)}">
@@ -6070,6 +6114,30 @@ function renderTransformerReportBody(){
   html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTransSubmitBtn" onclick="submitTransformerReportForm()">저장</button></div>
     <div class="modal-progress-wrap" id="rpTransProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTransProgressBar"></div></div>`;
   wrap.innerHTML=html;
+  syncTransformerFormWidth();
+}
+// 변압기 입력폼 폭 정렬 — 온도측정표(조명용/일반용/동력용, 셋 다 동일 구조라 폭도 같음)를 기준 카드로
+// 삼아 상단 측정일자·점검자 행과 참고사진 행의 폭을 그 표에 맞춘다(다른 탭의 기준 카드 폭 정렬과
+// 동일 원리). 참고사진은 2장의 폭을 균등 분배해 기준 폭을 정확히 채운다(2026-07-31 사용자 요청).
+function syncTransformerFormWidth(){
+  const wrap=document.getElementById('rpTransBody');
+  if(!wrap) return;
+  const anchorTable=wrap.querySelector('.rc-monthly-table');
+  if(!anchorTable) return;
+  const w=anchorTable.getBoundingClientRect().width;
+  if(!w) return;
+  const topRow=document.getElementById('trfTopRow');
+  if(topRow) topRow.style.width=`min(${Math.ceil(w)}px, 100%)`;
+  const refRow=document.getElementById('trfRefRow');
+  if(refRow){
+    refRow.style.width=`min(${Math.ceil(w)}px, 100%)`;
+    const boxes=Array.from(refRow.children);
+    const gap=10, n=boxes.length;
+    if(n){
+      const boxW=Math.max(120, Math.floor((w-gap*(n-1))/n));
+      boxes.forEach(b=>{ b.style.width=boxW+'px'; });
+    }
+  }
 }
 async function submitTransformerReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
@@ -6279,7 +6347,19 @@ async function renderReportPage_power(){
   if(_reportCurPage!=='power') return;
   document.getElementById('rpLoading')?.remove();
   renderPowerGrid();
+  syncPowerChartWidth();
   renderPowerChart();
+}
+// 전력사용량 입력폼 — 차트가 report-paper 전체 폭으로 늘어나 있으면 아래 실제 입력 표(4열, 좁음)와
+// 좌우 폭이 안 맞아 어색해 보인다는 사용자 피드백(2026-07-31) — A4 인쇄 기준으로는 표가 실제 필요한
+// 폭이므로 표를 기준 삼아 차트 래퍼 폭을 표에 맞춘다(다른 탭의 "기준 카드" 폭 정렬과 동일 원리).
+function syncPowerChartWidth(){
+  const chartWrap=document.getElementById('rpPowerChartWrap');
+  const table=document.querySelector('#rpPowerBody .rc-monthly-table');
+  if(!chartWrap || !table) return;
+  const w=table.getBoundingClientRect().width;
+  if(!w) return;
+  chartWrap.style.width=`min(${Math.ceil(w)}px, 100%)`;
 }
 // 실제 엑셀 보고서(전력사용량표)에도 표 위에 일별 MAIN/조명용 꺾은선 차트가 들어가 있어, 입력폼에도
 // 동일하게 표시(2026-07-30) — 보고서 생성용 renderPowerChartImage와 같은 Chart.js를 그대로 재사용하되,
