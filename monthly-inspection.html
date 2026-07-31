@@ -3080,6 +3080,9 @@ function openAddModal(tabId, recordId){
   const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'], photo:['번호','사진설명','점검사진'] }[tabId] : null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header){
+      // photo 탭의 "사진" 그룹(번호 뒤)은 신규등록 모드에선 사진설명·점검사진이 전부 buildPhotoMultiHtml
+      // 다중행 UI로 대체되어 실제 내용이 없다 — 그대로 두면 빈 헤더+빈 grid 박스만 남는다(2026-07-31 버그 수정).
+      if(MULTI_ITEM_FIELDS && tabId==='photo' && f.group==='사진') return;
       if(groupOpen) html+='</div>';
       html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
       groupOpen=true;
