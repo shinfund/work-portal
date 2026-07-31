@@ -195,6 +195,7 @@ tbody tr:last-child td{border-bottom:none}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 /* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정(2026-07-10) */
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
@@ -371,7 +372,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
-.modal-required{color:var(--coral);margin-left:2px}
+.modal-required{color:var(--coral800);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:640px){
@@ -389,7 +390,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .photo-upload-file-btn:hover{background:var(--sky100)}
 .photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-upload-status.ok{color:var(--teal600);font-weight:700}
-.photo-upload-status.err{color:var(--coral);font-weight:700}
+.photo-upload-status.err{color:var(--coral800);font-weight:700}
 .photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);display:none;margin-top:10px;cursor:zoom-in}
 .photo-thumb.show{display:block}
 
@@ -1996,9 +1997,9 @@ function updateKpiForList(){
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
   renderKpiCountLine('filterCount', [
     { label:isFiltered?'필터 결과':'전체', value:rows.length },
-    { label:'진행중', value:c.prog, color:'var(--coral)' },
+    { label:'진행중', value:c.prog, color:'var(--coral800)' },
     { label:'완료', value:c.done, color:'var(--teal600)' },
-    { label:'미흡', value:c.poor, color:'var(--amber)' }
+    { label:'미흡', value:c.poor, color:'var(--amber800)' }
   ]);
 }
 
@@ -2047,8 +2048,8 @@ function renderUnprocPanel(){
   var uc = countStatus(rows);
   renderKpiCountLine('unprocCount', [
     { label:'미처리 전체', value:rows.length },
-    { label:'진행중', value:uc.prog, color:'var(--coral)' },
-    { label:'미흡', value:uc.poor, color:'var(--amber)' }
+    { label:'진행중', value:uc.prog, color:'var(--coral800)' },
+    { label:'미흡', value:uc.poor, color:'var(--amber800)' }
   ]);
 
   var tbody = document.getElementById('unprocBody');
@@ -2068,7 +2069,7 @@ function makePhotoThumb(url){
   return '<a href="'+esc(url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
     +'<img src="'+esc(url)+'" alt="사진"'
     +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block;margin:0 auto"'
-    +' onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'afterend\',\'<span style=\\\'font-size:10px;color:var(--coral)\\\'>⚠</span>\')">'
+    +' onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'afterend\',\'<span style=\\\'font-size:10px;color:var(--coral800)\\\'>⚠</span>\')">'
     +'</a>';
 }
 
@@ -2219,7 +2220,7 @@ function renderDashboard(){
     var col  = colors[ci2++ % colors.length];
     var unproc = prog + poor;
     var unprocBadge = unproc > 0
-      ? '<span style="font-size:10px;font-weight:700;color:var(--coral);background:var(--coral50);border-radius:10px;padding:1px 6px;margin-left:4px">미처리 '+unproc+'</span>'
+      ? '<span style="font-size:10px;font-weight:700;color:var(--coral800);background:var(--coral50);border-radius:10px;padding:1px 6px;margin-left:4px">미처리 '+unproc+'</span>'
       : '';
     return buildBarRow(cp, rows.length, cmax, col, rate, unprocBadge, 'min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis');
   }).join('');
@@ -2310,7 +2311,7 @@ function updateTabCounts(){
     renderKpiCountLine('tunnelTabCount', [
       { label:'총', value:tData.length+'건' },
       { label:'터널 수', value:g2.count+'개' },
-      { label:'미처리 합계', value:g2.unproc, color:'var(--coral)' },
+      { label:'미처리 합계', value:g2.unproc, color:'var(--coral800)' },
       { label:'평균 완료율', value:g2.avgRate+'%', color:'var(--teal600)' }
     ]);
   }
@@ -2320,7 +2321,7 @@ function updateTabCounts(){
     renderKpiCountLine('companyTabCount', [
       { label:'총', value:cData.length+'건' },
       { label:'업체 수', value:g4.count+'개' },
-      { label:'미처리 합계', value:g4.unproc, color:'var(--coral)' },
+      { label:'미처리 합계', value:g4.unproc, color:'var(--coral800)' },
       { label:'평균 완료율', value:g4.avgRate+'%', color:'var(--teal600)' }
     ]);
   }
@@ -2743,7 +2744,7 @@ function showDeleteConfirm(idx){
   var footer = document.getElementById('detailFooter');
   if(!footer) return;
   footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
     +'<div style="display:flex;gap:6px">'
     +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
     +'<button class="detail-act-btn detail-del-btn" id="deleteExecBtn" onclick="deleteItem('+idx+')">삭제 확인</button>'
@@ -3608,7 +3609,7 @@ function showContactDeleteConfirm(idx){
   var footer = document.getElementById('detailFooter');
   if(!footer) return;
   footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
     +'<div style="display:flex;gap:6px">'
     +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
     +'<button class="detail-act-btn detail-del-btn" id="cDeleteExecBtn" onclick="deleteContactItem('+idx+')">삭제 확인</button>'
@@ -4583,7 +4584,7 @@ function renderMgmtTable(){
   renderKpiCountLine('mgmtCount', [
     { label:'총 계약', value:rows.length },
     { label:'전기공사', value:byCat['전기공사']||0, color:'var(--sky800)' },
-    { label:'소방(전기)', value:byCat['소방(전기)']||0, color:'var(--coral)' },
+    { label:'소방(전기)', value:byCat['소방(전기)']||0, color:'var(--coral800)' },
     { label:'지급자재', value:byCat['지급자재']||0, color:'var(--teal600)' },
     { label:'계약금액 합계', value:fmtWon(totalAmt) }
   ]);
@@ -4968,7 +4969,7 @@ function showMgmtDeleteConfirm(idx){
   var footer = document.getElementById('detailFooter');
   if(!footer) return;
   footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral)">이 항목을 휴지통으로 이동할까요?</span>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
     +'<div style="display:flex;gap:6px">'
     +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
     +'<button class="detail-act-btn detail-del-btn" id="mDeleteExecBtn" onclick="deleteMgmtItem('+idx+')">삭제 확인</button>'

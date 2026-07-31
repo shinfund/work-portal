@@ -152,7 +152,7 @@ tr:hover td{background:var(--sky50)}
 
 /* ── RANK ── */
 .rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
-.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#4a2200}.rn{background:var(--sky50);color:var(--txt3)}
+.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#2b1400}.rn{background:var(--sky50);color:var(--sky800)}
 
 /* ── FILTER (발전내역 툴바 — 하자보수현황 앱 필터바 패턴 재사용) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
@@ -226,6 +226,7 @@ tr:hover td{background:var(--sky50)}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 /* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정(2026-07-10) */
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
@@ -1578,7 +1579,7 @@ const SUMMARY_CELL_THEMES={
   sky:{bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)'},
   neutral:{bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)'},
   teal:{bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)'},
-  coral:{bg:'var(--coral50)',border:'var(--coral100)',labelColor:'var(--coral)'}
+  coral:{bg:'var(--coral50)',border:'var(--coral100)',labelColor:'var(--coral800)'}
 };
 function summaryCell(theme,label,value,sub,subColor){
   const t=SUMMARY_CELL_THEMES[theme]||SUMMARY_CELL_THEMES.neutral;
