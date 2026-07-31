@@ -61,7 +61,7 @@ html[data-theme="dark"]{
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
-  --amber:#D9A441;--amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --amber:#D9A441;--amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);--amber800:#D9A441;
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
   --pink:#FF6FA5;
@@ -277,7 +277,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
-.modal-required{color:var(--coral);margin-left:2px}
+.modal-required{color:var(--coral800);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 .detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
@@ -293,6 +293,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:100px}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
@@ -817,7 +818,7 @@ function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</
 // 전체를 그 색으로 칠한다(2026-07-30, 앱 공통 시맨틱 팔레트 사용 — 엑셀과 동일 색상일 필요는 없음).
 // "(분기, 필요시)"·"(연차, 필요시)"처럼 괄호 안에 부가문구가 붙는 변형도 잡히도록 분기/반기/연차
 // 뒤에 닫는 괄호까지 아무 문자나 허용(2026-07-30 사용자 제보 — 정확히 "(분기)"만 매칭되던 버그).
-const CHECKLIST_TAG_COLORS=[ [/\(분기[^)]*\)/, 'var(--sky)'], [/\(반기[^)]*\)/, 'var(--amber)'], [/\(연차[^)]*\)/, 'var(--pink)'] ];
+const CHECKLIST_TAG_COLORS=[ [/\(분기[^)]*\)/, 'var(--sky)'], [/\(반기[^)]*\)/, 'var(--amber800)'], [/\(연차[^)]*\)/, 'var(--pink)'] ];
 function highlightChecklistTags(text){
   const hit=CHECKLIST_TAG_COLORS.find(([re])=>re.test(text||''));
   const escaped=esc(text);
@@ -3115,7 +3116,7 @@ function uploadInspectionPhoto(input, fieldId){
   if(!files.length) return;
   const statusEl=document.getElementById(fieldId+'_status');
   if(!isAuthed()){
-    if(statusEl){ statusEl.textContent='⚠ 로그인 필요'; statusEl.style.color='var(--coral)'; }
+    if(statusEl){ statusEl.textContent='⚠ 로그인 필요'; statusEl.style.color='var(--coral800)'; }
     return;
   }
   let remaining=files.length;
@@ -5834,7 +5835,7 @@ function renderTaskBody(){
       <td><input type="text" class="modal-input tk-note" style="width:100%" value="${esc(note)}"></td>`;
   const existingRows=recs.map(r=>`<tr data-id="${r.id}">${cells(r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}<td></td></tr>`).join('');
   const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${cells('','','','','')}
-      <td><button type="button" onclick="taskRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button></td>
+      <td><button type="button" onclick="taskRemoveExtraRow(${row.key})" title="행 삭제" style="width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral800);border:1px solid var(--border);cursor:pointer">✕</button></td>
     </tr>`).join('');
   wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
       <thead><tr><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:120px">업체명</th><th style="width:100px">비고</th><th style="width:36px"></th></tr></thead>
@@ -6484,6 +6485,29 @@ function exportGeneratorExcel(){
 // 기존 7개 탭의 모달·제출 함수를 그대로 재사용하며(§계획 참고), 여기서는 탭 뼈대(선택바·페이지 네비)만 담당한다.
 // mountAddModalInline/unmountAddModalInline 및 각 페이지 렌더 함수(renderReportPage_*)는 이후 단계에서 채운다.
 const REPORT_TUNNELS=['청하터널(주)','청하터널(부)','흥해터널','남정5터널'];
+// 보고서 생성 탭 전용 — 청하터널(주)/(부)는 실제 설비 스펙이 달라 입력폼(REPORT_TUNNELS)에서는 그대로
+// 분리 유지하되, 엑셀 생성 시에는 "청하터널" 통합 옵션을 고르면 buildOneUnifiedReport의 기존
+// unifiedTunnelSplit 로직이 (주)+(부)를 시트 2개로 합쳐 파일 1개로 만들어준다(2026-07-31 사용자 요청).
+const REPORT_GEN_TUNNELS=['청하터널','청하터널(주)','청하터널(부)','흥해터널','남정5터널'];
+// 입력폼 9페이지 중 실제로 (주)/(부) 설비 스펙이 갈리는 5페이지만 분리 선택하고, 나머지(표지·월간점검·
+// 업무처리·간지)는 애초에 노션 저장 값도 base tunnel(reportBaseTunnel)이라 "청하터널" 단일 옵션만
+// 보여준다(2026-07-31 사용자 요청 — 페이지 이동 시 드롭다운 옵션 자체를 갈아끼움).
+const REPORT_SPLIT_PAGES=new Set(['elec','transformer','generator','photo','power']);
+function reportTunnelOptionsForPage(pageId){
+  return REPORT_SPLIT_PAGES.has(pageId) ? REPORT_TUNNELS : ['청하터널','흥해터널','남정5터널'];
+}
+// 분리↔통합 페이지를 오갈 때 REPORT_SEL.tunnel을 새 옵션 목록에 맞게 자동 변환한다
+// (청하터널(주)/(부) → 청하터널로 접거나, 청하터널 → 청하터널(주)로 펼침). 흥해/남정5·직접입력 값은 그대로 유지.
+function remapReportTunnelForPage(pageId){
+  const opts=reportTunnelOptionsForPage(pageId);
+  if(opts.includes(REPORT_SEL.tunnel)) return;
+  if(REPORT_SEL.tunnel==='청하터널(주)' || REPORT_SEL.tunnel==='청하터널(부)') REPORT_SEL.tunnel='청하터널';
+  else if(REPORT_SEL.tunnel==='청하터널') REPORT_SEL.tunnel='청하터널(주)';
+}
+function renderReportTunnelMenu(pageId){
+  const opts=reportTunnelOptionsForPage(pageId);
+  document.getElementById('rpTunnelMenu').innerHTML=opts.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')+'<div class="dd-opt" data-val="__custom__">직접입력</div>';
+}
 let _reportInited=false;
 // 터널·연·월 필터를 앱 표준 dd-btn/dd-menu(목록방식 드롭다운, toggleDd/closeDd 재사용)로 구성하고
 // 페이지 칩을 같은 행에 이어붙인다(2026-07-29 사용자 요청 — 기존 네이티브 select(16px)는 글자가
@@ -6494,7 +6518,7 @@ function initReportTab(){
     document.getElementById('reportSelBar').innerHTML=
       `<div class="dd-wrap" id="rpTunnelWrap">
         <button class="dd-btn" id="rpTunnelBtn" type="button" onclick="toggleDd('rpTunnelMenu','rpTunnelBtn')" aria-haspopup="listbox" aria-label="터널 선택"><span id="rpTunnelLabel"></span></button>
-        <div class="dd-menu" id="rpTunnelMenu">${REPORT_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
+        <div class="dd-menu" id="rpTunnelMenu"></div>
       </div>
       <input id="rpTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접입력" style="display:none;width:130px;flex-shrink:0" onchange="onReportTunnelCustomChange(this.value)"/>
       <div class="dd-wrap" id="rpYearWrap">
@@ -6516,7 +6540,7 @@ function initReportTab(){
       closeDd('rpTunnelMenu','rpTunnelBtn');
       if(opt.dataset.val==='__custom__'){
         const ci=document.getElementById('rpTunnelCustom');
-        ci.style.display=''; ci.value=REPORT_TUNNELS.includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
+        ci.style.display=''; ci.value=reportTunnelOptionsForPage(_reportCurPage).includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
         return;
       }
       document.getElementById('rpTunnelCustom').style.display='none';
@@ -6545,7 +6569,7 @@ function onReportTunnelCustomChange(v){
   gotoReportPage(_reportCurPage);
 }
 function syncReportSelLabels(){
-  const isCustomTunnel=!REPORT_TUNNELS.includes(REPORT_SEL.tunnel);
+  const isCustomTunnel=!reportTunnelOptionsForPage(_reportCurPage).includes(REPORT_SEL.tunnel);
   document.getElementById('rpTunnelLabel').textContent=REPORT_SEL.tunnel||'터널 선택';
   document.querySelectorAll('#rpTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val==='__custom__'?isCustomTunnel:o.dataset.val===REPORT_SEL.tunnel));
   document.getElementById('rpYearLabel').textContent=REPORT_SEL.year+'년';
@@ -6559,6 +6583,9 @@ function syncReportSelLabels(){
 function gotoReportPage(id){
   unmountAddModalInline();
   _reportCurPage=id;
+  remapReportTunnelForPage(id);
+  renderReportTunnelMenu(id);
+  syncReportSelLabels();
   REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
   const fn=window['renderReportPage_'+id];
   if(typeof fn==='function'){ fn(); }
@@ -6625,7 +6652,7 @@ function initReportGenTab(){
     document.getElementById('reportGenSelBar').innerHTML=
       `<div class="dd-wrap" id="rgTunnelWrap">
         <button class="dd-btn" id="rgTunnelBtn" type="button" onclick="toggleDd('rgTunnelMenu','rgTunnelBtn')" aria-haspopup="listbox" aria-label="터널 선택"><span id="rgTunnelLabel"></span></button>
-        <div class="dd-menu" id="rgTunnelMenu">${REPORT_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
+        <div class="dd-menu" id="rgTunnelMenu">${REPORT_GEN_TUNNELS.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}<div class="dd-opt" data-val="__custom__">직접입력</div></div>
       </div>
       <input id="rgTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접입력" style="display:none;width:130px;flex-shrink:0" onchange="onReportGenTunnelCustomChange(this.value)"/>
       <div class="dd-wrap" id="rgYearWrap">
@@ -6645,7 +6672,7 @@ function initReportGenTab(){
       closeDd('rgTunnelMenu','rgTunnelBtn');
       if(opt.dataset.val==='__custom__'){
         const ci=document.getElementById('rgTunnelCustom');
-        ci.style.display=''; ci.value=REPORT_TUNNELS.includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
+        ci.style.display=''; ci.value=REPORT_GEN_TUNNELS.includes(REPORT_SEL.tunnel)?'':REPORT_SEL.tunnel; ci.focus();
         return;
       }
       document.getElementById('rgTunnelCustom').style.display='none';
@@ -6671,7 +6698,7 @@ function onReportGenTunnelCustomChange(v){
   renderReportGenBody();
 }
 function syncReportGenSelLabels(){
-  const isCustomTunnel=!REPORT_TUNNELS.includes(REPORT_SEL.tunnel);
+  const isCustomTunnel=!REPORT_GEN_TUNNELS.includes(REPORT_SEL.tunnel);
   document.getElementById('rgTunnelLabel').textContent=REPORT_SEL.tunnel||'터널 선택';
   document.querySelectorAll('#rgTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val==='__custom__'?isCustomTunnel:o.dataset.val===REPORT_SEL.tunnel));
   document.getElementById('rgYearLabel').textContent=REPORT_SEL.year+'년';
