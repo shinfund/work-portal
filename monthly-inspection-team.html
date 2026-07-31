@@ -113,6 +113,10 @@ html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
+/* 입력폼 탭(report-paper) 안의 표는 목록 탭과 달리 화면을 꽉 채울 필요가 없다 — 컬럼 내용에 맞는
+   자연폭으로 왼쪽 정렬하고, 필요한 표만(점검내용처럼 텍스트가 긴 컬럼) 알아서 넓어지게 한다
+   (2026-07-31 사용자 요청 — 월간점검 표 방식을 입력폼 전체 기준으로 통일, 안전관리 앱과 동일). */
+.report-paper table{width:auto;min-width:0}
 thead tr{background:var(--sky50)}
 th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
 th.r,td.r{text-align:right}
@@ -2874,7 +2878,7 @@ function renderTeamPhotoPreview(){
         ${photo ? `<img src="${esc(photo.url)}" alt="사진" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="color:var(--txt3);font-size:11px">사진 없음</div>`}
       </div>`;
   }).join('');
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">${cells}</div>`;
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,260px));gap:10px">${cells}</div>`;
 }
 
 // ── 보고서 생성 탭 — 시트별 체크박스 선택 생성(안전관리 앱과 동일 패턴) ──

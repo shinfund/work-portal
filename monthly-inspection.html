@@ -174,6 +174,10 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
+/* 입력폼 탭(report-paper) 안의 표는 목록 탭과 달리 화면을 꽉 채울 필요가 없다 — 컬럼 내용에 맞는
+   자연폭으로 왼쪽 정렬하고, 필요한 표만(점검내용처럼 텍스트가 긴 컬럼) 알아서 넓어지게 한다
+   (2026-07-31 사용자 요청 — 월간점검 표 방식을 입력폼 전체 기준으로 통일). */
+.report-paper table{width:auto;min-width:0}
 thead tr{background:var(--sky50)}
 th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
 th.r,td.r{text-align:right}
@@ -2630,7 +2634,7 @@ async function submitMonthlyForm(){
 // 2열로 나란히 보여준다 — ELEC_CHECKLIST가 이미 앞 16개=저압설비/뒤 16개=특고(고압)설비 순서라
 // 인덱스 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 chkr_i 등을 그대로 유지, 저장 로직 불변, 2026-07-30).
 function buildElecChkSideTable(chkSrc, items, startIdx, label){
-  let html=`<div class="tbl-wrap" style="flex:1;min-width:280px"><table><thead><tr><th colspan="6">${esc(label)}</th></tr>
+  let html=`<div class="tbl-wrap" style="min-width:280px"><table><thead><tr><th colspan="6">${esc(label)}</th></tr>
     <tr><th>설비항목</th><th style="width:44px">판정</th><th style="width:56px">수량</th><th style="width:50px">증가</th><th style="width:50px">감소</th><th style="width:56px">부적합</th></tr></thead><tbody>`;
   items.forEach((c,i)=>{
     const idx=startIdx+i;
@@ -2691,13 +2695,7 @@ function buildElecFormExtra(r){
       <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
       <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="number" step="0.01" value="${acb0&&acb0.최대전력!=null?acb0.최대전력:''}"/></div>
       <div class="modal-field"><label class="modal-label">배율</label><input class="modal-input" id="ec_baeyul" type="number" step="1" value="${acb0&&acb0.배율!=null?acb0.배율:''}"/></div>
-      <div class="modal-field"><label class="modal-label">역률(%)</label>
-        <select class="modal-select" id="ec_yeokryul" onchange="onSelectChange(this,'ec_yeokryulc')">
-          <option value="">선택</option><option value="__custom__"${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?' selected':''}>직접입력</option>
-          ${ELEC_PF_OPTIONS.map(o=>`<option value="${o}"${acb0&&acb0.역률===o?' selected':''}>${o}</option>`).join('')}
-        </select>
-        <input id="ec_yeokryulc" class="modal-input" type="number" step="0.01" placeholder="직접 입력" style="display:${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?'':'none'};margin-top:6px" value="${acb0&&acb0.역률!=null&&!ELEC_PF_OPTIONS.includes(acb0.역률)?esc(acb0.역률):''}"/>
-      </div>
+      <div class="modal-field"><label class="modal-label">역률(%)</label><input class="modal-input" id="ec_yeokryul" type="number" step="0.01" value="${acb0&&acb0.역률!=null?acb0.역률:''}"/></div>
     </div>`;
   // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
@@ -2789,7 +2787,7 @@ function generatorLatestForTunnel(tunnel){
 // 보여준다 — GENERATOR_CHECKLIST가 이미 앞 10개=일반점검사항/뒤 10개=운전중점검사항 순서라 인덱스
 // 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 gchkr_i/gchks_i를 그대로 유지, 저장 로직 불변, 2026-07-30).
 function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
-  let html=`<div class="tbl-wrap" style="flex:1;min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:70px">결과</th><th style="width:90px">특이사항</th></tr></thead><tbody>`;
+  let html=`<div class="tbl-wrap" style="min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:70px">결과</th><th style="width:90px">특이사항</th></tr></thead><tbody>`;
   items.forEach((c,i)=>{
     const idx=startIdx+i;
     const rec=generatorChkLookup(chkSrc, c);
@@ -2994,7 +2992,7 @@ function buildTransformerRefHtml(){
     <div class="modal-hint" style="margin-bottom:8px">※ 지점번호 ①~⑮ 위치 확인용 참고사진입니다(모든 터널·변압기종류 공통). 클릭하면 크게 볼 수 있고, 등록 데이터에는 저장되지 않습니다.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       ${TRANSFORMER_REF_IMAGES.map(img=>`
-        <div style="flex:1;min-width:200px">
+        <div style="width:340px;max-width:100%">
           <img src="${esc(img.src)}" alt="${esc(img.label)}" style="width:100%;border-radius:var(--r10);border:1px solid var(--border);cursor:zoom-in;display:block" onclick="window.open('${esc(img.src)}','_blank')"/>
           <div style="text-align:center;font-size:11.5px;color:var(--txt3);margin-top:4px">${esc(img.label)}</div>
         </div>`).join('')}
@@ -3249,7 +3247,7 @@ function renderPhotoMultiRows(){
       <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;margin-top:8px">${thumbs}</div>
     </div>`;
   }).join('');
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${boxes}</div>`;
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${boxes}</div>`;
 }
 function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
@@ -3456,9 +3454,9 @@ async function submitElecForm(){
     무효전력량:document.getElementById('ec_muhyo')?.value,
     최대전력:document.getElementById('ec_choidae')?.value,
     배율:document.getElementById('ec_baeyul')?.value,
-    // 2026-07-23 역률(%)을 카탈로그 드롭다운(select+직접입력)으로 전환 — 다른 필드처럼 raw .value가
-    // 아니라 commonSelectValue()로 읽어야 "__custom__" 선택 시 실제 입력값을 가져온다.
-    역률:commonSelectValue('ec_yeokryul')
+    // 2026-07-31 사용자 요청 — 표준 후보가 실사용 값과 잘 안 맞아 항상 "직접입력"으로 떨어지던
+    // 카탈로그 드롭다운(select+직접입력)을 폐기하고 다른 필드처럼 일반 숫자 입력으로 단순화.
+    역률:document.getElementById('ec_yeokryul')?.value
   };
   function commonSelectValue(id){
     const sel=document.getElementById(id);
@@ -5762,7 +5760,7 @@ function renderPhotoReportPreview(){
           : `<div style="color:var(--txt3);font-size:11px">미등록</div>`}
       </div>`;
   }).join('');
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">${cells}</div>`;
+  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,260px));gap:10px">${cells}</div>`;
 }
 // 필드에 REPORT_SEL 값을 미리 채운 뒤 실제 change 이벤트를 발생시켜 그 필드의 onchange(캐스케이드
 // 재계산·extraOnChange)를 사용자가 직접 선택했을 때와 100% 동일하게 실행시킨다.
