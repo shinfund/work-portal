@@ -1372,8 +1372,8 @@ const TAB_DEFS=[
       {key:'전압(V)', type:'number'},
       {key:'전류(A)', type:'number'},
       {key:'전력(kW)', type:'number'},
-      {key:'주파수(Hz)', type:'number'},
-      {key:'역률(%)', type:'number'},
+      {key:'주파수(Hz)', type:'number', uiType:'fixed-select', options:['59','59.5','60','60.5','61']},
+      {key:'역률(%)', type:'number', uiType:'fixed-select', options:['90','91','92','93','94','95','96','97','98','99','100']},
       {key:'비고', type:'select', options:['부하 시운전','무부하 시운전','부하운전','감축시험']}
     ],
     listCols:['터널명','가동일자','제목','점검자','가동시간','전압(V)','전류(A)','전력(kW)','비고']
@@ -2778,9 +2778,9 @@ function setSelectOrCustom(selId, customId, value, options){
 // 자동으로 채운다(TAB_DEFS 터널명 필드의 extraOnChange 훅으로 연결됨, 2026-07-23 사용자 요청).
 // 수전/발전전압·태양광용량·제목은 uiType:cascade-select라 refreshAllCascadeSelects()가 이미 처리한다.
 function syncElecTunnelDefaults(){
-  const tunnelSel=document.getElementById('ff_0');
+  const tunnelSel=document.getElementById('ff_1');
   if(!tunnelSel) return;
-  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_0c')?.value||'') : tunnelSel.value;
+  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_1c')?.value||'') : tunnelSel.value;
   const spec=TUNNEL_ELEC_SPEC[t];
   const baeyulEl=document.getElementById('ec_baeyul');
   if(spec && spec.배율!=null && baeyulEl) baeyulEl.value=spec.배율;
@@ -2915,9 +2915,9 @@ function buildGeneratorChkHintHtml(chkSrc){
 // 최근 레코드의 금일재고량을 그대로 이어받음) + 가동시간·운전값·비고(직전 최근 레코드 값) + 체크리스트
 // 20행 그리드 재생성. 제목·점검자는 uiType:cascade-select라 refreshAllCascadeSelects()가 이미 처리한다.
 function syncGeneratorTunnelDefaults(){
-  const tunnelSel=document.getElementById('ff_0');
+  const tunnelSel=document.getElementById('ff_1');
   if(!tunnelSel) return;
-  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_0c')?.value||'') : tunnelSel.value;
+  const t = tunnelSel.value==='__custom__' ? (document.getElementById('ff_1c')?.value||'') : tunnelSel.value;
   const fuelDef=TUNNEL_GENERATOR_FUEL[t];
   const typeEl=document.getElementById('gfuel_type'), capEl=document.getElementById('gfuel_cap');
   if(fuelDef){
