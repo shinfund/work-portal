@@ -160,6 +160,10 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
    전체로 확대) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. */
 input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
+/* 위 .report-paper .modal-input 폰트축소 규칙(padding:7px 10px)이 클래스 2개(.report-paper .modal-input)라
+   input[type="date"] 단독 규칙보다 우선 적용되어 날짜칸 아이콘 왼쪽 여백이 다시 좁아지는 문제 — 표 안
+   날짜칸(월간점검 탭 등)에서 아이콘·숫자 겹침 발생(2026-08-03). 특이도를 더 높여 되돌림. */
+.report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
