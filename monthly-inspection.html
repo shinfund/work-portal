@@ -3149,8 +3149,9 @@ function openAddModal(tabId, recordId){
   });
   if(tabId==='photo' && !r){
     // 터널명·일자가 더 이상 상단 공용 필드가 아니라 카드마다 개별 입력이라(2026-08-03), 예전처럼
-    // 상단 필드 변경을 기다리지 않고 모달을 열 때 바로 #1~#6 6칸을 만든다.
-    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
+    // 상단 필드 변경을 기다리지 않고 모달을 열 때 바로 #1~#6 6칸을 만든다. 이미 저장된 슬롯이 있으면
+    // 빈 칸이 아니라 기존 값을 채워서 보여준다(2026-08-10 — 등록 후 다시 열면 빈 폼만 보이던 문제 수정).
+    _photoMultiRows=buildPhotoMultiRowsFromExisting();
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
     renderPhotoMultiRows();
   }
@@ -3273,6 +3274,27 @@ function newPhotoMultiRow(num, desc){
   // 터널명은 보고서입력 페이지에서 이미 선택된 터널(REPORT_SEL.tunnel)로 기본값을 채워 반복 입력을
   // 줄인다 — 다른 터널 사진이 섞인 경우엔 카드에서 개별로 바꾸면 된다(2026-08-03).
   return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[], tunnel:REPORT_SEL.tunnel||'', date:'' };
+}
+// 모달을 열 때 #1~#6을 항상 빈 칸으로 만들면 이미 등록해둔 사진도 매번 새로 입력하는 것처럼 보인다
+// (2026-08-10 사용자 지적 — 2개 슬롯 등록 후 다시 열었더니 빈 폼만 보임). REPORT_SEL(터널·연·월)
+// 기준으로 이미 저장된 슬롯을 찾아 값을 채워 넣는다 — submitPhotoMulti의 기존 레코드 매칭 기준
+// (터널명·연월·번호)과 동일하게 맞춰야 저장 시 새 레코드가 아니라 그 레코드를 수정하게 된다.
+function buildPhotoMultiRowsFromExisting(){
+  const tunnel=REPORT_SEL.tunnel;
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').slice(0,7)===ym);
+  const bySlot={};
+  recs.forEach(r=>{ const n=parseInt(r['번호'],10); if(n>=1 && n<=6 && !bySlot[n]) bySlot[n]=r; });
+  return ['1','2','3','4','5','6'].map(n=>{
+    const rec=bySlot[n];
+    const row=newPhotoMultiRow(n, rec ? (rec['사진설명']||'') : '');
+    if(rec){
+      row.tunnel=rec['터널명']||tunnel;
+      row.date=rec['일자']||'';
+      row.files=(rec['점검사진']||[]).slice(0,1);
+    }
+    return row;
+  });
 }
 // 실제 "운영관리 사진대지" 지면(#1~#6, 2열×3행)과 동일한 그리드로 재구성(2026-07-30) — 번호는
 // 더 이상 select로 고르지 않고 박스 위치 자체가 번호이므로, 초기화 시 6칸을 항상 전부 만들어둔다.
