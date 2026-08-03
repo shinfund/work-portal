@@ -314,6 +314,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.pm-card-label{font-size:13px;font-weight:800;color:var(--txt);margin:0 0 5px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 /* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
 .modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
@@ -1378,8 +1379,8 @@ const TAB_DEFS=[
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
       {header:true, group:'기본정보'},
-      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
-      {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
+      {key:'터널명', type:'select', options:['청하터널(주)','청하터널(부)','흥해터널','남정5터널'], required:true, cascadeTrigger:true},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
         emptyHint:'먼저 일자를 선택하세요'},
@@ -3096,12 +3097,13 @@ function openAddModal(tabId, recordId){
   // 대체된다(2026-07-28 사용자 요청 — 같은 날짜에 여러 설비/측정지점/사진을 한 번에 등록하는 경우가
   // 많았음, photo는 monthly-inspection-team.html에 먼저 구현된 패턴을 이식). 수정 모드는 기존
   // 레코드 1건만 고치는 것이므로 원래의 단일값 필드 그대로 유지.
-  const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'], photo:['번호','사진설명','점검사진'] }[tabId] : null;
+  const MULTI_ITEM_FIELDS = !r ? { monthly:['설비명','점검내용','점검결과'], transformer:['측정지점','지점번호','온도(℃)','비고'], photo:['터널명','일자','제목','번호','사진설명','점검사진'] }[tabId] : null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header){
-      // photo 탭의 "사진" 그룹(번호 뒤)은 신규등록 모드에선 사진설명·점검사진이 전부 buildPhotoMultiHtml
-      // 다중행 UI로 대체되어 실제 내용이 없다 — 그대로 두면 빈 헤더+빈 grid 박스만 남는다(2026-07-31 버그 수정).
-      if(MULTI_ITEM_FIELDS && tabId==='photo' && f.group==='사진') return;
+      // photo 탭은 신규등록 모드에선 터널명·일자·제목·번호·사진설명·점검사진이 전부 buildPhotoMultiHtml
+      // 다중행 카드 UI로 대체되어 기본정보/사진 그룹 모두 실제 내용이 없다 — 그대로 두면 빈 헤더+빈
+      // grid 박스만 남는다(2026-07-31 버그 수정, 2026-08-03 기본정보 그룹도 카드로 이동하며 확장).
+      if(MULTI_ITEM_FIELDS && tabId==='photo') return;
       if(groupOpen) html+='</div>';
       html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
       groupOpen=true;
@@ -3146,6 +3148,9 @@ function openAddModal(tabId, recordId){
     if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
   });
   if(tabId==='photo' && !r){
+    // 터널명·일자가 더 이상 상단 공용 필드가 아니라 카드마다 개별 입력이라(2026-08-03), 예전처럼
+    // 상단 필드 변경을 기다리지 않고 모달을 열 때 바로 #1~#6 6칸을 만든다.
+    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
     renderPhotoMultiRows();
   }
@@ -3263,16 +3268,20 @@ function removePhotoFile(idx, fieldId){
 // 먼저 구현된 패턴 이식(2026-07-28). 이 앱은 팀 앱과 달리 번호가 월간 이어지는 일련번호가 아니라
 // 터널·날짜당 고정 1~6번 슬롯이라, 행마다 1~6 select로 번호를 고르게 하고 사진설명은 해당
 // 터널·번호 조합의 과거 입력값을 datalist로 제안한다(자유입력도 가능).
-var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name}]}]
+var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name}],tunnel,date}]
 function newPhotoMultiRow(num, desc){
-  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[] };
+  // 터널명은 보고서입력 페이지에서 이미 선택된 터널(REPORT_SEL.tunnel)로 기본값을 채워 반복 입력을
+  // 줄인다 — 다른 터널 사진이 섞인 경우엔 카드에서 개별로 바꾸면 된다(2026-08-03).
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[], tunnel:REPORT_SEL.tunnel||'', date:'' };
 }
 // 실제 "운영관리 사진대지" 지면(#1~#6, 2열×3행)과 동일한 그리드로 재구성(2026-07-30) — 번호는
 // 더 이상 select로 고르지 않고 박스 위치 자체가 번호이므로, 초기화 시 6칸을 항상 전부 만들어둔다.
+// 터널명·일자·사진설명·점검사진을 전부 카드 안에서 입력한다(2026-08-03 — 상단 공용 기본정보
+// 섹션을 없애고 엑셀 사진대지 서식처럼 칸마다 완결된 정보를 담도록 사용자 요청).
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
     <label class="modal-label">사진대지(#1~#6) <span class="modal-required">*</span></label>
-    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다). 6장을 넘으면 "+ 행 추가"로 늘릴 수 있습니다(단, 실제 엑셀 보고서 서식은 6칸 고정이라 7번째부터는 노션에는 저장되지만 보고서 생성 시에는 반영되지 않습니다).</div>
+    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 터널명·일자·사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다). 6장을 넘으면 "+ 행 추가"로 늘릴 수 있습니다(단, 실제 엑셀 보고서 서식은 6칸 고정이라 7번째부터는 노션에는 저장되지만 보고서 생성 시에는 반영되지 않습니다).</div>
     <div id="photoMultiRowsList" style="margin-top:8px"></div>
     <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="photoMultiAddRow()">+ 행 추가</button>
   </div>`;
@@ -3293,41 +3302,54 @@ function renderPhotoMultiRows(){
   const wrap=document.getElementById('photoMultiRowsList');
   if(!wrap) return;
   if(!_photoMultiRows.length){
-    wrap.innerHTML='<div class="modal-hint">터널명·일자를 선택하면 6칸이 자동 생성됩니다.</div>';
+    wrap.innerHTML='<div class="modal-hint">잠시 후 6칸이 자동 생성됩니다.</div>';
     return;
   }
-  const tunnelSel=document.getElementById('ff_0');
-  const tunnel=tunnelSel ? (tunnelSel.value==='__custom__' ? '' : tunnelSel.value) : '';
+  const tunnelOpts=(getTabDef('photo').fields.find(f=>f.key==='터널명')||{}).options||[];
   const boxes=_photoMultiRows.slice().sort((a,b)=>Number(a.num)-Number(b.num)).map(row=>{
     // 사진설명은 해당 터널·번호 조합에서 과거에 입력된 값들을 select 드롭다운으로 제안(직접입력은
     // 다른 select 필드들과 동일하게 목록 맨 위 고정, 2026-07-28 사용자 요청 — 기존 datalist 방식은
-    // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음).
-    const descOptsArr=photoDescOptions(tunnel, row.num);
+    // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음). 터널명이 카드마다 개별 값이라(2026-08-03) 그 값
+    // 기준으로 제안 목록을 좁힌다.
+    const descOptsArr=photoDescOptions(row.tunnel, row.num);
     // descCustom은 "직접입력" 선택 직후(아직 아무것도 안 쳤을 때도) 입력칸을 계속 보여주기 위한
     // 명시적 플래그 — row.desc만으로 판단하면 빈 문자열일 때 목록으로 되돌아가버리는 버그가 있었다
     // (2026-07-28).
     const isCustomDesc=row.descCustom || (!!row.desc && !descOptsArr.includes(row.desc));
     const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
-    const thumbs=row.files.map((f,fi)=>
-      `<div style="position:relative">
-        <img src="${esc(f.url)}" alt="사진" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-        <button type="button" onclick="removePhotoMultiFile(${row.key},${fi})" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer">✕</button>
-      </div>`
-    ).join('');
+    const tunnelOptsHtml=tunnelOpts.map(o=>`<option value="${esc(o)}"${row.tunnel===o?' selected':''}>${esc(o)}</option>`).join('')
+      + (row.tunnel && !tunnelOpts.includes(row.tunnel) ? `<option value="${esc(row.tunnel)}" selected>${esc(row.tunnel)}</option>` : '');
+    const photo=row.files[0];
+    // 사진을 선택하면 작은 썸네일 목록 대신 카드 폭만큼 꽉 채운 큰 미리보기로 보여준다(2026-08-03
+    // 사용자 요청) — 이미지를 다시 누르면 바로 교체 파일선택창이 뜨고, ✕로 제거하면 원래 "사진 선택"
+    // 버튼으로 되돌아간다. 슬롯당 사진은 1장만 유지(교체 방식)로 단순화.
+    const photoArea = photo
+      ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
+          <img src="${esc(photo.url)}" alt="사진" style="width:100%;height:100%;object-fit:cover;display:block">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:5px 0">사진 변경</div>
+          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
+        </div>`
+      : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
       ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
-      <div style="font-weight:800;font-size:12.5px;margin-bottom:6px">#${esc(row.num)}</div>
-      <div class="modal-hint" style="margin:0 0 4px">사진설명</div>
+      <div style="font-weight:800;font-size:13px;margin-bottom:8px">#${esc(row.num)}</div>
+      <div class="pm-card-label">터널명</div>
+      <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSet(${row.key},'tunnel',this.value);renderPhotoMultiRows()">
+        <option value="">선택</option>
+        ${tunnelOptsHtml}
+      </select>
+      <div class="pm-card-label" style="margin-top:8px">일자</div>
+      <input type="date" class="modal-input" style="width:100%;padding:8px" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+      <div class="pm-card-label" style="margin-top:8px">사진설명</div>
       <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
         <option value="">선택</option>
         <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
         ${descOpts}
       </select>
       <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px;width:100%" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
-      <div class="modal-hint" style="margin:8px 0 4px">점검사진</div>
-      <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>
-      <input type="file" id="pmf_${row.key}" accept="image/*" multiple style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start;margin-top:8px">${thumbs}</div>
+      <div class="pm-card-label" style="margin-top:8px">점검사진</div>
+      ${photoArea}
+      <input type="file" id="pmf_${row.key}" accept="image/*" style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
     </div>`;
   }).join('');
   wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${boxes}</div>`;
@@ -3363,33 +3385,23 @@ function _photoMultiDescChange(key, selEl){
     row.desc=selEl.value;
   }
 }
+// 슬롯당 사진 1장(교체 방식) — 카드 전체를 채우는 큰 미리보기와 짝을 이루는 단순한 모델로
+// 변경(2026-08-03). 새 파일을 고르면 기존 사진을 그대로 대체한다.
 function uploadPhotoMultiFile(input, key){
-  const files=Array.from(input.files||[]);
-  if(!files.length) return;
+  const file=(input.files||[])[0];
+  if(!file) return;
   if(!isAuthed()){ toast('로그인이 필요합니다.'); return; }
   const row=_photoMultiRows.find(r=>r.key===key);
   if(!row) return;
-  const results=new Array(files.length).fill(null);
-  let done=0;
-  files.forEach((file,i)=>{
-    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
-      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-      const formData=new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'monthly-inspection');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
-    })
-      .catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); })
-      .finally(()=>{
-        done++;
-        if(done===files.length){
-          results.forEach(r=>{ if(r) row.files.push(r); });
-          renderPhotoMultiRows();
-        }
-      });
-  });
+  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+    if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+    const formData=new FormData();
+    formData.append('file', outFile);
+    formData.append('app', 'monthly-inspection');
+    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(data=>{ row.files=[{ url:data.url, name:file.name }]; renderPhotoMultiRows(); });
+  }).catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); });
   input.value='';
 }
 function removePhotoMultiFile(key, fileIdx){
@@ -3398,35 +3410,21 @@ function removePhotoMultiFile(key, fileIdx){
   row.files.splice(fileIdx,1);
   renderPhotoMultiRows();
 }
-// 터널명(ff_0)·일자(ff_1) 변경 시 호출 — 실제 보고서 지면과 동일하게 #1~#6 6칸을 항상 전부
-// 만들어둔다(2026-07-30, 과거엔 1행만 만들고 "+행 추가"로 늘렸으나 보고서 모양과 맞추기 위해 변경).
-// 수정 모드·다른 탭에는 photoMultiRowsList가 없어 조용히 종료.
-function refreshPhotoMultiRows(){
-  if(!document.getElementById('photoMultiRowsList')){ renderPhotoMultiRows(); return; }
-  if(!_photoMultiRows.length){
-    _photoMultiRows=['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n,''));
-  }
-  renderPhotoMultiRows();
-}
-// 행마다 별도 페이지로 순차 등록(공통 필드: 터널명/일자/제목, 최대 6개 동시 진행)
+// 행마다 별도 페이지로 순차 등록 — 터널명·일자·제목이 더 이상 공용 필드가 아니라 카드마다 개별
+// 값이라(2026-08-03), 검증·중복레코드 매칭·제목 생성을 전부 행 단위로 한다. 제목은 사용자에게
+// 입력받지 않고 해당 행의 일자로부터 자동 생성한다(titleWithMonth — 일자에서 연·월만 쓰므로 그대로 유지 가능).
 async function submitPhotoMulti(){
   const tabDef=getTabDef('photo');
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
-  const sharedKeys=['터널명','일자','제목'];
-  const shared={};
-  let missing=null;
-  tabDef.fields.forEach((f,idx)=>{
-    if(f.header || !sharedKeys.includes(f.key)) return;
-    const v=getFieldValue(f, idx);
-    shared[f.key]=v;
-    if(f.required && !v && !missing) missing=f.label||f.key;
-  });
-  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
   // 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28). 번호는
   // 박스 위치로 항상 고정돼 있어(2026-07-30) 별도 필수값 검사가 필요 없다.
   const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
   if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
+  const missingRow=usedRows.find(row=>!row.tunnel || !row.date);
+  if(missingRow){ alert('#'+missingRow.num+' 칸의 터널명·일자를 입력해주세요.'); return; }
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  if(!confirmDateOutOfMonth(usedRows.map(row=>row.date), ym)) return;
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
@@ -3438,17 +3436,17 @@ async function submitPhotoMulti(){
 
   // 같은 터널·월·번호(슬롯)에 이미 저장된 레코드가 있으면 새로 만들지 않고 그 레코드를 수정한다
   // (2026-07-31 버그 수정 — 기존엔 항상 신규 생성이라 같은 슬롯을 두 번 저장하면 중복 레코드가 생겼음).
-  const ym=(shared['일자']||'').slice(0,7);
   const tasks=usedRows.map(row=>()=>{
+    const rowYm=(row.date||'').slice(0,7);
     const properties={
-      '터널명':buildPropValue('select', shared['터널명']),
-      '일자':buildPropValue('date', shared['일자']),
-      '제목':buildPropValue('title', shared['제목']),
+      '터널명':buildPropValue('select', row.tunnel),
+      '일자':buildPropValue('date', row.date),
+      '제목':buildPropValue('title', titleWithMonth(row.date,'점검사진')),
       '번호':buildPropValue('number', row.num)
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===shared['터널명'] && (r['일자']||'').slice(0,7)===ym && parseInt(r['번호'],10)===row.num);
+    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && parseInt(r['번호'],10)===row.num);
     const req=existing
       ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
@@ -5816,9 +5814,9 @@ function renderReportPage_divider(){
     <div style="text-align:center;color:var(--txt3);font-size:12px">${tunnel}</div>`;
 }
 
-// ── 보고서입력 탭: 점검사진 페이지 — 실제 "점검사진대지"(#1~#6, 2열×3행: 번호/일자/사진설명+사진)
-// 지면과 동일한 모양으로 이번달 등록분을 미리보기 표시(2026-07-30, 조회 화면만 개선). 등록·수정 자체는
-// 기존 다중행 입력 카드(buildPhotoMultiHtml)를 그대로 아래에 둔다 — 업로드 로직은 건드리지 않음.
+// ── 보고서입력 탭: 점검사진 페이지 — 카드 안에서 이미 사진을 큰 미리보기로 보여주므로(2026-08-03)
+// 별도의 "등록 현황" 미리보기 블록은 없앴다. 등록·수정 자체는 기존 다중행 입력 카드
+// (buildPhotoMultiHtml)를 그대로 둔다 — 업로드 로직은 건드리지 않음.
 async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
@@ -5827,38 +5825,13 @@ async function renderReportPage_photo(){
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpPhotoMount"></div>
-    <div class="report-section-hd" style="margin-top:22px">등록 현황</div>
-    <div id="rpPhotoPreview"></div>`;
+    <div id="rpPhotoMount"></div>`;
   await loadTabData('photo');
   if(_reportCurPage!=='photo') return;
   document.getElementById('rpLoading')?.remove();
-  renderPhotoReportPreview();
   mountAddModalInline('rpPhotoMount');
   openAddModal('photo');
   document.body.style.overflow='';
-  reportPresetField('ff_1', REPORT_SEL.tunnel);
-}
-function renderPhotoReportPreview(){
-  const wrap=document.getElementById('rpPhotoPreview');
-  if(!wrap) return;
-  const tunnel=REPORT_SEL.tunnel;
-  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
-  const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').slice(0,7)===ym);
-  const bySlot={};
-  recs.forEach(r=>{ const n=parseInt(r['번호'],10); if(n>=1 && n<=6 && !bySlot[n]) bySlot[n]=r; });
-  const cells=Array.from({length:6},(_,i)=>{
-    const n=i+1, r=bySlot[n];
-    const photo=(r&&r['점검사진']&&r['점검사진'][0]) || null;
-    return `<div style="border:1px solid var(--border);border-radius:6px;padding:8px;min-height:150px">
-        <div style="font-weight:800;font-size:12.5px;margin-bottom:4px">#${n}</div>
-        ${r ? `<div style="font-size:12px;color:var(--txt2)">일자: ${esc(r['일자']||'')}</div>
-          <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">사진설명: ${esc(r['사진설명']||'')}</div>
-          ${photo ? `<img src="${esc(photo.url)}" alt="사진" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="color:var(--txt3);font-size:11px">사진 없음</div>`}`
-          : `<div style="color:var(--txt3);font-size:11px">미등록</div>`}
-      </div>`;
-  }).join('');
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,260px));gap:10px">${cells}</div>`;
 }
 // 필드에 REPORT_SEL 값을 미리 채운 뒤 실제 change 이벤트를 발생시켜 그 필드의 onchange(캐스케이드
 // 재계산·extraOnChange)를 사용자가 직접 선택했을 때와 100% 동일하게 실행시킨다.
