@@ -719,6 +719,14 @@ window.addEventListener('storage',e=>{
 // ══════════════════════════════════════════════════════
 const TUNNEL_OPTIONS_ELEC=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 const TUNNEL_OPTIONS_STD=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+// 점검사진 카드 그리드는 여러 터널이 섞여 나열돼(전체 터널 통합 보고서) 터널별 구분이 어렵다는
+// 사용자 피드백(2026-08-03) — 터널명 배열 순서에 고정 팔레트를 매핑해 카드 왼쪽에 색상 띠를 넣는다.
+// 배열 인덱스 기반이라 같은 터널은 앱을 다시 열어도 항상 같은 색이 나온다.
+const TUNNEL_COLOR_PALETTE=['#4C6EF5','#12B886','#F59F00','#E64980','#7048E8','#2F9E44','#E8590C','#1098AD','#F03E3E','#5C940D','#364FC7','#AE3EC9','#087F5B'];
+function tunnelColor(tunnel){
+  const idx=TUNNEL_OPTIONS_STD.indexOf(tunnel);
+  return idx>=0 ? TUNNEL_COLOR_PALETTE[idx % TUNNEL_COLOR_PALETTE.length] : 'var(--border)';
+}
 // 전기시설점검 "점검내용" 캐스케이드 — 구분별 표준 점검항목 후보(원본 엑셀 템플릿 실측, 터널별로
 // 실제 적용 항목 수는 다르지만(예: 남정3터널은 자탐설비 항목이 없음) 구분당 전체 후보를 모아
 // 두고 필요한 것만 골라 쓰는 방식 — 터널별 정확한 부분집합은 앱에서 강제하지 않는다.
@@ -1887,6 +1895,7 @@ function renderPhotoMultiRows(){
     const descOptsArr=photoDescOptionsTeam(row.tunnel);
     const isCustomDesc=row.descCustom || (!!row.desc && !descOptsArr.includes(row.desc));
     const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
+    const accent=tunnelColor(row.tunnel);
     const photo=row.files[0];
     const photoArea = photo
       ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
@@ -1895,9 +1904,12 @@ function renderPhotoMultiRows(){
           <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
         </div>`
       : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
-    return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
+    return `<div style="border:1px solid var(--border);border-left:4px solid ${accent};border-radius:var(--r8);padding:10px;position:relative">
       <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
-      <div id="pmn_${row.key}" style="font-weight:800;font-size:13px;margin-bottom:8px">#${esc(row.num||'-')}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
+        <span id="pmn_${row.key}" style="font-weight:800;font-size:13px">#${esc(row.num||'-')}</span>
+      </div>
       <div style="display:flex;gap:8px">
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">터널명</div>
@@ -2006,10 +2018,11 @@ async function submitPhotoMulti(){
   const tabDef=getTabDef('photo');
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
-  // 카드가 하나도 안 채워진 빈 행(터널명·일자·번호·사진설명·사진 전부 없음)은 등록 대상에서
-  // 제외한다 — "+ 행 추가" 직후 바로 취소하는 경우 등.
-  const usedRows=_photoMultiRows.filter(row=>row.tunnel || row.date || row.desc.trim() || row.files.length || String(row.num||'').trim());
-  if(!usedRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
+  // 등록 대상 판정은 사진설명·사진 여부만 본다(안전관리 앱과 동일 기준, 2026-08-03 버그 수정) —
+  // 기본으로 채워지는 번호(placeholder)만으로 "작성됨"으로 잘못 인식하면, 날짜별로 나눠 며칠에
+  // 걸쳐 일부 카드만 등록하는 실사용 흐름에서 아직 안 건드린 카드까지 필수값 누락으로 막혀버린다.
+  const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
+  if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
   const missingRow=usedRows.find(row=>!row.tunnel || !row.date || !String(row.num||'').trim());
   if(missingRow){ alert('#'+(missingRow.num||'-')+' 카드의 터널명·일자·번호를 입력해주세요.'); return; }
 
