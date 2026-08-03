@@ -3303,7 +3303,6 @@ function buildPhotoMultiRowsFromExisting(){
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
     <label class="modal-label">사진대지(#1~#6) <span class="modal-required">*</span></label>
-    <div class="modal-hint">보고서와 동일한 6칸입니다. 촬영한 슬롯만 터널명·일자·사진설명·사진을 채우세요(빈 칸은 등록되지 않습니다). 6장을 넘으면 "+ 행 추가"로 늘릴 수 있습니다(단, 실제 엑셀 보고서 서식은 6칸 고정이라 7번째부터는 노션에는 저장되지만 보고서 생성 시에는 반영되지 않습니다).</div>
     <div id="photoMultiRowsList" style="margin-top:8px"></div>
     <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="photoMultiAddRow()">+ 행 추가</button>
   </div>`;
@@ -5191,16 +5190,22 @@ function buildPhotoReportData(tunnel, year, month){
   const byNo={};
   recs.forEach(r=>{
     const no=parseInt(r['번호'],10);
-    if(!no || no<1 || no>6) return;
+    if(!no || no<1) return;
     const file=(r['점검사진']||[])[0];
     byNo[no]={일자:r['일자'], 사진설명:r['사진설명']||'', url:file?file.url:''};
   });
   return byNo;
 }
 function buildPhotoReportSheet(wb, photosByNo, tunnel){
+  // 원본 엑셀 서식은 6칸(3밴드) 고정이지만, "+ 행 추가"로 7번째 이상을 등록하는 경우가 있어
+  // 실제 최대 번호까지 밴드를 늘려 반영한다(2026-08-03 사용자 요청). 6칸 이내는 기존과 동일하게
+  // 1페이지에 맞춰 축소(fitToHeight:1) — 그 이상은 억지로 욱여넣으면 사진이 너무 작아지므로
+  // 여러 페이지로 자연스럽게 흐르게 둔다(fitToHeight:0).
+  const maxNo=Math.max(6, ...Object.keys(photosByNo).map(Number));
+  const bandCount=Math.ceil(maxNo/2);
   const ws=wb.addWorksheet('점검사진대지',{
     views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
+    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:bandCount>3?0:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   ws.columns=PHOTO_REPORT_COL_WIDTHS.map(w=>({width:w}));
@@ -5252,7 +5257,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
   // 통일) — 사진박스·라벨박스가 전부 구 위치에서 +1행씩 밀림.
 
   const photoTasks=[]; // {url, c1,r1,c2,r2}(0-based, addImage 앵커용)
-  for(let band=0; band<3; band++){
+  for(let band=0; band<bandCount; band++){
     const imgStart=4+band*15, imgEnd=imgStart+12;
     const lbl1=imgEnd+1, lbl2=imgEnd+2;
     // 원본 템플릿 실측 행높이(사진행 13.1×13, 라벨행 25.1×2) 그대로 재현 — 명시적으로 지정하지
