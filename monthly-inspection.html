@@ -3329,17 +3329,26 @@ function renderPhotoMultiRows(){
           <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:5px 0">사진 변경</div>
           <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
         </div>`
-      : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
+      // .tb-action-btn은 flex(align-items만 지정, justify-content 없음)라 원래 auto-width 버튼에서는
+      // 안 보이던 문제인데, 카드에 맞춰 width:100%로 늘리면 내용이 flex-start(왼쪽)로 쏠린다 —
+      // justify-content:center로 직접 보정(2026-08-10, 다른 tb-action-btn 공용 스타일은 건드리지 않음).
+      : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
       ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
       <div style="font-weight:800;font-size:13px;margin-bottom:8px">#${esc(row.num)}</div>
-      <div class="pm-card-label">터널명</div>
-      <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSet(${row.key},'tunnel',this.value);renderPhotoMultiRows()">
-        <option value="">선택</option>
-        ${tunnelOptsHtml}
-      </select>
-      <div class="pm-card-label" style="margin-top:8px">일자</div>
-      <input type="date" class="modal-input" style="width:100%;padding:8px" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div class="pm-card-label">터널명</div>
+          <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSet(${row.key},'tunnel',this.value);renderPhotoMultiRows()">
+            <option value="">선택</option>
+            ${tunnelOptsHtml}
+          </select>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="pm-card-label">일자</div>
+          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+        </div>
+      </div>
       <div class="pm-card-label" style="margin-top:8px">사진설명</div>
       <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
         <option value="">선택</option>
@@ -5821,7 +5830,9 @@ async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">5. 운영관리 사진대지</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+      <!-- photo 탭은 항상 신규등록 흐름이라(수정 모드 없음) 하단 버튼도 항상 "등록"으로 고정 —
+           상단·하단 명칭을 "등록"으로 통일(2026-08-10 사용자 요청). -->
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
