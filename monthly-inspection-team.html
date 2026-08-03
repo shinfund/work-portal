@@ -363,7 +363,7 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
         <h3><span id="addModalTitleText">신규 등록</span></h3>
         <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
       </div>
-      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+      <div id="addModalRequiredHint" style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
       <div id="addModalFields"></div>
       <div class="modal-progress-wrap" id="addModalProgressWrap" style="display:none"><div class="modal-progress-bar" id="addModalProgressBar"></div></div>
       <div class="modal-btns">
@@ -1618,6 +1618,7 @@ function openAddModal(tabId, recordId){
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
   document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
+  document.getElementById('addModalRequiredHint').style.display = tabId==='photo' ? 'none' : '';
   // 전기시설점검 신규등록(수정 아님)은 한 날짜·터널에 여러 구분·여러 항목을 한 번에 점검하는
   // 경우가 대부분이라, 구분/점검내용/점검방법/점검결과 4개 필드를 개별 입력받는 대신 구분을
   // 다중선택하게 하고 선택된 구분마다 표준 점검항목 전체를 기본 체크된 체크리스트로 보여준 뒤,
@@ -1806,7 +1807,33 @@ function removePhotoFile(idx, fieldId){
 // (2026-07-29 사용자 요청으로 월 전체 통합 연번에서 전환, worker/migrate-photo-numbering.mjs로
 // 기존 데이터 재부여 완료).
 function newPhotoMultiRow(num, desc){
-  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', files:[], tunnel:'', date:'' };
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[], tunnel:'', date:'' };
+}
+// 번호는 터널별로 그 달 안에서 1부터 이어지는 순번 — 카드에서 터널명을 고르거나 바꿀 때마다
+// 그 터널의 다음 번호를 자동 채운다(이미 저장된 레코드+현재 폼의 다른 카드 모두 참고, 2026-08-03
+// 사용자 요청 — 예: 남정3터널 카드 다음에 남정4터널을 고르면 다시 1번부터 시작).
+function nextNumberForTunnel(tunnel, excludeKey){
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const savedNums=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').startsWith(ym))
+    .map(r=>parseInt(r['번호'],10)).filter(n=>!isNaN(n));
+  const rowNums=_photoMultiRows.filter(r=>r.key!==excludeKey && r.tunnel===tunnel)
+    .map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
+  const all=savedNums.concat(rowNums);
+  return all.length ? Math.max(...all)+1 : 1;
+}
+// 사진설명 후보 — 전월(가장 최근 등록월) 같은 터널에서 쓰인 사진설명을 드롭다운으로 제안한다
+// (2026-08-03 사용자 요청). 안전관리 앱은 터널×번호 조합으로 좁히지만, 점검팀은 번호가 카테고리가
+// 아니라 단순 순번이라 번호까지 맞추면 오히려 안 맞는 제안이 나온다 — 터널만 기준으로 삼는다.
+function photoDescOptionsTeam(tunnel){
+  if(!tunnel) return [];
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').slice(0,7)<ym);
+  if(!recs.length) return [];
+  const lastYm=recs.reduce((a,r)=>{ const y=(r['일자']||'').slice(0,7); return (!a||y>a)?y:a; }, null);
+  const seen=new Set();
+  recs.filter(r=>(r['일자']||'').startsWith(lastYm)).sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0))
+    .forEach(r=>{ if(r['사진설명']) seen.add(r['사진설명']); });
+  return Array.from(seen);
 }
 // 모달을 열 때마다 빈 칸으로 시작하면 이미 등록해둔 사진도 매번 새로 입력하는 것처럼 보인다
 // (안전관리 앱과 동일한 문제, 2026-08-10). 점검팀은 REPORT_SEL에 터널 구분이 없어(전체 터널
@@ -1853,11 +1880,13 @@ function renderPhotoMultiRows(){
   }
   const tunnelOpts=TUNNEL_OPTIONS_STD;
   // 안전관리 앱 사진대지 카드와 동일한 형태로 배치(2026-08-10) — 다만 점검팀은 번호가 고정 6칸이
-  // 아니라 터널별로 이어지는 임의 개수라 카드 수가 가변이고, 사진설명은 자유 서술이라 select가
-  // 아니라 그대로 text 입력을 쓴다(기존 동작 유지). 사진은 슬롯당 1장(교체 방식)으로 단순화.
+  // 아니라 터널별로 이어지는 임의 개수라 카드 수가 가변이다. 사진은 슬롯당 1장(교체 방식)으로 단순화.
   wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${_photoMultiRows.map(row=>{
     const tunnelOptsHtml=tunnelOpts.map(o=>`<option value="${esc(o)}"${row.tunnel===o?' selected':''}>${esc(o)}</option>`).join('')
       + (row.tunnel && !tunnelOpts.includes(row.tunnel) ? `<option value="${esc(row.tunnel)}" selected>${esc(row.tunnel)}</option>` : '');
+    const descOptsArr=photoDescOptionsTeam(row.tunnel);
+    const isCustomDesc=row.descCustom || (!!row.desc && !descOptsArr.includes(row.desc));
+    const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
     const photo=row.files[0];
     const photoArea = photo
       ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
@@ -1872,7 +1901,7 @@ function renderPhotoMultiRows(){
       <div style="display:flex;gap:8px">
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">터널명</div>
-          <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSet(${row.key},'tunnel',this.value)">
+          <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSetTunnel(${row.key},this.value)">
             <option value="">선택</option>
             ${tunnelOptsHtml}
           </select>
@@ -1885,7 +1914,12 @@ function renderPhotoMultiRows(){
       <div class="pm-card-label" style="margin-top:8px">번호</div>
       <input type="number" class="modal-input" style="width:100%" value="${esc(row.num)}" oninput="_photoMultiSet(${row.key},'num',this.value);document.getElementById('pmn_${row.key}').textContent='#'+(this.value||'-')"/>
       <div class="pm-card-label" style="margin-top:8px">사진설명</div>
-      <input type="text" class="modal-input" style="width:100%" value="${esc(row.desc)}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+      <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
+        <option value="">선택</option>
+        <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
+        ${descOpts}
+      </select>
+      <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px;width:100%" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
       <div class="pm-card-label" style="margin-top:8px">점검사진</div>
       ${photoArea}
       <input type="file" id="pmf_${row.key}" accept="image/*" style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
@@ -1909,6 +1943,25 @@ function syncTeamPhotoFormWidth(){
 function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row[field]=val;
+}
+function _photoMultiSetTunnel(key, val){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  row.tunnel=val;
+  if(val) row.num=String(nextNumberForTunnel(val, key));
+  renderPhotoMultiRows();
+}
+function _photoMultiDescChange(key, selEl){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  if(selEl.value==='__custom__'){
+    row.descCustom=true;
+    renderPhotoMultiRows();
+    document.getElementById('pmfdescc_'+key)?.focus();
+  } else {
+    row.descCustom=false;
+    row.desc=selEl.value;
+  }
 }
 function addPhotoMultiRow(){
   const nums=_photoMultiRows.map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
