@@ -2359,17 +2359,21 @@ function buildFieldHtml(f, idx, curVal, tabId){
     </div>`;
   }
   if(f.uiType==='fixed-select'){
-    // 후보가 고정된 소수의 값(예: 1~6번)뿐이라 직접입력 없이 select만 제공 — cascade-select와 달리
-    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상이 아니다.
+    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상은 아니지만,
+    // 후보에 없는 값도 입력할 수 있어야 하므로 select·cascade-select와 동일하게 "직접입력"을
+    // 목록 맨 위(선택 바로 다음)에 둔다 — 드롭다운 공통 규칙(2026-08-03 사용자 확정).
+    const isCustom = curVal!=='' && curVal!=null && !(f.options||[]).map(String).includes(String(curVal));
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${String(curVal)===String(o)?' selected':''}>${esc(o)}</option>`).join('');
-    const onchangeParts=[];
+    const onchangeParts=[`onSelectChange(this,'${id}c')`];
     if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
     if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
     return `<div class="modal-field">${label}
       <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
         <option value="">선택</option>
+        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
       </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
     </div>`;
   }
   if(f.type==='file'){
@@ -2404,7 +2408,10 @@ function buildFieldHtml(f, idx, curVal, tabId){
     return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/></div>`;
   }
   if(f.type==='number'){
-    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="number" step="0.01" value="${curVal!=null&&curVal!==''?esc(curVal):''}"/></div>`;
+    // 천단위 콤마 표시(2026-08-03 사용자 요청 — 기존 전력사용량 그리드 전용이던 걸 입력폼탭
+    // 전체 숫자 필드로 확대). type="number"는 콤마를 표시할 수 없어 text+inputmode로 바꾸고,
+    // focus 시 원값으로 풀었다가 blur 시 다시 콤마를 붙인다. getFieldValue가 저장 직전 콤마를 제거한다.
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" inputmode="decimal" value="${curVal!=null&&curVal!==''?esc(formatThousands(curVal)):''}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/></div>`;
   }
   return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" value="${esc(curVal||'')}"/></div>`;
 }
@@ -2413,6 +2420,14 @@ function onSelectChange(selectEl, customInputId){
   if(!ci) return;
   if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
   else { ci.style.display='none'; ci.value=''; }
+}
+// 발전기점검 결과/전기설비기록 판정처럼 TAB_DEFS 필드 루프를 안 거치고 buildFieldHtml 밖에서
+// 직접 만든 select+직접입력 그리드 셀 값을 읽을 때 씀(getFieldValue의 __custom__ 처리와 동일 로직).
+function getGridSelectValue(id){
+  const sel=document.getElementById(id);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
+  return sel.value;
 }
 // 캐스케이딩 select 공용 엔진 — dependsOn 필드들의 현재값을 optionsFn에 넘겨 옵션을 재계산.
 // (월간점검 구분+설비명→점검내용, 변압기온도 변압기종류→측정지점, 전력사용량 터널명→제목 등 재사용)
@@ -2478,7 +2493,8 @@ function getFieldValue(f, idx){
     if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
     return sel.value;
   }
-  return (document.getElementById(id)?.value||'').trim();
+  const raw=(document.getElementById(id)?.value||'').trim();
+  return f.type==='number' ? stripThousands(raw) : raw;
 }
 // 월간점검 탭 신규등록 — 구분 선택 시 MONTHLY_CHECKLIST 표준 항목을 설비명별로 묶어 체크리스트로
 // 보여주고, 체크된 항목마다 점검결과를 개별 입력해 여러 설비·점검내용을 한 번에 등록한다(2026-07-28
@@ -2654,17 +2670,23 @@ async function submitMonthlyForm(){
 // 인덱스 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 chkr_i 등을 그대로 유지, 저장 로직 불변, 2026-07-30).
 function buildElecChkSideTable(chkSrc, items, startIdx, label){
   let html=`<div class="tbl-wrap" style="min-width:280px"><table><thead><tr><th colspan="6">${esc(label)}</th></tr>
-    <tr><th>설비항목</th><th style="width:44px">판정</th><th style="width:56px">수량</th><th style="width:50px">증가</th><th style="width:50px">감소</th><th style="width:56px">부적합</th></tr></thead><tbody>`;
+    <tr><th>설비항목</th><th style="width:80px">판정</th><th style="width:56px">수량</th><th style="width:50px">증가</th><th style="width:50px">감소</th><th style="width:56px">부적합</th></tr></thead><tbody>`;
   items.forEach((c,i)=>{
     const idx=startIdx+i;
     const rec=elecChkLookup(chkSrc, c);
     const cur=rec?rec.점검결과판정:'○';
+    // 판정은 실보고서 범례상 ○(적합)/×(부적합)//(해당없음) 3개뿐이지만, 드롭다운 공통 규칙대로
+    // "직접입력"을 맨 위에 둔다(2026-08-03). 44px였던 select 폭이 report-paper 데스크톱
+    // padding-right:28px(화살표 자리)까지 더해지며 글자가 잘렸던 문제도 함께 해결(80px로 확장).
+    const isCustom = cur!=='' && !['○','×','/'].includes(cur);
     html+=`<tr><td>${esc(c.설비항목)}</td>
-      <td><select class="modal-select elec-grid-select" style="width:44px" id="chkr_${idx}">
+      <td><select class="modal-select elec-grid-select" style="width:80px" id="chkr_${idx}" onchange="onSelectChange(this,'chkr_${idx}c')">
+        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         <option value="○"${cur==='○'?' selected':''}>○</option>
         <option value="×"${cur==='×'?' selected':''}>×</option>
         <option value="/"${cur==='/'?' selected':''}>/</option>
-      </select></td>
+      </select>
+      <input id="chkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};width:80px;margin-top:4px" value="${isCustom?esc(cur):''}"/></td>
       <td><input class="modal-input elec-grid-input" style="width:56px" type="number" step="1" id="chkc_${idx}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
       <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chki_${idx}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
       <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chkd_${idx}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
@@ -2687,6 +2709,20 @@ function buildElecChkGridHtml(chkSrc){
 function buildElecChkHintHtml(chkSrc){
   if(!chkSrc) return '';
   return `<div class="modal-hint" style="margin:-2px 0 8px">※ 가장 최근 등록(${esc(fmtDate(chkSrc['점검일자']))} · ${esc(chkSrc['터널명']||'')}) 값을 기본값으로 채웠습니다. 실제와 다르면 값을 고친 뒤 등록하세요.</div>`;
+}
+// 역률(%) 실측 데이터(86~100)를 감안한 고정 목록 — 발전기점검 탭과 동일하게 드롭다운 공통
+// 규칙대로 "직접입력"을 맨 위에 두고, 0.97처럼 비율로 잘못 입력된 과거 값도 직접입력으로 보존한다.
+const ELEC_YEOKRYUL_OPTIONS=['85','86','87','88','89','90','91','92','93','94','95','96','97','98','99','100'];
+function buildElecYeokryulSelectHtml(curVal){
+  const strVal = curVal!=null ? String(curVal) : '';
+  const isCustom = strVal!=='' && !ELEC_YEOKRYUL_OPTIONS.includes(strVal);
+  const opts=ELEC_YEOKRYUL_OPTIONS.map(o=>`<option value="${esc(o)}"${strVal===o?' selected':''}>${esc(o)}</option>`).join('');
+  return `<select class="modal-select" id="ec_yeokryul" onchange="onSelectChange(this,'ec_yeokryulc')">
+      <option value="">선택</option>
+      <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+      ${opts}
+    </select>
+    <input id="ec_yeokryulc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(strVal):''}"/>`;
 }
 // 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
 function buildElecFormExtra(r){
@@ -2715,7 +2751,7 @@ function buildElecFormExtra(r){
       <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
       <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="number" step="0.01" value="${acb0&&acb0.최대전력!=null?acb0.최대전력:''}"/></div>
       <div class="modal-field"><label class="modal-label">배율</label><input class="modal-input" id="ec_baeyul" type="number" step="1" value="${acb0&&acb0.배율!=null?acb0.배율:''}"/></div>
-      <div class="modal-field"><label class="modal-label">역률(%)</label><input class="modal-input" id="ec_yeokryul" type="number" step="0.01" value="${acb0&&acb0.역률!=null?acb0.역률:''}"/></div>
+      <div class="modal-field"><label class="modal-label">역률(%)</label>${buildElecYeokryulSelectHtml(acb0&&acb0.역률!=null?acb0.역률:'')}</div>
     </div>`;
   // 설비현황은 매월 값이 거의 고정이라, 신규등록(r 없음) 시 가장 최근 등록된 레코드 값을 기본값으로 채워
   // 매번 32개를 새로 입력하지 않고 다른 값만 고쳐서 등록할 수 있게 한다(ACB 측정값은 매번 실측이라 대상 아님).
@@ -2828,6 +2864,17 @@ function syncElecFormWidth(){
   const contLeft=acbRow.getBoundingClientRect().left;
   let maxRight=0;
   Array.from(acbRow.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
+  // 저압/특고설비 표(elecChkGridWrap)는 applyElecChkFlex()가 걸리기 전까지는 아직 폭이 자연스러운
+  // (강제로 눌리지 않은) 상태다 — 판정 컬럼처럼 내용이 넓어져 이 표의 원래 폭이 acbRow보다 커지면
+  // acbRow 기준으로만 wrap 폭을 잡을 때 표가 다시 눌려 잘린다. 두 후보 폭 중 큰 쪽을 쓴다
+  // (2026-08-03 사용자 요청 — 카드 폭이 늘어나면 위 카드들도 같이 맞춰져야 함).
+  const chkInner=document.querySelector('#elecChkGridWrap > div');
+  if(chkInner && chkInner.children.length){
+    const chkLeft=chkInner.getBoundingClientRect().left;
+    let chkRight=0;
+    Array.from(chkInner.children).forEach(ch=>{ chkRight=Math.max(chkRight, ch.getBoundingClientRect().right-chkLeft); });
+    maxRight=Math.max(maxRight, chkRight);
+  }
   if(maxRight<=0) return;
   wrap.style.width=`min(${Math.ceil(maxRight)}px, 100%)`;
   applyElecChkFlex();
@@ -2843,13 +2890,28 @@ function generatorLatestForTunnel(tunnel){
 // 실제 보고서(발전기점검표) "점검사항" 구획은 일반점검사항(10)|운전중점검사항(10)을 좌우 2열로 나란히
 // 보여준다 — GENERATOR_CHECKLIST가 이미 앞 10개=일반점검사항/뒤 10개=운전중점검사항 순서라 인덱스
 // 그대로 절반씩 나누기만 하면 된다(id는 원래 인덱스 gchkr_i/gchks_i를 그대로 유지, 저장 로직 불변, 2026-07-30).
+// 결과 컬럼은 대부분 양호/불량/점검요 3択이지만, 배터리 충전전압·회전기록계처럼 실측값을 그대로
+// 적는 행도 있어 고정 목록만으로는 안 된다 — 드롭다운 공통 규칙대로 "직접입력"을 맨 위에 두고,
+// 3択에 없는 기존 값(26.6 V, 1800 rpm, 해당사항없음 등)은 직접입력 칸에 그대로 보존한다(2026-08-03,
+// 기존 text input이 88px로 좁아 "해당사항없음" 등이 잘리던 문제도 함께 해결).
+const GENERATOR_CHK_RESULT_OPTIONS=['양호','불량','점검요'];
 function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
-  let html=`<div class="tbl-wrap" style="min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:96px">결과</th><th style="width:130px">특이사항</th></tr></thead><tbody>`;
+  let html=`<div class="tbl-wrap" style="min-width:260px"><table><thead><tr><th colspan="3">${esc(label)}</th></tr><tr><th>점검내용</th><th style="width:112px">결과</th><th style="width:130px">특이사항</th></tr></thead><tbody>`;
   items.forEach((c,i)=>{
     const idx=startIdx+i;
     const rec=generatorChkLookup(chkSrc, c);
+    const resultVal=rec?rec.결과:'';
+    const isCustom = resultVal!=='' && !GENERATOR_CHK_RESULT_OPTIONS.includes(resultVal);
+    const resultOpts=GENERATOR_CHK_RESULT_OPTIONS.map(o=>`<option value="${esc(o)}"${resultVal===o?' selected':''}>${esc(o)}</option>`).join('');
     html+=`<tr><td>${esc(c.점검내용)}</td>
-      <td><input class="modal-input elec-grid-input" style="width:88px" type="text" id="gchkr_${idx}" value="${esc(rec?rec.결과:'')}"/></td>
+      <td>
+        <select class="modal-select elec-grid-select" style="width:104px" id="gchkr_${idx}" onchange="onSelectChange(this,'gchkr_${idx}c')">
+          <option value="">선택</option>
+          <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+          ${resultOpts}
+        </select>
+        <input id="gchkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};width:104px;margin-top:4px" value="${isCustom?esc(resultVal):''}"/>
+      </td>
       <td><input class="modal-input elec-grid-input" style="width:120px" type="text" id="gchks_${idx}" value="${esc(rec?rec.특이사항:'')}"/></td>
     </tr>`;
   });
@@ -3606,9 +3668,10 @@ async function submitElecForm(){
     무효전력량:document.getElementById('ec_muhyo')?.value,
     최대전력:document.getElementById('ec_choidae')?.value,
     배율:document.getElementById('ec_baeyul')?.value,
-    // 2026-07-31 사용자 요청 — 표준 후보가 실사용 값과 잘 안 맞아 항상 "직접입력"으로 떨어지던
-    // 카탈로그 드롭다운(select+직접입력)을 폐기하고 다른 필드처럼 일반 숫자 입력으로 단순화.
-    역률:document.getElementById('ec_yeokryul')?.value
+    // 2026-08-03 사용자 요청으로 select+직접입력 드롭다운으로 재변경(2026-07-31엔 "직접입력으로
+    // 항상 떨어진다"는 이유로 일반 숫자 입력으로 단순화했었음 — 이번엔 "직접입력 맨 위" 공통
+    // 규칙이 적용돼 있어 후보에 없는 값도 한 번의 클릭으로 바로 입력 가능, 아래 commonSelectValue 사용).
+    역률:commonSelectValue('ec_yeokryul')
   };
   function commonSelectValue(id){
     const sel=document.getElementById(id);
@@ -3673,7 +3736,7 @@ async function submitElecForm(){
     }
     for(let i=0;i<ELEC_CHECKLIST.length;i++){
       const c=ELEC_CHECKLIST[i];
-      const resultVal=document.getElementById('chkr_'+i)?.value;
+      const resultVal=getGridSelectValue('chkr_'+i);
       const countVal=document.getElementById('chkc_'+i)?.value;
       const incVal=document.getElementById('chki_'+i)?.value;
       const decVal=document.getElementById('chkd_'+i)?.value;
@@ -3788,7 +3851,7 @@ async function submitGeneratorForm(){
 
     for(let i=0;i<GENERATOR_CHECKLIST.length;i++){
       const c=GENERATOR_CHECKLIST[i];
-      const resultVal=document.getElementById('gchkr_'+i)?.value;
+      const resultVal=getGridSelectValue('gchkr_'+i);
       const noteVal=document.getElementById('gchks_'+i)?.value;
       const existing=generatorChkLookup(r, c);
       childTasks.push(()=>{

@@ -1405,17 +1405,21 @@ function buildFieldHtml(f, idx, curVal, tabId){
     </div>`;
   }
   if(f.uiType==='fixed-select'){
-    // 후보가 고정된 소수의 값(예: 1~6번)뿐이라 직접입력 없이 select만 제공 — cascade-select와 달리
-    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상이 아니다.
+    // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상은 아니지만,
+    // 후보에 없는 값도 입력할 수 있어야 하므로 select·cascade-select와 동일하게 "직접입력"을
+    // 목록 맨 위(선택 바로 다음)에 둔다 — 드롭다운 공통 규칙(2026-08-03 사용자 확정).
+    const isCustom = curVal!=='' && curVal!=null && !(f.options||[]).map(String).includes(String(curVal));
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${String(curVal)===String(o)?' selected':''}>${esc(o)}</option>`).join('');
-    const onchangeParts=[];
+    const onchangeParts=[`onSelectChange(this,'${id}c')`];
     if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
     if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
     return `<div class="modal-field">${label}
       <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
         <option value="">선택</option>
+        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
       </select>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
     </div>`;
   }
   if(f.type==='file'){
