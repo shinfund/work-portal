@@ -244,6 +244,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.pm-card-label{font-size:13px;font-weight:800;color:var(--txt);margin:0 0 5px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 /* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
 .modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
@@ -787,8 +788,8 @@ const TAB_DEFS=[
     id:'photo', label:'점검사진', dbId:DB_IDS.photo, titleKey:'제목', dateKey:'일자',
     fields:[
       {header:true, group:'기본정보'},
-      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
-      {key:'일자', type:'date', required:true, cascadeTrigger:true, extraOnChange:'refreshPhotoMultiRows()'},
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true},
+      {key:'일자', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['일자'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['일자'],'점검사진'); return t?[t]:[]; },
         emptyHint:'먼저 일자를 선택하세요'},
@@ -1623,8 +1624,9 @@ function openAddModal(tabId, recordId){
   // 체크된 항목마다 한 행씩 등록한다(2026-07-25, 반복입력 부담 축소).
   const isElecinspChecklist = tabId==='elecinsp' && !r;
   // 점검사진 신규등록(수정 아님)도 마찬가지로 같은 날짜·터널에서 여러 장을 한 번에 촬영하는 게
-  // 보통이라, 번호/사진설명/점검사진 3개 필드를 행 단위로 반복 입력받는다(2026-07-27) — 터널별
-  // 사진 구성이 매달 비슷해 최근월 기록을 참고해 초기값을 채워줄 수 있게 한다.
+  // 보통이라, 터널명/일자/제목/번호/사진설명/점검사진을 전부 카드형 다중행 UI로 반복 입력받는다
+  // (2026-07-27 도입, 2026-08-10 안전관리 앱과 동일한 카드 UI로 전면 재구성 — 터널명·일자도
+  // 카드 안으로 이동하고 이미 등록된 슬롯은 빈 칸이 아니라 기존 값을 채워서 보여준다).
   const isPhotoMulti = tabId==='photo' && !r;
   if(isPhotoMulti){ _photoMultiRows=[]; _photoMultiNextKey=1; }
   // 필드 배열 순서대로 렌더링 — {header:true} 마커를 만나면 이전 그룹 grid div를 닫고 새로 연다
@@ -1633,9 +1635,10 @@ function openAddModal(tabId, recordId){
   let groupOpen=false;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header){
-      // photo 탭의 "사진" 그룹(번호 뒤)은 번호·사진설명·점검사진이 전부 다중행 UI로 대체되어
-      // 실제 내용이 없다 — 그대로 두면 빈 헤더+빈 grid 박스만 남는다(2026-07-31 버그 수정).
-      if(isPhotoMulti && f.group==='사진') return;
+      // photo 탭은 신규등록 모드에선 터널명·일자·제목·번호·사진설명·점검사진이 전부 카드형 다중행
+      // UI로 대체되어 기본정보/사진 그룹 모두 실제 내용이 없다 — 그대로 두면 빈 헤더+빈 grid 박스만
+      // 남는다(2026-07-31 버그 수정, 2026-08-10 기본정보 그룹도 카드로 이동하며 확장).
+      if(isPhotoMulti) return;
       if(groupOpen) html+='</div>';
       html+=`<div class="form-group-hd">${esc(f.group)}</div><div class="form-group-grid">`;
       groupOpen=true;
@@ -1651,11 +1654,8 @@ function openAddModal(tabId, recordId){
       }
       return;
     }
-    if(isPhotoMulti && (f.key==='번호' || f.key==='사진설명' || f.key==='점검사진')){
-      if(f.key==='번호'){
-        // photo의 TAB_DEFS는 기본정보 그룹을 닫는 두 번째 {header:true}가 없어(사진 필드가
-        // MULTI_ITEM_FIELDS 방식으로 완전히 대체됨) 그룹이 열린 채로 남아있다 — 번호·사진설명
-        // 다중행 UI가 기본정보 grid의 4번째 칸으로 찌그러져 들어가던 버그를 여기서 닫아 막는다.
+    if(isPhotoMulti && (f.key==='터널명' || f.key==='일자' || f.key==='제목' || f.key==='번호' || f.key==='사진설명' || f.key==='점검사진')){
+      if(f.key==='터널명'){
         if(groupOpen){ html+='</div>'; groupOpen=false; }
         html+='<div id="photoMultiWrap"></div>';
       }
@@ -1676,7 +1676,7 @@ function openAddModal(tabId, recordId){
     renderPhotoFileList('ff_'+fileIdx);
   }
   tabDef.fields.forEach((f,idx)=>{
-    if(isPhotoMulti && (f.key==='번호' || f.key==='사진설명' || f.key==='점검사진')) return;
+    if(isPhotoMulti && (f.key==='터널명' || f.key==='일자' || f.key==='제목' || f.key==='번호' || f.key==='사진설명' || f.key==='점검사진')) return;
     if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx, r ? (r[f.key]||'') : '');
   });
   if(isElecinspChecklist){
@@ -1684,6 +1684,10 @@ function openAddModal(tabId, recordId){
     refreshElecinspChecklist();
   }
   if(isPhotoMulti){
+    // 모달을 열 때마다 빈 칸으로 시작하지 않고, 이번 달(REPORT_SEL 기준) 이미 저장된 슬롯이 있으면
+    // 그 값을 채운 카드로 보여준다(2026-08-10 — 안전관리 앱 B9와 동일한 문제: 재진입 시 빈 폼만
+    // 보이던 것 수정).
+    _photoMultiRows=buildPhotoMultiRowsFromExisting();
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
     renderPhotoMultiRows();
     syncTeamPhotoFormWidth();
@@ -1811,13 +1815,44 @@ function suggestNextPhotoNum(dateStr, tunnel){
   return nums.length ? Math.max(...nums)+1 : 1;
 }
 function newPhotoMultiRow(num, desc){
-  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', files:[] };
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', files:[], tunnel:'', date:'' };
 }
+// 모달을 열 때마다 빈 칸으로 시작하면 이미 등록해둔 사진도 매번 새로 입력하는 것처럼 보인다
+// (안전관리 앱과 동일한 문제, 2026-08-10). 점검팀은 REPORT_SEL에 터널 구분이 없어(전체 터널
+// 월간 보고서) 이번 달 전체 터널의 기존 레코드를 터널명순·번호순으로 불러와 카드로 만든다.
+function buildPhotoMultiRowsFromExisting(){
+  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+  const recs=(TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(ym))
+    .sort((a,b)=>(a['터널명']||'').localeCompare(b['터널명']||'') || (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
+  return recs.map(r=>{
+    const row=newPhotoMultiRow(r['번호']!=null?String(r['번호']):'', r['사진설명']||'');
+    row.tunnel=r['터널명']||'';
+    row.date=r['일자']||'';
+    row.files=(r['점검사진']||[]).slice(0,1);
+    return row;
+  });
+}
+// 터널명·일자가 더 이상 상단 공용 필드가 아니라 카드마다 개별 입력이라(2026-08-10, 안전관리 앱과
+// 동일한 카드 UI로 전환), "전기시설점검 불러오기"·"최근월 불러오기"·"+ 행 추가"가 어느 터널·일자
+// 기준으로 동작할지 정할 소규모 기준 선택 UI(pmQuick*)를 카드 목록 위에 둔다 — 등록 데이터 자체는
+// 아니고 불러오기 액션의 입력값일 뿐이라 제출 시 그대로 버려진다.
 function buildPhotoMultiHtml(){
+  const tunnelOpts=TUNNEL_OPTIONS_STD.map(o=>`<option value="${esc(o)}">${esc(o)}</option>`).join('');
   return `<div class="modal-field">
-    <label class="modal-label">번호·사진설명 <span class="modal-required">*</span></label>
-    <div class="modal-hint">터널·일자에서 촬영한 사진 수만큼 행을 추가해 번호·사진설명·사진을 각각 등록합니다.</div>
-    <div style="display:flex;gap:8px;margin:8px 0;flex-wrap:wrap">
+    <label class="modal-label">사진대지 <span class="modal-required">*</span></label>
+    <div class="modal-hint">이번 달 이미 등록된 사진은 카드로 자동 표시됩니다. 새로 추가하려면 아래 기준 터널명·일자를 고른 뒤 불러오기 버튼이나 "+ 행 추가"를 누르세요.</div>
+    <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:10px 0">
+      <div>
+        <div class="pm-card-label">기준 터널명</div>
+        <select id="pmQuickTunnel" class="modal-select" style="padding:8px">
+          <option value="">선택</option>
+          ${tunnelOpts}
+        </select>
+      </div>
+      <div>
+        <div class="pm-card-label">기준 일자</div>
+        <input type="date" id="pmQuickDate" class="modal-input"/>
+      </div>
       <button type="button" class="tb-action-btn tb-add" onclick="loadPhotoMultiFromElecinsp()">전기시설점검 불러오기</button>
       <button type="button" class="tb-action-btn tb-add" onclick="loadPhotoMultiFromRecentMonth()">최근월 불러오기</button>
       <button type="button" class="tb-action-btn tb-add" onclick="addPhotoMultiRow()">+ 행 추가</button>
@@ -1829,95 +1864,99 @@ function renderPhotoMultiRows(){
   const wrap=document.getElementById('photoMultiRowsList');
   if(!wrap) return;
   if(!_photoMultiRows.length){
-    wrap.innerHTML='<div class="modal-hint">터널명·일자를 선택하면 행이 자동 생성됩니다.</div>';
+    wrap.innerHTML='<div class="modal-hint">이번 달 등록된 사진이 없습니다. 기준 터널명·일자를 고른 뒤 불러오기 버튼이나 "+ 행 추가"로 새 카드를 만드세요.</div>';
     return;
   }
-  // 안전관리 앱의 사진대지(#1~#6) 박스 그리드와 동일한 카드 형태로 배치(2026-07-31 사용자 요청) —
-  // 다만 점검팀은 번호가 고정 6칸이 아니라 그 달 안에서 이어지는 임의 개수라 카드 수가 가변이고,
-  // 사진설명은 자유 서술이라 select가 아니라 그대로 text 입력을 쓴다(기존 동작 유지).
-  wrap.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,300px));gap:10px">${_photoMultiRows.map(row=>{
-    const thumbs=row.files.map((f,fi)=>
-      `<div style="position:relative">
-        <img src="${esc(f.url)}" alt="사진" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-        <button type="button" onclick="removePhotoMultiFile(${row.key},${fi})" style="position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:10px;line-height:1;cursor:pointer">✕</button>
-      </div>`
-    ).join('');
+  const tunnelOpts=TUNNEL_OPTIONS_STD;
+  // 안전관리 앱 사진대지 카드와 동일한 형태로 배치(2026-08-10) — 다만 점검팀은 번호가 고정 6칸이
+  // 아니라 터널별로 이어지는 임의 개수라 카드 수가 가변이고, 사진설명은 자유 서술이라 select가
+  // 아니라 그대로 text 입력을 쓴다(기존 동작 유지). 사진은 슬롯당 1장(교체 방식)으로 단순화.
+  wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${_photoMultiRows.map(row=>{
+    const tunnelOptsHtml=tunnelOpts.map(o=>`<option value="${esc(o)}"${row.tunnel===o?' selected':''}>${esc(o)}</option>`).join('')
+      + (row.tunnel && !tunnelOpts.includes(row.tunnel) ? `<option value="${esc(row.tunnel)}" selected>${esc(row.tunnel)}</option>` : '');
+    const photo=row.files[0];
+    const photoArea = photo
+      ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
+          <img src="${esc(photo.url)}" alt="사진" style="width:100%;height:100%;object-fit:cover;display:block">
+          <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:5px 0">사진 변경</div>
+          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
+        </div>`
+      : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
       <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
-      <div id="pmn_${row.key}" style="font-weight:800;font-size:12.5px;margin-bottom:6px">#${esc(row.num||'-')}</div>
-      <div class="modal-hint" style="margin:0 0 4px">번호</div>
-      <input type="number" class="modal-input" style="width:72px" value="${esc(row.num)}" oninput="_photoMultiSet(${row.key},'num',this.value);document.getElementById('pmn_${row.key}').textContent='#'+(this.value||'-')"/>
-      <div class="modal-hint" style="margin:8px 0 4px">사진설명</div>
-      <input type="text" class="modal-input" style="width:100%" value="${esc(row.desc)}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
-      <div class="modal-hint" style="margin:8px 0 4px">점검사진</div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start">
-        ${row.files.length ? thumbs : `<div style="width:44px;height:44px;border:1.5px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:10px;flex-shrink:0">사진</div>`}
-        <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>
+      <div id="pmn_${row.key}" style="font-weight:800;font-size:13px;margin-bottom:8px">#${esc(row.num||'-')}</div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div class="pm-card-label">터널명</div>
+          <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiSet(${row.key},'tunnel',this.value)">
+            <option value="">선택</option>
+            ${tunnelOptsHtml}
+          </select>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="pm-card-label">일자</div>
+          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+        </div>
       </div>
-      <input type="file" id="pmf_${row.key}" accept="image/*" multiple style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
+      <div class="pm-card-label" style="margin-top:8px">번호</div>
+      <input type="number" class="modal-input" style="width:100%" value="${esc(row.num)}" oninput="_photoMultiSet(${row.key},'num',this.value);document.getElementById('pmn_${row.key}').textContent='#'+(this.value||'-')"/>
+      <div class="pm-card-label" style="margin-top:8px">사진설명</div>
+      <input type="text" class="modal-input" style="width:100%" value="${esc(row.desc)}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+      <div class="pm-card-label" style="margin-top:8px">점검사진</div>
+      ${photoArea}
+      <input type="file" id="pmf_${row.key}" accept="image/*" style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
     </div>`;
   }).join('')}</div>`;
   syncTeamPhotoFormWidth();
 }
-// 점검사진 입력폼 폭 정렬 — 아래 "등록 현황" 미리보기 그리드(실제 몇 장씩 한 줄에 배치되는지)를 기준
-// 카드로 삼아 위 기본정보(터널명/일자/제목) grid와 번호·사진설명 입력 영역 폭을 맞춘다(2026-07-31
-// 사용자 요청). 클래식 신규등록 모달(리스트탭)에는 미리보기 그리드가 없어 조용히 아무것도 안 한다.
+// 점검사진 입력폼 폭 정렬 — 카드 그리드가 실제로 몇 칸씩 배치되는지(현재 폭 기준 자연스러운 줄바꿈
+// 결과)를 기준 카드로 삼아 photoMultiWrap 폭을 맞춘다(안전관리 앱과 동일 패턴, 2026-08-10 —
+// "등록 현황" 미리보기 그리드를 없애면서 그 그리드를 기준으로 삼던 예전 방식 대체).
 function syncTeamPhotoFormWidth(){
-  const previewGrid=document.getElementById('rpPhotoPreviewGrid');
-  if(!previewGrid || !previewGrid.children.length) return;
-  const contLeft=previewGrid.getBoundingClientRect().left;
-  let maxRight=0;
-  Array.from(previewGrid.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
-  if(maxRight<=0) return;
-  const w=Math.ceil(maxRight)+'px';
-  const grid=document.querySelector('#addModalFields > .form-group-grid');
-  if(grid) grid.style.maxWidth=w;
+  const gridRow=document.getElementById('photoMultiGridRow');
   const photoWrap=document.getElementById('photoMultiWrap');
-  if(photoWrap) photoWrap.style.maxWidth=w;
+  if(!gridRow || !photoWrap || !gridRow.children.length) return;
+  const contLeft=gridRow.getBoundingClientRect().left;
+  let maxRight=0;
+  Array.from(gridRow.children).forEach(ch=>{ maxRight=Math.max(maxRight, ch.getBoundingClientRect().right-contLeft); });
+  if(maxRight<=0) return;
+  photoWrap.style.maxWidth=`min(${Math.ceil(maxRight)}px, 100%)`;
 }
 function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row[field]=val;
 }
 function addPhotoMultiRow(){
-  const nums=_photoMultiRows.map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
-  const dateVal=document.getElementById('ff_2')?.value;
-  const tunnel=document.getElementById('ff_1')?.value;
-  const nextNum = nums.length ? Math.max(...nums)+1 : (suggestNextPhotoNum(dateVal, tunnel)||1);
-  _photoMultiRows.push(newPhotoMultiRow(String(nextNum), ''));
+  const tunnel=document.getElementById('pmQuickTunnel')?.value||'';
+  const dateVal=document.getElementById('pmQuickDate')?.value||'';
+  const sameTunnelNums=_photoMultiRows.filter(r=>r.tunnel===tunnel).map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
+  const nextNum = sameTunnelNums.length ? Math.max(...sameTunnelNums)+1 : (suggestNextPhotoNum(dateVal, tunnel)||1);
+  const row=newPhotoMultiRow(String(nextNum), '');
+  row.tunnel=tunnel; row.date=dateVal;
+  _photoMultiRows.push(row);
   renderPhotoMultiRows();
 }
 function removePhotoMultiRow(key){
   _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
   renderPhotoMultiRows();
 }
+// 슬롯당 사진 1장(교체 방식) — 카드 전체를 채우는 큰 미리보기와 짝을 이루는 단순한 모델로
+// 변경(2026-08-10, 안전관리 앱과 동일). 새 파일을 고르면 기존 사진을 그대로 대체한다.
 function uploadPhotoMultiFile(input, key){
-  const files=Array.from(input.files||[]);
-  if(!files.length) return;
+  const file=(input.files||[])[0];
+  if(!file) return;
   if(!isAuthed()){ toast('로그인이 필요합니다.'); return; }
   const row=_photoMultiRows.find(r=>r.key===key);
   if(!row) return;
-  const results=new Array(files.length).fill(null);
-  let done=0;
-  files.forEach((file,i)=>{
-    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
-      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-      const formData=new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'monthly-inspection-team');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
-    })
-      .catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); })
-      .finally(()=>{
-        done++;
-        if(done===files.length){
-          results.forEach(r=>{ if(r) row.files.push(r); });
-          renderPhotoMultiRows();
-        }
-      });
-  });
+  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+    if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+    const formData=new FormData();
+    formData.append('file', outFile);
+    formData.append('app', 'monthly-inspection-team');
+    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(data=>{ row.files=[{ url:data.url, name:file.name }]; renderPhotoMultiRows(); });
+  }).catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); });
   input.value='';
 }
 function removePhotoMultiFile(key, fileIdx){
@@ -1926,100 +1965,94 @@ function removePhotoMultiFile(key, fileIdx){
   row.files.splice(fileIdx,1);
   renderPhotoMultiRows();
 }
-// 터널명+일자가 정확히 일치하는 "전기시설점검" 기록의 구분·점검내용을 사진설명 기본값으로
-// 여러 행에 미리 채운다(2026-07-29 사용자 요청) — 실측 데이터로 같은 터널·같은 날짜 기준
-// 전기시설점검 항목과 점검사진 사진설명이 정확히 대응됨을 확인함(한 달 점검이 여러 날짜에
-// 나눠 진행될 때도 날짜별로 정확히 일치). 최근월 참고보다 더 정확한 소스라 우선 시도한다.
+// 터널명+일자가 정확히 일치하는 "전기시설점검" 기록의 구분·점검내용을 사진설명 기본값으로 새
+// 카드에 채운다(2026-07-29 사용자 요청) — 실측 데이터로 같은 터널·같은 날짜 기준 전기시설점검
+// 항목과 점검사진 사진설명이 정확히 대응됨을 확인함. 기준 터널명·일자는 pmQuick* 선택값을 쓰고,
+// 이미 표시 중인 카드는 그대로 두고 새 카드만 뒤에 추가한다(2026-08-10 — 기존 등록 카드를
+// 프리필하면서 통째로 갈아치우면 이미 저장된 데이터가 화면에서 사라져 보이는 문제 방지).
 async function loadPhotoMultiFromElecinsp(silent){
-  const tunnel=document.getElementById('ff_1')?.value;
-  const dateVal=document.getElementById('ff_2')?.value;
-  if(!tunnel || !dateVal){ if(!silent) toast('터널명·일자를 먼저 선택하세요.'); return false; }
+  const tunnel=document.getElementById('pmQuickTunnel')?.value;
+  const dateVal=document.getElementById('pmQuickDate')?.value;
+  if(!tunnel || !dateVal){ if(!silent) toast('기준 터널명·일자를 먼저 선택하세요.'); return false; }
   if(!TAB_STATE.elecinsp.loaded){
     try{ await loadTabData('elecinsp'); }catch(e){ console.error(e); }
   }
-  // 로딩 중 사용자가 터널·일자를 바꿨으면 이 호출은 조용히 종료(최신 호출이 다시 처리).
-  if(document.getElementById('ff_1')?.value!==tunnel || document.getElementById('ff_2')?.value!==dateVal) return false;
+  // 로딩 중 사용자가 기준 터널·일자를 바꿨으면 이 호출은 조용히 종료(최신 호출이 다시 처리).
+  if(document.getElementById('pmQuickTunnel')?.value!==tunnel || document.getElementById('pmQuickDate')?.value!==dateVal) return false;
   const recs=(TAB_STATE.elecinsp.records||[]).filter(r=>r['터널명']===tunnel && r['날짜']===dateVal);
   if(!recs.length){ if(!silent) toast('해당 터널·일자의 전기시설점검 기록이 없습니다.'); return false; }
-  let nextNum=suggestNextPhotoNum(dateVal, tunnel)||1;
-  _photoMultiRows=recs.map(r=>{
+  const sameTunnelNums=_photoMultiRows.filter(r=>r.tunnel===tunnel).map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
+  let nextNum = sameTunnelNums.length ? Math.max(...sameTunnelNums)+1 : (suggestNextPhotoNum(dateVal, tunnel)||1);
+  recs.forEach(r=>{
     const desc=[r['구분'], r['점검내용']].filter(Boolean).join(' · ');
     const row=newPhotoMultiRow(String(nextNum), desc);
+    row.tunnel=tunnel; row.date=dateVal;
     nextNum++;
-    return row;
+    _photoMultiRows.push(row);
   });
   renderPhotoMultiRows();
-  if(!silent) toast('전기시설점검 '+recs.length+'건을 불러왔습니다. 사진은 각 행에서 첨부해주세요.');
+  if(!silent) toast('전기시설점검 '+recs.length+'건을 새 카드로 불러왔습니다. 사진은 각 카드에서 첨부해주세요.');
   return true;
 }
-// 같은 터널의 가장 최근 등록월(선택한 일자와 다른 날짜) 기록을 번호순으로 불러와 사진설명을
-// 그대로 참고 채움값으로 쓰고, 번호는 선택한 일자(월) 기준 다음 번호부터 이어서 매긴다.
+// 같은 터널의 가장 최근 등록월(기준 일자와 다른 날짜) 기록을 번호순으로 불러와 사진설명을 그대로
+// 참고 채움값으로 쓰는 새 카드를 추가한다 — 일자는 비워둔 채로 추가되니 각 카드에서 직접 입력해야
+// 한다(예전엔 상단 공용 일자 필드가 그 역할을 대신했지만 카드 UI 전환으로 카드마다 일자가 따로라
+// 자동으로 채울 단일 값이 없다, 2026-08-10).
 function loadPhotoMultiFromRecentMonth(silent){
-  const tunnel=document.getElementById('ff_1')?.value;
-  const dateVal=document.getElementById('ff_2')?.value;
-  if(!tunnel){ if(!silent) toast('터널명을 먼저 선택하세요.'); return false; }
+  const tunnel=document.getElementById('pmQuickTunnel')?.value;
+  const dateVal=document.getElementById('pmQuickDate')?.value;
+  if(!tunnel){ if(!silent) toast('기준 터널명을 먼저 선택하세요.'); return false; }
   const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (!dateVal || r['일자']!==dateVal));
   if(!recs.length){ if(!silent) toast('참고할 이전 등록 기록이 없습니다.'); return false; }
   const latestDate=recs.reduce((a,r)=>(!a||r['일자']>a)?r['일자']:a, null);
   const group=recs.filter(r=>r['일자']===latestDate).sort((a,b)=>(parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
-  let nextNum=suggestNextPhotoNum(dateVal, tunnel)||1;
-  _photoMultiRows=group.map(r=>{ const row=newPhotoMultiRow(String(nextNum), r['사진설명']||''); nextNum++; return row; });
+  const sameTunnelNums=_photoMultiRows.filter(r=>r.tunnel===tunnel).map(r=>parseInt(r.num,10)).filter(n=>!isNaN(n));
+  let nextNum = sameTunnelNums.length ? Math.max(...sameTunnelNums)+1 : (suggestNextPhotoNum(dateVal, tunnel)||1);
+  group.forEach(r=>{
+    const row=newPhotoMultiRow(String(nextNum), r['사진설명']||'');
+    row.tunnel=tunnel;
+    nextNum++;
+    _photoMultiRows.push(row);
+  });
   renderPhotoMultiRows();
-  if(!silent) toast(latestDate.slice(0,7)+' 기준 '+group.length+'건 불러왔습니다. 사진은 각 행에서 다시 첨부해주세요.');
+  if(!silent) toast(latestDate.slice(0,7)+' 기준 '+group.length+'건을 새 카드로 불러왔습니다. 일자·사진은 각 카드에서 입력해주세요.');
   return true;
 }
-async function refreshPhotoMultiRows(){
-  const wrap=document.getElementById('photoMultiWrap');
-  if(!wrap) return;
-  if(!document.getElementById('photoMultiRowsList')) wrap.innerHTML=buildPhotoMultiHtml();
-  const tunnel=document.getElementById('ff_1')?.value;
-  const dateVal=document.getElementById('ff_2')?.value;
-  if(!tunnel || !dateVal || _photoMultiRows.length){ renderPhotoMultiRows(); return; }
-  if(await loadPhotoMultiFromElecinsp(true)) return;
-  // 위 await 도중 사용자가 터널·일자를 바꿨으면 여기서 멈춘다(최신 호출이 다시 처리).
-  if(document.getElementById('ff_1')?.value!==tunnel || document.getElementById('ff_2')?.value!==dateVal || _photoMultiRows.length) return;
-  if(!loadPhotoMultiFromRecentMonth(true)){
-    _photoMultiRows=[newPhotoMultiRow(String(suggestNextPhotoNum(dateVal, tunnel)||1), '')];
-    renderPhotoMultiRows();
-  }
-}
+// 터널명·일자·제목이 더 이상 공용 필드가 아니라 카드마다 개별 값이라(2026-08-10, 안전관리 앱과
+// 동일 전환), 검증·중복레코드 매칭·제목 생성을 전부 행 단위로 한다. 제목은 사용자에게 입력받지
+// 않고 해당 행의 일자로부터 자동 생성한다(titleWithMonth — 일자에서 연·월만 쓰므로 그대로 유지 가능).
 async function submitPhotoMulti(){
   const tabDef=getTabDef('photo');
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
-  const shared={};
-  let missing=null;
-  tabDef.fields.forEach((f,idx)=>{
-    if(f.key==='번호' || f.key==='사진설명' || f.key==='점검사진') return;
-    const v=getFieldValue(f, idx);
-    shared[f.key]=v;
-    if(f.required && !v && !missing) missing=f.label||f.key;
-  });
-  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
-  if(!_photoMultiRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
-  if(_photoMultiRows.some(row=>!String(row.num||'').trim())){ alert('모든 행의 번호를 입력해주세요.'); return; }
+  // 카드가 하나도 안 채워진 빈 행(터널명·일자·번호·사진설명·사진 전부 없음)은 등록 대상에서
+  // 제외한다 — "+ 행 추가" 직후 바로 취소하는 경우 등.
+  const usedRows=_photoMultiRows.filter(row=>row.tunnel || row.date || row.desc.trim() || row.files.length || String(row.num||'').trim());
+  if(!usedRows.length){ alert('번호·사진설명을 하나 이상 입력해주세요.'); return; }
+  const missingRow=usedRows.find(row=>!row.tunnel || !row.date || !String(row.num||'').trim());
+  if(missingRow){ alert('#'+(missingRow.num||'-')+' 카드의 터널명·일자·번호를 입력해주세요.'); return; }
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
   showAddModalProgress();
-  const total=_photoMultiRows.length;
+  const total=usedRows.length;
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
   // 같은 터널·월·번호(슬롯)에 이미 저장된 레코드가 있으면 새로 만들지 않고 그 레코드를 수정한다
   // (안전관리 앱 B8과 동일 수정, 2026-07-31 — 입력폼 탭에서 같은 달을 재방문해 저장하면 중복 생성되던 문제).
-  const ym=(shared['일자']||'').slice(0,7);
-  const tasks=_photoMultiRows.map(row=>()=>{
+  const tasks=usedRows.map(row=>()=>{
+    const rowYm=(row.date||'').slice(0,7);
     const properties={
-      '터널명':buildPropValue('select', shared['터널명']),
-      '일자':buildPropValue('date', shared['일자']),
-      '제목':buildPropValue('title', shared['제목']),
+      '터널명':buildPropValue('select', row.tunnel),
+      '일자':buildPropValue('date', row.date),
+      '제목':buildPropValue('title', titleWithMonth(row.date,'점검사진')),
       '번호':buildPropValue('number', row.num)
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===shared['터널명'] && (r['일자']||'').slice(0,7)===ym && parseInt(r['번호'],10)===parseInt(row.num,10));
+    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && parseInt(r['번호'],10)===parseInt(row.num,10));
     const req=existing
       ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
@@ -2039,7 +2072,7 @@ async function submitPhotoMulti(){
     updateLastUpdate();
     btn.disabled=false; lbl.textContent='등록';
     closeAddModal();
-    toast(_photoMultiRows.length+'건 등록되었습니다.');
+    toast(total+'건 등록되었습니다.');
   }catch(e){
     btn.disabled=false; lbl.textContent='등록';
     alert('등록 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
@@ -2956,41 +2989,25 @@ async function submitTeamRepairForm(){
     console.error(e);
   }
 }
-// ── 점검사진 — 기존 모달 재사용(입력폼이 위, 이번 달 등록 현황은 아래, 2026-07-31 사용자 요청과 동일 순서) ──
+// ── 점검사진 — 카드 안에서 이미 사진을 큰 미리보기로 보여주므로(2026-08-10, 안전관리 앱과 동일)
+// 별도의 "등록 현황" 미리보기 블록은 없앴다. 등록·수정 자체는 기존 다중행 입력 카드
+// (buildPhotoMultiHtml)를 그대로 둔다 — 업로드 로직은 건드리지 않음.
 async function renderReportPage_photo(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 운영관리 사진대지</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+      <!-- photo 탭은 항상 신규등록 흐름이라(수정 모드 없음) 하단 버튼도 항상 "등록"으로 고정 —
+           상단·하단 명칭을 "등록"으로 통일(안전관리 앱과 동일, 2026-08-10). -->
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
-    <div id="rpPhotoMount"></div>
-    <div class="report-section-hd" style="margin-top:22px">등록 현황</div>
-    <div id="rpPhotoPreview"></div>`;
+    <div id="rpPhotoMount"></div>`;
   if(!TAB_STATE.photo.loaded) await loadTabData('photo');
   if(_reportCurPage!=='photo') return;
   document.getElementById('rpLoading')?.remove();
-  renderTeamPhotoPreview();
   mountAddModalInline('rpPhotoMount');
   openAddModal('photo');
   document.body.style.overflow='';
-}
-function renderTeamPhotoPreview(){
-  const wrap=document.getElementById('rpPhotoPreview');
-  if(!wrap) return;
-  const ymStr=REPORT_SEL.year+'-'+REPORT_SEL.month;
-  const recs=(TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(ymStr))
-    .sort((a,b)=>(a['터널명']||'').localeCompare(b['터널명']||'') || (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
-  if(!recs.length){ wrap.innerHTML=`<div style="color:var(--txt3);font-size:12px">이번 달 등록된 사진이 없습니다.</div>`; return; }
-  const cells=recs.map(r=>{
-    const photo=(r['점검사진']&&r['점검사진'][0]) || null;
-    return `<div style="border:1px solid var(--border);border-radius:6px;padding:8px;min-height:150px">
-        <div style="font-weight:800;font-size:12.5px;margin-bottom:4px">${esc(r['터널명']||'')} #${esc(r['번호']||'')}</div>
-        <div style="font-size:12px;color:var(--txt2);margin-bottom:6px">${esc(r['사진설명']||'')}</div>
-        ${photo ? `<img src="${esc(photo.url)}" alt="사진" style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">` : `<div style="color:var(--txt3);font-size:11px">사진 없음</div>`}
-      </div>`;
-  }).join('');
-  wrap.innerHTML=`<div id="rpPhotoPreviewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,260px));gap:10px">${cells}</div>`;
 }
 // ── 보고서 생성 탭 — 시트별 체크박스 선택 생성(안전관리 앱과 동일 패턴) ──
 const REPORT_GEN_SHEETS=[
