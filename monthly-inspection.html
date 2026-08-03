@@ -407,7 +407,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <h3><span id="addModalTitleText">신규 등록</span></h3>
         <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
       </div>
-      <div id="addModalRequiredHint" style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
       <div id="addModalFields"></div>
       <div class="modal-progress-wrap" id="addModalProgressWrap" style="display:none"><div class="modal-progress-bar" id="addModalProgressBar"></div></div>
       <div class="modal-btns">
@@ -462,8 +461,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼(작업중)</span></button>
-  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서(작업중)</span></button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼</span></button>
+  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서</span></button>
   <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')"><span class="tt-label">월간점검</span></button>
   <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')"><span class="tt-label">전기설비기록</span></button>
   <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')"><span class="tt-label">변압기온도</span></button>
@@ -2340,6 +2339,7 @@ function closeDetailModal(e){
 var EDIT_TAB=null, EDIT_PAGE_ID=null;
 var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
 function buildFieldHtml(f, idx, curVal, tabId){
+  if(f.key==='제목') return '';
   const id='ff_'+idx;
   const req=f.required?'<span class="modal-required">*</span>':'';
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
@@ -2352,7 +2352,6 @@ function buildFieldHtml(f, idx, curVal, tabId){
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      ${tabId==='elec' ? '' : `<div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>`}
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -2595,6 +2594,11 @@ async function submitMonthlyForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header || !commonKeys.includes(f.key)) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     if(f.required && !v && !missing) missing=f.label||f.key;
@@ -3004,6 +3008,11 @@ async function submitTransformerForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header || !commonKeys.includes(f.key)) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     if(f.required && !v && !missing) missing=f.label||f.key;
@@ -3087,7 +3096,6 @@ function openAddModal(tabId, recordId){
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
   document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
-  document.getElementById('addModalRequiredHint').style.display = tabId==='photo' ? 'none' : '';
   // 필드 배열 순서대로 렌더링 — {header:true} 마커를 만나면 이전 그룹 grid div를 닫고 새로 연다
   // (전기설비기록 탭의 조명용/일반용/동력용 ACB 3그룹처럼 그룹 필드가 연속으로 나오는 스키마 전용,
   //  그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다)
@@ -3513,6 +3521,11 @@ function submitAddForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     const isEmpty=Array.isArray(v) ? v.length===0 : !v;
@@ -3559,6 +3572,11 @@ async function submitElecForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     const isEmpty=Array.isArray(v)?v.length===0:!v;
@@ -3703,6 +3721,11 @@ async function submitGeneratorForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     const isEmpty=Array.isArray(v)?v.length===0:!v;

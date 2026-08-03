@@ -363,7 +363,6 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
         <h3><span id="addModalTitleText">신규 등록</span></h3>
         <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
       </div>
-      <div id="addModalRequiredHint" style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
       <div id="addModalFields"></div>
       <div class="modal-progress-wrap" id="addModalProgressWrap" style="display:none"><div class="modal-progress-bar" id="addModalProgressBar"></div></div>
       <div class="modal-btns">
@@ -417,8 +416,8 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 </div>
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼(작업중)</span></button>
-  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서(작업중)</span></button>
+  <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼</span></button>
+  <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서</span></button>
   <button class="top-tab" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')"><span class="tt-label">전기시설점검</span></button>
   <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')"><span class="tt-label">고장수리</span></button>
   <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')"><span class="tt-label">점검사진</span></button>
@@ -1389,6 +1388,7 @@ var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용,
 var _photoMultiRows=[]; // [{key,num,desc,files:[{url,name}]}] — 점검사진탭 신규등록 다중행 입력 전용
 var _photoMultiNextKey=1;
 function buildFieldHtml(f, idx, curVal, tabId){
+  if(f.key==='제목') return '';
   const id='ff_'+idx;
   const req=f.required?'<span class="modal-required">*</span>':'';
   const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
@@ -1401,7 +1401,6 @@ function buildFieldHtml(f, idx, curVal, tabId){
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
       <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-      <div class="modal-hint" id="${id}_hint">${(f.dependsOn||[]).length ? esc(f.dependsOn.join('·'))+' 선택에 따라 표준 목록이 좁혀집니다.' : '최근 입력값 중에서 선택하거나 직접 입력하세요.'}</div>
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -1626,7 +1625,6 @@ function openAddModal(tabId, recordId){
   const r=recordId ? TAB_STATE[tabId].records.find(x=>x.id===recordId) : null;
   document.getElementById('addModalTitleText').textContent=tabDef.label+' '+(r?'수정':'신규등록');
   document.getElementById('addSubmitLabel').textContent=r?'수정':'등록';
-  document.getElementById('addModalRequiredHint').style.display = tabId==='photo' ? 'none' : '';
   // 전기시설점검 신규등록(수정 아님)은 한 날짜·터널에 여러 구분·여러 항목을 한 번에 점검하는
   // 경우가 대부분이라, 구분/점검내용/점검방법/점검결과 4개 필드를 개별 입력받는 대신 구분을
   // 다중선택하게 하고 선택된 구분마다 표준 점검항목 전체를 기본 체크된 체크리스트로 보여준 뒤,
@@ -2084,6 +2082,11 @@ function submitAddForm(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.header) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     values[f.key]=v;
     const isEmpty=Array.isArray(v) ? v.length===0 : !v;
@@ -2147,6 +2150,11 @@ async function submitElecinspChecklist(){
   let missing=null;
   tabDef.fields.forEach((f,idx)=>{
     if(f.key==='구분' || f.key==='점검내용' || f.key==='점검방법' || f.key==='점검결과') return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=shared[k]; });
+      shared[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
     const v=getFieldValue(f, idx);
     shared[f.key]=v;
     if(f.required && !v && !missing) missing=f.label||f.key;
