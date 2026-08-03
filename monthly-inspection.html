@@ -306,7 +306,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
-.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-label{font-size:13px;font-weight:400;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
@@ -314,7 +314,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
-.pm-card-label{font-size:13px;font-weight:800;color:var(--txt);margin:0 0 5px}
+.pm-card-label{font-size:13px;font-weight:400;color:var(--txt);margin:0 0 5px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 /* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
 .modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
@@ -5907,7 +5907,7 @@ function confirmDateOutOfMonth(dates, ym){
   const bad=dates.some(d=>d && d.slice(0,7)!==ym);
   if(!bad) return true;
   const [y,m]=ym.split('-');
-  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 저장하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
+  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 등록하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
 }
 function reportPresetField(id, value){
   const el=document.getElementById(id);
@@ -5934,7 +5934,7 @@ async function renderReportPage_elec(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 전기설비 점검결과기록표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">설비명(상호) : ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -5957,7 +5957,7 @@ async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">4. 비상발전기 점검 및 가동일지</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">등록</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 16px">
       <div class="rc-monthly-sub" style="margin:0">□ ${esc(REPORT_SEL.tunnel)}</div>
@@ -6017,7 +6017,7 @@ async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">7. 월간 업무처리사항</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTaskSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTaskSubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(reportBaseTunnel(REPORT_SEL.tunnel))}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6106,7 +6106,7 @@ function renderTaskBody(){
       <button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button>
       <button type="button" class="tb-action-btn tb-delete" onclick="taskDeleteSelected()">선택 삭제</button>
     </div>
-    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">저장</button></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
   wrap.querySelectorAll('.tk-company').forEach(sel=>{ sel.style.width='100%'; });
   autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-note':90});
@@ -6151,12 +6151,12 @@ async function submitTaskReportForm(){
     if(!date && !content) return; // 완전히 빈 행은 건너뜀
     targets.push({id:tr.dataset.id||null, date, content, action, company, note});
   });
-  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  if(!targets.length){ alert('등록할 값을 하나 이상 입력해주세요.'); return; }
   const missing=targets.find(t=>!t.date || !t.content);
   if(missing){ alert('날짜와 업무내용은 필수입니다.'); return; }
   if(!confirmDateOutOfMonth(targets.map(t=>t.date), REPORT_SEL.year+'-'+REPORT_SEL.month)) return;
   const btn=document.getElementById('rpTaskSubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpTaskProgressWrap'), bar=document.getElementById('rpTaskProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
@@ -6177,11 +6177,11 @@ async function submitTaskReportForm(){
     done++; bar.style.width=Math.round(done/targets.length*100)+'%';
   });
   await runWithConcurrency(tasks, 6);
-  btn.disabled=false; btn.textContent='저장';
+  btn.disabled=false; btn.textContent='등록';
   wrap.style.display='none';
   await loadTabData('task');
   _taskExtraRows=[];
-  toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
+  toast(failed?`${targets.length-failed}건 등록 완료, ${failed}건 실패`:`${targets.length}건 등록되었습니다.`);
   if(_reportCurPage==='task') renderTaskBody();
 }
 
@@ -6195,7 +6195,7 @@ async function renderReportPage_transformer(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 변압기 온도측정표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTransSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpTransSubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6259,7 +6259,7 @@ function renderTransformerReportBody(){
     html+=`</tbody></table></div>`;
   });
 
-  html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTransSubmitBtn" onclick="submitTransformerReportForm()">저장</button></div>
+  html+=`<div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTransSubmitBtn" onclick="submitTransformerReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpTransProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTransProgressBar"></div></div>`;
   wrap.innerHTML=html;
   syncTransformerFormWidth();
@@ -6309,7 +6309,7 @@ async function submitTransformerReportForm(){
   if(!confirmDateOutOfMonth([dateVal], ym)) return;
 
   const btn=document.getElementById('rpTransSubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpTransProgressWrap'), bar=document.getElementById('rpTransProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
@@ -6334,10 +6334,10 @@ async function submitTransformerReportForm(){
     done++; bar.style.width=Math.round(done/targets.length*100)+'%';
   });
   await runWithConcurrency(tasks, 6);
-  btn.disabled=false; btn.textContent='저장';
+  btn.disabled=false; btn.textContent='등록';
   wrap.style.display='none';
   await loadTabData('transformer');
-  toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
+  toast(failed?`${targets.length-failed}건 등록 완료, ${failed}건 실패`:`${targets.length}건 등록되었습니다.`);
   if(_reportCurPage==='transformer') renderTransformerReportBody();
 }
 
@@ -6367,7 +6367,7 @@ async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 월간 점검결과표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpMonthlySubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpMonthlySubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6427,7 +6427,7 @@ function renderMonthlyFullCatalog(){
     }
   });
   html+=`</tbody></table></div>
-    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpMonthlySubmitBtn" onclick="submitMonthlyReportForm()">저장</button></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpMonthlySubmitBtn" onclick="submitMonthlyReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpMonthlyProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpMonthlyProgressBar"></div></div>`;
   wrap.innerHTML=html;
 }
@@ -6437,13 +6437,13 @@ async function submitMonthlyReportForm(){
   // 점검결과 select는 이제 최근 이력으로 기본값이 채워져 있어(항상 값이 있음) "선택됨" 여부로는 저장 대상을
   // 구분할 수 없다 — 점검일자를 실제로 입력한 행만 이번 제출 대상으로 삼는다.
   const dateInputs=[...document.querySelectorAll('#rpMonthlyBody input[id^="rpmcd_"]')].filter(inp=>inp.value);
-  if(!dateInputs.length){ alert('저장할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
+  if(!dateInputs.length){ alert('등록할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
   const missing=dateInputs.find(inp=>{ const sid='rpmc_'+inp.id.slice(6); return !document.getElementById(sid)?.value; });
   if(missing){ alert('점검일자를 입력한 항목은 점검결과도 선택해주세요.'); return; }
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   if(!confirmDateOutOfMonth(dateInputs.map(inp=>inp.value), ym)) return;
   const btn=document.getElementById('rpMonthlySubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpMonthlyProgressWrap'), bar=document.getElementById('rpMonthlyProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let failed=0, done=0;
@@ -6469,10 +6469,10 @@ async function submitMonthlyReportForm(){
     done++; bar.style.width=Math.round(done/dateInputs.length*100)+'%';
   });
   await runWithConcurrency(tasks, 6);
-  btn.disabled=false; btn.textContent='저장';
+  btn.disabled=false; btn.textContent='등록';
   wrap.style.display='none';
   await loadTabData('monthly');
-  toast(failed?`${dateInputs.length-failed}건 저장 완료, ${failed}건 실패`:`${dateInputs.length}건 저장되었습니다.`);
+  toast(failed?`${dateInputs.length-failed}건 등록 완료, ${failed}건 실패`:`${dateInputs.length}건 등록되었습니다.`);
   if(_reportCurPage==='monthly') renderMonthlyFullCatalog();
 }
 
@@ -6485,7 +6485,7 @@ async function renderReportPage_power(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">6. 전력데이터 분석</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpPowerSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpPowerSubmitBtn').click()">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6583,7 +6583,7 @@ function renderPowerGrid(){
   // 동일 폭(32.79 엑셀 단위 ≈ 230px)이라 입력폼도 동일 비율로 맞춘다(2026-07-31 사용자 지적 —
   // 기존엔 표가 너무 좁아 A4 인쇄 폭과 안 맞았음). table-layout:fixed로 th 폭을 그대로 강제한다.
   wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table" style="table-layout:fixed;width:920px"><thead><tr><th style="width:230px">날짜</th><th style="width:230px">MAIN (kWh)</th><th style="width:230px">조명용 (kWh)</th><th style="width:230px">비고</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">저장</button></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpPowerProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpPowerProgressBar"></div></div>`;
 }
 async function submitPowerReportForm(){
@@ -6597,9 +6597,9 @@ async function submitPowerReportForm(){
     if(main==='' && light==='' && note==='') return; // 아무 값도 없는 날은 건너뜀(빈 레코드 생성 방지)
     targets.push({dateStr, main, light, note});
   });
-  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  if(!targets.length){ alert('등록할 값을 하나 이상 입력해주세요.'); return; }
   const btn=document.getElementById('rpPowerSubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpPowerProgressWrap'), bar=document.getElementById('rpPowerProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
@@ -6620,10 +6620,10 @@ async function submitPowerReportForm(){
     done++; bar.style.width=Math.round(done/targets.length*100)+'%';
   });
   await runWithConcurrency(tasks, 6);
-  btn.disabled=false; btn.textContent='저장';
+  btn.disabled=false; btn.textContent='등록';
   wrap.style.display='none';
   await loadTabData('power');
-  toast(failed?`${targets.length-failed}건 저장 완료, ${failed}건 실패`:`${targets.length}건 저장되었습니다.`);
+  toast(failed?`${targets.length-failed}건 등록 완료, ${failed}건 실패`:`${targets.length}건 등록되었습니다.`);
   if(_reportCurPage==='power'){ renderPowerGrid(); renderPowerChart(); }
 }
 

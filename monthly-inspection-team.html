@@ -236,7 +236,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
-.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-label{font-size:13px;font-weight:400;color:var(--txt2);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
@@ -244,7 +244,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
-.pm-card-label{font-size:13px;font-weight:800;color:var(--txt);margin:0 0 5px}
+.pm-card-label{font-size:13px;font-weight:400;color:var(--txt);margin:0 0 5px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 /* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
 .modal-progress-wrap{height:6px;border-radius:4px;background:var(--border2);overflow:hidden;margin-top:12px}
@@ -2665,7 +2665,7 @@ function confirmDateOutOfMonth(dates, ym){
   const bad=dates.some(d=>d && d.slice(0,7)!==ym);
   if(!bad) return true;
   const [y,m]=ym.split('-');
-  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 저장하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
+  return confirm(`선택한 ${y}년 ${Number(m)}월과 다른 날짜가 포함돼 있습니다. 등록하면 해당 항목은 현재 화면 목록에 보이지 않을 수 있습니다. 계속할까요?`);
 }
 
 // ── 표지 ──
@@ -2697,7 +2697,7 @@ async function renderReportPage_elecinsp(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 터널전기시설 점검표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpElecinspSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpElecinspSubmitBtn').click()">등록</button>
     </div>
     <div class="dd-wrap" id="eiTunnelWrap" style="margin-bottom:14px">
       <button class="dd-btn" id="eiTunnelBtn" type="button" onclick="toggleDd('eiTunnelMenu','eiTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="eiTunnelLabel"></span></button>
@@ -2757,7 +2757,7 @@ function renderElecinspGrid(){
     });
   });
   html+=`</tbody></table></div>
-    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpElecinspSubmitBtn" onclick="submitElecinspGridForm()">저장</button></div>
+    <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpElecinspSubmitBtn" onclick="submitElecinspGridForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpElecinspProgressWrap" style="display:none;margin-top:10px"><div class="modal-progress-bar" id="rpElecinspProgressBar"></div></div>`;
   wrap.innerHTML=html;
 }
@@ -2767,12 +2767,12 @@ async function submitElecinspGridForm(){
   // 월간점검 페이지와 동일 기준 — 점검일자를 실제로 입력한 행만 저장 대상(결과는 항상 기본값이
   // 채워져 있어 "선택됨" 여부로는 저장 대상을 구분할 수 없음).
   const dateInputs=[...document.querySelectorAll('#rpElecinspBody input[id^="eigd_"]')].filter(inp=>inp.value);
-  if(!dateInputs.length){ alert('저장할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
+  if(!dateInputs.length){ alert('등록할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   if(!confirmDateOutOfMonth(dateInputs.map(inp=>inp.value), ym)) return;
   const dbId=getTabDef('elecinsp').dbId;
   const btn=document.getElementById('rpElecinspSubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpElecinspProgressWrap'), bar=document.getElementById('rpElecinspProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
@@ -2804,12 +2804,12 @@ async function submitElecinspGridForm(){
   try{
     await runWithConcurrency(tasks, 6);
     await loadTabData('elecinsp');
-    btn.disabled=false; btn.textContent='저장';
-    toast(dateInputs.length+'건 저장되었습니다.');
+    btn.disabled=false; btn.textContent='등록';
+    toast(dateInputs.length+'건 등록되었습니다.');
     if(_reportCurPage==='elecinsp') renderElecinspGrid();
   }catch(e){
-    btn.disabled=false; btn.textContent='저장';
-    alert('저장 실패: '+e.message+(failed?' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.':''));
+    btn.disabled=false; btn.textContent='등록';
+    alert('등록 실패: '+e.message+(failed?' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.':''));
     console.error(e);
   }
 }
@@ -2820,7 +2820,7 @@ async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 고장수리실적</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpRepairSubmitBtn').click()">저장</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpRepairSubmitBtn').click()">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpRepairBody"></div>`;
@@ -2886,7 +2886,7 @@ function renderTeamRepairBody(){
       <button type="button" class="tb-action-btn tb-delete" onclick="repairDeleteSelected()">선택 삭제</button>
     </div>
     <div class="modal-btns" style="margin-top:16px">
-      <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">저장</button>
+      <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">등록</button>
     </div>
     <div class="modal-progress-wrap" id="rpRepairProgressWrap" style="display:none;margin-top:10px"><div class="modal-progress-bar" id="rpRepairProgressBar"></div></div>`;
   wrap.querySelectorAll('.rp-tunnel, .rp-worker').forEach(sel=>{ sel.style.width='100%'; });
@@ -2952,12 +2952,12 @@ async function submitTeamRepairForm(){
     if(!occur && !issue) return; // 완전히 빈 행은 건너뜀
     targets.push({id:tr.dataset.id||null, tunnel, occur, issue, fixDate, fixNote, worker});
   });
-  if(!targets.length){ alert('저장할 값을 하나 이상 입력해주세요.'); return; }
+  if(!targets.length){ alert('등록할 값을 하나 이상 입력해주세요.'); return; }
   const missing=targets.find(t=>!t.tunnel || !t.occur || !t.issue);
   if(missing){ alert('터널명·발생일·이상발생내역은 필수입니다.'); return; }
   if(!confirmDateOutOfMonth(targets.map(t=>t.occur), REPORT_SEL.year+'-'+REPORT_SEL.month)) return;
   const btn=document.getElementById('rpRepairSubmitBtn');
-  btn.disabled=true; btn.textContent='저장 중...';
+  btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpRepairProgressWrap'), bar=document.getElementById('rpRepairProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
@@ -2982,12 +2982,12 @@ async function submitTeamRepairForm(){
   try{
     await runWithConcurrency(tasks, 6);
     await loadTabData('repair');
-    btn.disabled=false; btn.textContent='저장';
-    toast(targets.length+'건 저장되었습니다.');
+    btn.disabled=false; btn.textContent='등록';
+    toast(targets.length+'건 등록되었습니다.');
     if(_reportCurPage==='repair') renderReportPage_repair();
   }catch(e){
-    btn.disabled=false; btn.textContent='저장';
-    alert('저장 실패: '+e.message+(failed?' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.':''));
+    btn.disabled=false; btn.textContent='등록';
+    alert('등록 실패: '+e.message+(failed?' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.':''));
     console.error(e);
   }
 }
