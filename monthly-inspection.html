@@ -3477,7 +3477,10 @@ async function submitPhotoMulti(){
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && parseInt(r['번호'],10)===row.num);
+    // row.num은 항상 문자열('1'~'6')인데 r['번호']를 parseInt로 숫자 변환해 ===로 비교하면 타입이
+    // 달라 항상 false — 기존 레코드를 못 찾아 매번 신규 생성되며 중복이 쌓였다(2026-08-10 사용자
+    // 신고로 발견, 슬롯 프리필 도입 전엔 재제출 자체가 드물어 드러나지 않던 버그).
+    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && String(r['번호'])===String(row.num));
     const req=existing
       ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
