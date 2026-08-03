@@ -304,6 +304,8 @@ input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 .report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
+/* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 청록색 배경(2026-08-03 사용자 요청) */
+.report-paper .rp-filled{background:rgba(29,158,117,.14)!important}
 #addModal.modal-inline{display:block!important;position:static}
 #addModal.modal-inline .modal-backdrop{position:static;background:none;padding:0;display:block;inset:auto}
 #addModal.modal-inline .modal-box{max-width:none!important;width:100%;box-shadow:none;border-radius:0;padding:0;background:transparent;max-height:none;overflow:visible}
@@ -1467,6 +1469,34 @@ function onSelectChange(selectEl, customInputId){
   if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
   else { ci.style.display='none'; ci.value=''; }
 }
+// 입력폼탭 전체 입력창 채움 표시(.rp-filled, 2026-08-03) — safety 앱(monthly-inspection.html)과
+// 동일 패턴. #reportPaper를 MutationObserver로 감시해 어떤 방식으로 그려지든 채움 여부를 자동 갱신.
+function markReportFilled(el){
+  if(!el || !el.classList) return;
+  const tag=el.tagName;
+  if(tag!=='INPUT' && tag!=='SELECT' && tag!=='TEXTAREA') return;
+  if(el.type==='file') return;
+  const v=el.value;
+  el.classList.toggle('rp-filled', !!v && v!=='__custom__');
+}
+function markReportFilledAll(){
+  const rp=document.getElementById('reportPaper');
+  if(!rp) return;
+  rp.querySelectorAll('input,select,textarea').forEach(markReportFilled);
+}
+(function initReportFilledTracking(){
+  const rp=document.getElementById('reportPaper');
+  if(!rp) return;
+  rp.addEventListener('input', e=>markReportFilled(e.target));
+  rp.addEventListener('change', e=>markReportFilled(e.target));
+  let scheduled=false;
+  const observer=new MutationObserver(()=>{
+    if(scheduled) return;
+    scheduled=true;
+    setTimeout(()=>{ scheduled=false; markReportFilledAll(); }, 0);
+  });
+  observer.observe(rp, {childList:true, subtree:true});
+})();
 // 캐스케이딩 select 공용 엔진 — dependsOn 필드들의 현재값을 optionsFn에 넘겨 옵션을 재계산.
 // (월간점검 구분+설비명→점검내용, 변압기온도 변압기종류→측정지점, 전력사용량 터널명→제목 등 재사용)
 function refreshCascadeSelect(tabId, contentIdx, initialValue){
