@@ -156,10 +156,10 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
   .report-paper .modal-hint{font-size:11px}
   .report-paper .detail-modal-hd h3{font-size:14px}
 }
-/* 날짜칸 달력 아이콘을 우측→좌측으로(2026-07-29 사용자 요청, 우선 입력폼 탭부터 적용) — 크로미움
-   계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. */
-.report-paper input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
-.report-paper input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
+/* 날짜칸 달력 아이콘을 우측→좌측으로(2026-07-29 입력폼 탭 우선 적용, 2026-08-03 신규등록/수정 팝업 등
+   전체로 확대) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. */
+input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
+input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
