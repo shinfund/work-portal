@@ -232,6 +232,22 @@ tr:hover td{background:var(--sky50)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+/* 신규등록/수정(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시 — 상세보기·설정 모달은
+   기존 중앙 모달 그대로 유지(2026-08-04, work-portal 전체 앱 공통 적용). 열기는 modal-open 부여
+   직후 강제 리플로우(void offsetWidth)로 시작 상태를 확정한 뒤 drawer-in을 붙여 트랜지션이 실제로
+   재생되게 하고, 닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤 트랜지션 시간만큼 지나서
+   modal-open을 떼 display:none 처리한다(closeAddModal/openAddModal 참고). */
+#addModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal .add-modal-box{
+  height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
+  border-radius:20px 0 0 20px;
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.22,.8,.25,1);
+}
+#addModal.drawer-in .add-modal-box{transform:translateX(0)}
+@media(max-width:480px){
+  #addModal .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+}
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
@@ -744,6 +760,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
+    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외(2026-08-04)
     const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
@@ -1858,6 +1875,7 @@ function fmt(n){ return n<10 ? '0'+n : String(n); }
 // ── 신규등록/수정 모달 (관리자 모드에서만 접근 가능 — openAddModal/openEditModal 호출부에서
 // isMaster() 가드, 상세모달의 수정/삭제 버튼도 openDetailModal에서 isMaster()일 때만 렌더) ──
 let EDIT_PAGE_ID=null;
+let _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 function fillSelect(id, values, current){
   const sel=document.getElementById(id);
   if(!sel) return;
@@ -1930,12 +1948,19 @@ function openAddModal(){
   _formFiles=[];
   renderFileList();
   updateFileStatusText();
-  document.getElementById('addModal').classList.add('modal-open');
+  const am=document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  am.classList.add('drawer-in');
   document.body.style.overflow='hidden';
 }
 function closeAddModal(e){
   if(e && e.target!==e.currentTarget) return;
-  document.getElementById('addModal').classList.remove('modal-open');
+  const am=document.getElementById('addModal');
+  am.classList.remove('drawer-in');
+  _addModalCloseTimer=setTimeout(()=>{ am.classList.remove('modal-open'); _addModalCloseTimer=null; }, 280);
   document.body.style.overflow='';
   resetModalDragPos('addModal');
 }

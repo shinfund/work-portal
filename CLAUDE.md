@@ -9,6 +9,7 @@
 - `monthly-inspection.html` — 월간점검결과-안전관리
 - `monthly-inspection-team.html` — 월간점검결과-점검팀
 - `overtime-work.html` — 연장근무
+- `corporate-card.html` — 법인카드 (관리자모드 전용, index.html 사이드바에서 잠금 게이트)
 - `solar-power.html` — 태양광발전량
 - `vehicle-log.html` — 차량운행일지
 
