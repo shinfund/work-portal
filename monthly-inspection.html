@@ -6464,12 +6464,13 @@ async function submitTransformerReportForm(){
 // ── 보고서입력 탭: 월간점검 페이지 — REPORT_CHECKLIST_ORDER 전체 6개 구분을 한 화면에서 입력 ──
 // 유일하게 완전 신규 제출 로직(기존 submitMonthlyForm은 구분 1개씩·항상 신규생성이라 재사용 불가).
 // monthly는 터널명 옵션이 3개뿐(task와 동일, (주)/(부) 구분 없음) — reportBaseTunnel() 필요.
-// buildMonthlyReportRows()와 동일한 "이 터널에 실제 이력이 있는 항목만 표시" 규칙을 그대로 따른다.
+// 2026-08-04 사용자 요청으로 "이 터널에 실제 이력이 있는 항목만 표시" 필터 제거(이전엔
+// buildMonthlyReportRows()와 동일한 규칙을 따랐음) — 입력폼은 보고서
+// 양식(REPORT_CHECKLIST_ORDER) 그대로를 폼으로 재현해야 하므로, 노션에 레코드가(점검일자 유무와
+// 무관하게) 단 1건도 없는 신규 카탈로그 항목도 항상 전부 노출한다. tunnel 파라미터는 호출부 호환을
+// 위해 유지하지만 더는 필터링에 쓰이지 않는다.
 function monthlyApplicableItems(tunnel){
-  const recs=(TAB_STATE.monthly.records||[]).filter(r=>r['터널명']===tunnel);
-  return REPORT_CHECKLIST_ORDER.filter(item=>
-    recs.some(r=>r['구분']===item.구분 && (r['설비명']||'')===(item.설비명||'') && r['점검내용']===item.점검내용)
-  );
+  return REPORT_CHECKLIST_ORDER;
 }
 function monthlyDatedRecord(tunnel, item, ym){
   return (TAB_STATE.monthly.records||[]).find(r=>r['터널명']===tunnel && r['구분']===item.구분 &&
