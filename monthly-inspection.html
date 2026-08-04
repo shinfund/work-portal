@@ -34,6 +34,7 @@
   --hdr-btn-text:#fff;
   --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
   --hdr-error-text:rgba(255,150,130,.9);
+  --rp-filled-bg:rgba(79,70,229,.10);
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
@@ -65,6 +66,7 @@ html[data-theme="dark"]{
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
   --pink:#FF6FA5;
+  --rp-filled-bg:rgba(129,140,248,.18);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
@@ -166,9 +168,10 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
    날짜칸(월간점검 탭 등)에서 아이콘·숫자 겹침 발생(2026-08-03). 특이도를 더 높여 되돌림. */
 .report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
-/* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 청록색 배경(2026-08-03 사용자 요청, 4가지 색상/방식
-   미리보기 후 결정). 어떤 값이 채워졌는지 한눈에 훑어볼 수 있게. */
-.report-paper .rp-filled{background:rgba(29,158,117,.14)!important}
+/* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 인디고 배경(2026-08-03 청록으로 최초 도입 → 2026-08-04
+   "촌스럽다"는 피드백으로 5가지 색상 미리보기 후 인디고로 교체). 어떤 값이 채워졌는지 한눈에
+   훑어볼 수 있게. 다크/라이트 값은 :root/[data-theme="dark"]의 --rp-filled-bg로 분리 관리. */
+.report-paper .rp-filled{background:var(--rp-filled-bg)!important}
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
 .dd-wrap{position:relative;display:inline-block}
@@ -1043,7 +1046,11 @@ const MONTHLY_CHECKLIST=[
   // 아래 4건은 원본 참고파일에 병합 없이 단독 행으로 존재하는 항목이라 설비명이 없다(2026-08-04
   // 사용자가 홍해터널 실제 엑셀의 "구분,설비명" 병합을 해제해 확인 — 기존 68건 추출 당시엔 노션에
   // 해당 레코드가 아예 없었던 신규 항목). REPORT_CHECKLIST_ORDER/MONTHLY_CHECKLIST 둘 다 추가.
-  {구분:'직무고시',설비명:null,점검내용:'외관 점검 및 부하측정(월차)'},
+  // "외관 점검 및 부하측정"만은 사실 신규가 아니라 기존에 "직접입력"으로 매달 실제 점검일자와 함께
+  // 이미 쌓이고 있던 항목이었음(2026-01~07, 14건) — 처음엔 텍스트를 "(월차)" 앞 공백 없이 넣었다가
+  // 실제 노션 값 "외관 점검 및 부하측정 (월차)"(공백 있음)과 완전일치가 안 돼 입력폼에 기존 점검일자·
+  // 결과가 하나도 안 뜨는 문제가 재발해, 공백 있는 실데이터 텍스트로 정정함(같은 날 후속).
+  {구분:'직무고시',설비명:null,점검내용:'외관 점검 및 부하측정 (월차)'},
   {구분:'직무고시',설비명:'고압설비',점검내용:'절연내력 측정(연차)'},
   {구분:'직무고시',설비명:'고압설비',점검내용:'절연저항 측정(연차)'},
   {구분:'직무고시',설비명:'고압설비',점검내용:'접지저항 측정(연차)'},
@@ -1241,7 +1248,7 @@ const REPORT_CHECKLIST_ORDER=[
   // 원본 참고파일(홍해터널 실제 엑셀)에 다른 그룹과 병합되지 않은 단독 행으로 존재해 설비명이 없다
   // (2026-08-04 사용자가 "구분,설비명" 병합을 해제해 확인 — 노션에 레코드가 아예 없던 신규 항목이라
   // 인쇄 순서(행 5·14·18·19)에 맞춰 끼워넣었다. MONTHLY_CHECKLIST에도 동일하게 추가).
-  {구분:'직무고시',설비명:null,점검내용:'외관 점검 및 부하측정(월차)'},
+  {구분:'직무고시',설비명:null,점검내용:'외관 점검 및 부하측정 (월차)'},
   {구분:'직무고시',설비명:'저압설비',점검내용:'절연저항 측정(연차)'},
   {구분:'직무고시',설비명:'저압설비',점검내용:'누설전류 측정(분기, 필요시)'},
   {구분:'직무고시',설비명:'저압설비',점검내용:'접지저항 측정(반기)'},
