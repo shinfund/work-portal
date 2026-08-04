@@ -1987,7 +1987,12 @@ function openEditModal(pageId){
   _formFiles=(r.files||[]).map(f=>({url:f.url, name:f.name}));
   renderFileList();
   updateFileStatusText();
-  document.getElementById('addModal').classList.add('modal-open');
+  const am=document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  am.classList.add('drawer-in');
   document.body.style.overflow='hidden';
 }
 // 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 500KB까지

@@ -2753,7 +2753,12 @@ function openEditModal(idx){
   document.getElementById('addSubmitLabel').textContent = '수정';
 
   closeDetail();
-  document.getElementById('addModal').classList.add('modal-open');
+  var am = document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  am.classList.add('drawer-in');
   document.body.style.overflow = 'hidden';
   setTimeout(function(){ document.getElementById('addContent').focus(); }, 100);
 }

@@ -891,7 +891,12 @@ function openEditModal(pageId){
   // 기존 레코드의 전일누적량은 실제 값으로 확정돼 있으므로 직접입력 값으로 표시(과거 기록 드롭다운은 필요시 전환용으로만 남겨둠)
   refreshPrevCumOptions(r.tunnel||'', r.prevCumGen||'');
   recomputeGenAndFee();
-  document.getElementById('addModal').classList.add('modal-open');
+  const am=document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  am.classList.add('drawer-in');
   document.body.style.overflow='hidden';
 }
 function submitAddForm(){

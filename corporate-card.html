@@ -8,36 +8,79 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --sky:#378ADD;--sky50:#E6F1FB;--sky100:#B5D4F4;--sky600:#185FA5;--sky800:#0C447C;
+  /* work-portal 공통 색상 팔레트 기준(2026-08-04 디자인 통일 — solar-power.html 등과 동일 토큰) */
+  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
-  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
-  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
-  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
+  --green:#639922;--green50:#EAF3DE;--green100:#C0DD97;--green800:#27500A;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
-  --bg:#F0F5FC;--card:#FFFFFF;--border:#C8DCEF;--border2:#DDE9F7;
-  --txt:#0D1520;--txt2:#1E3148;--txt3:#3D5269;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
+  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
+  --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
-  --shadow:0 2px 12px rgba(55,138,221,.09);
+  --shadow:none;
+  --hdr-bg:#032F62;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#032F62;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#005CC5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#24292E;--card:#1C2024;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:none;
+  --hdr-bg:#24292E;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  --sky:#2E8FFF;
+  --sky50:rgba(46,143,255,.16);--sky100:rgba(46,143,255,.32);
+  --sky600:#79B8FF;--sky800:#C8E1FF;
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);
+  --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
+  --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:16px;line-height:1.75;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
-.header{background:var(--sky800);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(12,68,124,.25)}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+/* ── HEADER (work-portal 표준 구조 — 아이콘뱃지/부제 없이 텍스트 로고 하나, 2026-08-04) ── */
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease}
 .header-left{display:flex;align-items:center;gap:10px}
-.logo-mark{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-title{font-size:17px;font-weight:700;color:#fff;letter-spacing:-.02em}
-.logo-sub{font-size:12px;color:rgba(255,255,255,.8)}
-.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
-.hdr-btns{display:flex;gap:7px}
-.btn-api,.btn-sync{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:18px;padding:5px 13px;font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:32px;-webkit-tap-highlight-color:transparent;transition:.18s}
-.btn-api:hover,.btn-sync:hover{background:rgba(255,255,255,.25)}
-.btn-sync:disabled{opacity:.4;cursor:not-allowed}
-.last-update{font-size:11px;color:rgba(255,255,255,.75);min-height:14px}
+.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
+.header-btns{display:flex;gap:6px}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent;transition:.18s}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinning{animation:spin .8s linear infinite;display:inline-block}
+
+/* ── TOP TAB NAV ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
 .top-tab{flex:1;border:none;background:transparent;color:var(--txt2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
 .top-tab.active{color:var(--sky600)}
 .top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+
 .main{padding:14px;max-width:900px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:14px;box-shadow:var(--shadow);padding:8px 14px;display:flex;align-items:center;gap:8px}
@@ -58,7 +101,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
 .sc-hd{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:20px;padding:3px 10px;border:1px solid var(--sky100)}
+.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
 .kpi-card{border-radius:var(--r12);padding:10px 12px}
 .kpi-lbl{font-size:12px;font-weight:600;margin-bottom:3px}
@@ -71,14 +114,14 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .catbar-fill{height:100%;border-radius:5px;transition:width .5s ease;display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden}
 .catbar-amt{font-size:13px;font-weight:800;color:var(--txt);white-space:nowrap;text-align:right;width:90px;flex-shrink:0}
 .catbar-pct{font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
+
+/* ── 월별추이 라인차트(2026-08-04 막대→라인 전환) ── */
 .trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.trend-chart{display:flex;align-items:flex-end;gap:8px;min-width:300px;height:140px}
-.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:44px}
-.trend-bar-wrap{flex:1;width:100%;display:flex;align-items:flex-end}
-.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:height .4s ease}
-.trend-bar.cur{box-shadow:0 0 0 2px var(--sky600)}
-.trend-lbl{font-size:12px;color:var(--txt2);font-weight:700}
-.trend-val{font-size:11px;color:var(--sky600);font-weight:700;white-space:nowrap}
+.trend-chart{display:block}
+.trend-svg-lbl{font-size:11px;fill:var(--txt2);font-weight:700}
+.trend-svg-lbl.cur{fill:var(--sky600)}
+.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:700}
+
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
 thead tr{background:var(--sky50)}
@@ -87,7 +130,15 @@ th.r,td.r{text-align:right}
 td{padding:10px 12px;font-size:14px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
-.cat-tag{display:inline-block;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+/* 계정 뱃지 — 진한 단색+흰 글자(work-portal 공통 뱃지 규칙, 2026-07-28 확정) */
+.cat-tag{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.cat-c0{background:#1565C0}
+.cat-c1{background:#147A44}
+.cat-c2{background:#5B4FBD}
+.cat-c3{background:#4F6B16}
+.cat-c4{background:#A15C00}
+.cat-c5{background:#B23A12}
+.cat-cx{background:#5F5E5A}
 .lim-bar-wrap{display:flex;align-items:center;gap:6px}
 .lim-bar-track{flex:1;height:6px;background:var(--border);border-radius:10px;overflow:hidden}
 .lim-bar-fill{height:100%;border-radius:10px;transition:width .4s}
@@ -105,81 +156,187 @@ tr:hover td{background:var(--sky50)}
 .pg.on{background:var(--sky);color:#fff;border-color:var(--sky)}
 .empty{text-align:center;padding:36px 16px;color:var(--txt3)}
 .empty-icon{font-size:34px;margin-bottom:10px}
+
+/* ── 툴바 버튼(신규등록/엑셀생성 — work-portal 공통 색상, 2026-08-04) ── */
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#005CC5}
+.tb-action-btn.tb-add:hover{background:#004A9E}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
+
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── MODAL 공통 ── */
 #cfgModal{display:none}
 #cfgModal.modal-open{display:flex;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:18px}
+#addModal{display:none}
+#addModal.modal-open{display:block}
 .modal-backdrop{width:100%;display:flex;align-items:center;justify-content:center}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+/* 신규등록(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시(work-portal 전체 앱 공통 패턴,
+   2026-08-04). 열기는 modal-open 부여 직후 강제 리플로우(void offsetWidth)로 시작 상태를 확정한 뒤
+   drawer-in을 붙여 트랜지션이 실제로 재생되게 하고, 닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤
+   트랜지션 시간만큼 지나서 modal-open을 떼 display:none 처리한다(closeAddModal/openAddModal 참고). */
+#addModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal .add-modal-box{
+  height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
+  border-radius:20px 0 0 20px;
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.22,.8,.25,1);
+}
+#addModal.drawer-in .add-modal-box{transform:translateX(0)}
+@media(max-width:480px){
+  #addModal .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
 .modal-title{font-size:16px;font-weight:700;color:var(--txt);margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-required{color:var(--coral);margin-left:2px}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s;box-sizing:border-box}
-.modal-input:focus{border-color:var(--sky);background:#fff}
+.modal-input::placeholder{color:var(--txt3)}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+/* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정 */
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px;line-height:1.6}
 .modal-hint strong{color:var(--txt2)}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-save:hover{background:var(--sky600)}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
-@media(max-width:480px){.main{padding:10px}.header{padding:11px 12px}td{font-size:13px;padding:9px 10px}th{font-size:12px;padding:9px 10px}.kpi-val{font-size:14px}.lim-cat-grid{grid-template-columns:1fr}}
+
+.theme-opts{display:flex;gap:12px}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent}
+.theme-opt.on{border-color:var(--sky)}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px}
+.theme-swatch-light{background:#F8FAFC}
+.theme-swatch-dark{background:#191919}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7}
+.theme-swatch-dark .ts-side{background:#24292E;border-right:1px solid rgba(255,255,255,.08)}
+.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2)}
+
+@media(max-width:480px){
+  .main{padding:10px}
+  td{font-size:13px;padding:9px 10px}
+  th{font-size:12px;padding:9px 10px}
+  .kpi-val{font-size:14px}
+  .lim-cat-grid{grid-template-columns:1fr}
+  .modal-select,.modal-input,.search-wrap input{font-size:16px}
+}
 </style>
 </head>
 <body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+
+<!-- 설정(로그인 상태 안내 + 화면모드) 모달 — 공용 인증 체계로 전환(2026-08-04), Worker URL/DB ID 수동입력 제거 -->
 <div id="cfgModal">
   <div class="modal-backdrop" onclick="closeCfgModal(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-title">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Notion DB 연동 설정
+        설정
       </div>
       <div class="modal-field">
-        <label class="modal-label">Cloudflare Worker URL</label>
-        <input id="cfgWorkerUrl" class="modal-input" type="text" placeholder="https://your-worker.workers.dev"/>
-        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
       </div>
-      <div class="modal-field">
-        <label class="modal-label">노션 DB ID</label>
-        <input id="cfgDbId" class="modal-input" type="text" placeholder="2f559c8c-9c0a-804a-9201-e861453d6b48"/>
-        <div class="modal-hint">저장된 값은 XX로 마스킹 표시 · 변경 시에만 새로 입력하세요</div>
+      <div class="theme-opts">
+        <div class="theme-opt" id="theme-opt-dark" onclick="setAppTheme('dark')">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
+        </div>
+        <div class="theme-opt" id="theme-opt-light" onclick="setAppTheme('light')">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
+        </div>
       </div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
       <div class="modal-btns">
-        <button class="modal-cancel" onclick="closeCfgModal()">취소</button>
-        <button class="modal-save" onclick="saveCfg()">저장</button>
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
       </div>
     </div>
   </div>
 </div>
+
+<!-- 신규등록 드로어 -->
+<div id="addModal">
+  <div class="modal-backdrop" onclick="closeAddModal(event)">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3>신규 사용내역 등록</h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
+      <div class="modal-field">
+        <label class="modal-label">사용일자 <span class="modal-required">*</span></label>
+        <input id="addDate" class="modal-input" type="date"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">사용목적 및 지출내역 <span class="modal-required">*</span></label>
+        <input id="addDesc" class="modal-input" type="text" placeholder="예) 순찰차 주유"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">계정항목</label>
+        <select id="addCat" class="modal-select" onchange="onSelectChange(this,'addCatCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+        </select>
+        <input id="addCatCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">공급가(원)</label>
+        <input id="addSupply" class="modal-input" type="number" step="1" placeholder="예) 72728"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">부가세(원)</label>
+        <input id="addVat" class="modal-input" type="number" step="1" placeholder="예) 7272"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+      <div class="modal-hint">상호·카드 연동(관계형 속성)은 이 폼에서 지원하지 않습니다 — 노션에서 별도로 연결해주세요.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="modal-save" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div style="position:sticky;top:0;z-index:100">
 <div class="header">
   <div class="header-left">
-    <div class="logo-mark">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-    </div>
-    <div>
-      <div class="logo-title">법인카드</div>
-      <div class="logo-sub">Notion DB 연동</div>
-    </div>
+    <div class="logo-title">법인카드</div>
   </div>
   <div class="header-right">
-    <div class="hdr-btns">
-      <button class="btn-api" onclick="openCfgModal()">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         설정
       </button>
-      <button class="btn-sync" id="syncBtn" onclick="loadData()">
+      <button class="hdr-btn" id="syncBtn" onclick="loadData()">
         <svg id="syncIco" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         <span id="syncLabel">새로고침</span>
       </button>
     </div>
-    <div class="last-update" id="lastUpdate"></div>
   </div>
 </div>
 <div class="top-tabs">
-  <button class="top-tab active" id="nav-overview" onclick="switchPanel('overview')">요약</button>
+  <button class="top-tab active" id="nav-detail" onclick="switchPanel('detail')">사용내역</button>
+  <button class="top-tab" id="nav-overview" onclick="switchPanel('overview')">요약</button>
   <button class="top-tab" id="nav-account" onclick="switchPanel('account')">계정별</button>
   <button class="top-tab" id="nav-limit" onclick="switchPanel('limit')">한도별</button>
-  <button class="top-tab" id="nav-detail" onclick="switchPanel('detail')">사용내역</button>
   <button class="top-tab" id="nav-monthly" onclick="switchPanel('monthly')">월별추이</button>
 </div>
 </div>
@@ -203,7 +360,37 @@ tr:hover td{background:var(--sky50)}
     </div>
     <div class="month-sub-row" id="monthSubRow"></div>
   </div>
-  <div id="panel-overview" class="panel active">
+  <div id="panel-detail" class="panel active">
+    <div class="sc">
+      <div class="sc-hd" style="justify-content:space-between">
+        <span>사용 내역 <span class="badge" id="demoBadge" style="display:none;background:var(--amber50);color:var(--amber);border-color:var(--amber100)">🔒 데모 — 보안항목 마스킹</span></span>
+        <div style="display:flex;gap:8px">
+          <button class="tb-action-btn tb-add" onclick="openAddModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            신규등록
+          </button>
+          <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportCardExcel()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="excelExportLabel">엑셀 생성</span>
+          </button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="filterCat" onchange="renderDetail()"><option value="">전체 계정</option></select>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
+      </div>
+      <div class="detail-count" id="detailCount"></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>날짜</th><th>지출내역</th><th>상호</th><th style="width:1%">계정</th><th class="r">공급가</th><th class="r">합계</th></tr></thead>
+        <tbody id="dtTbody"></tbody>
+      </table></div>
+      <div class="pager" id="pager"></div>
+    </div>
+  </div>
+  <div id="panel-overview" class="panel">
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="sc">
       <div class="sc-hd">계정별 사용금액 <span class="badge" id="overviewBadge"></span></div>
@@ -272,24 +459,6 @@ tr:hover td{background:var(--sky50)}
       </table></div>
     </div>
   </div>
-  <div id="panel-detail" class="panel">
-    <div class="sc">
-      <div class="sc-hd">사용 내역 <span class="badge" id="demoBadge" style="display:none;background:var(--amber50);color:var(--amber);border-color:var(--amber100)">🔒 데모 — 보안항목 마스킹</span></div>
-      <div class="filter-row">
-        <select class="filter-select" id="filterCat" onchange="renderDetail()"><option value="">전체 계정</option></select>
-      </div>
-      <div class="search-wrap">
-        <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
-      </div>
-      <div class="detail-count" id="detailCount"></div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>날짜</th><th>지출내역</th><th>상호</th><th style="width:1%">계정</th><th class="r">공급가</th><th class="r">합계</th></tr></thead>
-        <tbody id="dtTbody"></tbody>
-      </table></div>
-      <div class="pager" id="pager"></div>
-    </div>
-  </div>
 </div>
 <div id="toast"></div>
 <script>
@@ -351,18 +520,44 @@ const BUILT_LIM=[
   {통합계정:"생수대금",한도금액:90000,계정항목:"비급여성(생수)",카드명:"법인카드"},
   {통합계정:"도서인쇄비",한도금액:120000,계정항목:"도서인쇄비",카드명:"법인카드"},
 ];
-// ── Notion 연동 설정 ──────────────────────────────────
-const DEFAULT_DB_ID="2f559c8c-9c0a-804a-9201-e861453d6b48";
-let CFG=(()=>{
-  try{return{workerUrl:localStorage.getItem("card_workerUrl")||"",dbId:localStorage.getItem("card_dbId")||DEFAULT_DB_ID};}
-  catch(e){return{workerUrl:"",dbId:DEFAULT_DB_ID};}
+// ── Worker/DB 연동 정보 (고정값 — 더 이상 사용자 입력 아님, 접근 제어는 로그인 토큰으로. 2026-08-04) ──
+const WORKER_URL='https://notion-proxy.shinfund.workers.dev';
+const DB_ID="2f559c8c-9c0a-804a-9201-e861453d6b48";
+let CFG={workerUrl:WORKER_URL,dbId:DB_ID,authToken:'',authExpires:0};
+(()=>{
+  try{
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+  }catch(e){}
 })();
-const CAT_CLR={"비급여성":{bg:"#E6F1FB",fg:"#0C447C",dot:"#378ADD"},"비급여성(생수)":{bg:"#E1F5EE",fg:"#085041",dot:"#1D9E75"},"소모품비":{bg:"#EEEDFE",fg:"#3C3489",dot:"#534AB7"},"차량비":{bg:"#EAF3DE",fg:"#27500A",dot:"#639922"},"차량비(법인카드)":{bg:"#FAEEDA",fg:"#633806",dot:"#BA7517"},"도서인쇄비":{bg:"#FAECE7",fg:"#712B13",dot:"#D85A30"}};
-function clr(cat){return CAT_CLR[cat]||{bg:"#F1EFE8",fg:"#5F5E5A",dot:"#B4B2A9"}}
+function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+// ── Worker 요청에 로그인 토큰 자동 첨부 + 401 시 로그인 안내 ──
+(()=>{
+  const _fetch=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    init=init||{};
+    const urlStr=typeof input==='string'?input:(input&&input.url)||'';
+    if(urlStr.indexOf(WORKER_URL)===0){
+      const headers=new Headers(init.headers||{});
+      if(CFG.authToken) headers.set('Authorization','Bearer '+CFG.authToken);
+      init=Object.assign({},init,{headers});
+    }
+    return _fetch(input,init).then(res=>{
+      if(res.status===401&&urlStr.indexOf(WORKER_URL)===0){
+        CFG.authToken='';CFG.authExpires=0;
+        try{localStorage.removeItem('wp_authToken');localStorage.removeItem('wp_authExpires');}catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
+const CAT_CLR={"비급여성":{cls:"cat-c0",dot:"#1565C0"},"비급여성(생수)":{cls:"cat-c1",dot:"#147A44"},"소모품비":{cls:"cat-c2",dot:"#5B4FBD"},"차량비":{cls:"cat-c3",dot:"#4F6B16"},"차량비(법인카드)":{cls:"cat-c4",dot:"#A15C00"},"도서인쇄비":{cls:"cat-c5",dot:"#B23A12"}};
+function clr(cat){return CAT_CLR[cat]||{cls:"cat-cx",dot:"#B4B2A9"}}
 let RD=[],LD=[];
 const THIS_YEAR=new Date().getFullYear();
 let curYear=THIS_YEAR,curMonth=0;
-let ddYearBase=THIS_YEAR,_activePanel="overview",dtPage=1;
+let ddYearBase=THIS_YEAR,_activePanel="detail",dtPage=1;
 let trendYear=THIS_YEAR,trendYearBase=THIS_YEAR;
 const PS=25;
 const fmt=n=>Math.round(n||0).toLocaleString("ko-KR");
@@ -372,7 +567,7 @@ function getPrevYM(){let pm=curMonth-1,py=curYear;if(pm<1){pm=12;py--;}return{y:
 function filteredRD(){if(!curMonth)return RD.filter(r=>r.date.startsWith(String(curYear)));const ym=`${curYear}-${String(curMonth).padStart(2,"0")}`;return RD.filter(r=>r.month===ym);}
 function prevMonthRD(){return RD.filter(r=>r.month===getPrevYM().ym);}
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2600)}
-const PANELS=["overview","account","limit","monthly","detail"];
+const PANELS=["detail","overview","account","limit","monthly"];
 function switchPanel(name){
   if(name===_activePanel)return;
   _activePanel=name;
@@ -426,7 +621,6 @@ function renderOverview(recs){
   const totalThis=recs.reduce((s,r)=>s+r.total,0);
   const monLbl=curMonth?`${curYear}년 ${curMonth}월`:curYear+"년 전체";
 
-  // 선택한 월에 데이터가 없는 경우 — 안내 KPI 표시
   if(curMonth&&!recs.length){
     const prevRecs=prevMonthRD(),prevTotal=prevRecs.reduce((s,r)=>s+r.total,0);
     const prevLbl=(()=>{const p=getPrevYM();return p.y+"년 "+p.m+"월";})();
@@ -455,7 +649,7 @@ function renderOverview(recs){
     buildCatBars(catArr,maxVal,totalThis)
     :emptyHTML();
   const top5=[...recs].sort((a,b)=>b.total-a.total).slice(0,5);
-  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag" style="background:${c.bg};color:${c.fg}">${esc(r.cat)}</span></td><td class="r" style="font-weight:800;color:var(--teal600);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
+  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-weight:800;color:var(--teal600);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
 }
 function buildCatBars(catArr,maxVal,totalRef){
   return catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/totalRef*100),barW=Math.round(amt/maxVal*100);return`<div class="catbar-row"><div class="catbar-name">${esc(cat)}</div><div class="catbar-track"><div class="catbar-fill" style="width:${barW}%;background:${c.dot}">${barW>=18?fmt(amt):""}</div></div><div class="catbar-amt">${fmt(amt)}원</div><div class="catbar-pct">${pct}%</div></div>`;}).join("");
@@ -472,7 +666,7 @@ function renderAccount(recs){
   const catArr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]),total=catArr.reduce((s,[,v])=>s+v,0)||1,maxVal=catArr[0]?catArr[0][1]:1;
   document.getElementById("accBadge").textContent=catArr.length+"개";
   document.getElementById("accCatBars").innerHTML=catArr.length?buildCatBars(catArr,maxVal,total):emptyHTML();
-  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag" style="background:${c.bg};color:${c.fg}">${esc(cat)}</span></td><td class="r">${cntMap[cat]}건</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(amt)}</td><td class="r" style="font-weight:700;color:${c.dot}">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
+  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r">${cntMap[cat]}건</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(amt)}</td><td class="r" style="font-weight:700;color:${c.dot}">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
 function unifiedAccount(r){const cat=r.cat||"",desc=r.desc||"";if(cat==="비급여성(생수)")return"생수대금";if(cat==="도서인쇄비")return"도서인쇄비";if(cat==="차량비(법인카드)")return"차량비(법인카드)";if(cat==="차량비"){if(/순찰차|875너|\*{3}너/.test(desc))return"차량비(점검차)";if(/업무차|396거|\*{3}거/.test(desc))return"차량비(업무차)";return"차량비(점검차)";}if(cat==="비급여성"){if(/회식/.test(desc))return"직원회식";if(/석식|중식/.test(desc))return"중석식대";return"다과부식";}if(cat==="소모품비")return"소모품비";return null;}
 function renderLimit(recs){
@@ -507,21 +701,19 @@ function renderLimit(recs){
   const catSummary={};rows.forEach(r=>{if(!catSummary[r.cat])catSummary[r.cat]={lim:0,used:0};catSummary[r.cat].lim+=r.lim;catSummary[r.cat].used+=r.used;});
   document.getElementById("limCatGrid").innerHTML=Object.entries(catSummary).map(([cat,cs])=>{const pct=Math.round(cs.used/Math.max(cs.lim,1)*100),remain=cs.lim-cs.used,c=clr(cat),barClr=pct>80?"var(--coral)":pct>60?"var(--amber)":c.dot;return`<div class="sc" style="margin-bottom:0"><div class="sc-hd" style="margin-bottom:10px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>${esc(cat)}<span style="margin-left:auto;font-size:12px;font-weight:600;color:${pct>80?"var(--coral)":"var(--teal600)"}">${pct>80?"⚠ 주의":remain<0?"● 초과":"여유"}</span></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px"><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:11px;color:var(--txt3)">한도</div><div style="font-size:13px;font-weight:700">${fmt(cs.lim)}</div></div><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:11px;color:var(--txt3)">사용</div><div style="font-size:13px;font-weight:700">${fmt(cs.used)}</div></div><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:11px;color:var(--txt3)">잔액</div><div style="font-size:13px;font-weight:700;color:${remain>=0?"var(--teal600)":"var(--coral)"}">${fmt(Math.abs(remain))}</div></div></div><div style="height:6px;background:var(--border);border-radius:10px;overflow:hidden"><div style="height:100%;width:${Math.min(pct,100)}%;background:${barClr};border-radius:10px;transition:width .4s"></div></div><div style="font-size:11px;font-weight:600;text-align:right;margin-top:3px;color:${barClr}">${pct}%</div></div>`;}).join("");
 }
+// 월별추이 — 막대에서 라인차트로 전환(2026-08-04). SVG 폴리라인+영역채우기, 데이터가 많으면
+// trend-wrap의 overflow-x:auto로 가로 스크롤(고정 px 폭이라 100%가 아닌 실측 width 지정).
 function renderMonthly(){
-  // 월별추이 전용 연도 드롭다운 렌더
   const dataYears=[...new Set(RD.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean))].sort();
   if(!trendYearBase)trendYearBase=dataYears.length?dataYears[dataYears.length-1]:THIS_YEAR;
   document.getElementById("trendYearLabel").textContent=trendYear?trendYear+"년":"전체";
   document.getElementById("trendYearCenter").textContent=trendYearBase;
   document.getElementById("trendYearOpts").innerHTML=buildYearOpts(trendYearBase,dataYears,trendYear,"pickTrendYear",{allLabel:"전체",allPickVal:0});
 
-  // 표시할 월 목록 생성
   let months=[];
   if(trendYear){
-    // 선택 연도 전체 12개월
     for(let m=1;m<=12;m++)months.push(`${trendYear}-${String(m).padStart(2,"0")}`);
   } else {
-    // 전체: RD에 있는 모든 월 + 없으면 최근 12개월
     if(RD.length){
       months=[...new Set(RD.map(r=>r.month))].sort();
     } else {
@@ -531,23 +723,47 @@ function renderMonthly(){
   }
 
   const mTotals=months.map(mon=>RD.filter(r=>r.month===mon).reduce((s,r)=>s+r.total,0));
-  const maxV=Math.max(...mTotals,1),H=120;
+  const maxV=Math.max(...mTotals,1);
   const hasData=mTotals.some(v=>v>0);
 
   const activeMonths=mTotals.filter(v=>v>0).length;
   const totalSum=mTotals.reduce((a,b)=>a+b,0);
   document.getElementById("trendBadge").textContent=activeMonths?`${activeMonths}개월 · ${Math.round(totalSum/10000)}만원`:"데이터 없음";
-  document.getElementById("trendChart").innerHTML=months.map((mon,i)=>{
-    const tot=mTotals[i],h=Math.max(Math.round(tot/maxV*H),tot>0?4:0);
-    const isCur=curMonth>0&&mon===`${curYear}-${String(curMonth).padStart(2,"0")}`;
-    return`<div class="trend-col"><div class="trend-bar-wrap"><div class="trend-bar${isCur?" cur":""}" style="height:${h}px;background:${tot>0?"var(--sky)":"var(--border)"}"></div></div><div class="trend-lbl">${mon.slice(5)}월</div>${tot>0?`<div class="trend-val">${Math.round(tot/10000)}만</div>`:""}</div>`;
-  }).join("");
+
+  const chartW=Math.max(300,months.length*54),chartH=150,padTop=22,padBottom=26,padL=22,padR=22;
+  const plotH=chartH-padTop-padBottom;
+  const stepX=months.length>1?(chartW-padL-padR)/(months.length-1):0;
+  const pts=months.map((mon,i)=>{
+    const v=mTotals[i];
+    const x=padL+stepX*i;
+    const y=padTop+plotH-(v/maxV*plotH);
+    return{x,y,v,mon,isCur:curMonth>0&&mon===`${curYear}-${String(curMonth).padStart(2,"0")}`};
+  });
+  const linePath=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  const baseY=(padTop+plotH).toFixed(1);
+  const areaPath=pts.length?linePath+` L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`:"";
+  document.getElementById("trendChart").innerHTML=`
+    <svg viewBox="0 0 ${chartW} ${chartH}" width="${chartW}" height="${chartH}" style="display:block;overflow:visible">
+      <defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="var(--sky)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="${padL}" y1="${baseY}" x2="${chartW-padR}" y2="${baseY}" stroke="var(--border)" stroke-width="1"/>
+      ${pts.length?`<path d="${areaPath}" fill="url(#trendFill)" stroke="none"/>`:""}
+      ${pts.length?`<path d="${linePath}" fill="none" stroke="var(--sky)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:""}
+      ${pts.map(p=>`
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isCur?4.5:3}" fill="${p.v>0?"var(--sky)":"var(--border)"}" stroke="var(--card)" stroke-width="1.5"/>
+        ${p.isCur?`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="none" stroke="var(--sky)" stroke-width="1.5" opacity="0.4"/>`:""}
+      `).join("")}
+      ${pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${chartH-6}" text-anchor="middle" class="trend-svg-lbl${p.isCur?" cur":""}">${p.mon.slice(5)}월</text>`).join("")}
+      ${pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${Math.round(p.v/10000)}만</text>`).join("")}
+    </svg>`;
   document.getElementById("trendLegend").innerHTML=`<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2)"><div style="width:10px;height:10px;border-radius:3px;background:var(--sky)"></div>월 합계</div>`+(hasData?`<div style="font-size:12px;color:var(--teal600);font-weight:700">합계 ${fmt(totalSum)}원</div>`:"");
   document.getElementById("monthlyTableBody").innerHTML=[...months].reverse().map(mon=>{
     const recs=RD.filter(r=>r.month===mon),tot=recs.reduce((s,r)=>s+r.total,0);if(!recs.length)return"";
     const catMap={};recs.forEach(r=>{catMap[r.cat]=(catMap[r.cat]||0)+r.total;});
-    const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0],c=topCat?clr(topCat[0]):{bg:"#eee",fg:"#555"};
-    return`<tr><td style="white-space:nowrap;font-weight:700">${mon.replace("-","년 ")}월</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(tot)}</td><td>${topCat?`<span class="cat-tag" style="background:${c.bg};color:${c.fg}">${esc(topCat[0])}</span>`:""}</td><td class="r" style="color:var(--txt2)">${recs.length}건</td></tr>`;
+    const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0],c=topCat?clr(topCat[0]):{cls:"cat-cx"};
+    return`<tr><td style="white-space:nowrap;font-weight:700">${mon.replace("-","년 ")}월</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(tot)}</td><td>${topCat?`<span class="cat-tag ${c.cls}">${esc(topCat[0])}</span>`:""}</td><td class="r" style="color:var(--txt2)">${recs.length}건</td></tr>`;
   }).join("")||`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
 function toggleTrendDD(){
@@ -572,7 +788,7 @@ function renderDetail(){
   const hasDemo=paged.some(r=>r.isDemo);
   const demoBadge=document.getElementById("demoBadge");
   if(demoBadge)demoBadge.style.display=hasDemo?"inline-flex":"none";
-  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{const c=clr(r.cat);const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td style="font-size:13px;color:var(--txt2);white-space:nowrap">${vendorTxt}</td><td><span class="cat-tag" style="background:${c.bg};color:${c.fg}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt2)">${fmt(r.supply)}</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(r.total)}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{const c=clr(r.cat);const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td style="font-size:13px;color:var(--txt2);white-space:nowrap">${vendorTxt}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt2)">${fmt(r.supply)}</td><td class="r" style="font-weight:800;color:var(--teal600)">${fmt(r.total)}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
   if(pages<=1){document.getElementById("pager").innerHTML="";return;}
   let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
@@ -581,8 +797,360 @@ function renderDetail(){
 }
 // ── 공통 헬퍼 ─────────────────────────────────────────
 function emptyHTML(msg){return`<div class="empty"><div class="empty-icon">📭</div><p>${msg||"데이터가 없습니다"}</p></div>`;}
-function openModal(){const m=document.getElementById("cfgModal");if(!m)return;m.classList.add("modal-open");document.body.style.overflow="hidden";}
-function closeModal(){const m=document.getElementById("cfgModal");if(!m)return;m.classList.remove("modal-open");document.body.style.overflow="";}
+
+// ── 모달 드래그 이동 ──────────────────────────────────
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    const p=e.touches?e.touches[0]:e;
+    const rect=box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  const box=document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(box=>{
+    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외
+    const handle=box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+function openModal(){const m=document.getElementById("cfgModal");if(!m)return;m.classList.add("modal-open");document.body.style.overflow="hidden";initDraggableModals();}
+function closeModal(){const m=document.getElementById("cfgModal");if(!m)return;m.classList.remove("modal-open");document.body.style.overflow="";resetModalDragPos('cfgModal');}
+
+// ── 설정 모달(로그인 상태 안내 + 화면모드) ──────────────
+function updateLoginStatusHint(){
+  const h=document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent=isAuthed()?'로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')':'로그인이 필요합니다';
+}
+// 이 앱 자체에는 로그인 UI가 없음 — 포털 사이드바 하단 설정에서 로그인하면 공유 토큰(wp_authToken)을
+// storage 이벤트로 감지해 자동으로 데이터를 불러온다(2026-08-04, work-portal 공용 인증 체계 적용).
+function openLoginModal(){
+  const lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
+function openCfgModal(){
+  updateLoginStatusHint();
+  syncThemeOptUI();
+  openModal();
+}
+function closeCfgModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  closeModal();
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCfgModal();closeAddModal();}});
+
+// ── 화면모드(테마) ────────────────────────────────────
+function syncThemeOptUI(){
+  const cur=document.documentElement.getAttribute('data-theme')||'dark';
+  document.getElementById('theme-opt-dark')?.classList.toggle('on',cur==='dark');
+  document.getElementById('theme-opt-light')?.classList.toggle('on',cur==='light');
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  try{localStorage.setItem('theme',theme);}catch(e){}
+  syncThemeOptUI();
+}
+window.addEventListener('storage',e=>{
+  if(e.key==='theme'&&e.newValue){
+    document.documentElement.setAttribute('data-theme',e.newValue);
+    syncThemeOptUI();
+  }
+  if(e.key==='wp_authToken'){
+    CFG.authToken=e.newValue||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()){ RD=[]; loadData(); }
+  }
+});
+
+// ── 신규등록 드로어 ───────────────────────────────────
+var EDIT_PAGE_ID=null; // 이 앱은 등록만 지원(수정/삭제 없음) — 항상 null
+var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
+function onSelectChange(selectEl, customInputId){
+  const ci=document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  const sel=document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function buildAddCatOpts(){
+  const known=Object.keys(CAT_CLR);
+  const fromData=[...new Set(RD.map(r=>r.cat).filter(Boolean))];
+  const all=[...new Set([...known,...fromData])];
+  document.getElementById('addCat').innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+    +all.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  document.getElementById('addCatCustom').style.display='none';
+}
+function openAddModal(){
+  EDIT_PAGE_ID=null;
+  const today=new Date();
+  document.getElementById('addDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  document.getElementById('addDesc').value='';
+  document.getElementById('addSupply').value='';
+  document.getElementById('addVat').value='';
+  document.getElementById('addNote').value='';
+  buildAddCatOpts();
+  document.getElementById('addSubmitLabel').textContent='등록';
+  const am=document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  am.classList.add('drawer-in');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function closeAddModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const am=document.getElementById('addModal');
+  if(!am.classList.contains('modal-open')) return;
+  am.classList.remove('drawer-in');
+  _addModalCloseTimer=setTimeout(()=>{ am.classList.remove('modal-open'); _addModalCloseTimer=null; }, 280);
+  document.body.style.overflow='';
+  resetModalDragPos('addModal');
+}
+// Notion DB 실스키마 확인(2026-08-04, probe) 기준 — 상호/카드명은 관계형(relation) 속성이라
+// 관련 페이지 ID가 있어야 하고 이 폼만으로는 만들 수 없어 제외한다(하위 rollup인 사업자등록번호·
+// 카드번호도 자동 계산값이라 마찬가지). 합계는 Notion 수식 컬럼이라 공급가·부가세만 보내면 자동 계산됨.
+function submitAddForm(){
+  const date=document.getElementById('addDate').value.trim();
+  const desc=document.getElementById('addDesc').value.trim();
+  const cat=getSelectValue('addCat','addCatCustom');
+  const supply=document.getElementById('addSupply').value.trim();
+  const vat=document.getElementById('addVat').value.trim();
+  const note=document.getElementById('addNote').value.trim();
+  if(!date){ alert('사용일자를 입력해주세요.'); return; }
+  if(!desc){ alert('사용목적 및 지출내역을 입력해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  const btn=document.getElementById('addSubmitBtn');
+  const lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  lbl.textContent='등록 중...';
+
+  const properties={
+    '사용일자': { date: { start: date } },
+    '사용목적 및 지출내역': { title: [{ text:{ content: desc } }] }
+  };
+  if(cat) properties['계정항목']={ select: { name: cat } };
+  if(supply!=='') properties['공급가']={ number: parseFloat(supply)||0 };
+  if(vat!=='') properties['부가세']={ number: parseFloat(vat)||0 };
+  if(note) properties['비고']={ rich_text: [{ text:{ content: note } }] };
+
+  fetch(CFG.workerUrl+'/v1/pages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:CFG.dbId},properties}) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{
+      btn.disabled=false; lbl.textContent='등록';
+      closeAddModal();
+      RD=[];loadData();
+      toast('등록되었습니다.');
+    })
+    .catch(e=>{
+      btn.disabled=false; lbl.textContent='등록';
+      alert('등록 실패: '+e.message);
+      console.error(e);
+    });
+}
+
+// ── 엑셀 생성(work-portal 공통 buildExcelReport 패턴 재사용, 2026-08-04) ──
+var EXCEL_LIB_LOADING=null;
+function loadExcelLib(){
+  if(window.ExcelJS) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise((resolve, reject)=>{
+      const s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING=loadScript(
+    'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+    'sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'
+  ).catch(e=>{ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+const EXCEL_COMPANY_NAME='수자원기술(주)';
+const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
+const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
+const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
+function excelCm2in(cm){ return cm/2.54; }
+const EXCEL_PAGE_PRESETS={
+  landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
+  portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+};
+function excelCharWeight(ch){
+  const code=ch.codePointAt(0);
+  const cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ let w=0; Array.from(String(s||'')).forEach(ch=>{ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min=8, max=40, padding=5){
+  let w=min;
+  strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelEstimateWrappedLines(text, colWidthChars){
+  const w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  let maxLines=1;
+  columns.forEach((col,i)=>{ if(!col.wrap) return; const lines=excelEstimateWrappedLines(row[col.key], colWidths[i]); if(lines>maxLines) maxLines=lines; });
+  const lineHeightPt=fontSize*1.4;
+  return Math.max(baseHeight, maxLines*lineHeightPt+6);
+}
+function excelParseDate(s){
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s||''));
+  if(!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2])-1, Number(m[3])));
+}
+function buildExcelReport(opts){
+  const btn=document.getElementById(opts.btnId);
+  const lbl=document.getElementById(opts.lblId);
+  const rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  const columns=opts.columns;
+  const orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+  loadExcelLib().then(()=>{
+    const wb=new ExcelJS.Workbook();
+    const ws=wb.addWorksheet(opts.sheetName,{
+      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
+      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+      headerFooter:{oddHeader:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:''}
+    });
+    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    ws.columns=colWidths.map(w=>({width:w}));
+    const titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    const titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
+    const headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach((col,i)=>{
+      const cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={vertical:'middle',horizontal:'center'};
+      cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
+    });
+    rows.forEach((r,i)=>{
+      const rn=3+i;
+      const row=ws.getRow(rn);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      columns.forEach((col,ci)=>{
+        const cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
+        cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
+        if(col.dateCol && r[col.key]){
+          const d=excelParseDate(r[col.key]);
+          if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
+        } else {
+          cell.value = r[col.key];
+          if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
+        }
+      });
+      row.commit();
+    });
+    lbl.textContent='파일 저장 중...';
+    return wb.xlsx.writeBuffer();
+  }).then(buf=>{
+    const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const now=new Date();
+    const p2=n=>String(n).padStart(2,'0');
+    const fname=opts.fnamePrefix+'_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+'.xlsx';
+    const a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    lbl.textContent='완료!';
+    setTimeout(()=>{ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(e=>{
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(()=>{ btn.disabled=false; });
+}
+const EXCEL_COLUMNS_CARD=[
+  {key:'날짜',header:'날짜',dateCol:true},
+  {key:'지출내역',header:'지출내역',width:24,wrap:true},
+  {key:'상호',header:'상호'},
+  {key:'계정',header:'계정'},
+  {key:'공급가',header:'공급가',numFmt:'#,##0'},
+  {key:'부가세',header:'부가세',numFmt:'#,##0'},
+  {key:'합계',header:'합계',numFmt:'#,##0'}
+];
+// 현재 사용내역 탭의 필터(계정/검색어/월)가 적용된 목록을 그대로 내보낸다(2026-08-04).
+function getDetailFilteredRecords(){
+  const selCat=(document.getElementById('filterCat')||{}).value||'';
+  const q=((document.getElementById('srch')||{}).value||'').toLowerCase();
+  const ym=curMonth?`${curYear}-${String(curMonth).padStart(2,'0')}`:'';
+  return RD.filter(r=>(!ym||r.month===ym)&&(!selCat||r.cat===selCat)&&(!q||(r.desc||'').toLowerCase().includes(q)||(r.vendor||'').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function exportCardExcel(){
+  const rows=getDetailFilteredRecords().map(r=>({
+    날짜:r.date, 지출내역:r.desc, 상호:r.isDemo?'':( r.vendor||'' ), 계정:r.cat, 공급가:r.supply||0, 부가세:r.vat||0, 합계:r.total||0
+  }));
+  const monLbl=curMonth?`${curYear}년 ${curMonth}월`:`${curYear}년 전체`;
+  buildExcelReport({
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'법인카드', title:'법인카드 사용내역 ('+monLbl+')', fnamePrefix:'법인카드_사용내역',
+    columns:EXCEL_COLUMNS_CARD, rows, orientation:'landscape'
+  });
+}
 
 function maskVal(v){
   if(!v)return"";
@@ -590,32 +1158,7 @@ function maskVal(v){
     try{const u=new URL(v);const h=u.hostname;const parts=h.split(".");const masked=parts[0].length>4?parts[0].slice(0,2)+"XX"+parts[0].slice(-2)+"."+parts.slice(1).join("."):("XX."+parts.slice(1).join("."));return u.protocol+"//"+masked;}
     catch(e){return v.slice(0,6)+"XX...XX"+v.slice(-4);}
   }
-  if(/^[0-9a-f\-]{32,36}$/i.test(v)){const clean=v.replace(/-/g,"");return clean.slice(0,4)+"-XXXX-XXXX-XXXX-"+clean.slice(-4);}
   return v.slice(0,3)+"XX...XX"+v.slice(-3);
-}
-// ── 모달 ─────────────────────────────────────────────
-function openCfgModal(){
-  const wEl=document.getElementById("cfgWorkerUrl"),dEl=document.getElementById("cfgDbId");
-  const wu=CFG.workerUrl,db=CFG.dbId;
-  if(wu){wEl.value="";wEl.placeholder=maskVal(wu);wEl.dataset.saved="1";}
-  else{wEl.value="";wEl.placeholder="https://your-worker.workers.dev";delete wEl.dataset.saved;}
-  if(db){dEl.value="";dEl.placeholder=maskVal(db);dEl.dataset.saved="1";}
-  else{dEl.value="";dEl.placeholder="2f559c8c-9c0a-804a-9201-e861453d6b48";delete dEl.dataset.saved;}
-  openModal();
-}
-function closeCfgModal(e){
-  if(e&&e.target!==e.currentTarget)return;
-  closeModal();
-}
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCfgModal();});
-function saveCfg(){
-  const wEl=document.getElementById("cfgWorkerUrl"),dEl=document.getElementById("cfgDbId");
-  const newWu=wEl.value.trim(),newDb=dEl.value.trim();
-  if(newWu)CFG.workerUrl=newWu;
-  if(newDb)CFG.dbId=newDb;
-  try{localStorage.setItem("card_workerUrl",CFG.workerUrl);localStorage.setItem("card_dbId",CFG.dbId);}catch(e){}
-  closeModal();
-  if(CFG.workerUrl&&CFG.dbId){RD=[];loadData();}
 }
 // ── Notion 파싱 ───────────────────────────────────────
 function normalizeCategory(cat){
@@ -646,12 +1189,10 @@ function parseNotionPage(page){
     if(p.type==="formula")return parseFloat(p.formula?.number||0)||0;
     return parseFloat(getText(p))||0;
   }
-  // 날짜
   let date="";
   for(const[,v] of Object.entries(props)){
     if(v.type==="date"&&v.date?.start){date=v.date.start.slice(0,10);break;}
   }
-  // 각 필드 추출 — 스키마 기준 (사용목적 및 지출내역, 사용일자, 공급가, 부가세, 계정항목)
   let desc="",supply=0,vat=0,cat="",vendor="";
   for(const[k,v] of Object.entries(props)){
     const lk=k.toLowerCase().replace(/\s/g,"");
@@ -659,13 +1200,11 @@ function parseNotionPage(page){
     if(!supply&&(lk==="공급가"||lk.includes("공급가")))supply=getNum(v);
     if(!vat&&(lk==="부가세"||lk.includes("부가세")))vat=getNum(v);
     if(!cat&&(lk==="계정항목"||lk.includes("계정")))cat=normalizeCategory(getText(v));
-    // 상호 (relation → title 롤업이 없으면 relation id)
     if(!vendor&&(lk==="상호"||lk.includes("상호"))){
       if(v.type==="relation"){const rel=v.relation||[];if(rel.length)vendor=rel[0].id||"";}
       else vendor=getText(v);
     }
   }
-  // title 필드 fallback
   if(!desc){const tp=Object.values(props).find(p=>p.type==="title");if(tp)desc=getText(tp);}
   if(!date)return null;
   const total=(supply+vat)||0;
@@ -683,19 +1222,17 @@ async function fetchNotion(body){
 }
 // ── 데이터 로드 ──────────────────────────────────────
 async function loadData(){
-  if(!CFG.workerUrl||!CFG.dbId){openCfgModal();return;}
+  if(!isAuthed()){openLoginModal();return;}
   if(!LD.length)LD=BUILT_LIM;
   const btn=document.getElementById("syncBtn"),lbl=document.getElementById("syncLabel"),ico=document.getElementById("syncIco"),lu=document.getElementById("lastUpdate");
   if(btn)btn.disabled=true;if(ico)ico.classList.add("spinning");if(lbl)lbl.textContent="불러오는 중...";if(lu)lu.textContent="";
   try{
-    // 날짜 속성명 자동 감지 (1건 probe)
     const probe=await fetchNotion({page_size:1});
     let dateProp="사용일자";
     if(probe.results&&probe.results.length){
       const pp=probe.results[0].properties||{};
       for(const[k,v] of Object.entries(pp)){if(v.type==="date"){dateProp=k;break;}}
     }
-    // 전체 조회 (filter 없이 전체 — 내장 데이터와 동일 범위)
     const body={page_size:100,sorts:[{property:dateProp,direction:"ascending"}]};
     const data=await fetchNotion(body);
     let pages=data.results||[];
@@ -707,7 +1244,6 @@ async function loadData(){
       cursor=d2.next_cursor;hasMore=d2.has_more;
     }
     const parsed=pages.map(parseNotionPage).filter(Boolean);
-    // 중복 제거
     const seen=new Set();
     const deduped=parsed.filter(r=>{const key=r.date+"|"+r.supply+"|"+r.desc;if(seen.has(key))return false;seen.add(key);return true;});
     if(deduped.length>0){
@@ -716,22 +1252,21 @@ async function loadData(){
       if(months.length){const latest=months[months.length-1];curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
       renderAll();
       const now=new Date(),ts=String(now.getMonth()+1).padStart(2,"0")+". "+String(now.getDate()).padStart(2,"0")+". "+now.toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"});
-      if(lu){lu.textContent="마지막 업데이트: "+ts;lu.style.color="rgba(255,255,255,.75)";}
+      if(lu){lu.textContent="마지막 업데이트: "+ts;lu.style.color="";}
       toast("Notion 로드 완료 ("+RD.length+"건)");
     }else{
       if(!RD.length)RD=BUILT_RD;
       renderAll();
-      if(lu){lu.textContent="⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인";lu.style.color="rgba(255,150,130,.9)";}
+      if(lu){lu.textContent="⚠ 데이터 없음";lu.style.color="var(--hdr-error-text)";}
       toast("Notion 데이터 없음 · 내장 데이터 유지");
     }
   }catch(e){
     if(!RD.length)RD=BUILT_RD;renderAll();
     const msg=e.message||"";let errMsg="⚠ "+msg;
-    if(msg.includes("401")||msg.includes("403"))errMsg="⚠ 인증 오류 — Worker API 키 확인";
-    else if(msg.includes("404"))errMsg="⚠ DB를 찾을 수 없음 — DB ID 확인";
-    else if(msg.includes("400"))errMsg="⚠ HTTP 400 — Worker URL 또는 DB ID 확인";
-    else if(msg.includes("Failed to fetch"))errMsg="⚠ 네트워크 오류 — Worker URL 확인";
-    if(lu){lu.textContent=errMsg;lu.style.color="rgba(255,150,130,.9)";}
+    if(msg.includes("401")||msg.includes("403"))errMsg="⚠ 인증 오류 — 다시 로그인해주세요";
+    else if(msg.includes("404"))errMsg="⚠ DB를 찾을 수 없음";
+    else if(msg.includes("Failed to fetch"))errMsg="⚠ 네트워크 오류";
+    if(lu){lu.textContent=errMsg;lu.style.color="var(--hdr-error-text)";}
     toast("연결 실패 · 내장 데이터 유지");
   }finally{
     if(btn)btn.disabled=false;if(ico)ico.classList.remove("spinning");if(lbl)lbl.textContent="새로고침";
@@ -741,7 +1276,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   RD=BUILT_RD;LD=BUILT_LIM;
   const months=allMonths();if(months.length){const latest=months[months.length-1];curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));ddYearBase=curYear;}
   renderAll();
-  if(CFG.workerUrl&&CFG.dbId)loadData();
+  initDraggableModals();
+  if(isAuthed()){ loadData(); } else { openLoginModal(); }
 });
 </script>
 </body>
