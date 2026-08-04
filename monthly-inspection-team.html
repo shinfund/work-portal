@@ -30,6 +30,7 @@
   --hdr-btn-text:#fff;
   --hdr-shadow:0 2px 8px rgba(3,47,98,.3);
   --hdr-error-text:rgba(255,150,130,.9);
+  --rp-filled-bg:rgba(79,70,229,.10);
 }
 html[data-theme="light"]{
   --hdr-bg:#FFFFFF;
@@ -59,6 +60,7 @@ html[data-theme="dark"]{
   --amber50:rgba(186,117,23,.16);--amber100:rgba(186,117,23,.32);--amber800:#F0B961;
   --green50:rgba(99,153,34,.16);--green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
+  --rp-filled-bg:rgba(129,140,248,.18);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
@@ -304,8 +306,9 @@ input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 .report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
-/* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 청록색 배경(2026-08-03 사용자 요청) */
-.report-paper .rp-filled{background:rgba(29,158,117,.14)!important}
+/* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 인디고 배경(2026-08-03 청록으로 도입 → 2026-08-04
+   안전관리 앱(monthly-inspection.html)과 동일하게 인디고로 통일, --rp-filled-bg로 다크/라이트 분리) */
+.report-paper .rp-filled{background:var(--rp-filled-bg)!important}
 #addModal.modal-inline{display:block!important;position:static}
 #addModal.modal-inline .modal-backdrop{position:static;background:none;padding:0;display:block;inset:auto}
 #addModal.modal-inline .modal-box{max-width:none!important;width:100%;box-shadow:none;border-radius:0;padding:0;background:transparent;max-height:none;overflow:visible}
@@ -2618,6 +2621,10 @@ function initReportTab(){
         <button class="dd-btn" id="rpMonthBtn" type="button" onclick="toggleDd('rpMonthMenu','rpMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rpMonthLabel"></span></button>
         <div class="dd-menu" id="rpMonthMenu"></div>
       </div>
+      <div class="dd-wrap" id="rpTunnelWrap" style="display:none">
+        <button class="dd-btn" id="rpTunnelBtn" type="button" onclick="toggleDd('rpTunnelMenu','rpTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="rpTunnelLabel"></span></button>
+        <div class="dd-menu" id="rpTunnelMenu">${TUNNEL_OPTIONS_ELEC.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
+      </div>
       <div class="report-toolbar-sep"></div>
       <div class="report-page-chips" id="reportPageChips"></div>`;
     const curY=new Date().getFullYear();
@@ -2630,6 +2637,12 @@ function initReportTab(){
     document.getElementById('rpMonthMenu').addEventListener('click', e=>{
       const opt=e.target.closest('.dd-opt'); if(!opt) return;
       REPORT_SEL.month=opt.dataset.val; closeDd('rpMonthMenu','rpMonthBtn'); syncReportSelLabels(); gotoReportPage(_reportCurPage);
+    });
+    document.getElementById('rpTunnelMenu').addEventListener('click', e=>{
+      const opt=e.target.closest('.dd-opt'); if(!opt) return;
+      closeDd('rpTunnelMenu','rpTunnelBtn');
+      _teamElecTunnel=opt.dataset.val;
+      gotoReportPage('elecinsp');
     });
     document.getElementById('reportPageChips').innerHTML=REPORT_PAGE_IDS.map(id=>
       `<button class="report-page-chip" id="chip-${id}" onclick="gotoReportPage('${id}')">${REPORT_PAGE_LABELS[id]}</button>`
@@ -2645,10 +2658,24 @@ function syncReportSelLabels(){
   document.querySelectorAll('#rpMonthMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===REPORT_SEL.month));
   ['rpYearBtn','rpMonthBtn'].forEach(id=>document.getElementById(id)?.classList.add('active'));
 }
+// 입력폼탭 각 페이지 상단 "등록" 버튼 — 실제 제출 로직·"등록 중..." 상태·진행률 바는 페이지 하단(또는
+// 모달) 버튼에 달려있어, 표가 길면 상단 버튼만 눌러선 아무 반응이 없어 보이는 문제가 있었다(안전관리
+// 앱과 동일한 문제, 2026-08-04 사용자 제보). 클릭 즉시 실제 버튼을 화면 중앙으로 스크롤해 보여준 뒤
+// 클릭을 전달한다.
+function scrollToAndClick(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+  el.click();
+}
 function gotoReportPage(id){
   unmountAddModalInline();
   _reportCurPage=id;
   REPORT_PAGE_IDS.forEach(p=>document.getElementById('chip-'+p)?.classList.toggle('active', p===id));
+  // 터널(구간) 드롭다운은 전기시설점검 페이지에서만 의미가 있어 그 페이지일 때만 연/월 옆에 노출
+  // (2026-08-04 사용자 요청 — 기존엔 페이지 본문 안에 별도로 있었음).
+  const tunnelWrap=document.getElementById('rpTunnelWrap');
+  if(tunnelWrap) tunnelWrap.style.display = id==='elecinsp' ? '' : 'none';
   const fn=window['renderReportPage_'+id];
   if(typeof fn==='function'){ fn(); }
   else{ document.getElementById('reportPaper').innerHTML=`<div class="report-title-band">${REPORT_PAGE_LABELS[id]}</div><div style="text-align:center;color:var(--txt3);padding:30px 0">준비 중입니다.</div>`; }
@@ -2732,20 +2759,10 @@ async function renderReportPage_elecinsp(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 터널전기시설 점검표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpElecinspSubmitBtn').click()">등록</button>
-    </div>
-    <div class="dd-wrap" id="eiTunnelWrap" style="margin-bottom:14px">
-      <button class="dd-btn" id="eiTunnelBtn" type="button" onclick="toggleDd('eiTunnelMenu','eiTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="eiTunnelLabel"></span></button>
-      <div class="dd-menu" id="eiTunnelMenu">${TUNNEL_OPTIONS_ELEC.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpElecinspSubmitBtn')">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin-bottom:14px">불러오는 중...</div>
     <div id="rpElecinspBody"></div>`;
-  document.getElementById('eiTunnelMenu').addEventListener('click', e=>{
-    const opt=e.target.closest('.dd-opt'); if(!opt) return;
-    closeDd('eiTunnelMenu','eiTunnelBtn');
-    _teamElecTunnel=opt.dataset.val;
-    gotoReportPage('elecinsp');
-  });
   syncTeamElecTunnelLabel();
   if(!TAB_STATE.elecinsp.loaded) await loadTabData('elecinsp');
   if(_reportCurPage!=='elecinsp') return;
@@ -2753,9 +2770,9 @@ async function renderReportPage_elecinsp(){
   renderElecinspGrid();
 }
 function syncTeamElecTunnelLabel(){
-  document.getElementById('eiTunnelLabel').textContent=_teamElecTunnel;
-  document.querySelectorAll('#eiTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===_teamElecTunnel));
-  document.getElementById('eiTunnelBtn')?.classList.add('active');
+  document.getElementById('rpTunnelLabel').textContent=_teamElecTunnel;
+  document.querySelectorAll('#rpTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===_teamElecTunnel));
+  document.getElementById('rpTunnelBtn')?.classList.add('active');
 }
 // 이번 달 이미 저장된 값(정확한 터널·구분·점검내용·연월 일치)
 function elecInspRowDatedRecord(tunnel, gubun, content, ym){
@@ -2855,7 +2872,7 @@ async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 고장수리실적</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('rpRepairSubmitBtn').click()">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpRepairSubmitBtn')">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpRepairBody"></div>`;
@@ -3035,7 +3052,7 @@ async function renderReportPage_photo(){
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 운영관리 사진대지</div>
       <!-- photo 탭은 항상 신규등록 흐름이라(수정 모드 없음) 하단 버튼도 항상 "등록"으로 고정 —
            상단·하단 명칭을 "등록"으로 통일(안전관리 앱과 동일, 2026-08-10). -->
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="document.getElementById('addSubmitBtn').click()">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('addSubmitBtn')">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPhotoMount"></div>`;
