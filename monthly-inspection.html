@@ -4293,9 +4293,6 @@ function exportTabExcel(tabId){
 // 매달 새 레코드가 쌓임), 분기/반기/연차 주기 항목은 점검일자가 비어있는 레코드 1건만 존재해서
 // 결과가 항상 "-"로 표시된다(2026-07-21 실데이터로 확인). REPORT_CHECKLIST_ORDER 순서대로 훑으며
 // 해당 월에 실제 기록된 레코드가 있으면 그 값을, 없으면 날짜 없는 고정 레코드의 "-" 값을 채운다.
-// 구분="기타"/"태양광발전설비"는 노션 실데이터의 설비명이 공란이라(위 데이터정리 참고) 구분·설비명을
-// 별도 표시하지 않고 한 셀로 합쳐서 보여준다(2026-07-21 사용자 피드백).
-const REPORT_COMBINE_GUBUN=new Set(['기타','태양광발전설비']);
 // 원본 템플릿에서 분기/반기/연차 주기 항목에 적용된 글자색을 재현(2026-07-21, 셀 폰트색 실측). 분기/연차는
 // 원본 파일에 있던 값을 그대로, 반기는 원본에 테마색(accent6)+틴트로만 지정돼 있어 근사값을 계산해
 // 썼는데 흰 배경 대비 3.83:1로 WCAG AA(4.5:1) 미달이라 가독성이 떨어져(2026-07-21 사용자 피드백)
@@ -4312,9 +4309,8 @@ function buildMonthlyReportRows(tunnel, year, month){
     const dated=matches.find(r=>(r['점검일자']||'').startsWith(ymStr));
     const staticRow=matches.find(r=>!r['점검일자']);
     const src=dated||staticRow;
-    const combined=REPORT_COMBINE_GUBUN.has(item.구분);
     rows.push({
-      구분:item.구분, 설비명:combined?'':(item.설비명||''), combined,
+      구분:item.구분, 설비명:item.설비명||'',
       점검내용:item.점검내용,
       점검결과:(src&&src['점검결과'])||'-',
       점검일자:dated?dated['점검일자']:'-',
@@ -4415,18 +4411,11 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
   const equipSpans=computeSpans(r=>r.구분+'|'+r.설비명);
 
   gubunSpans.forEach(span=>{
-    const first=rows[span.start];
     const rn1=5+span.start, rn2=5+span.end;
-    if(first.combined){
-      ws.mergeCells(`A${rn1}:B${rn2}`);
-      ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,2);
-    } else {
-      if(span.end>span.start) ws.mergeCells(`A${rn1}:A${rn2}`);
-      ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,1);
-    }
+    if(span.end>span.start) ws.mergeCells(`A${rn1}:A${rn2}`);
+    ws.getCell(`A${rn1}`).border=reportGridBorder(rn1,rn2,1,1);
   });
   equipSpans.forEach(span=>{
-    if(rows[span.start].combined) return; // 위에서 A+B로 이미 처리됨
     const rn1=5+span.start, rn2=5+span.end;
     if(span.end>span.start) ws.mergeCells(`B${rn1}:B${rn2}`);
     ws.getCell(`B${rn1}`).border=reportGridBorder(rn1,rn2,2,2);
@@ -4452,7 +4441,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
           : {vertical:'middle', horizontal:'center', shrinkToFit:true};
     }
     row.getCell(1).value = r.구분;
-    if(!r.combined) row.getCell(2).value=r.설비명;
+    row.getCell(2).value = r.설비명;
     row.getCell(3).value=r.점검내용;
     row.getCell(4).value=r.점검결과;
     row.getCell(6).value=r.비고;
