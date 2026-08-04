@@ -722,8 +722,8 @@ window.addEventListener('storage',e=>{
 // ══════════════════════════════════════════════════════
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-24 notion-fetch로 실스키마 확인 후 하드코딩) ──
 // ══════════════════════════════════════════════════════
-const TUNNEL_OPTIONS_ELEC=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 const TUNNEL_OPTIONS_STD=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+const TUNNEL_OPTIONS_ELEC=TUNNEL_OPTIONS_STD;
 // 점검사진 카드 그리드는 여러 터널이 섞여 나열돼(전체 터널 통합 보고서) 터널별 구분이 어렵다는
 // 사용자 피드백(2026-08-03) — 터널명 배열 순서에 고정 팔레트를 매핑해 카드 왼쪽에 색상 띠를 넣는다.
 // 배열 인덱스 기반이라 같은 터널은 앱을 다시 열어도 항상 같은 색이 나온다.
@@ -2660,12 +2660,21 @@ function syncReportSelLabels(){
 }
 // 입력폼탭 각 페이지 상단 "등록" 버튼 — 실제 제출 로직·"등록 중..." 상태·진행률 바는 페이지 하단(또는
 // 모달) 버튼에 달려있어, 표가 길면 상단 버튼만 눌러선 아무 반응이 없어 보이는 문제가 있었다(안전관리
-// 앱과 동일한 문제, 2026-08-04 사용자 제보). 클릭 즉시 실제 버튼을 화면 중앙으로 스크롤해 보여준 뒤
-// 클릭을 전달한다.
-function scrollToAndClick(id){
+// 앱과 동일한 문제, 2026-08-04 사용자 제보). 처음엔 스크롤로 하단 버튼을 보여줬으나, 화면이 움직이는
+// 게 불편하다는 피드백에 따라 실제 버튼의 disabled/문구 변화를 MutationObserver로 상단 버튼에 그대로
+// 반영하는 방식으로 교체.
+function clickAndMirror(id, topBtn){
   const el=document.getElementById(id);
   if(!el) return;
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  if(topBtn){
+    const lbl=document.getElementById(id+'Label');
+    const sync=()=>{ topBtn.disabled=el.disabled; topBtn.textContent=lbl?lbl.textContent:el.textContent; };
+    sync();
+    const mo=new MutationObserver(sync);
+    mo.observe(el,{attributes:true,attributeFilter:['disabled']});
+    mo.observe(lbl||el,{childList:true,characterData:true,subtree:true});
+    const stop=setInterval(()=>{ if(!el.disabled){ clearInterval(stop); setTimeout(()=>mo.disconnect(),500); } },150);
+  }
   el.click();
 }
 function gotoReportPage(id){
@@ -2710,17 +2719,6 @@ function unmountAddModalInline(){
   EDIT_TAB=null; EDIT_PAGE_ID=null;
   _photoFiles=[]; _photoMultiRows=[];
 }
-function reportPresetField(id, value){
-  const el=document.getElementById(id);
-  if(!el) return;
-  if(el.tagName==='SELECT' && ![...el.options].some(o=>o.value===value)){
-    const opt=document.createElement('option');
-    opt.value=value; opt.textContent=value;
-    el.insertBefore(opt, el.firstChild);
-  }
-  el.value=value;
-  el.dispatchEvent(new Event('change'));
-}
 // 저장하려는 날짜가 현재 화면에 선택된 연월과 다르면 저장 후 목록에서 사라져 "저장이 안 된 것"처럼
 // 보일 수 있다 — 저장 자체는 막지 않고 경고만 띄운다(안전관리 앱 B12와 동일 패턴).
 function confirmDateOutOfMonth(dates, ym){
@@ -2759,7 +2757,7 @@ async function renderReportPage_elecinsp(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 터널전기시설 점검표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpElecinspSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpElecinspSubmitBtn', this)">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin-bottom:14px">불러오는 중...</div>
     <div id="rpElecinspBody"></div>`;
@@ -2872,7 +2870,7 @@ async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 고장수리실적</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpRepairSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpRepairSubmitBtn', this)">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpRepairBody"></div>`;
@@ -2922,7 +2920,8 @@ function renderTeamRepairBody(){
   const ymStr=REPORT_SEL.year+'-'+REPORT_SEL.month;
   // 조치일 미기재 건은 이월(발생월 무관 항상 표시), 조치완료 건은 발생일·조치일 중 하나라도 이번
   // 달이면 표시 — buildRepairReportRows와 동일한 포함 기준(2026-07-31).
-  const recs=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일'] || (r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr));
+  const recs=(TAB_STATE.repair.records||[]).filter(r=>!r['조치일'] || (r['발생일']||'').startsWith(ymStr) || (r['조치일']||'').startsWith(ymStr))
+    .sort((a,b)=>(a['발생일']||'').localeCompare(b['발생일']||''));
   // 빈 화면으로 시작하면 "+ 행 추가"를 여러 번 눌러야 해서, 기존 건수와 합쳐 최소 10행은 항상
   // 보이게 빈 행을 미리 채워둔다(안전관리 앱 업무처리 페이지와 동일, 2026-07-31 사용자 요청).
   while(recs.length + _repairExtraRows.length < 10){ _repairExtraRows.push({key:Date.now()+Math.random()}); }
@@ -3052,7 +3051,7 @@ async function renderReportPage_photo(){
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 운영관리 사진대지</div>
       <!-- photo 탭은 항상 신규등록 흐름이라(수정 모드 없음) 하단 버튼도 항상 "등록"으로 고정 —
            상단·하단 명칭을 "등록"으로 통일(안전관리 앱과 동일, 2026-08-10). -->
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('addSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('addSubmitBtn', this)">등록</button>
     </div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
     <div id="rpPhotoMount"></div>`;

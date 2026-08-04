@@ -5987,11 +5987,20 @@ function reportBaseTunnel(t){ return (t||'').replace(/\(주\)|\(부\)/,''); }
 // 입력폼탭 각 페이지 상단 "등록" 버튼 — 실제 제출 로직·"등록 중..." 상태·진행률 바는 전부 페이지
 // 하단(또는 모달) 버튼에 달려있어서, 표가 길 때 상단 버튼만 누르면 하단 버튼이 화면 밖이라 아무
 // 반응이 없어 보이는 문제가 있었다(2026-08-04 사용자 제보 — 등록은 되고 있었지만 진행 상태가 전혀
-// 안 보였음). 클릭 즉시 실제 버튼을 화면 중앙으로 스크롤해 보여준 뒤 클릭을 전달한다.
-function scrollToAndClick(id){
+// 안 보였음). 처음엔 스크롤로 하단 버튼을 보여줬으나, 화면이 움직이는 게 불편하다는 피드백에 따라
+// 실제 버튼의 disabled/문구 변화를 MutationObserver로 상단 버튼에 그대로 반영하는 방식으로 교체.
+function clickAndMirror(id, topBtn){
   const el=document.getElementById(id);
   if(!el) return;
-  el.scrollIntoView({behavior:'smooth', block:'center'});
+  if(topBtn){
+    const lbl=document.getElementById(id+'Label');
+    const sync=()=>{ topBtn.disabled=el.disabled; topBtn.textContent=lbl?lbl.textContent:el.textContent; };
+    sync();
+    const mo=new MutationObserver(sync);
+    mo.observe(el,{attributes:true,attributeFilter:['disabled']});
+    mo.observe(lbl||el,{childList:true,characterData:true,subtree:true});
+    const stop=setInterval(()=>{ if(!el.disabled){ clearInterval(stop); setTimeout(()=>mo.disconnect(),500); } },150);
+  }
   el.click();
 }
 function renderReportPage_cover(){
@@ -6023,7 +6032,7 @@ async function renderReportPage_photo(){
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">5. 운영관리 사진대지</div>
       <!-- photo 탭은 항상 신규등록 흐름이라(수정 모드 없음) 하단 버튼도 항상 "등록"으로 고정 —
            상단·하단 명칭을 "등록"으로 통일(2026-08-10 사용자 요청). -->
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('addSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('addSubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6071,7 +6080,7 @@ async function renderReportPage_elec(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">2. 전기설비 점검결과기록표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('addSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('addSubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">설비명(상호) : ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6094,7 +6103,7 @@ async function renderReportPage_generator(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">4. 비상발전기 점검 및 가동일지</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('addSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('addSubmitBtn', this)">등록</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 16px">
       <div class="rc-monthly-sub" style="margin:0">□ ${esc(REPORT_SEL.tunnel)}</div>
@@ -6154,7 +6163,7 @@ async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">7. 월간 업무처리사항</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpTaskSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpTaskSubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(reportBaseTunnel(REPORT_SEL.tunnel))}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6332,7 +6341,7 @@ async function renderReportPage_transformer(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">3. 변압기 온도측정표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpTransSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpTransSubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6505,7 +6514,7 @@ async function renderReportPage_monthly(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">1. 월간 점검결과표</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpMonthlySubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpMonthlySubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">□ 전기안전관리자 정기점검표</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
@@ -6623,7 +6632,7 @@ async function renderReportPage_power(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
       <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">6. 전력데이터 분석</div>
-      <button class="add-submit-btn" style="flex-shrink:0" onclick="scrollToAndClick('rpPowerSubmitBtn')">등록</button>
+      <button class="add-submit-btn" style="flex-shrink:0" onclick="clickAndMirror('rpPowerSubmitBtn', this)">등록</button>
     </div>
     <div class="rc-monthly-sub">□ ${esc(REPORT_SEL.tunnel)}</div>
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin:-8px 0 14px">불러오는 중...</div>
