@@ -195,6 +195,19 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
+/* 인라인 행 추가(monthly/transformer/power/task 4개 탭 전용, 2026-08-04) — 목록 표 맨 위에 항상
+   입력 가능한 행을 붙여 모달을 열지 않고도 1건씩 빠르게 등록할 수 있게 한다. 신규등록 모달의
+   드로어와는 별개로, 모달의 "체크리스트 다중행" 일괄등록(카탈로그에서 여러 개 체크)과도 대체
+   관계가 아니라 보완 관계 — 이건 그때그때 1건만 즉석으로 넣는 용도. */
+.inline-add-row{background:var(--sky50)}
+.inline-add-row td{padding:6px 8px;vertical-align:top}
+.inline-add-cell select,.inline-add-cell input{width:100%;min-width:92px;background:var(--card);border:1.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;font-family:inherit;color:var(--txt);outline:none;transition:border .15s}
+.inline-add-cell select:focus,.inline-add-cell input:focus{border-color:var(--sky)}
+.inline-add-cell .modal-input{margin-top:4px}
+.inline-add-title{color:var(--txt3);font-size:12px;white-space:nowrap}
+.inline-add-btn{width:30px;height:30px;border-radius:8px;border:none;background:var(--sky);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.inline-add-btn:disabled{opacity:.5;cursor:not-allowed}
+.inline-add-btn:hover:not(:disabled){background:var(--sky600)}
 /* 입력폼 탭(report-paper) 안의 표는 목록 탭과 달리 화면을 꽉 채울 필요가 없다 — 컬럼 내용에 맞는
    자연폭으로 왼쪽 정렬하고, 필요한 표만(점검내용처럼 텍스트가 긴 컬럼) 알아서 넓어지게 한다
    (2026-07-31 사용자 요청 — 월간점검 표 방식을 입력폼 전체 기준으로 통일). */
@@ -314,6 +327,25 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:600px;max-height:90vh;overflow-y:auto}
+/* 신규등록/수정(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시 — 상세보기(#detailModal)·
+   설정(#cfgModal)은 기존 중앙 모달 그대로 유지(2026-08-04 사용자 요청, 등록창이 좁고 뒤 목록이
+   가려지는 불편 해소). 보고서입력 탭의 .modal-inline 모드는 페이지에 얹혀 있는 콘텐츠라 이 규칙
+   대상에서 제외한다. 열기는 modal-open 부여 직후 이중 rAF로 drawer-in을 붙여 트랜지션이 실제로
+   재생되게 하고(즉시 같은 프레임에 두 클래스를 넣으면 브라우저가 전환 시작 상태를 그려볼 새 없이
+   바로 최종 상태로 합쳐버린다), 닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤 트랜지션 시간만큼
+   지나서 modal-open을 떼 display:none 처리한다(closeAddModal/openAddModal 참고). */
+#addModal:not(.modal-inline) .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal:not(.modal-inline) .add-modal-box{
+  height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
+  border-radius:20px 0 0 20px;
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.22,.8,.25,1);
+}
+#addModal.drawer-in:not(.modal-inline) .add-modal-box{transform:translateX(0)}
+#addModal:not(.modal-inline) .add-modal-box.wide-modal{width:640px;max-width:94vw}
+@media(max-width:480px){
+  #addModal:not(.modal-inline) .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+}
 .detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
@@ -540,7 +572,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-monthly">
-          <th>터널명</th><th>점검일자</th><th>제목</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>비고</th>
+          <th>터널명</th><th>점검일자</th><th>제목</th><th>구분</th><th>설비명</th><th>점검내용</th><th>점검결과</th><th>비고</th><th style="width:40px"></th>
         </tr></thead>
         <tbody id="tbody-monthly"></tbody>
       </table>
@@ -621,7 +653,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-transformer">
-          <th>터널명</th><th>측정일자</th><th>제목</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th>
+          <th>터널명</th><th>측정일자</th><th>제목</th><th>점검자</th><th>변압기종류</th><th>용량</th><th>측정지점</th><th class="r">지점번호</th><th class="r">온도(℃)</th><th>비고</th><th style="width:40px"></th>
         </tr></thead>
         <tbody id="tbody-transformer"></tbody>
       </table>
@@ -741,7 +773,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-power">
-          <th>터널명</th><th>일자</th><th>제목</th><th class="r">MAIN(kWh)</th><th class="r">조명용(kWh)</th><th>비고</th>
+          <th>터널명</th><th>일자</th><th>제목</th><th class="r">MAIN(kWh)</th><th class="r">조명용(kWh)</th><th>비고</th><th style="width:40px"></th>
         </tr></thead>
         <tbody id="tbody-power"></tbody>
       </table>
@@ -779,7 +811,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="tbl-wrap">
       <table>
         <thead><tr id="thead-task">
-          <th>터널명</th><th>날짜</th><th>제목</th><th>업무내용</th><th>조치사항</th><th>업체명</th><th>비고</th>
+          <th>터널명</th><th>날짜</th><th>제목</th><th>업무내용</th><th>조치사항</th><th>업체명</th><th>비고</th><th style="width:40px"></th>
         </tr></thead>
         <tbody id="tbody-task"></tbody>
       </table>
@@ -905,6 +937,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
+    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외(2026-08-04)
     const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
@@ -2103,13 +2136,17 @@ function renderTabTable(tabId){
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
   const delMode=!!DELETE_MODE[tabId];
+  const inlineAdd=INLINE_ADD_TABS.includes(tabId);
+  const inlineRowHtml=inlineAdd ? buildInlineAddRowHtml(tabId) : '';
   if(!recs.length){
-    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length + (delMode?1:0) + (tabId==='elec'?3:0);
-    tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length + (delMode?1:0) + (tabId==='elec'?3:0) + (inlineAdd?1:0);
+    tbody.innerHTML=inlineRowHtml+`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    if(inlineAdd) refreshAllInlineCascadeSelects(tabId);
     return;
   }
-  tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
+  tbody.innerHTML=inlineRowHtml+recs.map(r=>buildRow(tabDef,r)).join('');
   if(delMode) syncSelectAllCheckbox(tabId, recs);
+  if(inlineAdd) refreshAllInlineCascadeSelects(tabId);
 }
 function buildCellHtml(f, r){
   const key=f.key;
@@ -2133,7 +2170,7 @@ function buildRow(tabDef, r){
   }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
     return f ? buildCellHtml(f, r) : '';
-  }).join('') + (tabDef.id==='elec' ? elecBaseChildCellsHtml(r) : '');
+  }).join('') + (tabDef.id==='elec' ? elecBaseChildCellsHtml(r) : '') + (INLINE_ADD_TABS.includes(tabDef.id) ? '<td></td>' : '');
   const delMode=!!DELETE_MODE[tabDef.id];
   const checked=(DELETE_SELECTED[tabDef.id]&&DELETE_SELECTED[tabDef.id].has(r.id));
   const checkCell=delMode
@@ -2371,22 +2408,25 @@ function closeDetailModal(e){
 
 // ── 신규등록/수정 모달 (필드 동적 생성) ──
 var EDIT_TAB=null, EDIT_PAGE_ID=null;
+var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
-function buildFieldHtml(f, idx, curVal, tabId){
-  if(f.key==='제목') return '';
-  const id='ff_'+idx;
-  const req=f.required?'<span class="modal-required">*</span>':'';
-  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+// 필드 타입별 실제 입력 컨트롤(select/input)만 만든다 — label·wrapping div는 호출부(모달용
+// buildFieldHtml/인라인 행용 buildInlineFieldCell)가 각자 다르게 감싼다(2026-08-04, 인라인 행
+// 추가 기능에서 동일한 타입별 분기를 재사용하기 위해 buildFieldHtml에서 분리).
+function buildFieldControlHtml(f, id, curVal, tabId, mode){
+  // mode:'inline'이면 인라인 행 추가 전용 refreshAllInlineCascadeSelects()를 부르고, 모달 전용
+  // 부가효과(extraOnChange — 체크리스트 갱신 등 #addModalFields 안에서만 의미 있는 함수)는
+  // 인라인 행에 없는 DOM을 건드리므로 생략한다(2026-08-04).
+  const refreshAllFn = mode==='inline' ? 'refreshAllInlineCascadeSelects' : 'refreshAllCascadeSelects';
+  const includeExtra = mode!=='inline';
   if(f.uiType==='cascade-select'){
-    // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
-    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
-    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
-    return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+    // 옵션은 refreshCascadeSelect()가 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
+    const cascadeCall = f.cascadeTrigger ? `;${refreshAllFn}('${tabId}')` : '';
+    const extraCall = (includeExtra && f.extraOnChange) ? `;${f.extraOnChange}` : '';
+    return `<select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
-    </div>`;
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>`;
   }
   if(f.uiType==='fixed-select'){
     // 다른 필드에 의존하지 않는 정적 목록이라 openAddModal의 캐스케이드 초기화 대상은 아니지만,
@@ -2395,55 +2435,87 @@ function buildFieldHtml(f, idx, curVal, tabId){
     const isCustom = curVal!=='' && curVal!=null && !(f.options||[]).map(String).includes(String(curVal));
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${String(curVal)===String(o)?' selected':''}>${esc(o)}</option>`).join('');
     const onchangeParts=[`onSelectChange(this,'${id}c')`];
-    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
-    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
-    return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
+    if(f.cascadeTrigger) onchangeParts.push(`${refreshAllFn}('${tabId}')`);
+    if(includeExtra && f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    return `<select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
         <option value="">선택</option>
         <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
       </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
-    </div>`;
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>`;
   }
   if(f.type==='file'){
-    return `<div class="modal-field">${label}
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button type="button" class="tb-action-btn tb-add" onclick="document.getElementById('${id}_input').click()">사진 선택</button>
         <span class="modal-hint" id="${id}_status" style="margin:0"></span>
       </div>
       <input type="file" id="${id}_input" accept="image/*" multiple style="display:none" onchange="uploadInspectionPhoto(this,'${id}')"/>
-      <div id="${id}_list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
-    </div>`;
+      <div id="${id}_list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>`;
   }
   if(f.type==='select'){
     const opts=(f.options||[]).map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
     const isCustom = curVal && !(f.options||[]).includes(curVal);
-    const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
-    const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
-    return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+    const cascadeCall = f.cascadeTrigger ? `;${refreshAllFn}('${tabId}')` : '';
+    const extraCall = (includeExtra && f.extraOnChange) ? `;${f.extraOnChange}` : '';
+    return `<select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
         <option value="">선택</option>
         <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         ${opts}
       </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
-    </div>`;
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>`;
   }
   if(f.type==='date'){
     const onchangeParts=[];
-    if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
-    if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
+    if(f.cascadeTrigger) onchangeParts.push(`${refreshAllFn}('${tabId}')`);
+    if(includeExtra && f.extraOnChange) onchangeParts.push(f.extraOnChange);
     const onchangeAttr = onchangeParts.length ? ` onchange="${onchangeParts.join(';')}"` : '';
-    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/></div>`;
+    return `<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/>`;
   }
   if(f.type==='number'){
     // 천단위 콤마 표시(2026-08-03 사용자 요청 — 기존 전력사용량 그리드 전용이던 걸 입력폼탭
     // 전체 숫자 필드로 확대). type="number"는 콤마를 표시할 수 없어 text+inputmode로 바꾸고,
     // focus 시 원값으로 풀었다가 blur 시 다시 콤마를 붙인다. getFieldValue가 저장 직전 콤마를 제거한다.
-    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" inputmode="decimal" value="${curVal!=null&&curVal!==''?esc(formatThousands(curVal)):''}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/></div>`;
+    return `<input id="${id}" class="modal-input" type="text" inputmode="decimal" value="${curVal!=null&&curVal!==''?esc(formatThousands(curVal)):''}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>`;
   }
-  return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="text" value="${esc(curVal||'')}"/></div>`;
+  return `<input id="${id}" class="modal-input" type="text" value="${esc(curVal||'')}"/>`;
+}
+function buildFieldHtml(f, idx, curVal, tabId){
+  if(f.key==='제목') return '';
+  const id='ff_'+idx;
+  const req=f.required?'<span class="modal-required">*</span>':'';
+  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  return `<div class="modal-field">${label}${buildFieldControlHtml(f, id, curVal, tabId)}</div>`;
+}
+// ── 인라인 행 추가(2026-08-04) — monthly/transformer/power/task 4개 탭 목록 최상단에 항상
+// 입력 가능한 행을 붙여 모달 없이 1건씩 빠르게 등록한다. elec/generator(신규등록 1건=부모+
+// 하위 22~42건 동시저장)·photo(파일첨부라 표 한 줄에 못 넣음)는 구조상 제외 — 드로어만 적용.
+const INLINE_ADD_TABS=['monthly','transformer','power','task'];
+function buildInlineFieldCell(f, idx, tabId){
+  const id='ir_'+tabId+'_'+idx;
+  if(f.key==='제목'){
+    // optionsFn으로 자동 파생되는 값이라 입력 UI 없이 미리보기 텍스트만 보여준다(buildFieldHtml도
+    // 모달에서 이 필드를 아예 렌더링하지 않는 것과 동일한 취급) — refreshAllInlineCascadeSelects가
+    // 날짜 등 의존 필드 변경 때마다 updateInlineTitlePreview로 갱신한다.
+    return `<td class="inline-add-title" id="${id}_preview">자동생성</td>`;
+  }
+  const curVal = f.defaultValue!=null ? f.defaultValue : '';
+  return `<td class="inline-add-cell">${buildFieldControlHtml(f, id, curVal, tabId, 'inline')}</td>`;
+}
+function buildInlineAddRowHtml(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return '';
+  // 삭제모드 중엔 thead 맨 앞에 체크박스 열이 동적으로 붙으므로(updateDeleteHeaderCheckbox) 인라인
+  // 행도 같은 자리에 빈 칸을 하나 넣어 컬럼이 어긋나지 않게 한다.
+  const delPad = DELETE_MODE[tabId] ? '<td></td>' : '';
+  const cells=tabDef.listCols.map(key=>{
+    const idx=tabDef.fields.findIndex(x=>x.key===key);
+    return idx>=0 ? buildInlineFieldCell(tabDef.fields[idx], idx, tabId) : '<td></td>';
+  }).join('');
+  return `<tr class="inline-add-row" id="inlineAddRow-${tabId}">${delPad}${cells}<td>
+      <button type="button" class="inline-add-btn" id="inlineAddBtn-${tabId}" onclick="submitInlineRow('${tabId}')" title="등록" aria-label="등록">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </td></tr>`;
 }
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
@@ -2555,6 +2627,72 @@ function getFieldValue(f, idx){
   }
   const raw=(document.getElementById(id)?.value||'').trim();
   return f.type==='number' ? stripThousands(raw) : raw;
+}
+// ── 인라인 행 추가 전용 — 위 refreshCascadeSelect/refreshAllCascadeSelects/getFieldValue와 로직은
+// 동일하되 ff_{idx}(모달) 대신 ir_{tabId}_{idx}(인라인 행) id를 읽고 쓴다. 모달과 별개 DOM이라
+// 값도 독립적으로 관리된다(2026-08-04).
+function getInlineFieldValue(tabId, f, idx){
+  const id='ir_'+tabId+'_'+idx;
+  if(f.type==='select' || f.uiType==='cascade-select' || f.uiType==='fixed-select'){
+    const sel=document.getElementById(id);
+    if(!sel) return '';
+    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
+    return sel.value;
+  }
+  const raw=(document.getElementById(id)?.value||'').trim();
+  return f.type==='number' ? stripThousands(raw) : raw;
+}
+function refreshInlineCascadeSelect(tabId, contentIdx){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  const f=tabDef.fields[contentIdx];
+  if(!f || f.uiType!=='cascade-select') return;
+  const id='ir_'+tabId+'_'+contentIdx;
+  const sel=document.getElementById(id);
+  if(!sel) return;
+  const ci=document.getElementById(id+'c');
+  const depValues={};
+  (f.dependsOn||[]).forEach(depKey=>{
+    const depIdx=tabDef.fields.findIndex(x=>x.key===depKey);
+    depValues[depKey]=depIdx>=0 ? getInlineFieldValue(tabId, tabDef.fields[depIdx], depIdx) : '';
+  });
+  const opts=f.optionsFn(depValues);
+  let curVal = sel.value==='__custom__' ? (ci?ci.value:'') : sel.value;
+  curVal = (curVal===undefined||curVal===null) ? '' : String(curVal);
+  // 인라인 행은 "수정 모드"가 없어 기존 값을 보존할 이유가 없다 — 의존값이 바뀌면 항상 새 후보로 스냅.
+  if(opts.length===1) curVal=opts[0];
+  else if(opts.length===0 && curVal) curVal='';
+  const isCustom = !!curVal && !opts.includes(curVal);
+  const emptyOptText = opts.length ? '선택' : (f.emptyHintFn ? f.emptyHintFn(depValues) : (f.emptyHint||'선택'));
+  sel.innerHTML = `<option value="">${esc(emptyOptText)}</option>`
+    + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
+    + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
+  if(!isCustom && opts.includes(curVal)) sel.value=curVal;
+  if(ci){
+    if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
+  }
+}
+function updateInlineTitlePreview(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  const idx=tabDef.fields.findIndex(f=>f.key==='제목');
+  if(idx<0) return;
+  const f=tabDef.fields[idx];
+  const dep={};
+  (f.dependsOn||[]).forEach(k=>{
+    const depIdx=tabDef.fields.findIndex(x=>x.key===k);
+    dep[k]=depIdx>=0 ? getInlineFieldValue(tabId, tabDef.fields[depIdx], depIdx) : '';
+  });
+  const t=(f.optionsFn(dep)||[])[0];
+  const el=document.getElementById('ir_'+tabId+'_'+idx+'_preview');
+  if(el) el.textContent=t||'자동생성';
+}
+// cascadeTrigger 필드의 onchange에서 호출 — 해당 탭 인라인 행의 캐스케이딩 select 전부 재계산
+function refreshAllInlineCascadeSelects(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  tabDef.fields.forEach((f,idx)=>{ if(f.uiType==='cascade-select') refreshInlineCascadeSelect(tabId, idx); });
+  updateInlineTitlePreview(tabId);
 }
 // 월간점검 탭 신규등록 — 구분 선택 시 MONTHLY_CHECKLIST 표준 항목을 설비명별로 묶어 체크리스트로
 // 보여주고, 체크된 항목마다 점검결과를 개별 입력해 여러 설비·점검내용을 한 번에 등록한다(2026-07-28
@@ -3267,7 +3405,14 @@ function openAddModal(tabId, recordId){
   // 조치사항)도 필드 수·입력폭이 비슷해 좁은 440px에서는 답답해 보인다는 피드백으로 함께 확장
   // (2026-07-22). photo/power는 필드 6개뿐이고 값도 짧아 440px 그대로 유지.
   document.querySelector('#addModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator' || tabId==='transformer' || tabId==='monthly' || tabId==='task');
-  document.getElementById('addModal').classList.add('modal-open');
+  { const am=document.getElementById('addModal');
+    am.classList.add('modal-open');
+    am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+    if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+    void am.offsetWidth; // 강제 리플로우 — rAF는 백그라운드 탭에서 지연/중단될 수 있어(2026-08-04 자동화
+    // 테스트로 확인) 대신 동기 리플로우로 트랜지션 시작점을 확정한다.
+    am.classList.add('drawer-in');
+  }
   document.body.style.overflow='hidden';
   initDraggableModals();
   // 점검사진(type:'file') 필드 초기화 — 수정 모드면 기존 사진을 _photoFiles에 로드(photo 탭
@@ -3293,20 +3438,24 @@ function openAddModal(tabId, recordId){
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget) return;
+  const am=document.getElementById('addModal');
   // 보고서입력 탭에서 인라인으로 떠 있는 동안은(제출 성공 후 submitXForm이 이 함수를 호출) 모달을
   // 닫는 대신 원래 자리로 되돌리고 현재 보고서 페이지를 다시 그린다 — 기존 7탭에서는 이 조건이
   // 항상 false라 아래 동작이 그대로 유지된다.
-  if(document.getElementById('addModal').classList.contains('modal-inline')){
+  if(am.classList.contains('modal-inline')){
     gotoReportPage(_reportCurPage); // 내부에서 unmountAddModalInline() 후 현재 페이지를 다시 그림
     return;
   }
-  document.getElementById('addModal').classList.remove('modal-open');
+  // 드로어를 먼저 슬라이드아웃시키고(.drawer-in 제거), 트랜지션(.28s)이 끝난 뒤 modal-open을 떼서
+  // display:none 처리한다 — 즉시 떼면 transform 전환이 재생될 새 없이 바로 사라져 보인다.
+  am.classList.remove('drawer-in');
   document.body.style.overflow='';
   resetModalDragPos('addModal');
   hideAddModalProgress();
   EDIT_TAB=null; EDIT_PAGE_ID=null;
   _photoFiles=[];
   _photoMultiRows=[];
+  _addModalCloseTimer=setTimeout(()=>{ am.classList.remove('modal-open'); _addModalCloseTimer=null; }, 280);
 }
 // 업로드 파일 1개당 용량 제한(2026-07-27 사용자 요청) — 이미지는 캔버스로 재인코딩해 자동 압축,
 // 압축이 불가능한 파일(문서 등)이나 압축 후에도 초과하는 이미지는 업로드를 막고 안내한다.
@@ -3687,6 +3836,52 @@ function submitAddForm(){
       alert((isEdit?'수정':'등록')+' 실패: '+e.message);
       console.error(e);
     });
+}
+// 인라인 행 추가(monthly/transformer/power/task) 제출 — submitAddForm의 제네릭 단일 페이지 경로와
+// 동일한 검증·payload 조립 로직이되, 값을 ff_{idx}(모달) 대신 ir_{tabId}_{idx}(인라인 행)에서
+// 읽고 항상 신규 생성(POST)만 한다(수정 모드 없음). 성공 시 loadTabData가 renderTabTable을 다시
+// 불러 인라인 행 자체가 빈 값으로 재생성되므로 별도 초기화 코드가 필요 없다(2026-08-04).
+async function submitInlineRow(tabId){
+  const tabDef=getTabDef(tabId);
+  if(!tabDef) return;
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
+
+  const values={};
+  let missing=null;
+  tabDef.fields.forEach((f,idx)=>{
+    if(f.header) return;
+    if(f.key==='제목'){
+      const dep={}; (f.dependsOn||[]).forEach(k=>{ dep[k]=values[k]; });
+      values[f.key]=(f.optionsFn(dep)||[])[0]||null;
+      return;
+    }
+    const v=getInlineFieldValue(tabId, f, idx);
+    values[f.key]=v;
+    const isEmpty=Array.isArray(v) ? v.length===0 : !v;
+    if(f.required && isEmpty && !missing) missing=f.label||f.key;
+  });
+  if(missing){ alert(missing+'을(를) 입력해주세요.'); return; }
+
+  const properties={};
+  tabDef.fields.forEach(f=>{
+    if(f.header) return;
+    const val=buildPropValue(f.type, values[f.key]);
+    if(val) properties[f.key]=val;
+  });
+
+  const btn=document.getElementById('inlineAddBtn-'+tabId);
+  if(btn) btn.disabled=true;
+  try{
+    const r=await fetch(CFG.workerUrl+'/v1/pages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:tabDef.dbId},properties}) });
+    if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+': '+t); }
+    await r.json();
+    loadTabData(tabId);
+    toast('등록되었습니다.');
+  }catch(e){
+    if(btn) btn.disabled=false;
+    alert('등록 실패: '+e.message);
+    console.error(e);
+  }
 }
 // 전기설비기록 신규등록/수정 — 부모(DB1) 1건 + ACB(DB2) 9건 + 설비현황(DB3) 32건을 순차 upsert
 // (수정 모드는 기존 자식 페이지가 있으면 PATCH, 없으면 relation과 함께 신규 생성 — 통째로 지웠다 새로 만들지 않음)
