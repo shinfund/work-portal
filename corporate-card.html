@@ -81,7 +81,9 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
 .top-tab{flex:0 0 auto;min-width:92px;border:none;background:transparent;color:var(--txt2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
-.top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
+html[data-theme="dark"] .top-tab.active{color:#fff}
+.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab.active .tt-label{border-bottom-color:var(--sky)}
 
 .main{padding:14px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
@@ -144,9 +146,9 @@ tr:hover td{background:var(--sky50)}
 .lim-bar-track{flex:1;height:6px;background:var(--border);border-radius:10px;overflow:hidden}
 .lim-bar-fill{height:100%;border-radius:10px;transition:width .4s}
 .lim-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:8px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:40px;font-weight:600}
-.search-wrap{position:relative;margin-bottom:10px}
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:6px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:34px;font-weight:600}
+.search-wrap{position:relative;flex:1;min-width:180px}
 .search-wrap input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:15px;background:var(--card);color:var(--txt);font-family:inherit;outline:none;transition:.2s}
 .search-wrap input:focus{border-color:var(--sky)}
 .search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
@@ -334,49 +336,49 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   </div>
 </div>
 <div class="top-tabs">
-  <button class="top-tab active" id="nav-detail" onclick="switchPanel('detail')">사용내역</button>
-  <button class="top-tab" id="nav-overview" onclick="switchPanel('overview')">요약</button>
-  <button class="top-tab" id="nav-account" onclick="switchPanel('account')">계정별</button>
-  <button class="top-tab" id="nav-limit" onclick="switchPanel('limit')">한도별</button>
-  <button class="top-tab" id="nav-monthly" onclick="switchPanel('monthly')">월별추이</button>
+  <button class="top-tab active" id="nav-detail" onclick="switchPanel('detail')"><span class="tt-label">사용내역</span></button>
+  <button class="top-tab" id="nav-overview" onclick="switchPanel('overview')"><span class="tt-label">요약</span></button>
+  <button class="top-tab" id="nav-account" onclick="switchPanel('account')"><span class="tt-label">계정별</span></button>
+  <button class="top-tab" id="nav-limit" onclick="switchPanel('limit')"><span class="tt-label">한도별</span></button>
+  <button class="top-tab" id="nav-monthly" onclick="switchPanel('monthly')"><span class="tt-label">월별추이</span></button>
 </div>
 </div>
 <div class="main">
-  <div class="month-sel" id="monthSel">
-    <div class="dd-wrap" id="ddYearWrap">
-      <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')"><span id="ddYearLabel">2026년</span></div>
-      <div class="dd-menu" id="ddYearMenu"><div id="ddYearOpts"></div></div>
-    </div>
-    <span class="dd-sep">&middot;</span>
-    <div class="dd-wrap" id="ddMonthWrap">
-      <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')"><span id="ddMonthLabel">전체</span></div>
-      <div class="dd-menu" id="ddMonthMenu"><div id="ddMonthOpts"></div></div>
-    </div>
+  <div class="month-sel" id="monthSel" style="display:none">
     <div class="month-sub-row" id="monthSubRow"></div>
   </div>
   <div id="panel-detail" class="panel active">
     <div class="sc">
-      <div class="sc-hd" style="justify-content:space-between">
-        <span>사용 내역 <span class="badge" id="demoBadge" style="display:none;background:var(--amber50);color:var(--amber);border-color:var(--amber100)">🔒 데모 — 보안항목 마스킹</span></span>
-        <div style="display:flex;gap:8px">
-          <button class="tb-action-btn tb-add" onclick="openAddModal()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            신규등록
-          </button>
-          <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportCardExcel()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span id="excelExportLabel">엑셀 생성</span>
-          </button>
+      <div class="filter-row" id="detailFilterRow">
+        <div id="dateDDGroup" style="display:flex;align-items:center;gap:8px">
+          <div class="dd-wrap" id="ddYearWrap">
+            <div class="dd-btn" id="ddYearBtn" onclick="toggleDD('year')"><span id="ddYearLabel">2026년</span></div>
+            <div class="dd-menu" id="ddYearMenu"><div id="ddYearOpts"></div></div>
+          </div>
+          <span class="dd-sep">&middot;</span>
+          <div class="dd-wrap" id="ddMonthWrap">
+            <div class="dd-btn" id="ddMonthBtn" onclick="toggleDD('month')"><span id="ddMonthLabel">전체</span></div>
+            <div class="dd-menu" id="ddMonthMenu"><div id="ddMonthOpts"></div></div>
+          </div>
         </div>
-      </div>
-      <div class="filter-row">
         <select class="filter-select" id="filterCat" onchange="renderDetail()"><option value="">전체 계정</option></select>
+        <div class="search-wrap">
+          <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
+        </div>
+        <button class="tb-action-btn tb-add" onclick="openAddModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          신규등록
+        </button>
+        <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportCardExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
       </div>
-      <div class="search-wrap">
-        <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="detail-count" id="detailCount"></div>
+        <span class="badge" id="demoBadge" style="display:none;background:var(--amber50);color:var(--amber);border-color:var(--amber100)">🔒 데모 — 보안항목 마스킹</span>
       </div>
-      <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>날짜</th><th>지출내역</th><th>상호</th><th style="width:1%">계정</th><th class="r">공급가</th><th class="r">합계</th></tr></thead>
         <tbody id="dtTbody"></tbody>
@@ -567,8 +569,20 @@ function switchPanel(name){
   if(name===_activePanel)return;
   _activePanel=name;
   PANELS.forEach(p=>{document.getElementById("panel-"+p).classList.toggle("active",p===name);document.getElementById("nav-"+p).classList.toggle("active",p===name);});
-  const MONTH_SEL_PANELS=["overview","account","limit","detail"];
-  document.getElementById("monthSel").style.display=MONTH_SEL_PANELS.includes(name)?"flex":"none";
+  // 연/월 드롭다운(dateDDGroup)은 요약/계정별/한도별 탭에서는 상단 공유 바(monthSel)에,
+  // 사용내역 탭에서는 필터 행(detailFilterRow)에 위치 — 같은 엘리먼트를 옮겨서 상태를 공유한다.
+  const MONTH_SEL_PANELS=["overview","account","limit"];
+  const monthSel=document.getElementById("monthSel"),dateGroup=document.getElementById("dateDDGroup");
+  if(MONTH_SEL_PANELS.includes(name)){
+    monthSel.style.display="flex";
+    if(dateGroup.parentElement!==monthSel)monthSel.insertBefore(dateGroup,monthSel.firstChild);
+  }else{
+    monthSel.style.display="none";
+    if(name==="detail"){
+      const filterRow=document.getElementById("detailFilterRow");
+      if(dateGroup.parentElement!==filterRow)filterRow.insertBefore(dateGroup,filterRow.firstChild);
+    }
+  }
   renderPanel(name);
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -611,7 +625,7 @@ function updateMonthLabel(){
   const n=filteredRD().length;
   document.getElementById("monthSubRow").textContent=n?`총 ${n}건`:"데이터 없음";
 }
-document.addEventListener("click",e=>{const sel=document.getElementById("monthSel");if(sel&&!sel.contains(e.target))closeAllDD();});
+document.addEventListener("click",e=>{const sel=document.getElementById("monthSel"),fr=document.getElementById("detailFilterRow");const inside=(sel&&sel.contains(e.target))||(fr&&fr.contains(e.target));if(!inside)closeAllDD();});
 function renderOverview(recs){
   const totalThis=recs.reduce((s,r)=>s+r.total,0);
   const monLbl=curMonth?`${curYear}년 ${curMonth}월`:curYear+"년 전체";
