@@ -73,7 +73,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:400;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
 .top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
@@ -85,20 +85,17 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 /* ── MONTH SELECTOR ── */
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
 .dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
-.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
+.dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow-y:auto;max-height:280px}
 .dd-menu.open{display:block}
-.dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
-.dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt);text-align:center;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+/* 목록방식(3-9 표준) — 년/월 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 .dd-opt.has{color:var(--sky600)}
-.dd-year-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border)}
-.dd-year-nav{background:none;border:none;font-size:16px;font-weight:700;color:var(--sky600);cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
-.dd-year-val{font-size:13px;font-weight:700;color:var(--txt)}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 
@@ -132,8 +129,8 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
 thead tr{background:var(--sky50)}
-th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
-html[data-theme="dark"] th{color:#fff;font-weight:400}
+th{padding:7px 10px;text-align:left;font-size:13px;font-weight:400;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+html[data-theme="dark"] th{color:#fff}
 th.r,td.r{text-align:right}
 td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
@@ -489,11 +486,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="ddYearLabel">2026년</span>
       </div>
       <div class="dd-menu" id="ddYearMenu">
-        <div class="dd-year-row">
-          <button class="dd-year-nav" aria-label="이전 연도" onclick="shiftDDYear(-1);event.stopPropagation()">‹</button>
-          <span class="dd-year-val" id="ddYearCenter">2026</span>
-          <button class="dd-year-nav" aria-label="다음 연도" onclick="shiftDDYear(1);event.stopPropagation()">›</button>
-        </div>
         <div id="ddYearOpts"></div>
       </div>
     </div>
@@ -504,7 +496,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <span id="ddMonthLabel">4월</span>
       </div>
       <div class="dd-menu" id="ddMonthMenu">
-        <div class="dd-grid" id="ddMonthOpts"></div>
+        <div id="ddMonthOpts"></div>
       </div>
     </div>
     <div class="month-sub-row" id="monthSub"></div>
@@ -847,27 +839,17 @@ function closeAllDD(){
   document.getElementById('ddYearMenu').classList.remove('open');
   document.getElementById('ddMonthMenu').classList.remove('open');
 }
-function shiftDDYear(d){
-  ddYearBase+=d;
-  document.getElementById('ddYearCenter').textContent=ddYearBase;
-  renderDDYear();
-}
 function renderDDYear(){
-  // 데이터 보유 연도 자동 감지 후 ddYearBase ±2년과 합산
+  // 목록방식(3-9 표준): 데이터 보유 연도 자동 감지 후 최신순 단일 리스트로 표시(그리드/이전·다음 없음)
   const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
   dataYears.add(curYear);
-  const minY=Math.min(ddYearBase-2,...dataYears);
-  const maxY=Math.max(ddYearBase+2,...dataYears);
-  const years=[];
-  for(let y=minY;y<=maxY;y++) years.push(y);
+  const years=[...dataYears].sort((a,b)=>b-a);
   document.getElementById('ddYearOpts').innerHTML=
-    `<div style="display:grid;grid-template-columns:repeat(3,1fr);">`+
-    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}${dataYears.has(y)&&y!==curYear?' has':''}" onclick="pickYear(${y})">${y}년</div>`).join('')+
-    `</div>`;
+    years.map(y=>`<div class="dd-opt${y===curYear?' sel':''}${dataYears.has(y)&&y!==curYear?' has':''}" onclick="pickYear(${y})">${y}년</div>`).join('');
 }
 function renderDDMonth(){
   const MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" style="grid-column:1/-1;border-bottom:1px solid var(--border2)" onclick="pickMonth(0)">전체</div>`;
+  const allOpt=`<div class="dd-opt${curMonth===0?' sel':''}" onclick="pickMonth(0)">전체</div>`;
   document.getElementById('ddMonthOpts').innerHTML=allOpt+MONTHS.map((lbl,i)=>{
     const m=i+1;
     const ym=`${curYear}-${String(m).padStart(2,'0')}`;
