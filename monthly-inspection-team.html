@@ -83,10 +83,10 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV (7개 탭 — 좁은 화면에서는 가로 스크롤) ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
-.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
 /* "기록관리" 하위 탭 — report-page-chip을 그대로 재사용(보라색)해 입력폼 탭 안 페이지 칩과 같은
    "하위 탭" 시각 언어를 유지한다(2026-08-05). */
@@ -102,7 +102,7 @@ html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
@@ -293,7 +293,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .report-toolbar .dd-wrap,.report-toolbar-sep{flex-shrink:0}
 .report-toolbar-sep{width:2px;align-self:stretch;background:var(--gray200);border-radius:2px;margin:0 6px}
 .report-page-chips{display:flex;gap:6px;flex-shrink:0}
-.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
 html[data-theme="dark"] .report-page-chip{color:#fff}
 .report-paper{background:var(--card);color:var(--txt);max-width:1400px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}

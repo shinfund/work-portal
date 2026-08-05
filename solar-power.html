@@ -84,10 +84,10 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
-.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
 
 /* ── MAIN ── */
@@ -97,7 +97,7 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
 /* 하자보수현황 앱 dd-btn/dd-menu/dd-opt와 수치·색상 완전 동일(2026-07-05 확정 — work-portal 공통 기준) */
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}

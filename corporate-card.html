@@ -79,17 +79,17 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;border:none;background:transparent;color:var(--txt2);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
-.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
 
 .main{padding:14px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:14px;box-shadow:var(--shadow);padding:8px 14px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;position:relative;user-select:none}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;position:relative;user-select:none}
 .dd-btn::after{content:'\25BE';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
 .dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow-y:auto;max-height:280px}
 .dd-menu.open{display:block}

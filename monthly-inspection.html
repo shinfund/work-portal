@@ -89,12 +89,12 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV (7개 탭 — 좁은 화면에서는 가로 스크롤) ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:8px 6px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
 /* 밑줄을 버튼 전체 폭 대비 %가 아니라 글자 자체(tt-label, 내용만큼만 넓어지는 inline-block)에
    달아서, 글자가 길어질수록 밑줄이 상대적으로 짧아 보이던 문제를 없앤다(2026-07-31 사용자 지적). */
-.top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
 /* "기록관리" 하위 탭 — report-page-chip을 그대로 재사용(보라색)해 입력폼 탭 안 페이지 칩과 같은
    "하위 탭" 시각 언어를 유지한다(2026-08-05). */
@@ -123,7 +123,7 @@ html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 .report-page-chips{display:flex;gap:6px;flex-shrink:0}
 /* 보고서 페이지 칩은 필터 드롭다운(--sky)과 색을 분리해 한눈에 구분되게 --purple 계열 사용(앱 전체에서
    "보고서 생성" 버튼에 이미 쓰이는 색과 통일), 모양도 완전 알약형(16px)에서 둥근 사각형(10px)으로 변경 */
-.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
 /* --purple는 --sky/--sky600과 달리 다크모드용 밝은 변형이 없어(:root에 고정값) 미선택 칩 글자가 어두운
    배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서는 흰색으로 오버라이드(가독성 최우선,
@@ -178,7 +178,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
@@ -3527,8 +3527,7 @@ function photoMultiDateSortKey(a,b){
 // 섹션을 없애고 엑셀 사진대지 서식처럼 칸마다 완결된 정보를 담도록 사용자 요청).
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
-    <label class="modal-label">사진대지(#1~#6) <span class="modal-required">*</span></label>
-    <div id="photoMultiRowsList" style="margin-top:8px"></div>
+    <div id="photoMultiRowsList"></div>
     <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="photoMultiAddRow()">+ 행 추가</button>
   </div>`;
 }
