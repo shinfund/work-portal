@@ -177,13 +177,13 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky800-solid);color:#fff;border-color:var(--sky800-solid)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky800-solid);color:#fff;font-weight:700}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 
 /* ── SECTION CARD ── */
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
@@ -216,6 +216,7 @@ tr:hover td{background:var(--sky50)}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -3449,6 +3450,20 @@ function removePhotoFile(idx, fieldId){
 // 터널·날짜당 고정 1~6번 슬롯이라, 행마다 1~6 select로 번호를 고르게 하고 사진설명은 해당
 // 터널·번호 조합의 과거 입력값을 datalist로 제안한다(자유입력도 가능).
 var _photoMultiRows=[], _photoMultiNextKey=1; // [{key,num,desc,files:[{url,name}],tunnel,date}]
+// 점검사진 카드 좌측 색상 띠 — 점검팀 앱(monthly-inspection-team.html)의 터널별 팔레트를 그대로
+// 이식(2026-08-05 사용자 요청, "점검팀앱 기준 색상"). 안전관리 앱은 보고서 하나가 터널 1곳
+// 고정이라 카드 간 색상 구분 실익은 적지만, 카드 카운트가 흐트러졌을 때 눈에 띄는 시각적 구분용으로
+// 요청됨 — 배열 인덱스가 점검팀 앱과 동일해야 같은 터널이 두 앱에서 같은 색으로 보인다.
+const TUNNEL_OPTIONS_STD_TEAM=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+const TUNNEL_COLOR_PALETTE=['#4C6EF5','#12B886','#F59F00','#E64980','#7048E8','#2F9E44','#E8590C','#1098AD','#F03E3E','#5C940D','#364FC7','#AE3EC9','#087F5B'];
+function tunnelColor(tunnel){
+  // 안전관리 앱은 "청하터널(주)"·"청하터널(부)"처럼 점검팀 앱에 없는 접미사 변형을 쓴다 — 접미사를
+  // 떼어낸 이름으로도 한 번 더 찾아야 "청하터널" 계열 카드가 회색(미매칭 fallback)으로 안 보인다.
+  const base=(tunnel||'').replace(/(\(주\)|\(부\))$/,'');
+  let idx=TUNNEL_OPTIONS_STD_TEAM.indexOf(tunnel);
+  if(idx<0) idx=TUNNEL_OPTIONS_STD_TEAM.indexOf(base);
+  return idx>=0 ? TUNNEL_COLOR_PALETTE[idx % TUNNEL_COLOR_PALETTE.length] : 'var(--border)';
+}
 function newPhotoMultiRow(num, desc){
   // 터널명은 보고서입력 페이지에서 이미 선택된 터널(REPORT_SEL.tunnel)로 기본값을 채워 반복 입력을
   // 줄인다 — 다른 터널 사진이 섞인 경우엔 카드에서 개별로 바꾸면 된다(2026-08-03).
@@ -3519,6 +3534,7 @@ function renderPhotoMultiRows(){
     const descOpts=descOptsArr.map(d=>`<option value="${esc(d)}"${!isCustomDesc&&row.desc===d?' selected':''}>${esc(d)}</option>`).join('');
     const tunnelOptsHtml=tunnelOpts.map(o=>`<option value="${esc(o)}"${row.tunnel===o?' selected':''}>${esc(o)}</option>`).join('')
       + (row.tunnel && !tunnelOpts.includes(row.tunnel) ? `<option value="${esc(row.tunnel)}" selected>${esc(row.tunnel)}</option>` : '');
+    const accent=tunnelColor(row.tunnel);
     const photo=row.files[0];
     // 사진을 선택하면 작은 썸네일 목록 대신 카드 폭만큼 꽉 채운 큰 미리보기로 보여준다(2026-08-03
     // 사용자 요청) — 이미지를 다시 누르면 바로 교체 파일선택창이 뜨고, ✕로 제거하면 원래 "사진 선택"
@@ -3533,9 +3549,12 @@ function renderPhotoMultiRows(){
       // 안 보이던 문제인데, 카드에 맞춰 width:100%로 늘리면 내용이 flex-start(왼쪽)로 쏠린다 —
       // justify-content:center로 직접 보정(2026-08-10, 다른 tb-action-btn 공용 스타일은 건드리지 않음).
       : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
-    return `<div style="border:1px solid var(--border);border-radius:var(--r8);padding:10px;position:relative">
+    return `<div style="border:1px solid var(--border);border-left:4px solid ${accent};border-radius:var(--r8);padding:10px;position:relative">
       ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
-      <div style="font-weight:800;font-size:13px;margin-bottom:8px">#${esc(row.num)}</div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
+        <span style="font-weight:800;font-size:13px">#${esc(row.num)}</span>
+      </div>
       <div style="display:flex;gap:8px">
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">터널명</div>

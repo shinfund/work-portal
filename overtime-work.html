@@ -55,10 +55,6 @@ html[data-theme="dark"]{
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);
   /* 근무형태 뱃지 — 다크 톤 */
 }
-/* 다크 모드 전용 — 선택된 dd-btn/dd-opt은 --sky800(다크에서 밝은 파스텔블루로 재정의됨)
-   대신 하자보수현황 앱과 동일하게 항상 고정된 짙은 네이비를 쓴다(2026-07-10, 색상 통일) */
-html[data-theme="dark"] .dd-btn.active{background:#032F62;border-color:#032F62}
-html[data-theme="dark"] .dd-opt.sel{background:#032F62}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
@@ -91,14 +87,14 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 26px 5px 10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px;white-space:nowrap;display:flex;align-items:center;gap:4px;-webkit-tap-highlight-color:transparent;user-select:none}
 .dd-btn::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 5px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:100%;display:none;overflow:hidden}
 .dd-menu.open{display:block}
 .dd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
 .dd-opt{padding:9px 6px;font-size:13px;font-weight:600;color:var(--txt);text-align:center;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky);color:#fff;font-weight:700}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 .dd-opt.has{color:var(--sky600)}
 .dd-year-row{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-bottom:1px solid var(--border)}
 .dd-year-nav{background:none;border:none;font-size:16px;font-weight:700;color:var(--sky600);cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
@@ -152,6 +148,7 @@ tr:hover td{background:var(--sky50)}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -258,6 +255,11 @@ tr:hover td{background:var(--sky50)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 /* 다크모드에서 네이티브 date input의 달력 아이콘이 검은색으로 고정 렌더링돼 배경과 거의
    구분이 안 되는 문제 — 아이콘 색을 반전시켜 밝게 보이도록 보정(2026-07-10) */
+/* 날짜칸 달력 아이콘을 우측→좌측으로(월간점검 안전관리·점검팀 앱과 동일 패턴, 2026-08-05 전체 앱 확대
+   적용) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. 아이콘과 숫자가
+   겹치지 않도록 좌측 패딩을 아이콘 폭만큼 확보한다. */
+input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
+input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
