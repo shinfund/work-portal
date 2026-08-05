@@ -147,9 +147,9 @@ tr:hover td{background:var(--sky50)}
 .lim-bar-fill{height:100%;border-radius:10px;transition:width .4s}
 .lim-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:6px 12px;font-size:14px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:34px;font-weight:600}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:6px 12px;font-size:13px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:34px;font-weight:600}
 .search-wrap{position:relative;flex:1;min-width:180px}
-.search-wrap input{width:100%;padding:10px 14px 10px 36px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:15px;background:var(--card);color:var(--txt);font-family:inherit;outline:none;transition:.2s}
+.search-wrap input{width:100%;padding:8px 14px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:13px;background:var(--card);color:var(--txt);font-family:inherit;outline:none;transition:.2s;min-height:34px}
 .search-wrap input:focus{border-color:var(--sky)}
 .search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
 .detail-count{font-size:13px;color:var(--txt2);padding:2px 0 8px;font-weight:600}
@@ -375,10 +375,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <span id="excelExportLabel">엑셀 생성</span>
         </button>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div class="detail-count" id="detailCount"></div>
-        <span class="badge" id="demoBadge" style="display:none;background:var(--amber50);color:var(--amber);border-color:var(--amber100)">🔒 데모 — 보안항목 마스킹</span>
-      </div>
+      <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>날짜</th><th>지출내역</th><th>상호</th><th style="width:1%">계정</th><th class="r">공급가</th><th class="r">합계</th></tr></thead>
         <tbody id="dtTbody"></tbody>
@@ -658,7 +655,7 @@ function renderOverview(recs){
     buildCatBars(catArr,maxVal,totalThis)
     :emptyHTML();
   const top5=[...recs].sort((a,b)=>b.total-a.total).slice(0,5);
-  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="color:var(--teal600);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
+  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="color:var(--teal600);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
 }
 function buildCatBars(catArr,maxVal,totalRef){
   return catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/totalRef*100),barW=Math.round(amt/maxVal*100);return`<div class="catbar-row"><div class="catbar-name">${esc(cat)}</div><div class="catbar-track"><div class="catbar-fill" style="width:${barW}%;background:${c.dot}">${barW>=18?fmt(amt):""}</div></div><div class="catbar-amt">${fmt(amt)}원</div><div class="catbar-pct">${pct}%</div></div>`;}).join("");
@@ -675,7 +672,7 @@ function renderAccount(recs){
   const catArr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]),total=catArr.reduce((s,[,v])=>s+v,0)||1,maxVal=catArr[0]?catArr[0][1]:1;
   document.getElementById("accBadge").textContent=catArr.length+"개";
   document.getElementById("accCatBars").innerHTML=catArr.length?buildCatBars(catArr,maxVal,total):emptyHTML();
-  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r">${cntMap[cat]}건</td><td class="r" style="color:var(--teal600)">${fmt(amt)}</td><td class="r" style="font-weight:700;color:${c.dot}">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
+  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r">${cntMap[cat]}건</td><td class="r" style="color:var(--teal600)">${fmt(amt)}</td><td class="r" style="color:${c.dot}">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
 function unifiedAccount(r){const cat=r.cat||"",desc=r.desc||"";if(cat==="비급여성(생수)")return"생수대금";if(cat==="도서인쇄비")return"도서인쇄비";if(cat==="차량비(법인카드)")return"차량비(법인카드)";if(cat==="차량비"){if(/순찰차|875너|\*{3}너/.test(desc))return"차량비(점검차)";if(/업무차|396거|\*{3}거/.test(desc))return"차량비(업무차)";return"차량비(점검차)";}if(cat==="비급여성"){if(/회식/.test(desc))return"직원회식";if(/석식|중식/.test(desc))return"중석식대";return"다과부식";}if(cat==="소모품비")return"소모품비";return null;}
 function renderLimit(recs){
@@ -702,7 +699,7 @@ function renderLimit(recs){
     if(r.cat!==prevCat&&prevCat)tbody+=flushGroup(prevCat);
     prevCat=r.cat;
     const ud=fmt(r.used);
-    tbody+=`<tr><td style="font-size:12px;color:var(--txt2)">${esc(r.cat)}</td><td style="font-size:12px;color:var(--txt3)">${esc(r.nm)}</td><td class="r" style="font-size:13px">${fmt(r.lim)}</td><td class="r" style="font-size:13px;font-weight:600">${ud}</td><td class="r" style="font-size:13px;font-weight:700;color:${remain>=0?"var(--teal600)":"var(--coral)"}">${fmt(Math.abs(remain))}${remain<0?" 초과":""}</td><td><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(pct,100)}%;background:${barClr}"></div></div><span style="font-size:11px;font-weight:600;color:${barClr};min-width:30px;text-align:right">${pct}%</span></div></td></tr>`;
+    tbody+=`<tr><td style="font-size:12px;color:var(--txt)">${esc(r.cat)}</td><td style="font-size:12px;color:var(--txt)">${esc(r.nm)}</td><td class="r" style="font-size:13px">${fmt(r.lim)}</td><td class="r" style="font-size:13px">${ud}</td><td class="r" style="font-size:13px;color:${remain>=0?"var(--teal600)":"var(--coral)"}">${fmt(Math.abs(remain))}${remain<0?" 초과":""}</td><td><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(pct,100)}%;background:${barClr}"></div></div><span style="font-size:11px;font-weight:600;color:${barClr};min-width:30px;text-align:right">${pct}%</span></div></td></tr>`;
   });
   if(prevCat)tbody+=flushGroup(prevCat);
   tbody+=`<tr style="background:var(--sky50);font-weight:800;border-top:2px solid var(--sky100)"><td colspan="2" style="color:var(--sky800);padding:11px 12px">총합계</td><td class="r" style="padding:11px 12px">${fmt(totalLim)}</td><td class="r" style="padding:11px 12px">${fmt(totalUsed)}</td><td class="r" style="padding:11px 12px;color:${totalRemain>=0?"var(--teal600)":"var(--coral)"}">${fmt(Math.abs(totalRemain))}${totalRemain<0?" 초과":""}</td><td style="padding:11px 12px;font-weight:800;color:${totalPct>80?"var(--coral)":"var(--teal600)"}">${totalPct}%</td></tr>`;
@@ -772,7 +769,7 @@ function renderMonthly(){
     const recs=RD.filter(r=>r.month===mon),tot=recs.reduce((s,r)=>s+r.total,0);if(!recs.length)return"";
     const catMap={};recs.forEach(r=>{catMap[r.cat]=(catMap[r.cat]||0)+r.total;});
     const topCat=Object.entries(catMap).sort((a,b)=>b[1]-a[1])[0],c=topCat?clr(topCat[0]):{cls:"cat-cx"};
-    return`<tr><td style="white-space:nowrap;font-weight:700">${mon.replace("-","년 ")}월</td><td class="r" style="color:var(--teal600)">${fmt(tot)}</td><td>${topCat?`<span class="cat-tag ${c.cls}">${esc(topCat[0])}</span>`:""}</td><td class="r" style="color:var(--txt2)">${recs.length}건</td></tr>`;
+    return`<tr><td style="white-space:nowrap">${mon.replace("-","년 ")}월</td><td class="r" style="color:var(--teal600)">${fmt(tot)}</td><td>${topCat?`<span class="cat-tag ${c.cls}">${esc(topCat[0])}</span>`:""}</td><td class="r" style="color:var(--txt)">${recs.length}건</td></tr>`;
   }).join("")||`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
 function toggleTrendDD(){
@@ -794,10 +791,7 @@ function renderDetail(){
   if(dtPage>pages)dtPage=1;
   const paged=f.slice((dtPage-1)*PS,dtPage*PS);
   document.getElementById("detailCount").textContent=total+"건";
-  const hasDemo=paged.some(r=>r.isDemo);
-  const demoBadge=document.getElementById("demoBadge");
-  if(demoBadge)demoBadge.style.display=hasDemo?"inline-flex":"none";
-  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{const c=clr(r.cat);const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt2)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td style="font-size:13px;color:var(--txt2);white-space:nowrap">${vendorTxt}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt2)">${fmt(r.supply)}</td><td class="r" style="color:var(--teal600)">${fmt(r.total)}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{const c=clr(r.cat);const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td style="font-size:13px;color:var(--txt);white-space:nowrap">${vendorTxt}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td><td class="r" style="color:var(--teal600)">${fmt(r.total)}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
   if(pages<=1){document.getElementById("pager").innerHTML="";return;}
   let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
