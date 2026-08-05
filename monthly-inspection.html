@@ -227,7 +227,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
-.tb-action-btn.tb-add{background:var(--sky600)}
+.tb-action-btn.tb-add{background:#185FA5}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
@@ -242,9 +242,6 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
 .tb-action-btn.tb-delete.on:hover{background:#962f25}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
-/* --sky600은 다크모드에서 밝은 텍스트용 색(#79B8FF)으로 바뀌어 흰 글자 배경으로 쓰면 대비가 무너지므로
-   (2.1:1) 다크모드에서만 원래 쓰던 안전한 고정값으로 되돌린다(2026-07-25, C1). */
-html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 
 /* ── 뱃지(터널명 등) ── */
 /* 2026-07-28: 배경색과 글자색이 같은 색 계열이라 가독성이 떨어진다는 피드백으로 전면 개편 —
