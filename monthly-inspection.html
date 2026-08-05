@@ -284,7 +284,7 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .detail-info-row{display:table-row}
 .detail-info-row:nth-child(odd){background:var(--card)}
 .detail-info-row:nth-child(even){background:var(--sky50)}
-.detail-info-key{display:table-cell;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);border-bottom:1px solid var(--border2);vertical-align:top;line-height:1.5}
+.detail-info-key{display:table-cell;font-size:12px;font-weight:400;color:var(--txt);white-space:nowrap;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);border-bottom:1px solid var(--border2);vertical-align:top;line-height:1.5}
 .detail-info-val{display:table-cell;font-size:13px;color:var(--txt);line-height:1.6;padding:10px 14px;word-break:break-all;border-bottom:1px solid var(--border2);vertical-align:top;width:100%}
 .detail-info-row:last-child .detail-info-key,.detail-info-row:last-child .detail-info-val{border-bottom:none}
 .photo-section{padding:10px 0;border-top:1px solid var(--border2)}
@@ -314,26 +314,27 @@ html[data-theme="dark"] .tb-action-btn.tb-add{background:#185FA5}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:600px;max-height:90vh;overflow-y:auto}
-/* 신규등록/수정(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시 — 상세보기(#detailModal)·
-   설정(#cfgModal)은 기존 중앙 모달 그대로 유지(2026-08-04 사용자 요청, 등록창이 좁고 뒤 목록이
-   가려지는 불편 해소). 보고서입력 탭의 .modal-inline 모드는 페이지에 얹혀 있는 콘텐츠라 이 규칙
-   대상에서 제외한다. 열기는 modal-open 부여 직후 강제 리플로우(void offsetWidth)로 드로어의 시작
-   상태를 브라우저에 확정시킨 다음 drawer-in을 붙여 트랜지션이 실제로 재생되게 하고(즉시 같은
-   프레임에 두 클래스를 넣으면 브라우저가 전환 시작 상태를 그려볼 새 없이 바로 최종 상태로
+/* 신규등록/수정(#addModal)·상세보기(#detailModal) 모두 중앙 팝업 대신 우측 슬라이드인 드로어로
+   표시 — 설정(#cfgModal)만 기존 중앙 모달 유지(2026-08-04 최초 addModal만 적용, 2026-08-05 상세보기도
+   동일하게 확장 — 등록창이 좁고 뒤 목록이 가려지는 불편 해소를 상세보기에도 동일 적용). 보고서입력
+   탭의 .modal-inline 모드는 페이지에 얹혀 있는 콘텐츠라 이 규칙 대상에서 제외한다(detailModal은
+   modal-inline 모드가 없어 해당 없음). 열기는 modal-open 부여 직후 강제 리플로우(void offsetWidth)로
+   드로어의 시작 상태를 브라우저에 확정시킨 다음 drawer-in을 붙여 트랜지션이 실제로 재생되게 하고(즉시
+   같은 프레임에 두 클래스를 넣으면 브라우저가 전환 시작 상태를 그려볼 새 없이 바로 최종 상태로
    합쳐버린다 — rAF 이중 콜백은 백그라운드 탭에서 지연/중단될 수 있어 대신 동기 리플로우를 쓴다),
    닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤 트랜지션 시간만큼 지나서 modal-open을 떼
-   display:none 처리한다(closeAddModal/openAddModal 참고). */
-#addModal:not(.modal-inline) .modal-backdrop{justify-content:flex-end;padding:0}
-#addModal:not(.modal-inline) .add-modal-box{
+   display:none 처리한다(closeAddModal/openAddModal, closeDetailModal/openDetailModal 참고). */
+#addModal:not(.modal-inline) .modal-backdrop,#detailModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal:not(.modal-inline) .add-modal-box,#detailModal .detail-modal-box{
   height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
   border-radius:20px 0 0 20px;
   transform:translateX(100%);
   transition:transform .28s cubic-bezier(.22,.8,.25,1);
 }
-#addModal.drawer-in:not(.modal-inline) .add-modal-box{transform:translateX(0)}
-#addModal:not(.modal-inline) .add-modal-box.wide-modal{width:640px;max-width:94vw}
+#addModal.drawer-in:not(.modal-inline) .add-modal-box,#detailModal.drawer-in .detail-modal-box{transform:translateX(0)}
+#addModal:not(.modal-inline) .add-modal-box.wide-modal,#detailModal .detail-modal-box.wide-modal{width:640px;max-width:94vw}
 @media(max-width:480px){
-  #addModal:not(.modal-inline) .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+  #addModal:not(.modal-inline) .add-modal-box,#detailModal .detail-modal-box{width:100vw;max-width:100vw;border-radius:0}
 }
 .detail-modal-box{max-width:520px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
@@ -926,7 +927,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
-    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외(2026-08-04)
+    if(box.closest('#addModal') || box.closest('#detailModal')) return; // 우측 고정 드로어는 드래그 이동 대상에서 제외(2026-08-04, 2026-08-05 detailModal도 추가)
     const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
@@ -2338,7 +2339,13 @@ function openDetailModal(tabId, recordId){
     `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openAddModal('${tabId}','${recordId}')">수정</button>`+
     `<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${tabId}','${recordId}')">삭제</button>`;
   document.querySelector('#detailModal .modal-box')?.classList.toggle('wide-modal', tabId==='elec' || tabId==='generator');
-  document.getElementById('detailModal').classList.add('modal-open');
+  { const dm=document.getElementById('detailModal');
+    dm.classList.add('modal-open');
+    dm.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+    if(_detailModalCloseTimer){ clearTimeout(_detailModalCloseTimer); _detailModalCloseTimer=null; }
+    void dm.offsetWidth; // 강제 리플로우 — openAddModal과 동일 이유(rAF는 백그라운드 탭에서 지연될 수 있음)
+    dm.classList.add('drawer-in');
+  }
   document.body.style.overflow='hidden';
   initDraggableModals();
 }
@@ -2386,10 +2393,13 @@ function buildGeneratorDetailExtra(r){
 }
 function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget) return;
-  document.getElementById('detailModal').classList.remove('modal-open');
+  const dm=document.getElementById('detailModal');
+  dm.classList.remove('drawer-in');
   document.body.style.overflow='';
   resetModalDragPos('detailModal');
+  _detailModalCloseTimer=setTimeout(()=>{ dm.classList.remove('modal-open'); _detailModalCloseTimer=null; }, 280);
 }
+var _detailModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 
 // ── 신규등록/수정 모달 (필드 동적 생성) ──
 var EDIT_TAB=null, EDIT_PAGE_ID=null;

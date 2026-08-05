@@ -190,7 +190,7 @@ tr:hover td{background:var(--sky50)}
 .detail-info-row:last-child{border-bottom:none}
 .detail-info-row:nth-child(odd){background:var(--card)}
 .detail-info-row:nth-child(even){background:var(--sky50)}
-.detail-info-key{font-size:12px;font-weight:700;color:var(--sky800);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-key{font-size:12px;font-weight:400;color:var(--txt);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
 .detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
 .detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
@@ -208,21 +208,22 @@ tr:hover td{background:var(--sky50)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
-/* 신규등록/수정(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시 — 상세보기·설정 모달은
-   기존 중앙 모달 그대로 유지(2026-08-04, work-portal 전체 앱 공통 적용). 열기는 modal-open 부여
-   직후 강제 리플로우(void offsetWidth)로 시작 상태를 확정한 뒤 drawer-in을 붙여 트랜지션이 실제로
-   재생되게 하고, 닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤 트랜지션 시간만큼 지나서
-   modal-open을 떼 display:none 처리한다(closeAddModal/openAddModal 참고). */
-#addModal .modal-backdrop{justify-content:flex-end;padding:0}
-#addModal .add-modal-box{
+/* 신규등록/수정(#addModal)·상세보기(#detailModal) 모두 중앙 팝업 대신 우측 슬라이드인 드로어로
+   표시 — 설정 모달만 기존 중앙 모달 유지(2026-08-04 addModal 최초 적용, 2026-08-05 detailModal도
+   동일 확장, work-portal 전체 앱 공통 적용). 열기는 modal-open 부여 직후 강제 리플로우(void
+   offsetWidth)로 시작 상태를 확정한 뒤 drawer-in을 붙여 트랜지션이 실제로 재생되게 하고, 닫기는
+   drawer-in만 먼저 떼 슬라이드아웃시킨 뒤 트랜지션 시간만큼 지나서 modal-open을 떼 display:none
+   처리한다(closeAddModal/openAddModal, closeDetailModal/openDetailModal 참고). */
+#addModal .modal-backdrop,#detailModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal .add-modal-box,#detailModal .detail-modal-box{
   height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
   border-radius:20px 0 0 20px;
   transform:translateX(100%);
   transition:transform .28s cubic-bezier(.22,.8,.25,1);
 }
-#addModal.drawer-in .add-modal-box{transform:translateX(0)}
+#addModal.drawer-in .add-modal-box,#detailModal.drawer-in .detail-modal-box{transform:translateX(0)}
 @media(max-width:480px){
-  #addModal .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+  #addModal .add-modal-box,#detailModal .detail-modal-box{width:100vw;max-width:100vw;border-radius:0}
 }
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
@@ -729,7 +730,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
-    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외(2026-08-04)
+    if(box.closest('#addModal') || box.closest('#detailModal')) return; // 우측 고정 드로어는 드래그 이동 대상에서 제외(2026-08-04, 2026-08-05 detailModal도 추가)
     const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
@@ -1214,15 +1215,24 @@ function openDetailModal(id){
   document.getElementById('detailModalActions').innerHTML=
     `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
     +`<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>`;
-  document.getElementById('detailModal').classList.add('modal-open');
+  { const dm=document.getElementById('detailModal');
+    dm.classList.add('modal-open');
+    dm.classList.remove('drawer-in');
+    if(_detailModalCloseTimer){ clearTimeout(_detailModalCloseTimer); _detailModalCloseTimer=null; }
+    void dm.offsetWidth;
+    dm.classList.add('drawer-in');
+  }
   document.body.style.overflow='hidden';
 }
 function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget)return;
-  document.getElementById('detailModal').classList.remove('modal-open');
+  const dm=document.getElementById('detailModal');
+  dm.classList.remove('drawer-in');
   document.body.style.overflow='';
   resetModalDragPos('detailModal');
+  _detailModalCloseTimer=setTimeout(()=>{ dm.classList.remove('modal-open'); _detailModalCloseTimer=null; }, 280);
 }
+var _detailModalCloseTimer=null;
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
 
 // ── 날짜 ──────────────────────────────────────────────
