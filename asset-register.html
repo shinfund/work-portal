@@ -72,8 +72,8 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
 /* ── TOP TAB NAV ── */
-.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(3,102,214,.07)}
-.top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(3,102,214,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:8px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 .top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
 

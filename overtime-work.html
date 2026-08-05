@@ -76,8 +76,8 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .spinning{animation:spin .8s linear infinite;display:inline-block}
 
 /* ── TOP TAB NAV ── */
-.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07)}
-.top-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative}
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:6px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 .top-tab.active::after{content:'';position:absolute;bottom:0;left:12%;right:12%;height:2.5px;background:var(--sky);border-radius:2px 2px 0 0}
 
@@ -125,13 +125,10 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TREND CHART ── */
 .trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.trend-chart{display:flex;align-items:flex-end;gap:8px;min-width:300px;height:140px}
-.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:40px}
-
-.trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
-.trend-bar.cur{box-shadow:0 0 0 2px var(--sky600)}
-.trend-lbl{font-size:13px;color:var(--txt2);font-weight:700}
-.trend-val{font-size:12px;color:var(--sky600);font-weight:700}
+.trend-chart{display:block}
+.trend-svg-lbl{font-size:11px;fill:var(--txt2);font-weight:700}
+.trend-svg-lbl.cur{fill:var(--sky600)}
+.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:700}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
@@ -1824,15 +1821,33 @@ function renderTrend(){
       </div>
     </div>`;
 
-  document.getElementById('trendChart').innerHTML=data.map(({y,m,label,totalPay})=>{
-    const isCur=curMonth!==0&&y===curYear&&m===curMonth;
-    const h=Math.max(totalPay/maxPay*110,totalPay>0?5:2);
-    return `<div class="trend-col">
-      <div class="trend-bar${isCur?' cur':''}" style="height:${h}px;background:${isCur?'var(--sky)':'var(--sky100)'};width:100%;border-radius:4px 4px 0 0"></div>
-      <div class="trend-lbl">${esc(label)}</div>
-      <div class="trend-val">${totalPay>0?fmtWon(Math.round(totalPay/10000))+'만':'-'}</div>
-    </div>`;
-  }).join('');
+  const chartW=Math.max(300,data.length*54),chartH=150,padTop=22,padBottom=26,padL=22,padR=22;
+  const plotH=chartH-padTop-padBottom;
+  const stepX=data.length>1?(chartW-padL-padR)/(data.length-1):0;
+  const pts=data.map(({y,m,label,totalPay},i)=>{
+    const x=padL+stepX*i;
+    const yy=padTop+plotH-(totalPay/maxPay*plotH);
+    return{x,y:yy,v:totalPay,label,isCur:curMonth!==0&&y===curYear&&m===curMonth};
+  });
+  const linePath=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  const baseY=(padTop+plotH).toFixed(1);
+  const areaPath=pts.length?linePath+` L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`:"";
+  document.getElementById('trendChart').innerHTML=`
+    <svg viewBox="0 0 ${chartW} ${chartH}" width="${chartW}" height="${chartH}" style="display:block;overflow:visible">
+      <defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="var(--sky)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="${padL}" y1="${baseY}" x2="${chartW-padR}" y2="${baseY}" stroke="var(--border)" stroke-width="1"/>
+      ${pts.length?`<path d="${areaPath}" fill="url(#trendFill)" stroke="none"/>`:""}
+      ${pts.length?`<path d="${linePath}" fill="none" stroke="var(--sky)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:""}
+      ${pts.map(p=>`
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isCur?4.5:3}" fill="${p.v>0?"var(--sky)":"var(--border)"}" stroke="var(--card)" stroke-width="1.5"/>
+        ${p.isCur?`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="none" stroke="var(--sky)" stroke-width="1.5" opacity="0.4"/>`:""}
+      `).join("")}
+      ${pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${chartH-6}" text-anchor="middle" class="trend-svg-lbl${p.isCur?" cur":""}">${esc(p.label)}</text>`).join("")}
+      ${pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${fmtWon(Math.round(p.v/10000))}만</text>`).join("")}
+    </svg>`;
 
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalPay,cnt,empCnt,typeMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
