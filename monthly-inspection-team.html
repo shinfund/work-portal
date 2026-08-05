@@ -101,15 +101,13 @@ html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
-html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
-html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 
 /* ── SECTION CARD ── */
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
@@ -142,6 +140,7 @@ html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .detail-count{color:#fff}
 .detail-count.warn{background:var(--amber50);color:var(--amber800);border-color:var(--amber100)}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
@@ -780,8 +779,21 @@ function gubunSlug(v){
 }
 
 // 고장수리 "작업자" 드롭다운 후보(2026-07-24, 노션 실데이터 SELECT DISTINCT 기준) — 텍스트 속성이라
-// 카탈로그+직접입력 방식(다른 select 필드와 동일 UX)으로 제공, 새 업체는 직접입력으로 추가.
-const REPAIR_WORKER_OPTIONS=['D2U이앤씨','남도전기','대성기업','대성기업㈜','명신전기','성신전기공업','와튼','점검팀','한마음수배전반'];
+// 카탈로그+직접입력 방식(다른 select 필드와 동일 UX)으로 제공. 고정 목록이 새로 등록되는 업체명을
+// 못 따라가 계속 "직접입력"으로 빠지는 문제(2026-08-05 사용자 재신고 — 어제 고친 게 반영 안 됐다는
+// 피드백)를 근본적으로 막기 위해, 아래 정적 목록에 실제 로드된 레코드의 작업자 값을 매번 합쳐서
+// 반환하는 함수로 전환 — 새 업체명이 데이터에 나타나는 즉시 옵션 목록에 자동 포함되어 "직접입력"
+// 이중 표시(select=직접입력 + 그 옆 커스텀 input 둘 다 보이는 현상)가 재발하지 않는다.
+const REPAIR_WORKER_OPTIONS_BASE=['D2U이앤씨','남도전기','대성기업','대성기업㈜','명신전기','성신전기공업','와튼','점검팀','한마음수배전반'];
+function getRepairWorkerOptions(){
+  const opts=REPAIR_WORKER_OPTIONS_BASE.slice();
+  const seen=new Set(opts);
+  (TAB_STATE.repair && TAB_STATE.repair.records || []).forEach(r=>{
+    const w=(r['작업자']||'').trim();
+    if(w && !seen.has(w)){ seen.add(w); opts.push(w); }
+  });
+  return opts;
+}
 
 const TAB_DEFS=[
   {
@@ -813,7 +825,7 @@ const TAB_DEFS=[
       {key:'이상발생내역', type:'text', required:true},
       {key:'조치일', type:'date'},
       {key:'조치내역', type:'text'},
-      {key:'작업자', type:'text', uiType:'cascade-select', optionsFn:()=>REPAIR_WORKER_OPTIONS, emptyHint:'선택 또는 직접입력'}
+      {key:'작업자', type:'text', uiType:'cascade-select', optionsFn:()=>getRepairWorkerOptions(), emptyHint:'선택 또는 직접입력'}
     ],
     listCols:['터널명','발생일','제목','이상발생내역','조치일','조치내역','작업자']
   },
@@ -1930,19 +1942,25 @@ function buildPhotoMultiRowsFromExisting(){
   // 보여준다(2026-08-03) — 몇 장을 보여줄지는 가장 최근에 실제 등록이 있었던 달의 카드 수를
   // 그대로 참고한다(예: 이번 달이 비어있고 지난달에 10장을 등록했으면 10장짜리 빈 카드로 시작).
   // 내용(터널명·일자·사진설명)은 채우지 않고 개수만 참고한다 — 데이터가 아예 없으면 1장.
-  if(!recs.length){
-    const allYms=[...new Set((TAB_STATE.photo.records||[]).map(r=>(r['일자']||'').slice(0,7)).filter(Boolean))].filter(y=>y<ym).sort();
-    const lastYm=allYms[allYms.length-1];
-    const count=lastYm ? (TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(lastYm)).length : 1;
-    return Array.from({length:Math.max(count,1)}, (_,i)=>newPhotoMultiRow(String(i+1),''));
-  }
-  return recs.map(r=>{
+  const allYms=[...new Set((TAB_STATE.photo.records||[]).map(r=>(r['일자']||'').slice(0,7)).filter(Boolean))].filter(y=>y<ym).sort();
+  const lastYm=allYms[allYms.length-1];
+  const historyCount=lastYm ? (TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(lastYm)).length : 0;
+  const targetCount=Math.max(historyCount,1);
+  // 이번 달에 이미 일부 등록된 상태에서도(recs.length>0) 나머지 미입력 카드가 targetCount까지
+  // 그대로 이어서 보이도록, 기존 레코드를 채운 카드 뒤에 빈 카드를 이어붙인다 — 예전엔 recs가
+  // 하나라도 있으면 그 개수만큼만 반환해서 나머지 미입력 카드가 전부 사라지는 버그가 있었음
+  // (2026-08-05 사용자 재신고: 42장 기본에서 4장만 등록하니 나머지 38장이 사라지고 "+행 추가"를
+  // 일일이 눌러야 했음 — 안전관리 앱은 터널당 고정 6칸이라 이 문제가 없었던 것과 대조하여 발견).
+  const filledRows=recs.map(r=>{
     const row=newPhotoMultiRow(r['번호']!=null?String(r['번호']):'', r['사진설명']||'');
     row.tunnel=r['터널명']||'';
     row.date=r['일자']||'';
     row.files=(r['점검사진']||[]).slice(0,1);
     return row;
   });
+  const extraCount=Math.max(targetCount-filledRows.length,0);
+  const extraRows=Array.from({length:extraCount}, (_,i)=>newPhotoMultiRow(String(filledRows.length+i+1),''));
+  return filledRows.concat(extraRows);
 }
 // 터널명·일자가 더 이상 상단 공용 필드가 아니라 카드마다 개별 입력이라(2026-08-10, 안전관리 앱과
 // 동일한 카드 UI로 전환). 기준 터널명·일자 선택 후 불러오는 편의 기능(전기시설점검 불러오기·
@@ -2925,8 +2943,8 @@ async function renderReportPage_repair(){
 function repairRowCells(rowKey, tunnel, occur, issue, fixDate, fixNote, worker){
   const isCustomTunnel=tunnel && !TUNNEL_OPTIONS_STD.includes(tunnel);
   const tunnelOpts=TUNNEL_OPTIONS_STD.map(t=>`<option value="${esc(t)}"${t===tunnel?' selected':''}>${esc(t)}</option>`).join('');
-  const isCustomWorker=worker && !REPAIR_WORKER_OPTIONS.includes(worker);
-  const workerOpts=REPAIR_WORKER_OPTIONS.map(w=>`<option value="${esc(w)}"${w===worker?' selected':''}>${esc(w)}</option>`).join('');
+  const isCustomWorker=worker && !getRepairWorkerOptions().includes(worker);
+  const workerOpts=getRepairWorkerOptions().map(w=>`<option value="${esc(w)}"${w===worker?' selected':''}>${esc(w)}</option>`).join('');
   return `<td>
         <select class="modal-select rp-tunnel" onchange="onSelectChange(this,'rpt_${rowKey}')">
           <option value="__custom__"${isCustomTunnel?' selected':''}>직접입력</option>

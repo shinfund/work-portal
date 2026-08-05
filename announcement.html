@@ -82,15 +82,13 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-wrap{position:relative;display:inline-block}
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:34px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
-html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
-html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
@@ -98,16 +96,17 @@ table{width:100%;border-collapse:collapse;min-width:300px}
 thead tr{background:var(--sky50)}
 th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
 html[data-theme="dark"] th{color:#fff;font-weight:400}
-td{padding:7px 10px;font-size:13px;color:var(--txt2);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
 .title-cell{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.title-text{color:var(--txt);font-weight:600}
+.title-text{color:var(--txt);font-weight:400}
 
 /* ── FILTER ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
@@ -250,6 +249,11 @@ html[data-theme="dark"] .attach-chip .ac-kind.link{background:rgba(52,168,110,.2
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
+/* 날짜칸 달력 아이콘을 우측→좌측으로(월간점검 안전관리·점검팀 앱과 동일 패턴, 2026-08-05 전체 앱 확대
+   적용) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. 아이콘과 숫자가
+   겹치지 않도록 좌측 패딩을 아이콘 폭만큼 확보한다. */
+input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
+input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
