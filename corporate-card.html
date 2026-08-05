@@ -85,7 +85,7 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
 
-.main{padding:14px;max-width:1400px;margin:0 auto}
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
 .panel{display:none}.panel.active{display:block}
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:14px;box-shadow:var(--shadow);padding:8px 14px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
@@ -147,10 +147,8 @@ tr:hover td{background:var(--sky50)}
 .lim-bar-fill{height:100%;border-radius:10px;transition:width .4s}
 .lim-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.search-wrap{position:relative;flex:1;min-width:180px}
-.search-wrap input{width:100%;padding:8px 14px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:13px;background:var(--card);color:var(--txt);font-family:inherit;outline:none;transition:.2s;min-height:34px}
-.search-wrap input:focus{border-color:var(--sky)}
-.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
 .detail-count{font-size:13px;color:var(--txt);padding:2px 0 8px;font-weight:600}
 .pager{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;flex-wrap:wrap}
 .pg{width:30px;height:30px;border-radius:var(--r6);border:1.5px solid var(--border);background:var(--card);color:var(--txt3);cursor:pointer;font-family:inherit;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s}
@@ -201,7 +199,7 @@ tr:hover td{background:var(--sky50)}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-required{color:var(--coral);margin-left:2px}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s;box-sizing:border-box}
-.modal-input::placeholder{color:var(--txt3)}
+.modal-input::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
@@ -237,7 +235,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   th{font-size:12px;padding:9px 10px}
   .kpi-val{font-size:14px}
   .lim-cat-grid{grid-template-columns:1fr}
-  .modal-select,.modal-input,.search-wrap input{font-size:16px}
+  .modal-select,.modal-input,.search-box{font-size:16px}
 }
 </style>
 </head>
@@ -369,10 +367,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
           <div class="dd-btn" id="catDdBtn" onclick="toggleDD('cat')"><span id="catDdLabel">전체 계정</span></div>
           <div class="dd-menu" id="catDdMenu"><div id="catDdOpts"></div></div>
         </div>
-        <div class="search-wrap">
-          <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
-        </div>
+        <input class="search-box" id="srch" placeholder="🔍 지출내역, 상호 검색..." oninput="renderDetail()"/>
         <button class="tb-action-btn tb-add" onclick="openAddModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록

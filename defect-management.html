@@ -59,7 +59,7 @@ html[data-theme="dark"]{
   /* 색상군 50/100 틴트 → 다크 카드 위 반투명 오버레이로 전환 */
   --sky50:rgba(46,143,255,.16); --sky100:rgba(46,143,255,.32);
   --teal50:rgba(29,158,117,.16); --teal100:rgba(29,158,117,.32);
-  --coral50:rgba(216,90,48,.16); --coral100:rgba(216,90,48,.32);
+  --coral:#F2896A; --coral50:rgba(216,90,48,.16); --coral100:rgba(216,90,48,.32); --coral800:#F0916A;
   --amber50:rgba(186,117,23,.16); --amber100:rgba(186,117,23,.32);
   --green50:rgba(99,153,34,.16); --green100:rgba(99,153,34,.32);
   --purple50:rgba(83,74,183,.16); --purple100:rgba(83,74,183,.32);
@@ -103,13 +103,13 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 
 
 /* ── MAIN WRAP ── */
-.wrap{max-width:1600px;margin:0 auto;padding:10px 12px}
+.main{max-width:1400px;margin:0 auto;padding:10px 12px}
 .panel{display:none}
 .panel.on{display:block}
 
 /* ── FILTER BAR ── */
 .filter-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center}
-.search-box{flex:1;min-width:160px;padding:5px 9px;border-radius:var(--r8);border:1px solid var(--border);font-size:12.5px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky100);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
 .filter-count{font-size:12.5px;color:var(--txt);font-weight:600;white-space:nowrap;padding:3px 0}
 
@@ -265,25 +265,22 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .empty p{font-size:13px}
 .last-update{font-size:11px;color:var(--hdr-text-dim);min-height:14px;text-align:right}
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE (2026-08-05: 480 단일 브레이크포인트로 통일, 이전 640/380/641-960/961 4단계 폐지) ── */
 
-/* 모바일 공통 (~ 640px) */
-@media(max-width:640px){
+@media(max-width:480px){
   /* 헤더 */
   .hdr{padding:9px 12px;min-height:unset}
   .hdr-title{font-size:14px;white-space:nowrap}
   .hdr-right{flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
   .hdr-btns{gap:5px}
-  /* [개선2] 터치 타겟 40px 확보 */
   .hdr-btn{padding:8px 10px;font-size:11px;min-height:40px;gap:3px}
   .hdr-btn svg{width:11px;height:11px}
   .last-update{font-size:10px}
 
-  /* [개선3] 탭 7개 - 가로 스크롤 방식, 다른 앱과 동일 */
   .top-tab{font-size:12px;padding:9px 4px}
 
   /* 본문 */
-  .wrap{padding:10px}
+  .main{padding:10px}
 
   /* 대시보드 */
   .dash-grid{grid-template-columns:1fr}
@@ -295,61 +292,26 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .col-contact{display:none}
   .col-remark{display:none}
   .col-manager{display:none}
-  /* [문제1 수정] 숨긴 컬럼 반영해 min-width 축소 */
   table{min-width:340px}
   td{padding:7px 8px;font-size:12px}
   th{padding:7px 8px;font-size:11px}
   .td-content{-webkit-line-clamp:4}
 
-  /* [개선4] 필터 - 검색박스 모바일에서 독립 줄 배치 */
+  /* 필터 - 검색박스 모바일에서 독립 줄 배치 */
   .filter-row{flex-wrap:wrap;gap:6px}
   .filter-row .search-box{width:100%;order:9;min-width:unset;margin-top:2px}
-  /* [문제2 수정] 입력창 16px 미만이면 iOS 포커스 시 자동 확대(줌) 발생 → 16px로 고정 */
+  /* 입력창 16px 미만이면 iOS 포커스 시 자동 확대(줌) 발생 → 16px로 고정 */
   .search-box{font-size:16px}
 
-  /* [문제3 수정] KPI 요약 줄(필터결과·계약금액 합계 등)이 nowrap으로 고정폭 넘쳐
-     페이지 전체 가로 스크롤을 유발 → 모바일에서는 줄바꿈 허용 */
   .filter-count{white-space:normal;line-height:1.7}
 
-  /* 드롭다운 - 모바일 높이 제한 */
   .dd-menu{max-height:200px}
 
   /* 모달 */
   .modal-box{padding:18px;border-radius:var(--r16)}
   .detail-modal-box{max-height:90vh}
-  /* [문제2 수정] 모달 입력창도 16px 미만이면 iOS 자동 확대 발생
-     (select·textarea는 정의가 파일 뒤쪽에 있어 거기서 별도로 재지정함) */
   .modal-input{font-size:16px}
-}
 
-/* 소형 모바일 (~ 380px) */
-@media(max-width:380px){
-  /* [개선3] 소형 기기 탭 폰트 추가 축소 */
-  .top-tab{font-size:11px}
-  .hdr-title{font-size:14px}
-}
-
-/* 태블릿 (641px ~ 960px) */
-@media(min-width:641px) and (max-width:960px){
-  .top-tab{font-size:13px;padding:10px 6px}
-  .wrap{padding:14px}
-  .col-contact{display:table-cell}
-  .col-remark{display:table-cell}
-  .col-manager{display:table-cell}
-  /* [개선1] 태블릿 테이블 min-width 추가 */
-  table{min-width:800px}
-}
-
-/* PC (961px ~) */
-@media(min-width:961px){
-  .wrap{padding:18px}
-  .col-contact{display:table-cell}
-  .col-remark{display:table-cell}
-  .col-manager{display:table-cell}
-  table{width:100%;min-width:1200px}
-}
-
-@media(max-width:640px){
   .modal-backdrop{padding:0;align-items:flex-end}
   .detail-modal-box{max-width:100%;width:100%;border-radius:var(--r20) var(--r20) 0 0;max-height:92vh}
   .modal-box{border-radius:var(--r16) var(--r16) 0 0;max-width:100%}
@@ -394,12 +356,12 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
-.modal-required{color:var(--coral800);margin-left:2px}
+.modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
-@media(max-width:640px){
+@media(max-width:480px){
   .modal-form-row{grid-template-columns:1fr}
-  /* [문제2 수정] select/textarea 정의가 이 아래(cascade 순서상 나중)에 있어 위쪽 모바일
+  /* select/textarea 정의가 이 아래(cascade 순서상 나중)에 있어 위쪽 모바일
      블록의 16px 지정이 무효화됨 — 여기서 다시 지정해 iOS 자동 확대 방지 */
   .modal-select,.modal-textarea{font-size:16px}
 }
@@ -437,10 +399,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
-.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
-.dd-menu::-webkit-scrollbar{width:4px}
-.dd-menu::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-.dd-menu::-webkit-scrollbar-track{background:transparent}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(55,138,221,.15);z-index:500;min-width:130px;display:none;overflow-y:auto;max-height:280px}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2);white-space:nowrap}
 .dd-opt:last-child{border-bottom:none}
@@ -855,7 +814,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 </div>
 
-<div class="wrap">
+<div class="main">
 
 <!-- 패널0: 대시보드 -->
 <div class="panel" id="p0">
