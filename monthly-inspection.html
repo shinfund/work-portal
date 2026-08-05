@@ -3507,9 +3507,19 @@ function buildPhotoMultiRowsFromExisting(){
       row.tunnel=rec['터널명']||tunnel;
       row.date=rec['일자']||'';
       row.files=(rec['점검사진']||[]).slice(0,1);
+      // 노션 페이지 id를 잡아둔다 — 저장 시 번호가 일자순으로 재계산되면서 원래 슬롯 번호와
+      // 달라질 수 있어(아래 photoMultiDateSortKey 참고), tunnel+연월+번호 조합 매칭은 더 이상
+      // 안전하지 않다. id가 있으면 무조건 그 레코드를 그대로 PATCH한다(2026-08-05).
+      row.id=rec.id;
     }
     return row;
   });
+}
+// 카드 순서·화면 번호(#N)는 항상 일자 오름차순 — 일자 미입력 카드는 맨 뒤로 보낸다(2026-08-05
+// 사용자 신고: 날짜를 바꿔 저장해도 번호가 원래 슬롯 번호 그대로 남아있던 문제 수정).
+function photoMultiDateSortKey(a,b){
+  const da=a.date||'9999-99-99', db=b.date||'9999-99-99';
+  return da<db?-1:da>db?1:0;
 }
 // 실제 "운영관리 사진대지" 지면(#1~#6, 2열×3행)과 동일한 그리드로 재구성(2026-07-30) — 번호는
 // 더 이상 select로 고르지 않고 박스 위치 자체가 번호이므로, 초기화 시 6칸을 항상 전부 만들어둔다.
@@ -3542,7 +3552,8 @@ function renderPhotoMultiRows(){
     return;
   }
   const tunnelOpts=(getTabDef('photo').fields.find(f=>f.key==='터널명')||{}).options||[];
-  const boxes=_photoMultiRows.slice().sort((a,b)=>Number(a.num)-Number(b.num)).map(row=>{
+  const boxes=_photoMultiRows.slice().sort(photoMultiDateSortKey).map((row,idx)=>{
+    const displayNum=idx+1;
     // 사진설명은 해당 터널·번호 조합에서 과거에 입력된 값들을 select 드롭다운으로 제안(직접입력은
     // 다른 select 필드들과 동일하게 목록 맨 위 고정, 2026-07-28 사용자 요청 — 기존 datalist 방식은
     // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음). 터널명이 카드마다 개별 값이라(2026-08-03) 그 값
@@ -3574,7 +3585,7 @@ function renderPhotoMultiRows(){
       ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
-        <span style="font-weight:800;font-size:13px">#${esc(row.num)}</span>
+        <span style="font-weight:800;font-size:13px">#${displayNum}</span>
       </div>
       <div style="display:flex;gap:8px">
         <div style="flex:1;min-width:0">
@@ -3586,7 +3597,7 @@ function renderPhotoMultiRows(){
         </div>
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">일자</div>
-          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value);renderPhotoMultiRows()"/>
         </div>
       </div>
       <div class="pm-card-label" style="margin-top:8px">사진설명</div>
@@ -3666,46 +3677,46 @@ async function submitPhotoMulti(){
   const tabDef=getTabDef('photo');
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
-  // 쓰지 않은 빈 슬롯(사진설명·사진 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28). 번호는
-  // 박스 위치로 항상 고정돼 있어(2026-07-30) 별도 필수값 검사가 필요 없다.
-  const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
-  if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
-  const missingRow=usedRows.find(row=>!row.tunnel || !row.date);
-  if(missingRow){ alert('#'+missingRow.num+' 칸의 터널명·일자를 입력해주세요.'); return; }
+  // 저장 순번은 화면에 보이는 순서(일자 오름차순, photoMultiDateSortKey)를 그대로 따른다 — 사용자가
+  // 카드를 눈으로 확인한 순서와 실제 저장되는 번호가 어긋나면 안 된다(2026-08-05 사용자 신고: 날짜를
+  // 바꿔 저장해도 번호가 원래 슬롯 번호 그대로 남아있던 문제 수정). 쓰지 않은 빈 슬롯(사진설명·사진
+  // 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28).
+  const sortedRows=_photoMultiRows.slice().sort(photoMultiDateSortKey);
+  const usedEntries=sortedRows.map((row,idx)=>({row, displayNum:idx+1})).filter(e=>e.row.desc.trim() || e.row.files.length);
+  if(!usedEntries.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
+  const missing=usedEntries.find(e=>!e.row.tunnel || !e.row.date);
+  if(missing){ alert('#'+missing.displayNum+' 칸의 터널명·일자를 입력해주세요.'); return; }
   // "현재 화면 연월과 다른 날짜" 경고는 REPORT_SEL(입력폼 탭 상단 연월 선택)이 실제로 화면에 보이는
   // 입력폼 탭 진입 시에만 의미가 있다 — 독립된 "점검사진" 탭 신규등록에는 그런 연월 선택 자체가
   // 없으므로 REPORT_SEL과 무관하게 경고 없이 그대로 저장한다.
   if(isReportEntryPhotoContext()){
     const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
-    if(!confirmDateOutOfMonth(usedRows.map(row=>row.date), ym)) return;
+    if(!confirmDateOutOfMonth(usedEntries.map(e=>e.row.date), ym)) return;
   }
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
   showAddModalProgress();
-  const total=usedRows.length;
+  const total=usedEntries.length;
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
-  // 같은 터널·월·번호(슬롯)에 이미 저장된 레코드가 있으면 새로 만들지 않고 그 레코드를 수정한다
-  // (2026-07-31 버그 수정 — 기존엔 항상 신규 생성이라 같은 슬롯을 두 번 저장하면 중복 레코드가 생겼음).
-  const tasks=usedRows.map(row=>()=>{
-    const rowYm=(row.date||'').slice(0,7);
+  // 편집 세션 중 기존 레코드를 로드해둔 카드는 buildPhotoMultiRowsFromExisting에서 잡아둔 노션
+  // 페이지 id로 정확히 PATCH한다 — 번호가 일자순으로 재계산되면서 원래 슬롯 번호와 달라질 수 있어
+  // tunnel+연월+번호 조합으로 기존 레코드를 다시 찾는 방식은 더 이상 안전하지 않다(2026-08-05).
+  const tasks=usedEntries.map(({row,displayNum})=>()=>{
+    const savedNum=String(displayNum);
     const properties={
       '터널명':buildPropValue('select', row.tunnel),
       '일자':buildPropValue('date', row.date),
       '제목':buildPropValue('title', titleWithMonth(row.date,'점검사진')),
-      '번호':buildPropValue('number', row.num)
+      '번호':buildPropValue('number', savedNum)
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
     if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
-    // row.num은 항상 문자열('1'~'6')인데 r['번호']를 parseInt로 숫자 변환해 ===로 비교하면 타입이
-    // 달라 항상 false — 기존 레코드를 못 찾아 매번 신규 생성되며 중복이 쌓였다(2026-08-10 사용자
-    // 신고로 발견, 슬롯 프리필 도입 전엔 재제출 자체가 드물어 드러나지 않던 버그).
-    const existing=(TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && String(r['번호'])===String(row.num));
-    const req=existing
-      ? notionFetch('/v1/pages/'+existing.id,'PATCH',{properties})
+    const req=row.id
+      ? notionFetch('/v1/pages/'+row.id,'PATCH',{properties})
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
     return req.then(page=>{ progress(); return page; });
   });
