@@ -98,7 +98,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
-.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt2);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
 .dd-opt.sel{background:var(--sky800);color:#fff;font-weight:700}
 html[data-theme="dark"] .dd-btn.active{background:#0C447C;border-color:#0C447C}
@@ -109,6 +109,7 @@ html[data-theme="dark"] .dd-opt.sel{background:#0C447C}
 table{width:100%;border-collapse:collapse;min-width:300px}
 thead tr{background:var(--sky50)}
 th{padding:7px 10px;text-align:left;font-size:12px;font-weight:700;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+html[data-theme="dark"] th{color:#fff;font-weight:400}
 th.r,td.r{text-align:right}
 td{padding:7px 10px;font-size:13px;color:var(--txt2);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
@@ -233,7 +234,7 @@ tr:hover td{background:var(--sky50)}
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
-.modal-label{font-size:13px;font-weight:700;color:var(--txt2);margin-bottom:6px;display:block}
+.modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
