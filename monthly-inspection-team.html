@@ -88,6 +88,9 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 html[data-theme="dark"] .top-tab.active{color:#fff}
 .top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
+/* "기록관리" 하위 탭 — report-page-chip을 그대로 재사용(보라색)해 입력폼 탭 안 페이지 칩과 같은
+   "하위 탭" 시각 언어를 유지한다(2026-08-05). */
+.db-subnav{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;gap:6px;padding:8px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 html[data-theme="dark"] .form-group-hd,
 html[data-theme="dark"] .report-section-hd,
 html[data-theme="dark"] th,
@@ -438,13 +441,19 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
     </div>
   </div>
 </div>
-<!-- TOP TAB NAV -->
+<!-- TOP TAB NAV — 목록형 3개 탭(전기시설점검/고장수리/점검사진)은 "기록관리" 하나로 묶고 하위 칩으로
+     노출한다(2026-08-05 사용자 요청 — 입력폼 탭 안 페이지 칩과 이름이 그대로 겹쳐 혼동 유발, 안전관리
+     앱과 동일하게 적용). 실제 목록 화면(panel-elecinsp 등)과 로직은 전혀 건드리지 않는다. -->
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼</span></button>
   <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서</span></button>
-  <button class="top-tab" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')"><span class="tt-label">전기시설점검</span></button>
-  <button class="top-tab" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')"><span class="tt-label">고장수리</span></button>
-  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')"><span class="tt-label">점검사진</span></button>
+  <button class="top-tab" id="nav-db" role="tab" aria-selected="false" onclick="switchPanel(_lastDbTab)"><span class="tt-label">기록관리</span></button>
+</div>
+<!-- "기록관리"가 활성일 때만 노출되는 하위 탭 — 입력폼 탭의 report-page-chip과 동일한 시각 언어(보라색) 재사용. -->
+<div class="db-subnav" id="dbSubnav" role="tablist" style="display:none">
+  <button class="report-page-chip" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+  <button class="report-page-chip" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')">고장수리</button>
+  <button class="report-page-chip" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
 </div>
 
 <!-- MAIN -->
@@ -3820,7 +3829,11 @@ async function buildOneTeamUnifiedReport(year, month, sections){
 
 // ── 하단 탭 전환 ──
 const PANEL_IDS=['formEntry','report',...TAB_DEFS.map(t=>t.id)];
+// 상단에서 목록형 3개 탭(전기시설점검/고장수리/점검사진)은 "기록관리" 하나로 묶여 있어(2026-08-05),
+// 그 3개 id는 별도로 뽑아 "기록관리가 활성 상태인지"·"하위 칩 노출 여부" 판단에 쓴다.
+const DB_TAB_IDS=TAB_DEFS.map(t=>t.id);
 let _activePanel=PANEL_IDS[0];
+let _lastDbTab=DB_TAB_IDS[0]; // "기록관리" 상단 탭 클릭 시 되돌아갈 마지막 하위 탭(기본값=첫 탭)
 function switchPanel(id){
   if(id===_activePanel) return;
   _activePanel=id;
@@ -3829,6 +3842,13 @@ function switchPanel(id){
     const btn=document.getElementById('nav-'+p);
     if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
   });
+  // "기록관리" 상단 탭 자체는 PANEL_IDS에 없는 래퍼라 위 루프에서 활성화되지 않는다 — 하위 3개 중
+  // 하나가 선택돼 있을 때만 별도로 active 표시하고, 그때만 하위 칩 줄을 보여준다.
+  const isDb=DB_TAB_IDS.includes(id);
+  if(isDb) _lastDbTab=id;
+  document.getElementById('nav-db')?.classList.toggle('active', isDb);
+  const subnav=document.getElementById('dbSubnav');
+  if(subnav) subnav.style.display=isDb?'':'none';
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
   if(id==='formEntry'){ initReportTab(); }
   else if(id==='report'){ initReportGenTab(); unmountAddModalInline(); }

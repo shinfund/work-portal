@@ -96,6 +96,9 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
    달아서, 글자가 길어질수록 밑줄이 상대적으로 짧아 보이던 문제를 없앤다(2026-07-31 사용자 지적). */
 .top-tab .tt-label{display:inline-block;padding-bottom:6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
+/* "기록관리" 하위 탭 — report-page-chip을 그대로 재사용(보라색)해 입력폼 탭 안 페이지 칩과 같은
+   "하위 탭" 시각 언어를 유지한다(2026-08-05). */
+.db-subnav{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;gap:6px;padding:8px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 /* 입력폼 탭의 구획 헤더("1.기본사항" 등)·표 컬럼 헤더("위상","전압(V)" 등) — 라이트모드는 기존
    진한 남색+굵게 유지, 다크모드만 흰색+보통 굵기로 통일(2026-07-31 사용자 요청 — 다크모드 가독성 우선). */
 html[data-theme="dark"] .form-group-hd,
@@ -493,17 +496,24 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   </div>
 </div>
 
-<!-- TOP TAB NAV -->
+<!-- TOP TAB NAV — 목록형 7개 탭(월간점검~업무처리)은 "기록관리" 하나로 묶고 하위 칩으로 노출한다
+     (2026-08-05 사용자 요청 — 입력폼 탭 안 페이지 칩과 이름이 그대로 겹쳐 혼동 유발). 실제 목록 화면
+     (panel-monthly 등)과 openAddModal 등 로직은 전혀 건드리지 않고, 상단 진입 UI만 2단으로 재편한다. -->
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼</span></button>
   <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서</span></button>
-  <button class="top-tab" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')"><span class="tt-label">월간점검</span></button>
-  <button class="top-tab" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')"><span class="tt-label">전기설비기록</span></button>
-  <button class="top-tab" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')"><span class="tt-label">변압기온도</span></button>
-  <button class="top-tab" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')"><span class="tt-label">발전기점검</span></button>
-  <button class="top-tab" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')"><span class="tt-label">점검사진</span></button>
-  <button class="top-tab" id="nav-power" role="tab" aria-selected="false" aria-controls="panel-power" onclick="switchPanel('power')"><span class="tt-label">전력사용량</span></button>
-  <button class="top-tab" id="nav-task" role="tab" aria-selected="false" aria-controls="panel-task" onclick="switchPanel('task')"><span class="tt-label">업무처리</span></button>
+  <button class="top-tab" id="nav-db" role="tab" aria-selected="false" onclick="switchPanel(_lastDbTab)"><span class="tt-label">기록관리</span></button>
+</div>
+<!-- "기록관리"가 활성일 때만 노출되는 하위 탭 — 입력폼 탭의 report-page-chip과 동일한 시각 언어(보라색)를
+     재사용해 "이건 상위 탭 안의 하위 목록"이라는 걸 일관되게 전달한다. -->
+<div class="db-subnav" id="dbSubnav" role="tablist" style="display:none">
+  <button class="report-page-chip" id="nav-monthly" role="tab" aria-selected="false" aria-controls="panel-monthly" onclick="switchPanel('monthly')">월간점검</button>
+  <button class="report-page-chip" id="nav-elec" role="tab" aria-selected="false" aria-controls="panel-elec" onclick="switchPanel('elec')">전기설비기록</button>
+  <button class="report-page-chip" id="nav-transformer" role="tab" aria-selected="false" aria-controls="panel-transformer" onclick="switchPanel('transformer')">변압기온도</button>
+  <button class="report-page-chip" id="nav-generator" role="tab" aria-selected="false" aria-controls="panel-generator" onclick="switchPanel('generator')">발전기점검</button>
+  <button class="report-page-chip" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
+  <button class="report-page-chip" id="nav-power" role="tab" aria-selected="false" aria-controls="panel-power" onclick="switchPanel('power')">전력사용량</button>
+  <button class="report-page-chip" id="nav-task" role="tab" aria-selected="false" aria-controls="panel-task" onclick="switchPanel('task')">업무처리</button>
 </div>
 
 <!-- MAIN -->
@@ -3464,16 +3474,27 @@ function tunnelColor(tunnel){
   if(idx<0) idx=TUNNEL_OPTIONS_STD_TEAM.indexOf(base);
   return idx>=0 ? TUNNEL_COLOR_PALETTE[idx % TUNNEL_COLOR_PALETTE.length] : 'var(--border)';
 }
+// "입력폼" 탭(보고서입력)의 점검사진 페이지는 상단 REPORT_SEL(터널·연·월)을 공유하는 인라인
+// 모달(mountAddModalInline)로 열리지만, 독립된 "점검사진" 탭 목록의 "신규등록"은 같은 openAddModal
+// 함수를 재사용하면서도 REPORT_SEL과 무관해야 한다 — 두 진입점을 구분하지 않고 REPORT_SEL을 그대로
+// 읽으면 입력폼 탭에서 선택해둔 터널이 점검사진 탭 신규등록에 잘못 넘어온다(2026-08-05 버그 신고).
+function isReportEntryPhotoContext(){
+  return document.getElementById('addModal').classList.contains('modal-inline');
+}
 function newPhotoMultiRow(num, desc){
-  // 터널명은 보고서입력 페이지에서 이미 선택된 터널(REPORT_SEL.tunnel)로 기본값을 채워 반복 입력을
-  // 줄인다 — 다른 터널 사진이 섞인 경우엔 카드에서 개별로 바꾸면 된다(2026-08-03).
-  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[], tunnel:REPORT_SEL.tunnel||'', date:'' };
+  // 터널명은 보고서입력 페이지에서 열렸을 때만 이미 선택된 터널(REPORT_SEL.tunnel)로 기본값을 채워
+  // 반복 입력을 줄인다 — 다른 터널 사진이 섞인 경우엔 카드에서 개별로 바꾸면 된다(2026-08-03).
+  // 독립된 "점검사진" 탭에서 열렸을 땐 REPORT_SEL과 무관하게 항상 빈 값으로 시작한다.
+  const defTunnel = isReportEntryPhotoContext() ? (REPORT_SEL.tunnel||'') : '';
+  return { key:_photoMultiNextKey++, num:num||'', desc:desc||'', descCustom:false, files:[], tunnel:defTunnel, date:'' };
 }
 // 모달을 열 때 #1~#6을 항상 빈 칸으로 만들면 이미 등록해둔 사진도 매번 새로 입력하는 것처럼 보인다
 // (2026-08-10 사용자 지적 — 2개 슬롯 등록 후 다시 열었더니 빈 폼만 보임). REPORT_SEL(터널·연·월)
 // 기준으로 이미 저장된 슬롯을 찾아 값을 채워 넣는다 — submitPhotoMulti의 기존 레코드 매칭 기준
 // (터널명·연월·번호)과 동일하게 맞춰야 저장 시 새 레코드가 아니라 그 레코드를 수정하게 된다.
+// 독립된 "점검사진" 탭에서는 REPORT_SEL이 의미가 없으므로(위 참고) 프리필 없이 항상 빈 6칸으로 연다.
 function buildPhotoMultiRowsFromExisting(){
+  if(!isReportEntryPhotoContext()) return ['1','2','3','4','5','6'].map(n=>newPhotoMultiRow(n, ''));
   const tunnel=REPORT_SEL.tunnel;
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const recs=(TAB_STATE.photo.records||[]).filter(r=>r['터널명']===tunnel && (r['일자']||'').slice(0,7)===ym);
@@ -3651,8 +3672,13 @@ async function submitPhotoMulti(){
   if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
   const missingRow=usedRows.find(row=>!row.tunnel || !row.date);
   if(missingRow){ alert('#'+missingRow.num+' 칸의 터널명·일자를 입력해주세요.'); return; }
-  const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
-  if(!confirmDateOutOfMonth(usedRows.map(row=>row.date), ym)) return;
+  // "현재 화면 연월과 다른 날짜" 경고는 REPORT_SEL(입력폼 탭 상단 연월 선택)이 실제로 화면에 보이는
+  // 입력폼 탭 진입 시에만 의미가 있다 — 독립된 "점검사진" 탭 신규등록에는 그런 연월 선택 자체가
+  // 없으므로 REPORT_SEL과 무관하게 경고 없이 그대로 저장한다.
+  if(isReportEntryPhotoContext()){
+    const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
+    if(!confirmDateOutOfMonth(usedRows.map(row=>row.date), ym)) return;
+  }
 
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
@@ -7352,7 +7378,11 @@ async function runReportGenBuild(btn, lbl, defaultLabel, sections){
 
 // ── 하단 탭 전환 ──
 const PANEL_IDS=['formEntry', 'report', ...TAB_DEFS.map(t=>t.id)];
+// 상단에서 목록형 7개 탭(월간점검~업무처리)은 "기록관리" 하나로 묶여 있어(2026-08-05), 그 7개 id는
+// 별도로 뽑아 "기록관리가 활성 상태인지"·"하위 칩 노출 여부" 판단에 쓴다.
+const DB_TAB_IDS=TAB_DEFS.map(t=>t.id);
 let _activePanel=PANEL_IDS[0];
+let _lastDbTab=DB_TAB_IDS[0]; // "기록관리" 상단 탭 클릭 시 되돌아갈 마지막 하위 탭(기본값=첫 탭)
 function switchPanel(id){
   if(id===_activePanel) return;
   _activePanel=id;
@@ -7361,6 +7391,13 @@ function switchPanel(id){
     const btn=document.getElementById('nav-'+p);
     if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
   });
+  // "기록관리" 상단 탭 자체는 PANEL_IDS에 없는 래퍼라 위 루프에서 활성화되지 않는다 — 하위 7개 중
+  // 하나가 선택돼 있을 때만 별도로 active 표시하고, 그때만 하위 칩 줄을 보여준다.
+  const isDb=DB_TAB_IDS.includes(id);
+  if(isDb) _lastDbTab=id;
+  document.getElementById('nav-db')?.classList.toggle('active', isDb);
+  const subnav=document.getElementById('dbSubnav');
+  if(subnav) subnav.style.display=isDb?'':'none';
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
   if(id==='formEntry'){ initReportTab(); }
   else if(id==='report'){ initReportGenTab(); unmountAddModalInline(); }
