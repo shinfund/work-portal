@@ -304,9 +304,11 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .report-cover-a4{position:relative;width:100%;max-width:600px;margin:0 auto;aspect-ratio:210/297;padding:5% 7%;box-sizing:border-box}
 .rc-title{font-size:clamp(20px,4.6vw,30px);font-weight:900;text-align:left;line-height:1.3}
 .rc-date{font-size:clamp(17px,3.8vw,24px);font-weight:800;text-align:center;margin-top:22%}
-.rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:center;margin-top:18%;letter-spacing:6px}
-.rc-toc-list{margin-top:6%;max-width:78%;margin-left:auto;margin-right:auto;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
-@media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px} }
+/* 목차 시작 위치 — 원본 보고서 엑셀 "표지" 시트 실측(13열 중 G열=6/13≈46%부터 시작, 목차 블록
+   가운데 정렬이 아니라 페이지 중간쯤에서 시작해 우측으로 이어짐, 2026-08-05, 안전관리 앱과 동일). */
+.rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:center;margin-top:18%;margin-left:44%;width:52%;letter-spacing:6px}
+.rc-toc-list{margin-top:6%;margin-left:44%;width:52%;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
+@media(max-width:480px){ .report-cover-a4{aspect-ratio:auto;padding:24px 16px} .rc-date{margin-top:60px} .rc-toc-hd{margin-top:40px;margin-left:0;width:100%} .rc-toc-list{margin-left:0;width:100%} }
 .rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
 .rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
 .rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
@@ -441,19 +443,15 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
     </div>
   </div>
 </div>
-<!-- TOP TAB NAV — 목록형 3개 탭(전기시설점검/고장수리/점검사진)은 "기록관리" 하나로 묶고 하위 칩으로
-     노출한다(2026-08-05 사용자 요청 — 입력폼 탭 안 페이지 칩과 이름이 그대로 겹쳐 혼동 유발, 안전관리
-     앱과 동일하게 적용). 실제 목록 화면(panel-elecinsp 등)과 로직은 전혀 건드리지 않는다. -->
+<!-- TOP TAB NAV — 목록형 3개 탭(전기시설점검/고장수리/점검사진)은 "기록관리" 하나로 묶는다(2026-08-05
+     사용자 요청 — 입력폼 탭 안 페이지 칩과 이름이 그대로 겹쳐 혼동 유발, 안전관리 앱과 동일하게 적용).
+     하위 3개 탭 전환 칩은 별도 줄로 분리하지 않고 각 패널의 필터 행(연도·월·터널 드롭다운 옆)에
+     이어붙인다(2026-08-05 재조정 — 안전관리 앱과 동일). 실제 목록 화면(panel-elecinsp 등)과 로직은
+     전혀 건드리지 않는다. -->
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-formEntry" role="tab" aria-selected="true" aria-controls="panel-formEntry" onclick="switchPanel('formEntry')"><span class="tt-label">입력폼</span></button>
   <button class="top-tab" id="nav-report" role="tab" aria-selected="false" aria-controls="panel-report" onclick="switchPanel('report')"><span class="tt-label">보고서</span></button>
   <button class="top-tab" id="nav-db" role="tab" aria-selected="false" onclick="switchPanel(_lastDbTab)"><span class="tt-label">기록관리</span></button>
-</div>
-<!-- "기록관리"가 활성일 때만 노출되는 하위 탭 — 입력폼 탭의 report-page-chip과 동일한 시각 언어(보라색) 재사용. -->
-<div class="db-subnav" id="dbSubnav" role="tablist" style="display:none">
-  <button class="report-page-chip" id="nav-elecinsp" role="tab" aria-selected="false" aria-controls="panel-elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
-  <button class="report-page-chip" id="nav-repair" role="tab" aria-selected="false" aria-controls="panel-repair" onclick="switchPanel('repair')">고장수리</button>
-  <button class="report-page-chip" id="nav-photo" role="tab" aria-selected="false" aria-controls="panel-photo" onclick="switchPanel('photo')">점검사진</button>
 </div>
 
 <!-- MAIN -->
@@ -465,12 +463,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
     <div id="reportPaper" class="report-paper"></div>
   </div>
 
-  <!-- ▸ 보고서(작업중) -->
+  <!-- ▸ 보고서(작업중) — 제목 텍스트("보고서 생성")는 삭제하고 연월·생성 버튼 행을 좌측 정렬로
+       (2026-08-05 사용자 요청, 안전관리 앱과 동일). -->
   <div class="panel" id="panel-report">
     <div class="report-paper" id="reportGenPaper">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
-        <div class="report-title-band" style="border-bottom:none;padding-bottom:0;margin-bottom:0">보고서 생성</div>
-        <div class="report-toolbar" id="reportGenSelBar" style="flex-shrink:0;width:auto"></div>
+      <div style="border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
+        <div class="report-toolbar" id="reportGenSelBar"></div>
       </div>
       <div id="reportGenBody" style="max-width:700px"></div>
     </div>
@@ -480,6 +478,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
   <div class="panel" id="panel-elecinsp">
     <div class="filter-row">
       <div id="filterDd-elecinsp" style="display:contents"></div>
+      <div class="report-toolbar-sep"></div>
+      <div class="report-page-chips">
+        <button class="report-page-chip active" data-panel="elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+        <button class="report-page-chip" data-panel="repair" onclick="switchPanel('repair')">고장수리</button>
+        <button class="report-page-chip" data-panel="photo" onclick="switchPanel('photo')">점검사진</button>
+      </div>
       <input class="search-box" id="search-elecinsp" placeholder="🔍 제목·점검내용·비고 검색..." aria-label="검색" oninput="renderTabTable('elecinsp')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('elecinsp')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -488,10 +492,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
       <button class="tb-action-btn tb-excel" id="excelBtn_elecinsp" onclick="exportTabExcel('elecinsp')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_elecinsp">엑셀 생성</span>
-      </button>
-      <button class="tb-action-btn tb-report" id="reportBtn_elecinsp" onclick="exportElecInspReport()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_elecinsp">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -518,6 +518,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
   <div class="panel" id="panel-repair">
     <div class="filter-row">
       <div id="filterDd-repair" style="display:contents"></div>
+      <div class="report-toolbar-sep"></div>
+      <div class="report-page-chips">
+        <button class="report-page-chip" data-panel="elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+        <button class="report-page-chip active" data-panel="repair" onclick="switchPanel('repair')">고장수리</button>
+        <button class="report-page-chip" data-panel="photo" onclick="switchPanel('photo')">점검사진</button>
+      </div>
       <input class="search-box" id="search-repair" placeholder="🔍 제목·이상발생내역·조치내역·작업자 검색..." aria-label="검색" oninput="renderTabTable('repair')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('repair')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -526,10 +532,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
       <button class="tb-action-btn tb-excel" id="excelBtn_repair" onclick="exportTabExcel('repair')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_repair">엑셀 생성</span>
-      </button>
-      <button class="tb-action-btn tb-report" id="reportBtn_repair" onclick="exportRepairReport()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_repair">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -557,6 +559,12 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
   <div class="panel" id="panel-photo">
     <div class="filter-row">
       <div id="filterDd-photo" style="display:contents"></div>
+      <div class="report-toolbar-sep"></div>
+      <div class="report-page-chips">
+        <button class="report-page-chip" data-panel="elecinsp" onclick="switchPanel('elecinsp')">전기시설점검</button>
+        <button class="report-page-chip" data-panel="repair" onclick="switchPanel('repair')">고장수리</button>
+        <button class="report-page-chip active" data-panel="photo" onclick="switchPanel('photo')">점검사진</button>
+      </div>
       <input class="search-box" id="search-photo" placeholder="🔍 제목·사진설명 검색..." aria-label="검색" oninput="renderTabTable('photo')"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal('photo')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -565,10 +573,6 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px
       <button class="tb-action-btn tb-excel" id="excelBtn_photo" onclick="exportTabExcel('photo')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_photo">엑셀 생성</span>
-      </button>
-      <button class="tb-action-btn tb-report" id="reportBtn_photo" onclick="exportPhotoTeamReport()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-        <span id="reportLbl_photo">보고서 생성</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -2798,6 +2802,7 @@ function confirmDateOutOfMonth(dates, ym){
 // ── 표지 ──
 function renderReportPage_cover(){
   document.getElementById('reportPaper').innerHTML=`
+    <div class="report-title-band">2. 점검팀</div>
     <div class="report-cover-a4">
       <div class="rc-title">2. 점검팀</div>
       <div class="rc-date">${esc(REPORT_SEL.year)}년 ${Number(REPORT_SEL.month)}월</div>
@@ -3151,7 +3156,7 @@ function initReportGenTab(){
         <button class="dd-btn" id="rgMonthBtn" type="button" onclick="toggleDd('rgMonthMenu','rgMonthBtn')" aria-haspopup="listbox" aria-label="월 선택"><span id="rgMonthLabel"></span></button>
         <div class="dd-menu" id="rgMonthMenu"></div>
       </div>
-      <button class="add-submit-btn" id="teamReportGenBtn" onclick="generateTeamReport()" style="margin-left:4px"><span id="teamReportGenLbl">보고서 생성</span></button>`;
+      <button id="teamReportGenBtn" onclick="generateTeamReport()" style="background:var(--purple);border:1.5px solid var(--purple);color:#fff;border-radius:var(--r8);padding:5px 14px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;flex-shrink:0;margin-left:4px"><span id="teamReportGenLbl">보고서 생성</span></button>`;
     const curY=new Date().getFullYear();
     document.getElementById('rgYearMenu').innerHTML=[curY-1,curY,curY+1].map(y=>`<div class="dd-opt" data-val="${y}">${y}년</div>`).join('');
     document.getElementById('rgMonthMenu').innerHTML=Array.from({length:12},(_,i)=>i+1).map(m=>`<div class="dd-opt" data-val="${String(m).padStart(2,'0')}">${m}월</div>`).join('');
@@ -3830,7 +3835,9 @@ async function buildOneTeamUnifiedReport(year, month, sections){
 // ── 하단 탭 전환 ──
 const PANEL_IDS=['formEntry','report',...TAB_DEFS.map(t=>t.id)];
 // 상단에서 목록형 3개 탭(전기시설점검/고장수리/점검사진)은 "기록관리" 하나로 묶여 있어(2026-08-05),
-// 그 3개 id는 별도로 뽑아 "기록관리가 활성 상태인지"·"하위 칩 노출 여부" 판단에 쓴다.
+// 그 3개 id는 별도로 뽑아 "기록관리가 활성 상태인지" 판단에 쓴다. 하위 탭 전환 칩은 별도 줄(dbSubnav)이
+// 아니라 각 패널 필터 행 안에 [data-panel] 속성으로 3번 중복 배치돼 있다(2026-08-05 재조정, 안전관리
+// 앱과 동일) — 패널당 하나뿐인 id로는 매칭할 수 없어 querySelectorAll로 전부 순회하며 active를 맞춘다.
 const DB_TAB_IDS=TAB_DEFS.map(t=>t.id);
 let _activePanel=PANEL_IDS[0];
 let _lastDbTab=DB_TAB_IDS[0]; // "기록관리" 상단 탭 클릭 시 되돌아갈 마지막 하위 탭(기본값=첫 탭)
@@ -3842,13 +3849,13 @@ function switchPanel(id){
     const btn=document.getElementById('nav-'+p);
     if(btn){ btn.classList.toggle('active', p===id); btn.setAttribute('aria-selected', p===id?'true':'false'); }
   });
-  // "기록관리" 상단 탭 자체는 PANEL_IDS에 없는 래퍼라 위 루프에서 활성화되지 않는다 — 하위 3개 중
-  // 하나가 선택돼 있을 때만 별도로 active 표시하고, 그때만 하위 칩 줄을 보여준다.
+  // "기록관리" 상단 탭 자체는 PANEL_IDS에 없는 래퍼라 위 루프에서 활성화되지 않는다.
   const isDb=DB_TAB_IDS.includes(id);
   if(isDb) _lastDbTab=id;
   document.getElementById('nav-db')?.classList.toggle('active', isDb);
-  const subnav=document.getElementById('dbSubnav');
-  if(subnav) subnav.style.display=isDb?'':'none';
+  document.querySelectorAll('.report-page-chip[data-panel]').forEach(chip=>{
+    chip.classList.toggle('active', chip.dataset.panel===id);
+  });
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
   if(id==='formEntry'){ initReportTab(); }
   else if(id==='report'){ initReportGenTab(); unmountAddModalInline(); }
