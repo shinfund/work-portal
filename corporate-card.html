@@ -79,7 +79,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 
 /* ── TOP TAB NAV ── */
 .top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(55,138,221,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.top-tab{flex:0 0 auto;min-width:92px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab{flex:0 0 auto;min-width:92px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:400;font-family:inherit;cursor:pointer;padding:11px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
 .top-tab.active{color:var(--sky600)}
 html[data-theme="dark"] .top-tab.active{color:#fff}
 .top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
@@ -147,7 +147,6 @@ tr:hover td{background:var(--sky50)}
 .lim-bar-fill{height:100%;border-radius:10px;transition:width .4s}
 .lim-cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
-.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--r8);padding:6px 12px;font-size:13px;font-family:inherit;color:var(--txt);cursor:pointer;min-height:34px;font-weight:600}
 .search-wrap{position:relative;flex:1;min-width:180px}
 .search-wrap input{width:100%;padding:8px 14px 8px 34px;border:1.5px solid var(--border);border-radius:var(--r8);font-size:13px;background:var(--card);color:var(--txt);font-family:inherit;outline:none;transition:.2s;min-height:34px}
 .search-wrap input:focus{border-color:var(--sky)}
@@ -366,7 +365,10 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
             <div class="dd-menu" id="ddMonthMenu"><div id="ddMonthOpts"></div></div>
           </div>
         </div>
-        <select class="filter-select" id="filterCat" onchange="renderDetail()"><option value="">전체 계정</option></select>
+        <div class="dd-wrap" id="catDdWrap">
+          <div class="dd-btn" id="catDdBtn" onclick="toggleDD('cat')"><span id="catDdLabel">전체 계정</span></div>
+          <div class="dd-menu" id="catDdMenu"><div id="catDdOpts"></div></div>
+        </div>
         <div class="search-wrap">
           <svg class="search-ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input id="srch" type="text" placeholder="지출내역, 상호 검색..." oninput="renderDetail()">
@@ -598,11 +600,28 @@ function renderPanel(name){
 }
 function renderAll(){updateMonthLabel();renderPanel(_activePanel);}
 function toggleDD(type){
-  const yM=document.getElementById("ddYearMenu"),mM=document.getElementById("ddMonthMenu");
+  const yM=document.getElementById("ddYearMenu"),mM=document.getElementById("ddMonthMenu"),cM=document.getElementById("catDdMenu");
   if(type==="year"){const o=yM.classList.contains("open");closeAllDD();if(!o){renderDDYear();yM.classList.add("open");}}
-  else{const o=mM.classList.contains("open");closeAllDD();if(!o){renderDDMonth();mM.classList.add("open");}}
+  else if(type==="month"){const o=mM.classList.contains("open");closeAllDD();if(!o){renderDDMonth();mM.classList.add("open");}}
+  else{const o=cM.classList.contains("open");closeAllDD();if(!o){renderDDCat();cM.classList.add("open");}}
 }
-function closeAllDD(){document.getElementById("ddYearMenu").classList.remove("open");document.getElementById("ddMonthMenu").classList.remove("open");const tm=document.getElementById("trendYearMenu");if(tm)tm.classList.remove("open");}
+function closeAllDD(){document.getElementById("ddYearMenu").classList.remove("open");document.getElementById("ddMonthMenu").classList.remove("open");const cM=document.getElementById("catDdMenu");if(cM)cM.classList.remove("open");const tm=document.getElementById("trendYearMenu");if(tm)tm.classList.remove("open");}
+let catFilter="";
+function renderDDCat(){
+  const cats=[...new Set(RD.map(r=>r.cat))].filter(Boolean).sort();
+  const menu=document.getElementById("catDdOpts");
+  const all=`<div class="dd-opt${!catFilter?" sel":""}" data-val="">전체 계정</div>`;
+  menu.innerHTML=all+cats.map(c=>`<div class="dd-opt${c===catFilter?" sel":""}" data-val="${esc(c)}">${esc(c)}</div>`).join("");
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener("click",e=>{
+      const opt=e.target.closest(".dd-opt");
+      if(!opt)return;
+      pickCat(opt.dataset.val||"");
+    });
+  }
+}
+function pickCat(c){catFilter=c;document.getElementById("catDdLabel").textContent=c||"전체 계정";closeAllDD();renderDetail();}
 function buildYearOpts(base,dataYears,selYear,onPickFn,{allLabel,allPickVal}={}){
   const minY=Math.min(base-1,...dataYears),maxY=Math.max(base+1,...dataYears);
   const years=[];for(let y=minY;y<=maxY;y++)years.push(y);
@@ -660,7 +679,7 @@ function renderOverview(recs){
     buildCatBars(catArr,maxVal,totalThis)
     :emptyHTML();
   const top5=[...recs].sort((a,b)=>b.total-a.total).slice(0,5);
-  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="color:var(--txt);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
+  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
 }
 function buildCatBars(catArr,maxVal,totalRef){
   return catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/totalRef*100),barW=Math.round(amt/maxVal*100);return`<div class="catbar-row"><div class="catbar-name">${esc(cat)}</div><div class="catbar-track"><div class="catbar-fill" style="width:${barW}%;background:${c.dot}">${barW>=18?fmt(amt):""}</div></div><div class="catbar-amt">${fmt(amt)}원</div><div class="catbar-pct">${pct}%</div></div>`;}).join("");
@@ -677,7 +696,7 @@ function renderAccount(recs){
   const catArr=Object.entries(catMap).sort((a,b)=>b[1]-a[1]),total=catArr.reduce((s,[,v])=>s+v,0)||1,maxVal=catArr[0]?catArr[0][1]:1;
   document.getElementById("accBadge").textContent=catArr.length+"개";
   document.getElementById("accCatBars").innerHTML=catArr.length?buildCatBars(catArr,maxVal,total):emptyHTML();
-  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r">${cntMap[cat]}건</td><td class="r" style="color:var(--txt)">${fmt(amt)}</td><td class="r" style="color:var(--txt)">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
+  document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt)">${cntMap[cat]}건</td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(amt)}</td><td class="r" style="font-size:13px;color:var(--txt)">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
 function unifiedAccount(r){const cat=r.cat||"",desc=r.desc||"";if(cat==="비급여성(생수)")return"생수대금";if(cat==="도서인쇄비")return"도서인쇄비";if(cat==="차량비(법인카드)")return"차량비(법인카드)";if(cat==="차량비"){if(/순찰차|875너|\*{3}너/.test(desc))return"차량비(점검차)";if(/업무차|396거|\*{3}거/.test(desc))return"차량비(업무차)";return"차량비(점검차)";}if(cat==="비급여성"){if(/회식/.test(desc))return"직원회식";if(/석식|중식/.test(desc))return"중석식대";return"다과부식";}if(cat==="소모품비")return"소모품비";return null;}
 function renderLimit(recs){
@@ -696,7 +715,7 @@ function renderLimit(recs){
     `<div class="kpi-card" style="background:var(--sky50);border:1px solid var(--sky100)"><div class="kpi-lbl" style="color:var(--sky600)">총 한도</div><div class="kpi-val" style="color:var(--sky800)">${fmt(totalLim)}<span style="font-size:12px;font-weight:500">원</span></div></div>`+
     `<div class="kpi-card" style="background:var(--card);border:1px solid var(--border)"><div class="kpi-lbl" style="color:var(--txt2)">총 사용</div><div class="kpi-val" style="color:var(--txt)">${fmt(totalUsed)}<span style="font-size:12px;font-weight:500">원</span></div></div>`+
     `<div class="kpi-card" style="background:${totalRemain>=0?"var(--teal50)":"var(--coral50)"};border:1px solid ${totalRemain>=0?"var(--teal100)":"var(--coral100)"}"><div class="kpi-lbl" style="color:${totalRemain>=0?"var(--teal600)":"var(--coral)"}">잔액 (${totalPct}%)</div><div class="kpi-val" style="color:${totalRemain>=0?"var(--teal600)":"var(--coral)"}">${fmt(Math.abs(totalRemain))}<span style="font-size:12px;font-weight:500">${totalRemain<0?" 초과":"원"}</span></div></div>`;
-  function flushGroup(cat){const cs=rows.filter(x=>x.cat===cat),csu=cs.reduce((s,x)=>s+x.used,0),csl=cs.reduce((s,x)=>s+x.lim,0),cpct=Math.round(csu/Math.max(csl,1)*100);return`<tr style="background:var(--sky50);font-weight:700"><td colspan="2" style="font-size:12px;color:var(--txt);padding:8px 12px">└ ${esc(cat)} 소계</td><td class="r" style="padding:8px 12px">${fmt(csl)}</td><td class="r" style="padding:8px 12px">${fmt(csu)}</td><td class="r" style="padding:8px 12px;color:var(--txt)">${fmt(Math.abs(csl-csu))}${csl-csu<0?" 초과":""}</td><td style="padding:8px 12px"><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(cpct,100)}%;background:${cpct>80?"var(--coral)":"var(--sky)"}"></div></div><span style="font-size:11px;color:var(--txt)">${cpct}%</span></div></td></tr>`;}
+  function flushGroup(cat){const cs=rows.filter(x=>x.cat===cat),csu=cs.reduce((s,x)=>s+x.used,0),csl=cs.reduce((s,x)=>s+x.lim,0),cpct=Math.round(csu/Math.max(csl,1)*100);return`<tr style="background:var(--sky50);font-weight:700"><td colspan="2" style="font-size:13px;color:var(--txt);padding:8px 12px">└ ${esc(cat)} 소계</td><td class="r" style="font-size:13px;padding:8px 12px">${fmt(csl)}</td><td class="r" style="font-size:13px;padding:8px 12px">${fmt(csu)}</td><td class="r" style="font-size:13px;padding:8px 12px;color:var(--txt)">${fmt(Math.abs(csl-csu))}${csl-csu<0?" 초과":""}</td><td style="padding:8px 12px"><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(cpct,100)}%;background:${cpct>80?"var(--coral)":"var(--sky)"}"></div></div><span style="font-size:11px;color:var(--txt)">${cpct}%</span></div></td></tr>`;}
   let tbody="",prevCat="";
   rows.forEach(r=>{
     const remain=r.lim-r.used,pct=Math.round(r.used/Math.max(r.lim,1)*100);
@@ -704,10 +723,10 @@ function renderLimit(recs){
     if(r.cat!==prevCat&&prevCat)tbody+=flushGroup(prevCat);
     prevCat=r.cat;
     const ud=fmt(r.used);
-    tbody+=`<tr><td style="font-size:12px;color:var(--txt)">${esc(r.cat)}</td><td style="font-size:12px;color:var(--txt)">${esc(r.nm)}</td><td class="r" style="font-size:13px">${fmt(r.lim)}</td><td class="r" style="font-size:13px">${ud}</td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(Math.abs(remain))}${remain<0?" 초과":""}</td><td><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(pct,100)}%;background:${barClr}"></div></div><span style="font-size:11px;color:var(--txt);min-width:30px;text-align:right">${pct}%</span></div></td></tr>`;
+    tbody+=`<tr><td style="font-size:13px;color:var(--txt)">${esc(r.cat)}</td><td style="font-size:13px;color:var(--txt)">${esc(r.nm)}</td><td class="r" style="font-size:13px">${fmt(r.lim)}</td><td class="r" style="font-size:13px">${ud}</td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(Math.abs(remain))}${remain<0?" 초과":""}</td><td><div class="lim-bar-wrap"><div class="lim-bar-track"><div class="lim-bar-fill" style="width:${Math.min(pct,100)}%;background:${barClr}"></div></div><span style="font-size:11px;color:var(--txt);min-width:30px;text-align:right">${pct}%</span></div></td></tr>`;
   });
   if(prevCat)tbody+=flushGroup(prevCat);
-  tbody+=`<tr style="background:var(--sky50);font-weight:800;border-top:2px solid var(--sky100)"><td colspan="2" style="color:var(--txt);padding:11px 12px">총합계</td><td class="r" style="padding:11px 12px">${fmt(totalLim)}</td><td class="r" style="padding:11px 12px">${fmt(totalUsed)}</td><td class="r" style="padding:11px 12px;color:var(--txt)">${fmt(Math.abs(totalRemain))}${totalRemain<0?" 초과":""}</td><td style="padding:11px 12px;color:var(--txt)">${totalPct}%</td></tr>`;
+  tbody+=`<tr style="background:var(--sky50);font-weight:800;border-top:2px solid var(--sky100)"><td colspan="2" style="font-size:13px;color:var(--txt);padding:11px 12px">총합계</td><td class="r" style="font-size:13px;padding:11px 12px">${fmt(totalLim)}</td><td class="r" style="font-size:13px;padding:11px 12px">${fmt(totalUsed)}</td><td class="r" style="font-size:13px;padding:11px 12px;color:var(--txt)">${fmt(Math.abs(totalRemain))}${totalRemain<0?" 초과":""}</td><td style="font-size:13px;padding:11px 12px;color:var(--txt)">${totalPct}%</td></tr>`;
   document.getElementById("limTableBody").innerHTML=tbody;
   const catSummary={};rows.forEach(r=>{if(!catSummary[r.cat])catSummary[r.cat]={lim:0,used:0};catSummary[r.cat].lim+=r.lim;catSummary[r.cat].used+=r.used;});
   document.getElementById("limCatGrid").innerHTML=Object.entries(catSummary).map(([cat,cs])=>{const pct=Math.round(cs.used/Math.max(cs.lim,1)*100),remain=cs.lim-cs.used,c=clr(cat),barClr=pct>80?"var(--coral)":pct>60?"var(--amber)":c.dot;return`<div class="sc" style="margin-bottom:0"><div class="sc-hd" style="margin-bottom:10px"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>${esc(cat)}<span style="margin-left:auto;font-size:12px;font-weight:600;color:${pct>80?"var(--coral)":"var(--teal600)"}">${pct>80?"⚠ 주의":remain<0?"● 초과":"여유"}</span></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px"><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:13px;color:var(--txt)">한도</div><div style="font-size:16px;font-weight:700;color:var(--txt)">${fmt(cs.lim)}</div></div><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:13px;color:var(--txt)">사용</div><div style="font-size:16px;font-weight:700;color:var(--txt)">${fmt(cs.used)}</div></div><div style="text-align:center;background:var(--bg);border-radius:var(--r8);padding:7px"><div style="font-size:13px;color:var(--txt)">잔액</div><div style="font-size:16px;font-weight:700;color:var(--txt)">${fmt(Math.abs(remain))}</div></div></div><div style="height:6px;background:var(--border);border-radius:10px;overflow:hidden"><div style="height:100%;width:${Math.min(pct,100)}%;background:${barClr};border-radius:10px;transition:width .4s"></div></div><div style="font-size:11px;font-weight:600;text-align:right;margin-top:3px;color:${barClr}">${pct}%</div></div>`;}).join("");
@@ -786,12 +805,9 @@ function toggleTrendDD(){
 function shiftTrendYear(d){trendYearBase+=d;document.getElementById("trendYearCenter").textContent=trendYearBase;renderMonthly();document.getElementById("trendYearMenu").classList.add("open");}
 function pickTrendYear(y){trendYear=y;if(y)trendYearBase=y;document.getElementById("trendYearMenu").classList.remove("open");renderMonthly();}
 function renderDetail(){
-  const cats=[...new Set(RD.map(r=>r.cat))].sort();
-  const filterEl=document.getElementById("filterCat"),selCat=filterEl.value;
-  filterEl.innerHTML=`<option value="">전체 계정</option>`+cats.map(c=>`<option value="${esc(c)}"${c===selCat?" selected":""}>${esc(c)}</option>`).join("");
   const q=(document.getElementById("srch").value||"").toLowerCase();
   const ym=curMonth?`${curYear}-${String(curMonth).padStart(2,"0")}`:"";
-  const f=RD.filter(r=>(!ym||r.month===ym)&&(!selCat||r.cat===selCat)&&(!q||(r.desc||"").toLowerCase().includes(q)||(r.vendor||"").toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+  const f=RD.filter(r=>(!ym||r.month===ym)&&(!catFilter||r.cat===catFilter)&&(!q||(r.desc||"").toLowerCase().includes(q)||(r.vendor||"").toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
   const total=f.length,pages=Math.ceil(total/PS)||1;
   if(dtPage>pages)dtPage=1;
   const paged=f.slice((dtPage-1)*PS,dtPage*PS);
@@ -1143,10 +1159,9 @@ const EXCEL_COLUMNS_CARD=[
 ];
 // 현재 사용내역 탭의 필터(계정/검색어/월)가 적용된 목록을 그대로 내보낸다(2026-08-04).
 function getDetailFilteredRecords(){
-  const selCat=(document.getElementById('filterCat')||{}).value||'';
   const q=((document.getElementById('srch')||{}).value||'').toLowerCase();
   const ym=curMonth?`${curYear}-${String(curMonth).padStart(2,'0')}`:'';
-  return RD.filter(r=>(!ym||r.month===ym)&&(!selCat||r.cat===selCat)&&(!q||(r.desc||'').toLowerCase().includes(q)||(r.vendor||'').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
+  return RD.filter(r=>(!ym||r.month===ym)&&(!catFilter||r.cat===catFilter)&&(!q||(r.desc||'').toLowerCase().includes(q)||(r.vendor||'').toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
 }
 function exportCardExcel(){
   const rows=getDetailFilteredRecords().map(r=>({
