@@ -1277,19 +1277,33 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   const NUMFMT='_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
   const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
 
+  const byCat={};
+  rows.forEach(r=>{ (byCat[r.cat]=byCat[r.cat]||[]).push(r); });
+  const cats=CARD_REPORT_CAT_ORDER.filter(c=>byCat[c]&&byCat[c].length)
+    .concat(Object.keys(byCat).filter(c=>!CARD_REPORT_CAT_ORDER.includes(c)));
+  // 소계·총합계를 열 너비 계산 전에 미리 구해둔다 — 이 값들은 굵게(bold) 표시되는 데다
+  // 개별 거래 행보다 자릿수가 큰 경우가 많아, 거래 행 값만으로 폭을 잡으면 총합계 셀이
+  // "###"로 잘린다(2026-08-06 실제 발견).
+  const catSums=cats.map(cat=>byCat[cat].reduce((s,r)=>({supply:s.supply+r.supply,vat:s.vat+r.vat,total:s.total+r.total}),{supply:0,vat:0,total:0}));
+  const grand=catSums.reduce((s,c)=>({supply:s.supply+c.supply,vat:s.vat+c.vat,total:s.total+c.total}),{supply:0,vat:0,total:0});
+
   const headerLabels=['계정항목','사용일자','상호','사업자등록번호','사용목적 및 지출내역','카드명','카드번호','공급가액 ','세액 ','합계 '];
   const colGetters=[r=>r.cat, r=>r.date, r=>r.vendor, r=>r.bizNo, r=>r.desc, r=>r.cardName, r=>r.cardNo, r=>(r.supply||0).toLocaleString(), r=>(r.vat||0).toLocaleString(), r=>(r.total||0).toLocaleString()];
-  ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
+  // 굵은 소계·총합계 값(공급가액/세액/합계 열)도 후보 문자열에 포함, bold라 실제 렌더 폭이
+  // 더 넓으므로 패딩을 여유 있게(+2) 준다.
+  const boldAmountStrs={8:catSums.map(c=>c.supply.toLocaleString()).concat(grand.supply.toLocaleString()),
+    9:catSums.map(c=>c.vat.toLocaleString()).concat(grand.vat.toLocaleString()),
+    10:catSums.map(c=>c.total.toLocaleString()).concat(grand.total.toLocaleString())};
+  ws.columns=colGetters.map((get,i)=>{
+    const ci=i+1;
+    const extra=boldAmountStrs[ci]||[];
+    return {width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)).concat(extra), 8, 40, extra.length?7:5)};
+  });
 
   ws.getRow(1).height=60;
   const titleCell=ws.getCell('A1');
   titleCell.value=`법인/주유카드 계정항목별 요약 (${tunnel})`;
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
-
-  const byCat={};
-  rows.forEach(r=>{ (byCat[r.cat]=byCat[r.cat]||[]).push(r); });
-  const cats=CARD_REPORT_CAT_ORDER.filter(c=>byCat[c]&&byCat[c].length)
-    .concat(Object.keys(byCat).filter(c=>!CARD_REPORT_CAT_ORDER.includes(c)));
 
   const REGION={r1:2, r2:2+1+rows.length+cats.length, c1:1, c2:10};
   // 계정별 소계 행 아래(=다음 계정항목 첫 행 위) 경계는 표 외곽 테두리와 같은 두께(thin)로 —
@@ -1307,10 +1321,10 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL; cell.border=gb(2,2,i+1,i+1);
   });
 
-  let rn=3, grand={supply:0,vat:0,total:0};
+  let rn=3;
   cats.forEach((cat,catIdx)=>{
     const list=byCat[cat].slice().sort((a,b)=>a.date.localeCompare(b.date));
-    let sub={supply:0,vat:0,total:0};
+    const sub=catSums[catIdx];
     list.forEach((r,i)=>{
       const row=ws.getRow(rn);
       if(i===0){ const c=row.getCell(1); c.value=cat; c.font=BODY; c.alignment=LEFT; }
@@ -1326,7 +1340,6 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
       const topThin=(i===0&&catIdx>0);
       for(let ci=1;ci<=10;ci++) row.getCell(ci).border=gb(rn,rn,ci,ci,{topThin});
       row.commit();
-      sub.supply+=r.supply; sub.vat+=r.vat; sub.total+=r.total;
       rn++;
     });
     const subRow=ws.getRow(rn);
@@ -1336,7 +1349,6 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     });
     for(let ci=1;ci<=10;ci++) subRow.getCell(ci).border=gb(rn,rn,ci,ci,{bottomThin:true});
     subRow.commit();
-    grand.supply+=sub.supply; grand.vat+=sub.vat; grand.total+=sub.total;
     rn++;
   });
   const totalRow=ws.getRow(rn);
