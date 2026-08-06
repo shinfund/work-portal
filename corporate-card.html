@@ -1391,6 +1391,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   });
 
   const sorted=rows.slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const CENTER_COLS=[1,5,6,8,9,11,12,13];
   sorted.forEach((r,i)=>{
     const rn=3+i;
     const row=ws.getRow(rn);
@@ -1411,7 +1412,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
     for(let ci=1;ci<=13;ci++){
       const cell=row.getCell(ci);
       cell.font=(ci===13&&r.cardName==='주유카드') ? FUEL_CARD_FONT : BODY;
-      cell.alignment=(ci===2||ci===3||ci===4||ci===11) ? {vertical:'middle'} : LEFT;
+      cell.alignment = CENTER_COLS.includes(ci) ? CENTER : ((ci===2||ci===3||ci===4) ? {vertical:'middle'} : LEFT);
       cell.border=gb(rn,rn,ci,ci);
     }
     row.commit();
