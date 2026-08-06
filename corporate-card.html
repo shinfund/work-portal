@@ -1200,7 +1200,7 @@ const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주
 const CARD_REPORT_CAT_ORDER=['차량비','도서인쇄비','소모품비','비급여성','차량비(법인카드)','비급여성(생수)'];
 
 async function fetchVendorFullMap(){
-  const map={}, list=[];
+  const map={};
   let data=await fetchNotion({page_size:100},VENDOR_DB_ID);
   let pages=data.results||[];
   let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
@@ -1215,13 +1215,10 @@ async function fetchVendorFullMap(){
     const tp=Object.values(props).find(v=>v.type==='title');
     const name=tp?(tp.title||[]).map(t=>t.plain_text||'').join(''):'';
     const bizNoProp=props['사업자등록번호'];
-    const noteProp=props['비고'];
     const bizNo=bizNoProp?(bizNoProp.rich_text||[]).map(t=>t.plain_text||'').join(''):'';
-    const note=noteProp?(noteProp.rich_text||[]).map(t=>t.plain_text||'').join(''):'';
-    if(name){ map[p.id]={name,bizNo,note}; list.push({name,bizNo,note}); }
+    if(name) map[p.id]={name,bizNo};
   });
-  list.sort((a,b)=>a.name.localeCompare(b.name,'ko'));
-  return {map,list};
+  return map;
 }
 function parseCardReportPage(page,vendorMap){
   const props=page.properties||{};
@@ -1254,7 +1251,7 @@ function parseCardReportPage(page,vendorMap){
 }
 async function fetchCardReportRows(year,month){
   const ym=`${year}-${String(month).padStart(2,'0')}`;
-  const [vendorInfo,data]=await Promise.all([fetchVendorFullMap(),fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}]})]);
+  const [vendorMap,data]=await Promise.all([fetchVendorFullMap(),fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}]})]);
   let pages=data.results||[];
   let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
   const MAX=20;
@@ -1263,8 +1260,8 @@ async function fetchCardReportRows(year,month){
     pages=[...pages,...(d2.results||[])];
     cursor=d2.next_cursor;hasMore=d2.has_more;
   }
-  const rows=pages.map(p=>parseCardReportPage(p,vendorInfo.map)).filter(r=>r&&r.month===ym);
-  return {rows,vendorList:vendorInfo.list};
+  const rows=pages.map(p=>parseCardReportPage(p,vendorMap)).filter(r=>r&&r.month===ym);
+  return {rows};
 }
 
 function buildCardSummarySheet(wb,rows,tunnel,year,month){
@@ -1273,10 +1270,14 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
-  ws.columns=[14.5,14.9,24,15.4,28.6,9,18.1,10.6,10.6,10.6].map(w=>({width:w}));
   const BODY=EXCEL_BODY_FONT;
   const LEFT={vertical:'middle', horizontal:'left'};
   const NUMFMT='_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
+  const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
+
+  const headerLabels=['계정항목','사용일자','상호','사업자등록번호','사용목적 및 지출내역','카드명','카드번호','공급가액 ','세액 ','합계 '];
+  const colGetters=[r=>r.cat, r=>r.date, r=>r.vendor, r=>r.bizNo, r=>r.desc, r=>r.cardName, r=>r.cardNo, r=>(r.supply||0).toLocaleString(), r=>(r.vat||0).toLocaleString(), r=>(r.total||0).toLocaleString()];
+  ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
 
   ws.getRow(1).height=30;
   ws.getRow(2).height=30;
@@ -1287,24 +1288,30 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   ws.getRow(4).height=20.05;
   ws.getCell('H5').value='값'; ws.getCell('H5').font=BODY; ws.getCell('H5').alignment={vertical:'middle'};
 
-  const headerLabels=['계정항목','사용일자','상호','사업자등록번호','사용목적 및 지출내역','카드명','카드번호','공급가액 ','세액 ','합계 '];
-  const headerRow=ws.getRow(6);
-  headerLabels.forEach((h,i)=>{
-    const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=BODY; cell.alignment=LEFT;
-  });
-
   const byCat={};
   rows.forEach(r=>{ (byCat[r.cat]=byCat[r.cat]||[]).push(r); });
   const cats=CARD_REPORT_CAT_ORDER.filter(c=>byCat[c]&&byCat[c].length)
     .concat(Object.keys(byCat).filter(c=>!CARD_REPORT_CAT_ORDER.includes(c)));
+
+  const REGION={r1:6, r2:6+1+rows.length+cats.length, c1:1, c2:10};
+  function gb(r1,r2,c1,c2){
+    return {
+      top:{style: r1===REGION.r1 ? 'thin':'hair'}, bottom:{style: r2===REGION.r2 ? 'thin':'hair'},
+      left:{style: c1===REGION.c1 ? 'thin':'hair'}, right:{style: c2===REGION.c2 ? 'thin':'hair'}
+    };
+  }
+  const headerRow=ws.getRow(6);
+  headerLabels.forEach((h,i)=>{
+    const cell=headerRow.getCell(i+1);
+    cell.value=h; cell.font=BODY; cell.alignment=LEFT; cell.fill=HEADER_FILL; cell.border=gb(6,6,i+1,i+1);
+  });
 
   let rn=7, grand={supply:0,vat:0,total:0};
   cats.forEach(cat=>{
     const list=byCat[cat].slice().sort((a,b)=>a.date.localeCompare(b.date));
     let sub={supply:0,vat:0,total:0};
     list.forEach((r,i)=>{
-      const row=ws.getRow(rn++);
+      const row=ws.getRow(rn);
       if(i===0){ const c=row.getCell(1); c.value=cat; c.font=BODY; c.alignment=LEFT; }
       const dc=row.getCell(2); const d=excelParseDate(r.date); if(d){dc.value=d;dc.numFmt='mm-dd-yy';} dc.font=BODY; dc.alignment=LEFT;
       row.getCell(3).value=r.vendor; row.getCell(3).font=BODY; row.getCell(3).alignment={vertical:'middle'};
@@ -1315,22 +1322,27 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
       const hc=row.getCell(8); hc.value=r.supply; hc.font=BODY; hc.alignment={vertical:'middle'}; hc.numFmt=NUMFMT;
       const ic=row.getCell(9); ic.value=r.vat; ic.font=BODY; ic.alignment={vertical:'middle'}; ic.numFmt='#,##0';
       const jc=row.getCell(10); jc.value=r.total; jc.font=BODY; jc.alignment={vertical:'middle'}; jc.numFmt=NUMFMT;
+      for(let ci=1;ci<=10;ci++) row.getCell(ci).border=gb(rn,rn,ci,ci);
       row.commit();
       sub.supply+=r.supply; sub.vat+=r.vat; sub.total+=r.total;
+      rn++;
     });
-    const subRow=ws.getRow(rn++);
+    const subRow=ws.getRow(rn);
     subRow.getCell(1).value=' '; subRow.getCell(1).font=BODY; subRow.getCell(1).alignment=LEFT; subRow.getCell(1).numFmt='@';
     [ [8,sub.supply,NUMFMT],[9,sub.vat,'#,##0'],[10,sub.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
       const c=subRow.getCell(ci); c.value=v; c.font=BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
     });
+    for(let ci=1;ci<=10;ci++) subRow.getCell(ci).border=gb(rn,rn,ci,ci);
     subRow.commit();
     grand.supply+=sub.supply; grand.vat+=sub.vat; grand.total+=sub.total;
+    rn++;
   });
-  const totalRow=ws.getRow(rn++);
+  const totalRow=ws.getRow(rn);
   totalRow.getCell(1).value='총합계'; totalRow.getCell(1).font=BODY; totalRow.getCell(1).alignment=LEFT;
   [ [8,grand.supply,NUMFMT],[9,grand.vat,'#,##0'],[10,grand.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
     const c=totalRow.getCell(ci); c.value=v; c.font=BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
   });
+  for(let ci=1;ci<=10;ci++) totalRow.getCell(ci).border=gb(rn,rn,ci,ci);
   totalRow.commit();
   return ws;
 }
@@ -1341,7 +1353,6 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
     pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'5:5'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
-  ws.columns=[11.1,11.6,11.6,11.6,6.6,6.6,26.8,14.5,16.6,28.6,7.4,19,10.5].map(w=>({width:w}));
   const BODY=EXCEL_BODY_FONT;
   const LEFT={vertical:'middle', horizontal:'left'};
   const CENTER={vertical:'middle', horizontal:'center'};
@@ -1355,6 +1366,14 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
     };
   }
 
+  const headerLabels=['사용일자','공급가액','세액','합계','직급','성명','상호','사업자등록번호','계정항목','사용목적 및 지출내역','총인원','카드번호','카드명'];
+  const colGetters=[
+    r=>r.date, r=>(r.supply||0).toLocaleString(), r=>(r.vat||0).toLocaleString(), r=>(r.total||0).toLocaleString(),
+    ()=>CARD_REPORT_PREPARER.title, ()=>CARD_REPORT_PREPARER.name, r=>r.vendor, r=>r.bizNo, r=>r.cat, r=>r.desc,
+    r=>r.headcount, r=>r.cardNo, r=>r.cardName
+  ];
+  ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
+
   ws.getRow(1).height=30;
   ws.getRow(2).height=30;
   const titleCell=ws.getCell('A2');
@@ -1363,7 +1382,6 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   ws.getRow(3).height=30;
   ws.getRow(4).height=20.05;
 
-  const headerLabels=['사용일자','공급가액','세액','합계','직급','성명','상호','사업자등록번호','계정항목','사용목적 및 지출내역','총인원','카드번호','카드명'];
   const headerRow=ws.getRow(5);
   headerRow.height=30;
   headerLabels.forEach((h,i)=>{
@@ -1401,113 +1419,13 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   return ws;
 }
 
-function buildCardLimitSheet(wb){
-  const ws=wb.addWorksheet('카드한도',{
-    views:[{showGridLines:false, zoomScale:100}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait}
-  });
-  ws.columns=[16.41,16.41,16.41,16.41,16.41,16.41].map(w=>({width:w}));
-  const TITLE_FONT={name:'HY헤드라인M', size:24, color:{argb:'FF000000'}};
-  const BODY={name:'맑은 고딕', size:12, color:{argb:'FF000000'}};
-  const CENTER={vertical:'middle', horizontal:'center'};
-  const THIN_BOX={top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'}};
-  const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
-  const YELLOW_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}};
-  const BLUE_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFD9E2F3'}};
-  const NONE_FILL={type:'pattern',pattern:'none'};
-
-  function mc(range,value,font,fill,numFmt){
-    const master=range.split(':')[0];
-    const cell=ws.getCell(master);
-    cell.value=value; cell.font=font; cell.alignment=CENTER; cell.border=THIN_BOX; cell.fill=fill||NONE_FILL;
-    if(numFmt) cell.numFmt=numFmt;
-    if(range.includes(':')) ws.mergeCells(range);
-  }
-
-  ws.getRow(1).height=30;
-  ws.mergeCells('A1:F1');
-  const t=ws.getCell('A1'); t.value='법인카드한도'; t.font=TITLE_FONT; t.alignment=CENTER; t.border={}; t.fill=NONE_FILL;
-  ws.getRow(2).height=30;
-  const s=ws.getCell('A2'); s.value=EXCEL_COMPANY_NAME; s.font=BODY; s.alignment={vertical:'middle'}; s.border={}; s.fill=NONE_FILL;
-
-  ws.getRow(3).height=30;
-  ['계정항목','사용목적','사용내역','한도금액','소계','비고'].forEach((h,i)=>mc(String.fromCharCode(65+i)+'3',h,BODY,HEADER_FILL));
-
-  // 비급여성(4~7행) — 참고 엑셀 실측값 그대로(석식대 신설분 포함, 소계 780,000→1,180,000)
-  ws.getRow(4).height=30; ws.getRow(5).height=30; ws.getRow(6).height=30; ws.getRow(7).height=30;
-  const NONPAY=[{b:'다과, 부식',d:100000},{b:'직원회식',d:280000},{b:'중식대',d:400000},{b:'석식대',d:400000}];
-  const nonpaySum=NONPAY.reduce((s,r)=>s+r.d,0);
-  mc('A4:A7','비급여성',BODY,YELLOW_FILL);
-  mc('E4:E7',nonpaySum,BODY,YELLOW_FILL,'#,##0_ ');
-  NONPAY.forEach((r,i)=>{ const rn=4+i; mc('B'+rn,r.b,BODY,BLUE_FILL); mc('D'+rn,r.d,BODY,BLUE_FILL,'#,##0_ '); });
-  mc('C6:C7','중식대, 석식대',BODY,NONE_FILL);
-  mc('F6:F7','업무추진비',BODY,NONE_FILL);
-  ws.getCell('C4').value='커피, 음료수 등'; ws.getCell('C4').font=BODY; ws.getCell('C4').alignment=CENTER; ws.getCell('C4').border=THIN_BOX;
-  ws.getCell('C5').value='직원회식'; ws.getCell('C5').font=BODY; ws.getCell('C5').alignment=CENTER; ws.getCell('C5').border=THIN_BOX;
-
-  // 소모품비(8~10행)
-  ws.getRow(8).height=30; ws.getRow(9).height=30; ws.getRow(10).height=30;
-  const SUPPLY=[{c:'전산,사무용품비',d:150000},{c:'공구 및 집기류',d:150000},{c:'소모성자재(장갑 등)',d:200000}];
-  const supplySum=SUPPLY.reduce((s,r)=>s+r.d,0);
-  mc('A8:A10','소모품비',BODY,YELLOW_FILL);
-  mc('E8:E10',supplySum,BODY,YELLOW_FILL,'#,##0_ ');
-  SUPPLY.forEach((r,i)=>{ const rn=8+i; mc('C'+rn,r.c,BODY,NONE_FILL); mc('D'+rn,r.d,BODY,NONE_FILL,'#,##0_ '); });
-
-  // 차량비(11~13행)
-  ws.getRow(11).height=30; ws.getRow(12).height=30; ws.getRow(13).height=30;
-  const VEHICLE=[{c:'점검차량 유류비',d:500000},{c:'업무차량 유류비',d:300000},{c:'고속도로 통행료',d:150000}];
-  const vehicleSum=VEHICLE.reduce((s,r)=>s+r.d,0);
-  mc('A11:A13','차량비',BODY,NONE_FILL);
-  mc('E11:E13',vehicleSum,BODY,NONE_FILL,'#,##0_ ');
-  VEHICLE.forEach((r,i)=>{ const rn=11+i; mc('C'+rn,r.c,BODY,NONE_FILL); mc('D'+rn,r.d,BODY,NONE_FILL,'#,##0_ '); });
-
-  // 비급여성(생수)(14행), 도서인쇄비(15행), 합계(16행)
-  ws.getRow(14).height=30;
-  mc('A14','비급여성',BODY,YELLOW_FILL); mc('B14','생수',BODY,BLUE_FILL); mc('C14','생수',BODY,NONE_FILL);
-  mc('D14',90000,BODY,BLUE_FILL,'#,##0_ '); mc('E14',90000,BODY,YELLOW_FILL,'#,##0_ ');
-  ws.getRow(15).height=30;
-  mc('A15','도서인쇄비',BODY,NONE_FILL); mc('B15','제본비',BODY,NONE_FILL); mc('C15','제본비',BODY,NONE_FILL);
-  mc('D15',120000,BODY,NONE_FILL,'#,##0_ '); mc('E15',120000,BODY,NONE_FILL,'#,##0_ ');
-  ws.getRow(16).height=30;
-  const total=nonpaySum+supplySum+vehicleSum+90000+120000;
-  mc('A16','합계',BODY,NONE_FILL);
-  ws.getCell('B16').border=THIN_BOX; ws.getCell('C16').border=THIN_BOX;
-  mc('D16',total,BODY,NONE_FILL,'#,##0_ ');
-  ws.getCell('E16').border=THIN_BOX; ws.getCell('F16').border=THIN_BOX;
-  return ws;
-}
-
-function buildVendorDbSheet(wb,vendorList){
-  const ws=wb.addWorksheet('거래처DB',{
-    views:[{state:'frozen', ySplit:1, showGridLines:false, zoomScale:100}],
-    pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0, margins:EXCEL_PAGE_PRESETS.portrait}
-  });
-  ws.columns=[{width:30.2},{width:19.2},{width:16.5}];
-  const BODY=EXCEL_BODY_FONT;
-  const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
-  const headerRow=ws.getRow(1);
-  ['상호','사업자등록번호','비고'].forEach((h,i)=>{
-    const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=BODY; cell.alignment={vertical:'middle'}; cell.fill=HEADER_FILL;
-  });
-  vendorList.forEach((v,i)=>{
-    const row=ws.getRow(2+i);
-    row.getCell(1).value=v.name; row.getCell(2).value=v.bizNo; row.getCell(2).numFmt='@'; row.getCell(3).value=v.note;
-    [1,2,3].forEach(ci=>{ row.getCell(ci).font=BODY; row.getCell(ci).alignment={vertical:'middle'}; });
-    row.commit();
-  });
-  return ws;
-}
-
 async function buildOneCardReport(year,month){
-  const {rows,vendorList}=await fetchCardReportRows(year,month);
+  const {rows}=await fetchCardReportRows(year,month);
   if(!rows.length) throw new Error('해당 연월에 데이터가 없습니다.');
   await loadExcelLib();
   const wb=new ExcelJS.Workbook();
   buildCardSummarySheet(wb,rows,CARD_REPORT_TUNNEL,year,month);
   buildCardDetailSheet(wb,rows,CARD_REPORT_TUNNEL,year,month);
-  buildCardLimitSheet(wb);
-  buildVendorDbSheet(wb,vendorList);
   const buf=await wb.xlsx.writeBuffer();
   const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url=URL.createObjectURL(blob);
