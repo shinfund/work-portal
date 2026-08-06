@@ -399,7 +399,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>날짜</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정</th><th>지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
+        <thead><tr><th>날짜</th><th>제목</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정</th><th>지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
       </table></div>
       <div class="pager" id="pager"></div>
@@ -840,6 +840,7 @@ function renderDetail(){
     const fuelTxt=r.cardName==="주유카드"?`<span style="color:var(--coral)">${esc(r.cardName)}</span>`:esc(r.cardName||"");
     return`<tr>`+
       `<td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td>`+
+      `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.title||"")}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.vat)}</td>`+
       `<td class="r" style="color:var(--txt)">${fmt(r.total)}</td>`+
@@ -852,7 +853,7 @@ function renderDetail(){
       `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.cardNo||"")}</td>`+
       `<td style="font-size:13px;color:var(--txt)">${esc(r.note||"")}</td>`+
     `</tr>`;
-  }).join(""):`<tr><td colspan="12"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  }).join(""):`<tr><td colspan="13"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
   if(pages<=1){document.getElementById("pager").innerHTML="";return;}
   let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
@@ -1597,7 +1598,8 @@ function parseNotionPage(page,vendorMap){
   const cardName=CARD_NAME_BY_NO[cardNo]||"";
   const headcount=props["총인원"]?.number||1;
   const note=getText(props["비고"]);
-  return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),bizNo,cardNo,cardName,headcount,note};
+  const title=getText(props["제목"]);
+  return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),bizNo,cardNo,cardName,headcount,note,title};
 }
 // ── Notion fetch 헬퍼 ────────────────────────────────
 async function fetchNotion(body,dbId){
