@@ -1058,9 +1058,14 @@ function submitAddForm(){
   btn.disabled=true;
   lbl.textContent='등록 중...';
 
+  // 2026-08-06부터 title 속성이 "제목"(연월 고정 라벨)으로 분리되고 "사용목적 및 지출내역"은
+  // 일반 텍스트(rich_text) 속성이 됨 — "제목"은 입력받은 사용일자 기준으로 자동 생성한다.
+  const dateY=date.slice(0,4), dateM=parseInt(date.slice(5,7),10);
+  const jemok=(dateY&&dateM)?`${dateY}년 ${dateM}월 법인카드사용내역`:desc;
   const properties={
     '사용일자': { date: { start: date } },
-    '사용목적 및 지출내역': { title: [{ text:{ content: desc } }] }
+    '사용목적 및 지출내역': { rich_text: [{ text:{ content: desc } }] },
+    '제목': { title: [{ text:{ content: jemok } }] }
   };
   if(cat) properties['계정항목']={ select: { name: cat } };
   if(vendorId) properties['상호']={ relation: [{ id: vendorId }] };
@@ -1568,7 +1573,11 @@ function parseNotionPage(page,vendorMap){
   for(const[,v] of Object.entries(props)){
     if(v.type==="date"&&v.date?.start){date=v.date.start.slice(0,10);break;}
   }
-  let desc="",supply=0,vat=0,cat="",vendor="";
+  // "사용목적 및 지출내역"을 먼저 명시적으로 시도 — 2026-08-06부터 title 속성이 "제목"(월별 고정
+  // 라벨용)으로 분리되면서, title 여부만으로 desc를 고르던 예전 방식은 "제목" 값을 잘못 집어올 수
+  // 있다(둘 다 존재하는 상태). 정확한 필드명을 우선하고, 없을 때만 예전 방식으로 폴백한다.
+  let desc=getText(props["사용목적 및 지출내역"]);
+  let supply=0,vat=0,cat="",vendor="";
   for(const[k,v] of Object.entries(props)){
     const lk=k.toLowerCase().replace(/\s/g,"");
     if(!desc&&(v.type==="title"||lk.includes("사용목적")||lk.includes("지출내역")))desc=getText(v);
