@@ -1271,7 +1271,9 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const BODY=EXCEL_BODY_FONT;
+  const BOLD_BODY=Object.assign({},BODY,{bold:true});
   const LEFT={vertical:'middle', horizontal:'left'};
+  const CENTER={vertical:'middle', horizontal:'center'};
   const NUMFMT='_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
   const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
 
@@ -1286,7 +1288,6 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
   ws.getRow(3).height=30;
   ws.getRow(4).height=20.05;
-  ws.getCell('H5').value='값'; ws.getCell('H5').font=BODY; ws.getCell('H5').alignment={vertical:'middle'};
 
   const byCat={};
   rows.forEach(r=>{ (byCat[r.cat]=byCat[r.cat]||[]).push(r); });
@@ -1303,7 +1304,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   const headerRow=ws.getRow(6);
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=BODY; cell.alignment=LEFT; cell.fill=HEADER_FILL; cell.border=gb(6,6,i+1,i+1);
+    cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL; cell.border=gb(6,6,i+1,i+1);
   });
 
   let rn=7, grand={supply:0,vat:0,total:0};
@@ -1330,7 +1331,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     const subRow=ws.getRow(rn);
     subRow.getCell(1).value=' '; subRow.getCell(1).font=BODY; subRow.getCell(1).alignment=LEFT; subRow.getCell(1).numFmt='@';
     [ [8,sub.supply,NUMFMT],[9,sub.vat,'#,##0'],[10,sub.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
-      const c=subRow.getCell(ci); c.value=v; c.font=BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
+      const c=subRow.getCell(ci); c.value=v; c.font=BOLD_BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
     });
     for(let ci=1;ci<=10;ci++) subRow.getCell(ci).border=gb(rn,rn,ci,ci);
     subRow.commit();
@@ -1340,7 +1341,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   const totalRow=ws.getRow(rn);
   totalRow.getCell(1).value='총합계'; totalRow.getCell(1).font=BODY; totalRow.getCell(1).alignment=LEFT;
   [ [8,grand.supply,NUMFMT],[9,grand.vat,'#,##0'],[10,grand.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
-    const c=totalRow.getCell(ci); c.value=v; c.font=BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
+    const c=totalRow.getCell(ci); c.value=v; c.font=BOLD_BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
   });
   for(let ci=1;ci<=10;ci++) totalRow.getCell(ci).border=gb(rn,rn,ci,ci);
   totalRow.commit();
@@ -1354,6 +1355,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const BODY=EXCEL_BODY_FONT;
+  const FUEL_CARD_FONT=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FFFF0000'}});
   const LEFT={vertical:'middle', horizontal:'left'};
   const CENTER={vertical:'middle', horizontal:'center'};
   const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
@@ -1386,7 +1388,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   headerRow.height=30;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=BODY; cell.alignment=LEFT; cell.fill=HEADER_FILL;
+    cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL;
     cell.border=gb(5,5,i+1,i+1);
   });
 
@@ -1410,7 +1412,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
     row.getCell(13).value=r.cardName;
     for(let ci=1;ci<=13;ci++){
       const cell=row.getCell(ci);
-      cell.font=BODY;
+      cell.font=(ci===13&&r.cardName==='주유카드') ? FUEL_CARD_FONT : BODY;
       cell.alignment=(ci===2||ci===3||ci===4||ci===11) ? {vertical:'middle'} : LEFT;
       cell.border=gb(rn,rn,ci,ci);
     }
