@@ -1128,7 +1128,7 @@ function buildExcelReport(opts){
       columns.forEach((col,ci)=>{
         const cell=row.getCell(ci+1);
         cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
-        cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
+        cell.alignment = {vertical:'middle', horizontal: col.align==='left'?'left':col.align==='right'?'right':'center', wrapText:!!col.wrap};
         if(col.dateCol && r[col.key]){
           const d=excelParseDate(r[col.key]);
           if(d){ cell.value=d; cell.numFmt='yyyy-mm-dd'; } else { cell.value=r[col.key]; }
@@ -1160,12 +1160,12 @@ function buildExcelReport(opts){
 }
 const EXCEL_COLUMNS_CARD=[
   {key:'날짜',header:'날짜',dateCol:true},
-  {key:'지출내역',header:'지출내역',width:24,wrap:true},
-  {key:'상호',header:'상호'},
+  {key:'지출내역',header:'지출내역',align:'left'},
+  {key:'상호',header:'상호',align:'left'},
   {key:'계정',header:'계정'},
-  {key:'공급가',header:'공급가',numFmt:'#,##0'},
-  {key:'부가세',header:'부가세',numFmt:'#,##0'},
-  {key:'합계',header:'합계',numFmt:'#,##0'}
+  {key:'공급가',header:'공급가',numFmt:'#,##0',align:'right'},
+  {key:'부가세',header:'부가세',numFmt:'#,##0',align:'right'},
+  {key:'합계',header:'합계',numFmt:'#,##0',align:'right'}
 ];
 // 현재 사용내역 탭의 필터(계정/검색어/월)가 적용된 목록을 그대로 내보낸다(2026-08-04).
 function getDetailFilteredRecords(){
@@ -1180,7 +1180,7 @@ function exportCardExcel(){
   const monLbl=curMonth?`${curYear}년 ${curMonth}월`:`${curYear}년 전체`;
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'법인카드', title:'법인카드 사용내역 ('+monLbl+')', fnamePrefix:'법인카드_사용내역',
+    sheetName:'법인카드', title:'법인카드 사용내역 ('+monLbl+')', fnamePrefix:'법인카드 사용내역',
     columns:EXCEL_COLUMNS_CARD, rows, orientation:'landscape'
   });
 }
