@@ -310,6 +310,13 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+/* select 팝업(옵션 목록)은 color-scheme만으로는 배경이 플랫폼별로 강제 반영이 안 되는 경우가 있어
+   (Windows Chrome 등) option 자체에 명시적 배경·글자색을 지정 — 2026-08-06 다크모드 흰 배경/흰 글자
+   실사례로 확인 후 추가. */
+.modal-select option{background-color:var(--card);color:var(--txt)}
+/* 다크모드에서 날짜 입력창의 달력 아이콘이 기본 검정이라 거의 안 보이는 문제(2026-08-06) — 아이콘
+   자체를 반전시켜 밝게 표시. 라이트모드는 원래 색 그대로 유지. */
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
