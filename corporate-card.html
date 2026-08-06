@@ -1266,8 +1266,8 @@ async function fetchCardReportRows(year,month){
 
 function buildCardSummarySheet(wb,rows,tunnel,year,month){
   const ws=wb.addWorksheet('요약',{
-    views:[{showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape},
+    views:[{state:'frozen', ySplit:2, showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'2:2'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const BODY=EXCEL_BODY_FONT;
@@ -1281,34 +1281,34 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   const colGetters=[r=>r.cat, r=>r.date, r=>r.vendor, r=>r.bizNo, r=>r.desc, r=>r.cardName, r=>r.cardNo, r=>(r.supply||0).toLocaleString(), r=>(r.vat||0).toLocaleString(), r=>(r.total||0).toLocaleString()];
   ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
 
-  ws.getRow(1).height=30;
-  ws.getRow(2).height=30;
-  const titleCell=ws.getCell('A2');
+  ws.getRow(1).height=60;
+  const titleCell=ws.getCell('A1');
   titleCell.value=`법인/주유카드 계정항목별 요약 (${tunnel})`;
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
-  ws.getRow(3).height=30;
-  ws.getRow(4).height=20.05;
 
   const byCat={};
   rows.forEach(r=>{ (byCat[r.cat]=byCat[r.cat]||[]).push(r); });
   const cats=CARD_REPORT_CAT_ORDER.filter(c=>byCat[c]&&byCat[c].length)
     .concat(Object.keys(byCat).filter(c=>!CARD_REPORT_CAT_ORDER.includes(c)));
 
-  const REGION={r1:6, r2:6+1+rows.length+cats.length, c1:1, c2:10};
-  function gb(r1,r2,c1,c2){
+  const REGION={r1:2, r2:2+1+rows.length+cats.length, c1:1, c2:10};
+  // 계정별 소계 행 아래(=다음 계정항목 첫 행 위) 경계는 표 외곽 테두리와 같은 두께(thin)로 —
+  // 그 외 내부 경계는 전부 hair(2026-08-06, 사용자가 직접 손본 참고 파일 기준으로 확정).
+  function gb(r1,r2,c1,c2,opts){
+    opts=opts||{};
     return {
-      top:{style: r1===REGION.r1 ? 'thin':'hair'}, bottom:{style: r2===REGION.r2 ? 'thin':'hair'},
+      top:{style: (r1===REGION.r1||opts.topThin) ? 'thin':'hair'}, bottom:{style: (r2===REGION.r2||opts.bottomThin) ? 'thin':'hair'},
       left:{style: c1===REGION.c1 ? 'thin':'hair'}, right:{style: c2===REGION.c2 ? 'thin':'hair'}
     };
   }
-  const headerRow=ws.getRow(6);
+  const headerRow=ws.getRow(2);
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
-    cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL; cell.border=gb(6,6,i+1,i+1);
+    cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL; cell.border=gb(2,2,i+1,i+1);
   });
 
-  let rn=7, grand={supply:0,vat:0,total:0};
-  cats.forEach(cat=>{
+  let rn=3, grand={supply:0,vat:0,total:0};
+  cats.forEach((cat,catIdx)=>{
     const list=byCat[cat].slice().sort((a,b)=>a.date.localeCompare(b.date));
     let sub={supply:0,vat:0,total:0};
     list.forEach((r,i)=>{
@@ -1323,7 +1323,8 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
       const hc=row.getCell(8); hc.value=r.supply; hc.font=BODY; hc.alignment={vertical:'middle'}; hc.numFmt=NUMFMT;
       const ic=row.getCell(9); ic.value=r.vat; ic.font=BODY; ic.alignment={vertical:'middle'}; ic.numFmt='#,##0';
       const jc=row.getCell(10); jc.value=r.total; jc.font=BODY; jc.alignment={vertical:'middle'}; jc.numFmt=NUMFMT;
-      for(let ci=1;ci<=10;ci++) row.getCell(ci).border=gb(rn,rn,ci,ci);
+      const topThin=(i===0&&catIdx>0);
+      for(let ci=1;ci<=10;ci++) row.getCell(ci).border=gb(rn,rn,ci,ci,{topThin});
       row.commit();
       sub.supply+=r.supply; sub.vat+=r.vat; sub.total+=r.total;
       rn++;
@@ -1333,7 +1334,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     [ [8,sub.supply,NUMFMT],[9,sub.vat,'#,##0'],[10,sub.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
       const c=subRow.getCell(ci); c.value=v; c.font=BOLD_BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
     });
-    for(let ci=1;ci<=10;ci++) subRow.getCell(ci).border=gb(rn,rn,ci,ci);
+    for(let ci=1;ci<=10;ci++) subRow.getCell(ci).border=gb(rn,rn,ci,ci,{bottomThin:true});
     subRow.commit();
     grand.supply+=sub.supply; grand.vat+=sub.vat; grand.total+=sub.total;
     rn++;
@@ -1343,15 +1344,15 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   [ [8,grand.supply,NUMFMT],[9,grand.vat,'#,##0'],[10,grand.total,NUMFMT] ].forEach(([ci,v,fmt])=>{
     const c=totalRow.getCell(ci); c.value=v; c.font=BOLD_BODY; c.alignment={vertical:'middle'}; c.numFmt=fmt;
   });
-  for(let ci=1;ci<=10;ci++) totalRow.getCell(ci).border=gb(rn,rn,ci,ci);
+  for(let ci=1;ci<=10;ci++) totalRow.getCell(ci).border=gb(rn,rn,ci,ci,{topThin:true});
   totalRow.commit();
   return ws;
 }
 
 function buildCardDetailSheet(wb,rows,tunnel,year,month){
   const ws=wb.addWorksheet('사용내역',{
-    views:[{state:'frozen', ySplit:5, showGridLines:false, zoomScale:90}],
-    pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'5:5'},
+    views:[{state:'frozen', ySplit:2, showGridLines:false, zoomScale:90}],
+    pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'2:2'},
     headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
   });
   const BODY=EXCEL_BODY_FONT;
@@ -1360,7 +1361,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   const CENTER={vertical:'middle', horizontal:'center'};
   const HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
   const NUMFMT='_-* #,##0_-;-* #,##0_-;_-* "-"_-;_-@_-';
-  const REGION={r1:5, r2:5+rows.length, c1:1, c2:13};
+  const REGION={r1:2, r2:2+rows.length, c1:1, c2:13};
   function gb(r1,r2,c1,c2){
     return {
       top:{style: r1===REGION.r1 ? 'thin':'hair'}, bottom:{style: r2===REGION.r2 ? 'thin':'hair'},
@@ -1376,25 +1377,22 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   ];
   ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
 
-  ws.getRow(1).height=30;
-  ws.getRow(2).height=30;
-  const titleCell=ws.getCell('A2');
+  ws.getRow(1).height=60;
+  const titleCell=ws.getCell('A1');
   titleCell.value=`법인/주유카드 사용대장 (${tunnel})`;
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
-  ws.getRow(3).height=30;
-  ws.getRow(4).height=20.05;
 
-  const headerRow=ws.getRow(5);
+  const headerRow=ws.getRow(2);
   headerRow.height=30;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL;
-    cell.border=gb(5,5,i+1,i+1);
+    cell.border=gb(2,2,i+1,i+1);
   });
 
   const sorted=rows.slice().sort((a,b)=>a.date.localeCompare(b.date));
   sorted.forEach((r,i)=>{
-    const rn=6+i;
+    const rn=3+i;
     const row=ws.getRow(rn);
     row.height=30;
     const dc=row.getCell(1); const d=excelParseDate(r.date); if(d){dc.value=d;dc.numFmt='mm-dd-yy';}
