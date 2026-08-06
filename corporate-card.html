@@ -302,6 +302,14 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <input id="addCatCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
+        <label class="modal-label">상호</label>
+        <select id="addVendor" class="modal-select"><option value="">선택</option></select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">카드명</label>
+        <select id="addCardName" class="modal-select"><option value="">선택</option></select>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">공급가(원)</label>
         <input id="addSupply" class="modal-input" type="number" step="1" placeholder="예) 72728"/>
       </div>
@@ -310,10 +318,14 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <input id="addVat" class="modal-input" type="number" step="1" placeholder="예) 7272"/>
       </div>
       <div class="modal-field">
+        <label class="modal-label">총인원</label>
+        <input id="addHeadcount" class="modal-input" type="number" step="1" min="1" value="1"/>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">비고</label>
         <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
       </div>
-      <div class="modal-hint">상호·카드 연동(관계형 속성)은 이 폼에서 지원하지 않습니다 — 노션에서 별도로 연결해주세요.</div>
+      <div class="modal-hint">상호 목록에 원하는 거래처가 없으면 노션 거래처DB에 먼저 등록해주세요.</div>
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeAddModal()">취소</button>
         <button class="modal-save" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
@@ -387,7 +399,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>날짜</th><th>지출내역</th><th>상호</th><th style="width:1%">계정</th><th class="r">공급가</th><th class="r">합계</th></tr></thead>
+        <thead><tr><th>날짜</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정</th><th>지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
       </table></div>
       <div class="pager" id="pager"></div>
@@ -822,7 +834,25 @@ function renderDetail(){
   if(dtPage>pages)dtPage=1;
   const paged=f.slice((dtPage-1)*PS,dtPage*PS);
   document.getElementById("detailCount").textContent=total+"건";
-  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{const c=clr(r.cat);const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td style="font-size:13px;color:var(--txt);white-space:nowrap">${vendorTxt}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td><td class="r" style="color:var(--txt)">${fmt(r.total)}</td></tr>`;}).join(""):`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{
+    const c=clr(r.cat);
+    const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");
+    const fuelTxt=r.cardName==="주유카드"?`<span style="color:var(--coral)">${esc(r.cardName)}</span>`:esc(r.cardName||"");
+    return`<tr>`+
+      `<td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td>`+
+      `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td>`+
+      `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.vat)}</td>`+
+      `<td class="r" style="color:var(--txt)">${fmt(r.total)}</td>`+
+      `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${vendorTxt}</td>`+
+      `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.bizNo||"")}</td>`+
+      `<td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td>`+
+      `<td style="font-size:14px">${esc(r.desc)}</td>`+
+      `<td class="r" style="font-size:13px;color:var(--txt)">${r.headcount||1}</td>`+
+      `<td style="font-size:13px;white-space:nowrap">${fuelTxt}</td>`+
+      `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.cardNo||"")}</td>`+
+      `<td style="font-size:13px;color:var(--txt)">${esc(r.note||"")}</td>`+
+    `</tr>`;
+  }).join(""):`<tr><td colspan="12"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
   if(pages<=1){document.getElementById("pager").innerHTML="";return;}
   let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
@@ -956,6 +986,24 @@ function buildAddCatOpts(){
     +all.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   document.getElementById('addCatCustom').style.display='none';
 }
+function buildAddCardNameOpts(){
+  document.getElementById('addCardName').innerHTML='<option value="">선택</option>'
+    +CARD_NAME_OPTIONS.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+}
+async function fetchVendorNameList(){
+  const map=await fetchVendorFullMap();
+  return Object.entries(map).map(([id,v])=>({id,name:v.name})).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+}
+async function buildAddVendorOpts(){
+  const sel=document.getElementById('addVendor');
+  sel.innerHTML='<option value="">불러오는 중...</option>';
+  try{
+    const list=await fetchVendorNameList();
+    sel.innerHTML='<option value="">선택</option>'+list.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+  }catch(e){
+    sel.innerHTML='<option value="">거래처 목록 로드 실패</option>';
+  }
+}
 function openAddModal(){
   EDIT_PAGE_ID=null;
   const today=new Date();
@@ -963,8 +1011,11 @@ function openAddModal(){
   document.getElementById('addDesc').value='';
   document.getElementById('addSupply').value='';
   document.getElementById('addVat').value='';
+  document.getElementById('addHeadcount').value='1';
   document.getElementById('addNote').value='';
   buildAddCatOpts();
+  buildAddCardNameOpts();
+  buildAddVendorOpts();
   document.getElementById('addSubmitLabel').textContent='등록';
   const am=document.getElementById('addModal');
   am.classList.add('modal-open');
@@ -984,15 +1035,19 @@ function closeAddModal(e){
   document.body.style.overflow='';
   resetModalDragPos('addModal');
 }
-// Notion DB 실스키마 확인(2026-08-04, probe) 기준 — 상호/카드명은 관계형(relation) 속성이라
-// 관련 페이지 ID가 있어야 하고 이 폼만으로는 만들 수 없어 제외한다(하위 rollup인 사업자등록번호·
-// 카드번호도 자동 계산값이라 마찬가지). 합계는 Notion 수식 컬럼이라 공급가·부가세만 보내면 자동 계산됨.
+// Notion DB 실스키마 확인(2026-08-04 probe, 2026-08-06 상호·카드명 relation 지원 추가) 기준 —
+// 상호·카드명은 관계형(relation) 속성이라 대상 페이지ID를 보낸다(드롭다운은 CARD_NAME_OPTIONS·
+// fetchVendorNameList() 참고). 하위 rollup인 사업자등록번호·카드번호는 자동 계산값이라 폼에서
+// 직접 입력하지 않는다. 합계는 Notion 수식 컬럼이라 공급가·부가세만 보내면 자동 계산됨.
 function submitAddForm(){
   const date=document.getElementById('addDate').value.trim();
   const desc=document.getElementById('addDesc').value.trim();
   const cat=getSelectValue('addCat','addCatCustom');
+  const vendorId=document.getElementById('addVendor').value;
+  const cardId=document.getElementById('addCardName').value;
   const supply=document.getElementById('addSupply').value.trim();
   const vat=document.getElementById('addVat').value.trim();
+  const headcount=document.getElementById('addHeadcount').value.trim();
   const note=document.getElementById('addNote').value.trim();
   if(!date){ alert('사용일자를 입력해주세요.'); return; }
   if(!desc){ alert('사용목적 및 지출내역을 입력해주세요.'); return; }
@@ -1008,8 +1063,11 @@ function submitAddForm(){
     '사용목적 및 지출내역': { title: [{ text:{ content: desc } }] }
   };
   if(cat) properties['계정항목']={ select: { name: cat } };
+  if(vendorId) properties['상호']={ relation: [{ id: vendorId }] };
+  if(cardId) properties['카드명']={ relation: [{ id: cardId }] };
   if(supply!=='') properties['공급가']={ number: parseFloat(supply)||0 };
   if(vat!=='') properties['부가세']={ number: parseFloat(vat)||0 };
+  if(headcount!=='') properties['총인원']={ number: parseInt(headcount,10)||1 };
   if(note) properties['비고']={ rich_text: [{ text:{ content: note } }] };
 
   fetch(CFG.workerUrl+'/v1/pages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:CFG.dbId},properties}) })
@@ -1195,7 +1253,13 @@ const CARD_REPORT_PREPARER={title:'소장', name:'신종섭'};
 // 카드명(relation)은 Worker 화이트리스트상 GET /v1/pages/{id}가 막혀 있어 관계 대상 페이지의
 // 제목을 직접 조회할 수 없다 — 대신 이미 롤업으로 내려오는 카드번호(카드마다 고유)로 역추적한다.
 // 참고 엑셀 43행 전체에서 검증된 매핑(법인카드·주유카드 두 장뿐).
-const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주유카드'};
+// '4518444511736552'는 재발급 이전 구 법인카드 번호(2026-05-27 이전 기록에 남아있음, 2026-08-06 사용자 확인).
+const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주유카드','4518444511736552':'법인카드'};
+// 신규등록폼 "카드명" 드롭다운용 — relation 대상 페이지ID는 API로 이름을 못 가져와 실측으로 고정(2026-08-06).
+const CARD_NAME_OPTIONS=[
+  {id:'36f59c8c-9c0a-80d9-b01c-de6d0c985168', name:'법인카드'},
+  {id:'2f559c8c-9c0a-808e-8c13-ec4552060545', name:'주유카드'}
+];
 // 요약 시트의 계정항목 그룹 인쇄 순서 — 노션 select 옵션 생성 순서(참고 엑셀 실측)를 그대로 고정.
 const CARD_REPORT_CAT_ORDER=['차량비','도서인쇄비','소모품비','비급여성','차량비(법인카드)','비급여성(생수)'];
 
@@ -1519,7 +1583,12 @@ function parseNotionPage(page,vendorMap){
   if(!desc){const tp=Object.values(props).find(p=>p.type==="title");if(tp)desc=getText(tp);}
   if(!date)return null;
   const total=(supply+vat)||0;
-  return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim()};
+  const bizNo=getText(props["사업자등록번호"]);
+  const cardNo=getText(props["카드번호"]);
+  const cardName=CARD_NAME_BY_NO[cardNo]||"";
+  const headcount=props["총인원"]?.number||1;
+  const note=getText(props["비고"]);
+  return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),bizNo,cardNo,cardName,headcount,note};
 }
 // ── Notion fetch 헬퍼 ────────────────────────────────
 async function fetchNotion(body,dbId){
