@@ -1224,12 +1224,17 @@ function buildExcelReport(opts){
 }
 const EXCEL_COLUMNS_CARD=[
   {key:'날짜',header:'날짜',dateCol:true},
-  {key:'지출내역',header:'지출내역',align:'left'},
-  {key:'상호',header:'상호',align:'left'},
-  {key:'계정',header:'계정'},
   {key:'공급가',header:'공급가',numFmt:'#,##0',align:'right'},
   {key:'부가세',header:'부가세',numFmt:'#,##0',align:'right'},
-  {key:'합계',header:'합계',numFmt:'#,##0',align:'right'}
+  {key:'합계',header:'합계',numFmt:'#,##0',align:'right'},
+  {key:'상호',header:'상호',align:'left'},
+  {key:'사업자등록번호',header:'사업자등록번호'},
+  {key:'계정',header:'계정'},
+  {key:'지출내역',header:'지출내역',align:'left'},
+  {key:'총인원',header:'총인원',numFmt:'#,##0',align:'right'},
+  {key:'카드명',header:'카드명'},
+  {key:'카드번호',header:'카드번호'},
+  {key:'비고',header:'비고',align:'left'}
 ];
 // 현재 사용내역 탭의 필터(계정/검색어/월)가 적용된 목록을 그대로 내보낸다(2026-08-04).
 function getDetailFilteredRecords(){
@@ -1239,7 +1244,9 @@ function getDetailFilteredRecords(){
 }
 function exportCardExcel(){
   const rows=getDetailFilteredRecords().map(r=>({
-    날짜:r.date, 지출내역:r.desc, 상호:r.isDemo?'':( r.vendor||'' ), 계정:r.cat, 공급가:r.supply||0, 부가세:r.vat||0, 합계:r.total||0
+    날짜:r.date, 공급가:r.supply||0, 부가세:r.vat||0, 합계:r.total||0,
+    상호:r.isDemo?'':( r.vendor||'' ), 사업자등록번호:r.isDemo?'':(r.bizNo||''), 계정:r.cat, 지출내역:r.desc,
+    총인원:r.headcount||1, 카드명:r.cardName||'', 카드번호:r.cardNo||'', 비고:r.note||''
   }));
   const monLbl=curMonth?`${curYear}년 ${curMonth}월`:`${curYear}년 전체`;
   buildExcelReport({
