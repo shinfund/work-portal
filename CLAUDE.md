@@ -26,6 +26,18 @@ Cloudflare Pages는 **`main` 브랜치를 push할 때만 자동 배포**된다. 
 
 main은 프로덕션에 직결되는 공유 브랜치이므로, 병합 전에 사용자에게 확인받는다 (이미 이런 흐름으로 진행하기로 합의된 경우가 많음 — 그래도 매번 명시적으로 언급하고 진행).
 
+### 라이브 확인 시 `curl` 필수 규칙 (반복 실수 이력 있음 — 2026-07-11, 2026-08-05, 2026-08-07 총 3회)
+
+`work-portal-4z9.pages.dev`의 `*.html` URL은 Cloudflare Pages가 확장자 없는 경로로 **308 리다이렉트**한다
+(예: `/corporate-card.html` → `/corporate-card`). `curl`에 `-L`이 없으면 빈 응답(size 0)만 받고 이를
+"배포 안 됨"으로 오판하게 된다 — 실제로는 이미 정상 배포된 상태를 몇 분씩 "배포 지연"으로 잘못 진단한
+사례가 세 번 반복됐다.
+
+**규칙: 이 도메인을 대상으로 하는 `curl` 명령은 일회성 확인이든 `Monitor`/`Bash`의 폴링·until 루프든
+예외 없이 항상 `curl -sL`(최소 `-L`)을 쓴다.** 특히 Monitor 폴링 스크립트처럼 반복 실행되는 curl은
+작성 직후 `-L` 유무를 한 번 더 눈으로 확인한다. grep이 매치되지 않을 때 "아직 배포 안 됨"이라고
+바로 결론 내리지 말고, "curl이 리다이렉트를 못 따라가서 빈 응답을 받았을 가능성"부터 먼저 배제할 것.
+
 ## 백엔드
 
 Notion DB + Cloudflare Worker(`notion-proxy.shinfund.workers.dev`) 연동. 로그인은 공용 비밀번호 방식이며 로그인 상태는 기기별 localStorage에 저장(`wp_authToken`).
