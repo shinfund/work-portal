@@ -291,20 +291,26 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="modal-field">
         <label class="modal-label">공급가(원)</label>
-        <input id="addSupply" class="modal-input" type="number" step="1" placeholder="예) 72728"/>
+        <input id="addSupply" class="modal-input" type="text" inputmode="numeric" placeholder="예) 72,728" oninput="formatCommaInput(this)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">부가세(원)</label>
-        <input id="addVat" class="modal-input" type="number" step="1" placeholder="예) 7272"/>
+        <input id="addVat" class="modal-input" type="text" inputmode="numeric" placeholder="예) 7,272" oninput="formatCommaInput(this)"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">합계(원)</label>
+        <input id="addTotal" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <div class="modal-hint">= 공급가 + 부가세 (자동 계산, 노션 수식 컬럼과 동일)</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">상호</label>
         <select id="addVendor" class="modal-select" onchange="onAddVendorChange()"><option value="">선택</option></select>
+        <input id="addVendorCustom" class="modal-input" type="text" placeholder="신규 거래처명 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">사업자등록번호</label>
         <input id="addBizNo" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
-        <div class="modal-hint">상호 선택 시 자동 입력(거래처DB 기준)</div>
+        <div class="modal-hint" id="addBizNoHint">상호 선택 시 자동 입력(거래처DB 기준)</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">계정항목</label>
@@ -329,17 +335,18 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="modal-field">
         <label class="modal-label">카드명</label>
         <select id="addCardName" class="modal-select" onchange="onAddCardNameChange()"><option value="">선택</option></select>
+        <input id="addCardNameCustom" class="modal-input" type="text" placeholder="신규 카드명 입력(예: 하이패스카드)" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">카드번호</label>
         <input id="addCardNo" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
-        <div class="modal-hint">카드명 선택 시 자동 입력</div>
+        <div class="modal-hint" id="addCardNoHint">카드명 선택 시 자동 입력</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
         <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
       </div>
-      <div class="modal-hint">상호 목록에 원하는 거래처가 없으면 노션 거래처DB에 먼저 등록해주세요.</div>
+      <div class="modal-hint">상호·카드명을 "직접입력"하면 노션 거래처DB·법인카드종류DB에 신규 페이지가 자동 등록됩니다.</div>
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeAddModal()">취소</button>
         <button class="modal-save" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
@@ -413,7 +420,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>날짜</th><th>제목</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정</th><th>지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
+        <thead><tr><th>사용일자</th><th>제목</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정항목</th><th>사용목적 및 지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
       </table></div>
       <div class="pager" id="pager"></div>
@@ -428,7 +435,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
     <div class="sc">
       <div class="sc-hd">TOP 지출 내역</div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>날짜</th><th>지출내역</th><th>계정</th><th class="r">합계</th></tr></thead>
+        <thead><tr><th>사용일자</th><th>사용목적 및 지출내역</th><th>계정항목</th><th class="r">합계</th></tr></thead>
         <tbody id="topTbody"></tbody>
       </table></div>
     </div>
@@ -981,6 +988,18 @@ window.addEventListener('storage',e=>{
 // ── 신규등록 드로어 ───────────────────────────────────
 var EDIT_PAGE_ID=null; // 이 앱은 등록만 지원(수정/삭제 없음) — 항상 null
 var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
+// 금액 입력창(공급가/부가세) 천 단위 콤마 실시간 표시 — 값 자체는 콤마 제거 후 숫자로 읽는다(submitAddForm).
+function formatCommaInput(el){
+  const digits=el.value.replace(/[^\d]/g,'');
+  el.value=digits===''?'':Number(digits).toLocaleString('ko-KR');
+  recomputeAddTotal();
+}
+// 합계 = 공급가 + 부가세 (노션 "합계" 수식 컬럼과 동일 계산, 등록 전 미리보기용 — 이 값 자체는 전송하지 않음)
+function recomputeAddTotal(){
+  const supply=parseFloat(document.getElementById('addSupply').value.replace(/,/g,''))||0;
+  const vat=parseFloat(document.getElementById('addVat').value.replace(/,/g,''))||0;
+  document.getElementById('addTotal').value=(supply+vat).toLocaleString('ko-KR');
+}
 function onSelectChange(selectEl, customInputId){
   const ci=document.getElementById(customInputId);
   if(!ci) return;
@@ -1011,15 +1030,40 @@ function buildAddDescOpts(){
   document.getElementById('addDescCustom').style.display='none';
   document.getElementById('addDescCustom').value='';
 }
-function buildAddCardNameOpts(){
-  document.getElementById('addCardName').innerHTML='<option value="">선택</option>'
-    +CARD_NAME_OPTIONS.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+var _addCardMap={}; // 카드명 select onchange 시 카드번호 즉시 조회용 캐시(id → {name,cardNo})
+async function buildAddCardNameOpts(){
+  const sel=document.getElementById('addCardName');
+  sel.innerHTML='<option value="">불러오는 중...</option>';
+  try{
+    const list=await fetchCardTypeList();
+    _addCardMap={}; list.forEach(c=>{ _addCardMap[c.id]={name:c.name,cardNo:c.cardNo}; });
+    sel.innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+      +list.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  }catch(e){
+    // 조회 실패 시 하드코딩 목록으로 폴백(2026-08-06 실측 값)
+    _addCardMap={}; CARD_NAME_OPTIONS.forEach(c=>{ _addCardMap[c.id]={name:c.name,cardNo:CARD_NO_BY_NAME[c.name]||''}; });
+    sel.innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+      +CARD_NAME_OPTIONS.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  }
   document.getElementById('addCardNo').value='';
 }
+// 직접입력 선택 시: 카드명은 신규 입력창을 보이고, 카드번호는 (자동입력 불가하므로) 직접 입력 가능하게 전환.
 function onAddCardNameChange(){
-  const id=document.getElementById('addCardName').value;
-  const opt=CARD_NAME_OPTIONS.find(c=>c.id===id);
-  document.getElementById('addCardNo').value=opt?(CARD_NO_BY_NAME[opt.name]||''):'';
+  const sel=document.getElementById('addCardName');
+  const customEl=document.getElementById('addCardNameCustom');
+  const noEl=document.getElementById('addCardNo');
+  const hintEl=document.getElementById('addCardNoHint');
+  if(sel.value==='__custom__'){
+    customEl.style.display=''; customEl.focus();
+    noEl.readOnly=false; noEl.value=''; noEl.placeholder='예) 1234567890123456';
+    noEl.style.background=''; noEl.style.cursor='';
+    hintEl.textContent='신규 카드 등록 — 카드번호를 직접 입력하세요(법인카드종류DB에 자동 등록됩니다)';
+  }else{
+    customEl.style.display='none'; customEl.value='';
+    noEl.readOnly=true; noEl.style.background='rgba(127,127,127,.08)'; noEl.style.cursor='not-allowed';
+    hintEl.textContent='카드명 선택 시 자동 입력';
+    noEl.value=(_addCardMap[sel.value]||{}).cardNo||'';
+  }
 }
 var _addVendorMap={}; // 상호 select onchange 시 사업자등록번호 즉시 조회용 캐시(id → {name,bizNo})
 async function fetchVendorNameList(){
@@ -1027,18 +1071,31 @@ async function fetchVendorNameList(){
   _addVendorMap=map;
   return Object.entries(map).map(([id,v])=>({id,name:v.name})).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
 }
+// 직접입력 선택 시: 상호는 신규 거래처명 입력창을 보이고, 사업자등록번호는 신규 거래처라 값이 없으므로 비운다.
 function onAddVendorChange(){
-  const id=document.getElementById('addVendor').value;
-  document.getElementById('addBizNo').value=(_addVendorMap[id]||{}).bizNo||'';
+  const sel=document.getElementById('addVendor');
+  const customEl=document.getElementById('addVendorCustom');
+  const bizEl=document.getElementById('addBizNo');
+  const hintEl=document.getElementById('addBizNoHint');
+  if(sel.value==='__custom__'){
+    customEl.style.display=''; customEl.focus();
+    bizEl.value='';
+    hintEl.textContent='신규 거래처 등록 — 사업자등록번호는 비워둡니다(거래처DB에 자동 등록됩니다)';
+  }else{
+    customEl.style.display='none'; customEl.value='';
+    hintEl.textContent='상호 선택 시 자동 입력(거래처DB 기준)';
+    bizEl.value=(_addVendorMap[sel.value]||{}).bizNo||'';
+  }
 }
 async function buildAddVendorOpts(){
   const sel=document.getElementById('addVendor');
   sel.innerHTML='<option value="">불러오는 중...</option>';
   try{
     const list=await fetchVendorNameList();
-    sel.innerHTML='<option value="">선택</option>'+list.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+    sel.innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+      +list.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
   }catch(e){
-    sel.innerHTML='<option value="">거래처 목록 로드 실패</option>';
+    sel.innerHTML='<option value="">거래처 목록 로드 실패</option><option value="__custom__">직접입력</option>';
   }
 }
 function openAddModal(){
@@ -1047,10 +1104,18 @@ function openAddModal(){
   document.getElementById('addDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   document.getElementById('addSupply').value='';
   document.getElementById('addVat').value='';
+  document.getElementById('addTotal').value='';
   document.getElementById('addHeadcount').value='1';
   document.getElementById('addNote').value='';
   document.getElementById('addBizNo').value='';
-  document.getElementById('addCardNo').value='';
+  document.getElementById('addVendorCustom').style.display='none';
+  document.getElementById('addVendorCustom').value='';
+  document.getElementById('addBizNoHint').textContent='상호 선택 시 자동 입력(거래처DB 기준)';
+  const cardNoEl=document.getElementById('addCardNo');
+  cardNoEl.value=''; cardNoEl.readOnly=true; cardNoEl.style.background='rgba(127,127,127,.08)'; cardNoEl.style.cursor='not-allowed';
+  document.getElementById('addCardNameCustom').style.display='none';
+  document.getElementById('addCardNameCustom').value='';
+  document.getElementById('addCardNoHint').textContent='카드명 선택 시 자동 입력';
   buildAddCatOpts();
   buildAddDescOpts();
   buildAddCardNameOpts();
@@ -1075,21 +1140,35 @@ function closeAddModal(e){
   resetModalDragPos('addModal');
 }
 // Notion DB 실스키마 확인(2026-08-04 probe, 2026-08-06 상호·카드명 relation 지원 추가) 기준 —
-// 상호·카드명은 관계형(relation) 속성이라 대상 페이지ID를 보낸다(드롭다운은 CARD_NAME_OPTIONS·
-// fetchVendorNameList() 참고). 하위 rollup인 사업자등록번호·카드번호는 자동 계산값이라 폼에서
-// 직접 입력하지 않는다. 합계는 Notion 수식 컬럼이라 공급가·부가세만 보내면 자동 계산됨.
-function submitAddForm(){
+// 상호·카드명은 관계형(relation) 속성이라 대상 페이지ID를 보낸다. 목록에 없는 상호·카드명은
+// "직접입력" 선택 시 거래처DB(VENDOR_DB_ID)·법인카드종류DB(CARD_TYPE_DB_ID)에 신규 페이지를
+// 먼저 만들고 그 페이지ID로 relation을 건다(2026-08-07). 하위 rollup인 사업자등록번호는
+// 신규 거래처의 경우 값이 없어 비워지고, 카드번호는 신규 카드 등록 시 직접 입력한 값이 그대로
+// 법인카드종류DB에 반영돼 rollup으로 내려온다. 합계는 Notion 수식 컬럼이라 공급가·부가세만
+// 보내면 자동 계산됨.
+async function createNotionPage(dbId, properties){
+  const r=await fetch(CFG.workerUrl+'/v1/pages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:dbId},properties}) });
+  if(!r.ok){ const t=await r.text(); throw new Error('HTTP '+r.status+': '+t); }
+  const j=await r.json();
+  return j.id;
+}
+async function submitAddForm(){
   const date=document.getElementById('addDate').value.trim();
   const desc=getSelectValue('addDesc','addDescCustom');
   const cat=getSelectValue('addCat','addCatCustom');
-  const vendorId=document.getElementById('addVendor').value;
-  const cardId=document.getElementById('addCardName').value;
-  const supply=document.getElementById('addSupply').value.trim();
-  const vat=document.getElementById('addVat').value.trim();
+  const vendorSelVal=document.getElementById('addVendor').value;
+  const cardSelVal=document.getElementById('addCardName').value;
+  const vendorCustomName=document.getElementById('addVendorCustom').value.trim();
+  const cardCustomName=document.getElementById('addCardNameCustom').value.trim();
+  const cardCustomNo=document.getElementById('addCardNo').value.replace(/[^\d]/g,'');
+  const supply=document.getElementById('addSupply').value.replace(/,/g,'').trim();
+  const vat=document.getElementById('addVat').value.replace(/,/g,'').trim();
   const headcount=document.getElementById('addHeadcount').value.trim();
   const note=document.getElementById('addNote').value.trim();
   if(!date){ alert('사용일자를 입력해주세요.'); return; }
   if(!desc){ alert('사용목적 및 지출내역을 입력해주세요.'); return; }
+  if(vendorSelVal==='__custom__'&&!vendorCustomName){ alert('신규 거래처명을 입력해주세요.'); return; }
+  if(cardSelVal==='__custom__'&&(!cardCustomName||!cardCustomNo)){ alert('신규 카드명과 카드번호를 입력해주세요.'); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
   const btn=document.getElementById('addSubmitBtn');
@@ -1097,36 +1176,49 @@ function submitAddForm(){
   btn.disabled=true;
   lbl.textContent='등록 중...';
 
-  // 2026-08-06부터 title 속성이 "제목"(연월 고정 라벨)으로 분리되고 "사용목적 및 지출내역"은
-  // 일반 텍스트(rich_text) 속성이 됨 — "제목"은 입력받은 사용일자 기준으로 자동 생성한다.
-  const dateY=date.slice(0,4), dateM=parseInt(date.slice(5,7),10);
-  const jemok=(dateY&&dateM)?`${dateY}년 ${dateM}월 법인카드사용내역`:desc;
-  const properties={
-    '사용일자': { date: { start: date } },
-    '사용목적 및 지출내역': { rich_text: [{ text:{ content: desc } }] },
-    '제목': { title: [{ text:{ content: jemok } }] }
-  };
-  if(cat) properties['계정항목']={ select: { name: cat } };
-  if(vendorId) properties['상호']={ relation: [{ id: vendorId }] };
-  if(cardId) properties['카드명']={ relation: [{ id: cardId }] };
-  if(supply!=='') properties['공급가']={ number: parseFloat(supply)||0 };
-  if(vat!=='') properties['부가세']={ number: parseFloat(vat)||0 };
-  if(headcount!=='') properties['총인원']={ number: parseInt(headcount,10)||1 };
-  if(note) properties['비고']={ rich_text: [{ text:{ content: note } }] };
+  try{
+    let vendorId=vendorSelVal;
+    if(vendorSelVal==='__custom__'){
+      lbl.textContent='거래처 등록 중...';
+      vendorId=await createNotionPage(VENDOR_DB_ID,{ '상호':{ title:[{ text:{ content: vendorCustomName } }] } });
+    }
+    let cardId=cardSelVal;
+    if(cardSelVal==='__custom__'){
+      lbl.textContent='카드 등록 중...';
+      cardId=await createNotionPage(CARD_TYPE_DB_ID,{
+        '카드명':{ title:[{ text:{ content: cardCustomName } }] },
+        '카드번호':{ rich_text:[{ text:{ content: cardCustomNo } }] }
+      });
+    }
+    lbl.textContent='등록 중...';
 
-  fetch(CFG.workerUrl+'/v1/pages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({parent:{database_id:CFG.dbId},properties}) })
-    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-    .then(()=>{
-      btn.disabled=false; lbl.textContent='등록';
-      closeAddModal();
-      RD=[];loadData();
-      toast('등록되었습니다.');
-    })
-    .catch(e=>{
-      btn.disabled=false; lbl.textContent='등록';
-      alert('등록 실패: '+e.message);
-      console.error(e);
-    });
+    // 2026-08-06부터 title 속성이 "제목"(연월 고정 라벨)으로 분리되고 "사용목적 및 지출내역"은
+    // 일반 텍스트(rich_text) 속성이 됨 — "제목"은 입력받은 사용일자 기준으로 자동 생성한다.
+    const dateY=date.slice(0,4), dateM=parseInt(date.slice(5,7),10);
+    const jemok=(dateY&&dateM)?`${dateY}년 ${dateM}월 법인카드사용내역`:desc;
+    const properties={
+      '사용일자': { date: { start: date } },
+      '사용목적 및 지출내역': { rich_text: [{ text:{ content: desc } }] },
+      '제목': { title: [{ text:{ content: jemok } }] }
+    };
+    if(cat) properties['계정항목']={ select: { name: cat } };
+    if(vendorId) properties['상호']={ relation: [{ id: vendorId }] };
+    if(cardId) properties['카드명']={ relation: [{ id: cardId }] };
+    if(supply!=='') properties['공급가']={ number: parseFloat(supply)||0 };
+    if(vat!=='') properties['부가세']={ number: parseFloat(vat)||0 };
+    if(headcount!=='') properties['총인원']={ number: parseInt(headcount,10)||1 };
+    if(note) properties['비고']={ rich_text: [{ text:{ content: note } }] };
+
+    await createNotionPage(CFG.dbId, properties);
+    btn.disabled=false; lbl.textContent='등록';
+    closeAddModal();
+    RD=[];loadData();
+    toast('등록되었습니다.');
+  }catch(e){
+    btn.disabled=false; lbl.textContent='등록';
+    alert('등록 실패: '+e.message);
+    console.error(e);
+  }
 }
 
 // ── 엑셀 생성(work-portal 공통 buildExcelReport 패턴 재사용, 2026-08-04) ──
@@ -1261,14 +1353,14 @@ function buildExcelReport(opts){
   }).finally(()=>{ btn.disabled=false; });
 }
 const EXCEL_COLUMNS_CARD=[
-  {key:'날짜',header:'날짜',dateCol:true},
+  {key:'날짜',header:'사용일자',dateCol:true},
   {key:'공급가',header:'공급가',numFmt:'#,##0',align:'right'},
   {key:'부가세',header:'부가세',numFmt:'#,##0',align:'right'},
   {key:'합계',header:'합계',numFmt:'#,##0',align:'right'},
   {key:'상호',header:'상호',align:'left'},
   {key:'사업자등록번호',header:'사업자등록번호'},
-  {key:'계정',header:'계정'},
-  {key:'지출내역',header:'지출내역',align:'left'},
+  {key:'계정',header:'계정항목'},
+  {key:'지출내역',header:'사용목적 및 지출내역',align:'left'},
   {key:'총인원',header:'총인원',numFmt:'#,##0',align:'right'},
   {key:'카드명',header:'카드명'},
   {key:'카드번호',header:'카드번호'},
@@ -1309,13 +1401,42 @@ const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주
 // 신규등록폼 "카드명" 선택 시 "카드번호" 자동 입력용 역방향 매핑 — 재발급 이전 구 법인카드 번호는
 // 신규 입력 기준에서 제외(현재 사용 중인 번호만, 2026-08-07).
 const CARD_NO_BY_NAME={'법인카드':'5585269627183851','주유카드':'9410499201259867'};
-// 신규등록폼 "카드명" 드롭다운용 — relation 대상 페이지ID는 API로 이름을 못 가져와 실측으로 고정(2026-08-06).
+// 신규등록폼 "카드명" 드롭다운용 폴백 — relation 대상 페이지ID는 API로 이름을 못 가져와 실측으로 고정(2026-08-06).
+// 평상시엔 fetchCardTypeList()로 CARD_TYPE_DB_ID를 직접 조회해 최신 목록(직접입력으로 신규 등록된 카드 포함)을
+// 쓰고, 조회 실패 시에만 이 폴백을 사용한다.
 const CARD_NAME_OPTIONS=[
   {id:'36f59c8c-9c0a-80d9-b01c-de6d0c985168', name:'법인카드'},
   {id:'2f559c8c-9c0a-808e-8c13-ec4552060545', name:'주유카드'}
 ];
+// 법인카드종류DB — 카드명(title)·카드번호(text)·카드사(select)·비고(text) 스키마.
+// Notion MCP로 2026-08-07 확인(법인카드 페이지 하위 데이터베이스 목록에서 조회).
+const CARD_TYPE_DB_ID='2f559c8c-9c0a-8021-8c19-ef8e48dcaec5';
 // 요약 시트의 계정항목 그룹 인쇄 순서 — 노션 select 옵션 생성 순서(참고 엑셀 실측)를 그대로 고정.
 const CARD_REPORT_CAT_ORDER=['차량비','도서인쇄비','소모품비','비급여성','차량비(법인카드)','비급여성(생수)'];
+// 카드번호(rollup) → 카드명 조회용 캐시. loadData()에서 CARD_TYPE_DB_ID를 조회해 채운다 — 직접입력으로
+// 새 카드가 등록돼도(코드 수정 없이) 다음 새로고침부터 이름이 정상 표시된다. 조회 실패 시 CARD_NAME_BY_NO로 폴백.
+let CARD_NO_NAME_MAP={};
+async function fetchCardTypeList(){
+  const list=[];
+  let data=await fetchNotion({page_size:100},CARD_TYPE_DB_ID);
+  let pages=data.results||[];
+  let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
+  const MAX=5;
+  while(cursor&&hasMore&&++pageCount<MAX){
+    const d2=await fetchNotion({page_size:100,start_cursor:cursor},CARD_TYPE_DB_ID);
+    pages=[...pages,...(d2.results||[])];
+    cursor=d2.next_cursor;hasMore=d2.has_more;
+  }
+  pages.forEach(p=>{
+    const props=p.properties||{};
+    const nameProp=props['카드명'];
+    const name=nameProp?(nameProp.title||[]).map(t=>t.plain_text||'').join(''):'';
+    const noProp=props['카드번호'];
+    const cardNo=noProp?(noProp.rich_text||[]).map(t=>t.plain_text||'').join(''):'';
+    if(name) list.push({id:p.id,name,cardNo});
+  });
+  return list;
+}
 
 async function fetchVendorFullMap(){
   const map={};
@@ -1362,14 +1483,15 @@ function parseCardReportPage(page,vendorMap){
   const headcount=props['총인원']?.number||1;
   const bizNo=getText(props['사업자등록번호']);
   const cardNo=getText(props['카드번호']);
-  const cardName=CARD_NAME_BY_NO[cardNo]||'';
+  const cardName=CARD_NO_NAME_MAP[cardNo]||CARD_NAME_BY_NO[cardNo]||'';
   const vendorRel=(props['상호']?.relation||[])[0];
   const vendor=vendorRel?(vendorMap[vendorRel.id]?.name||''):'';
   return{date,month:date.slice(0,7),desc,supply,vat,total:supply+vat,cat,headcount,bizNo,cardNo,cardName,vendor};
 }
 async function fetchCardReportRows(year,month){
   const ym=`${year}-${String(month).padStart(2,'0')}`;
-  const [vendorMap,data]=await Promise.all([fetchVendorFullMap(),fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}]})]);
+  const [vendorMap,data,cardTypeList]=await Promise.all([fetchVendorFullMap(),fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}]}),fetchCardTypeList().catch(()=>[])]);
+  if(cardTypeList.length){ CARD_NO_NAME_MAP={}; cardTypeList.forEach(c=>{ if(c.cardNo) CARD_NO_NAME_MAP[c.cardNo]=c.name; }); }
   let pages=data.results||[];
   let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
   const MAX=20;
@@ -1643,7 +1765,7 @@ function parseNotionPage(page,vendorMap){
   const total=(supply+vat)||0;
   const bizNo=getText(props["사업자등록번호"]);
   const cardNo=getText(props["카드번호"]);
-  const cardName=CARD_NAME_BY_NO[cardNo]||"";
+  const cardName=CARD_NO_NAME_MAP[cardNo]||CARD_NAME_BY_NO[cardNo]||"";
   const headcount=props["총인원"]?.number||1;
   const note=getText(props["비고"]);
   const title=getText(props["제목"]);
@@ -1694,7 +1816,9 @@ async function loadData(){
       for(const[k,v] of Object.entries(pp)){if(v.type==="date"){dateProp=k;break;}}
     }
     const body={page_size:100,sorts:[{property:dateProp,direction:"ascending"}]};
-    const [data,vendorMap]=await Promise.all([fetchNotion(body),fetchVendorMap()]);
+    const [data,vendorMap,cardTypeList]=await Promise.all([fetchNotion(body),fetchVendorMap(),fetchCardTypeList().catch(()=>[])]);
+    CARD_NO_NAME_MAP={};
+    cardTypeList.forEach(c=>{ if(c.cardNo) CARD_NO_NAME_MAP[c.cardNo]=c.name; });
     let pages=data.results||[];
     let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
     const MAX=20;
