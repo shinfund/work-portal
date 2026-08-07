@@ -3845,9 +3845,6 @@ var EXCEL_PAGE_PRESETS = {
 var EXCEL_COLUMNS = [
   { key:'날짜', header:'날짜', dateCol:true },
   { key:'터널명', header:'터널명' },
-  { key:'업무담당', header:'관리' },
-  { key:'공종', header:'공종' },
-  { key:'위치', header:'위치' },
   { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
   { key:'하자사진', header:'하자사진', photo:true, width:18 }, // 데이터 필드는 '하자사진_URL' (key+'_URL' 암묵적 결합)
   { key:'조치일', header:'조치일', dateCol:true },
@@ -4022,7 +4019,7 @@ function buildExcelReport(opts){
         printTitlesRow: '2:2'
       },
       headerFooter: {
-        oddHeader: '&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',
+        oddHeader: opts.oddHeader || ('&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T'),
         oddFooter: ''
       }
     });
@@ -4134,6 +4131,28 @@ function buildExcelReport(opts){
   }).finally(function(){ btn.disabled = false; });
 }
 
+// 엑셀 제목행 — 내보내는 행들의 "관리"(업무담당)가 단일값이면 그에 맞춰 제목을 특화한다
+// (2026-08-07 사용자 요청): 점검팀만 있으면 "점검팀 하자보수현황", 안전관리자만 있으면 터널명
+// 기준으로 "{터널명} 하자보수현황"(단일) 또는 "{터널1}, {터널2}, {마지막터널명}터널 하자보수현황"
+// (여러 터널 — 마지막 항목만 "터널" 접미사를 남기고 나머지는 생략). 관리가 섞여 있거나 비어있으면
+// 기존 기본 제목("하자보수현황") 유지.
+function buildDefectExcelTitle(rows){
+  var managers = [];
+  rows.forEach(function(r){ var m=r['업무담당']||''; if(m && managers.indexOf(m)<0) managers.push(m); });
+  if(managers.length===1 && managers[0]==='점검팀'){
+    return '점검팀 하자보수현황';
+  }
+  if(managers.length===1 && managers[0]==='안전관리자'){
+    var tunnels = [];
+    rows.forEach(function(r){ var t=r['터널명']||''; if(t && tunnels.indexOf(t)<0) tunnels.push(t); });
+    if(tunnels.length===1) return tunnels[0]+' 하자보수현황';
+    if(tunnels.length>1){
+      var labels = tunnels.map(function(t, idx){ return idx===tunnels.length-1 ? t : t.replace(/터널$/,''); });
+      return labels.join(', ')+' 하자보수현황';
+    }
+  }
+  return '하자보수현황';
+}
 function exportToExcel(){
   var rows = filtered().slice().sort(function(a,b){
     var da=(a['날짜']||'').replace(/[.\/]/g,'-');
@@ -4142,9 +4161,10 @@ function exportToExcel(){
   });
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'하자현황', title:'하자보수현황', fnamePrefix:'하자보수현황',
+    sheetName:'하자현황', title: buildDefectExcelTitle(rows), fnamePrefix:'하자보수현황',
     columns: EXCEL_COLUMNS, rows: rows, orientation:'landscape',
-    statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }]
+    statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
+    oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME
   });
 }
 
@@ -4198,15 +4218,20 @@ function buildDefectPhotoSheet(wb, sheetRecords, sheetIdx, showTitle, mode){
 
   mc('A1:F1', showTitle ? titleText : null, { name:'HY헤드라인M', size:20 }, { vertical:'middle', horizontal:'left' }, false);
   ws.getRow(1).height = 50.05;
-  ws.getRow(2).height = 10;
-  ws.getRow(3).height = 20;
+  ws.getRow(2).height = 30;
+  // 제목행 바로 아래 빈행 2개(2·3행) 중 3행은 완전히 삭제(다음 행이 3이 아니라 그대로 이어짐),
+  // 2행만 남겨 높이 30으로 — 제목과 사진표 사이 간격을 줄이기 위함(2026-08-07 사용자 요청).
 
-  // 행 높이는 일부러 실측 페이지 높이보다 넉넉하게 잡는다 — fitToHeight:1은 넘칠 때만
-  // 축소하고 남으면 그대로 두므로(늘려서 채워주지 않음), 자연 높이를 페이지보다 크게 만들어야
-  // 축소 적용을 통해 하단 여백 없이 항상 1페이지 꽉 채우게 된다(2026-07-27 사용자 지적).
-  var IMG_ROWS = 20, IMG_ROW_H = 22, LABEL_ROW_H = 20, CAP_ROW_H = 26, SPACER_H = 20;
+  // 사진·글자 행(라벨/이미지/캡션) 전체를 높이 30·글자크기 13으로 통일(2026-08-07 사용자 요청,
+  // 캡션·라벨 글자는 이미 13pt라 폰트 크기는 변경 없음). 행이 22→30으로 커진 만큼 이미지 행
+  // 수를 20→14로 줄여 레코드당 총 블록 높이를 기존과 비슷하게 유지(사진이 과도하게 늘어나거나
+  // 인쇄 축소율이 커지지 않도록). 행 높이는 일부러 실측 페이지 높이보다 넉넉하게 잡는다 —
+  // fitToHeight:1은 넘칠 때만 축소하고 남으면 그대로 두므로(늘려서 채워주지 않음), 자연 높이를
+  // 페이지보다 크게 만들어야 축소 적용을 통해 하단 여백 없이 항상 1페이지 꽉 채우게 된다
+  // (2026-07-27 사용자 지적).
+  var IMG_ROWS = 14, IMG_ROW_H = 30, LABEL_ROW_H = 30, CAP_ROW_H = 30, SPACER_H = 20;
   var photoTasks = [];
-  var rn = 4;
+  var rn = 3;
 
   sheetRecords.forEach(function(r){
     var lblRow1 = rn;
