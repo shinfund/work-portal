@@ -141,9 +141,12 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
    (2026-08-07 사용자 요청). 예전엔 실제 엑셀 표지 시트의 셀 정렬을 그대로 재현해 중앙 배열된 A4 박스
    안에 제목을 한 번 더 표시했었으나, title-band와 내용이 중복되고 다른 탭과 정렬 방식이 달라 혼란을
    준다는 피드백에 따라 제거. */
-.rc-date{font-size:clamp(17px,3.8vw,24px);font-weight:800;text-align:left;margin-top:18px}
-.rc-toc-hd{font-size:clamp(14px,3vw,19px);font-weight:800;text-align:left;margin-top:22px;letter-spacing:6px}
-.rc-toc-list{margin-top:10px;font-size:clamp(12.5px,2.4vw,16px);line-height:2.3;text-align:left;color:var(--txt)}
+/* 날짜·목차는 vw 기반 clamp를 쓰면 넓은 창에서 제목(title-band, 19px/900)보다 커져버렸다
+   (2026-08-07 사용자 제보 — 24px/800까지 커짐). 고정 크기로 바꿔 제목보다 작고 가볍게 통일. */
+.rc-date{font-size:15px;font-weight:700;text-align:left;margin-top:16px}
+.rc-toc-hd{font-size:14px;font-weight:700;text-align:left;margin-top:40px;letter-spacing:6px}
+.rc-toc-list{margin-top:14px;font-size:14px;line-height:2.2;text-align:left;color:var(--txt)}
+@media(max-width:480px){ .rc-date{font-size:14px} .rc-toc-hd{margin-top:28px;font-size:13px} .rc-toc-list{font-size:13px} }
 /* 월간점검 페이지 — 실제 엑셀 시트(월간점검표1~3)의 표 구조(구분·설비명 세로병합) 재현 */
 .rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
 .rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
