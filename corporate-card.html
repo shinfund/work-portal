@@ -290,8 +290,21 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <input id="addDate" class="modal-input" type="date"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">사용목적 및 지출내역 <span class="modal-required">*</span></label>
-        <input id="addDesc" class="modal-input" type="text" placeholder="예) 순찰차 주유"/>
+        <label class="modal-label">공급가(원)</label>
+        <input id="addSupply" class="modal-input" type="number" step="1" placeholder="예) 72728"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">부가세(원)</label>
+        <input id="addVat" class="modal-input" type="number" step="1" placeholder="예) 7272"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">상호</label>
+        <select id="addVendor" class="modal-select" onchange="onAddVendorChange()"><option value="">선택</option></select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">사업자등록번호</label>
+        <input id="addBizNo" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <div class="modal-hint">상호 선택 시 자동 입력(거래처DB 기준)</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">계정항목</label>
@@ -302,24 +315,25 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <input id="addCatCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
-        <label class="modal-label">상호</label>
-        <select id="addVendor" class="modal-select"><option value="">선택</option></select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">카드명</label>
-        <select id="addCardName" class="modal-select"><option value="">선택</option></select>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">공급가(원)</label>
-        <input id="addSupply" class="modal-input" type="number" step="1" placeholder="예) 72728"/>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">부가세(원)</label>
-        <input id="addVat" class="modal-input" type="number" step="1" placeholder="예) 7272"/>
+        <label class="modal-label">사용목적 및 지출내역 <span class="modal-required">*</span></label>
+        <select id="addDesc" class="modal-select" onchange="onSelectChange(this,'addDescCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+        </select>
+        <input id="addDescCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">총인원</label>
         <input id="addHeadcount" class="modal-input" type="number" step="1" min="1" value="1"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">카드명</label>
+        <select id="addCardName" class="modal-select" onchange="onAddCardNameChange()"><option value="">선택</option></select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">카드번호</label>
+        <input id="addCardNo" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <div class="modal-hint">카드명 선택 시 자동 입력</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -987,13 +1001,35 @@ function buildAddCatOpts(){
     +all.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   document.getElementById('addCatCustom').style.display='none';
 }
+// 최근 지출내역 30건(날짜 최신순, 중복 제거)을 드롭다운으로 제공 — 반복 지출(주유 등) 입력 편의용.
+function buildAddDescOpts(){
+  const seen=new Set();
+  const recent=[...RD].filter(r=>r.desc&&!r.isDemo).sort((a,b)=>b.date.localeCompare(a.date))
+    .filter(r=>{ if(seen.has(r.desc))return false; seen.add(r.desc); return true; }).slice(0,30);
+  document.getElementById('addDesc').innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
+    +recent.map(r=>`<option value="${esc(r.desc)}">${esc(r.desc)}</option>`).join('');
+  document.getElementById('addDescCustom').style.display='none';
+  document.getElementById('addDescCustom').value='';
+}
 function buildAddCardNameOpts(){
   document.getElementById('addCardName').innerHTML='<option value="">선택</option>'
     +CARD_NAME_OPTIONS.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  document.getElementById('addCardNo').value='';
 }
+function onAddCardNameChange(){
+  const id=document.getElementById('addCardName').value;
+  const opt=CARD_NAME_OPTIONS.find(c=>c.id===id);
+  document.getElementById('addCardNo').value=opt?(CARD_NO_BY_NAME[opt.name]||''):'';
+}
+var _addVendorMap={}; // 상호 select onchange 시 사업자등록번호 즉시 조회용 캐시(id → {name,bizNo})
 async function fetchVendorNameList(){
   const map=await fetchVendorFullMap();
+  _addVendorMap=map;
   return Object.entries(map).map(([id,v])=>({id,name:v.name})).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+}
+function onAddVendorChange(){
+  const id=document.getElementById('addVendor').value;
+  document.getElementById('addBizNo').value=(_addVendorMap[id]||{}).bizNo||'';
 }
 async function buildAddVendorOpts(){
   const sel=document.getElementById('addVendor');
@@ -1009,12 +1045,14 @@ function openAddModal(){
   EDIT_PAGE_ID=null;
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  document.getElementById('addDesc').value='';
   document.getElementById('addSupply').value='';
   document.getElementById('addVat').value='';
   document.getElementById('addHeadcount').value='1';
   document.getElementById('addNote').value='';
+  document.getElementById('addBizNo').value='';
+  document.getElementById('addCardNo').value='';
   buildAddCatOpts();
+  buildAddDescOpts();
   buildAddCardNameOpts();
   buildAddVendorOpts();
   document.getElementById('addSubmitLabel').textContent='등록';
@@ -1042,7 +1080,7 @@ function closeAddModal(e){
 // 직접 입력하지 않는다. 합계는 Notion 수식 컬럼이라 공급가·부가세만 보내면 자동 계산됨.
 function submitAddForm(){
   const date=document.getElementById('addDate').value.trim();
-  const desc=document.getElementById('addDesc').value.trim();
+  const desc=getSelectValue('addDesc','addDescCustom');
   const cat=getSelectValue('addCat','addCatCustom');
   const vendorId=document.getElementById('addVendor').value;
   const cardId=document.getElementById('addCardName').value;
@@ -1268,6 +1306,9 @@ const CARD_REPORT_PREPARER={title:'소장', name:'신종섭'};
 // 참고 엑셀 43행 전체에서 검증된 매핑(법인카드·주유카드 두 장뿐).
 // '4518444511736552'는 재발급 이전 구 법인카드 번호(2026-05-27 이전 기록에 남아있음, 2026-08-06 사용자 확인).
 const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주유카드','4518444511736552':'법인카드'};
+// 신규등록폼 "카드명" 선택 시 "카드번호" 자동 입력용 역방향 매핑 — 재발급 이전 구 법인카드 번호는
+// 신규 입력 기준에서 제외(현재 사용 중인 번호만, 2026-08-07).
+const CARD_NO_BY_NAME={'법인카드':'5585269627183851','주유카드':'9410499201259867'};
 // 신규등록폼 "카드명" 드롭다운용 — relation 대상 페이지ID는 API로 이름을 못 가져와 실측으로 고정(2026-08-06).
 const CARD_NAME_OPTIONS=[
   {id:'36f59c8c-9c0a-80d9-b01c-de6d0c985168', name:'법인카드'},
