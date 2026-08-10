@@ -135,6 +135,7 @@ th.r,td.r{text-align:right}
 td{padding:10px 12px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
+tfoot td{background:var(--sky50);border-top:1.5px solid var(--sky100);border-bottom:none;font-weight:700;color:var(--txt)}
 /* 계정 뱃지 — 진한 단색+흰 글자(work-portal 공통 뱃지 규칙, 2026-07-28 확정) */
 .cat-tag{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;color:#fff;border:1px solid rgba(0,0,0,.18)}
 .cat-c0{background:#1565C0}
@@ -303,22 +304,23 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
         <div class="modal-hint">= 공급가 + 부가세 (자동 계산, 노션 수식 컬럼과 동일)</div>
       </div>
       <div class="modal-field">
+        <label class="modal-label">계정항목</label>
+        <select id="addCat" class="modal-select" onchange="onAddCatChange(this)">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+        </select>
+        <input id="addCatCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
         <label class="modal-label">상호</label>
         <select id="addVendor" class="modal-select" onchange="onAddVendorChange()"><option value="">선택</option></select>
         <input id="addVendorCustom" class="modal-input" type="text" placeholder="신규 거래처명 입력" style="display:none;margin-top:6px"/>
+        <div class="modal-hint" id="addVendorHint">계정항목 선택 시 관련 거래처가 위쪽 그룹에 표시됩니다</div>
       </div>
       <div class="modal-field">
         <label class="modal-label">사업자등록번호</label>
         <input id="addBizNo" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint" id="addBizNoHint">상호 선택 시 자동 입력(거래처DB 기준)</div>
-      </div>
-      <div class="modal-field">
-        <label class="modal-label">계정항목</label>
-        <select id="addCat" class="modal-select" onchange="onSelectChange(this,'addCatCustom')">
-          <option value="">선택</option>
-          <option value="__custom__">직접입력</option>
-        </select>
-        <input id="addCatCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">사용목적 및 지출내역 <span class="modal-required">*</span></label>
@@ -422,6 +424,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       <div class="tbl-wrap"><table>
         <thead><tr><th>사용일자</th><th>제목</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정항목</th><th>사용목적 및 지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
+        <tfoot id="dtTfoot"></tfoot>
       </table></div>
       <div class="pager" id="pager"></div>
     </div>
@@ -875,6 +878,17 @@ function renderDetail(){
       `<td style="font-size:13px;color:var(--txt)">${esc(r.note||"")}</td>`+
     `</tr>`;
   }).join(""):`<tr><td colspan="13"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  // 합계 행 — 페이지네이션과 무관하게 현재 필터(f) 전체 기준으로 집계.
+  const tfoot=document.getElementById("dtTfoot");
+  if(tfoot){
+    tfoot.innerHTML=f.length?`<tr>`+
+      `<td colspan="2">합계</td>`+
+      `<td class="r">${fmt(f.reduce((s,r)=>s+(r.supply||0),0))}</td>`+
+      `<td class="r">${fmt(f.reduce((s,r)=>s+(r.vat||0),0))}</td>`+
+      `<td class="r">${fmt(f.reduce((s,r)=>s+(r.total||0),0))}</td>`+
+      `<td colspan="8"></td>`+
+    `</tr>`:"";
+  }
   if(pages<=1){document.getElementById("pager").innerHTML="";return;}
   let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
   for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
@@ -1046,6 +1060,21 @@ async function buildAddCardNameOpts(){
       +CARD_NAME_OPTIONS.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
   }
   document.getElementById('addCardNo').value='';
+  applyCatCardDefault();
+}
+// 계정항목별 카드명 기본값(2026-08-10 확정, 기존 실사용 데이터와 일치 — BUILT_LIM 한도표 매핑과 동일).
+const CAT_CARD_DEFAULT={'차량비':'주유카드','차량비(법인카드)':'법인카드'};
+// 카드명 목록이 비동기 로드라 계정항목 변경 시점과 카드명 목록 로드 완료 시점 양쪽에서 호출해 순서를 안전하게 처리.
+function applyCatCardDefault(){
+  const cat=(document.getElementById('addCat')||{}).value||'';
+  const cardName=CAT_CARD_DEFAULT[cat];
+  if(!cardName) return;
+  const sel=document.getElementById('addCardName');
+  if(!sel||sel.options.length<2) return; // 아직 목록 로딩 전(선택/직접입력 옵션만 있음)
+  const targetId=Object.keys(_addCardMap).find(id=>_addCardMap[id].name===cardName);
+  if(!targetId) return;
+  sel.value=targetId;
+  onAddCardNameChange();
 }
 // 직접입력 선택 시: 카드명은 신규 입력창을 보이고, 카드번호는 (자동입력 불가하므로) 직접 입력 가능하게 전환.
 function onAddCardNameChange(){
@@ -1066,10 +1095,43 @@ function onAddCardNameChange(){
   }
 }
 var _addVendorMap={}; // 상호 select onchange 시 사업자등록번호 즉시 조회용 캐시(id → {name,bizNo})
+var _addVendorFullList=null; // 상호 전체 목록 캐시(계정항목 변경 시 재조회 없이 재정렬만 하기 위함)
 async function fetchVendorNameList(){
   const map=await fetchVendorFullMap();
   _addVendorMap=map;
   return Object.entries(map).map(([id,v])=>({id,name:v.name})).sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+}
+// 계정항목 select 변경 시: 직접입력 토글 + 상호 목록을 해당 계정항목 관련 거래처 위주로 재정렬.
+function onAddCatChange(selectEl){
+  onSelectChange(selectEl,'addCatCustom');
+  renderAddVendorOpts();
+  applyCatCardDefault();
+}
+// 사용내역(RD)에서 선택된 계정항목으로 실제 쓰인 거래처를 빈도순으로 뽑아 상단 optgroup에 보여준다.
+// 계정항목 미선택/직접입력이거나 매칭 이력이 없으면 기존처럼 전체 거래처 단일 목록으로 표시.
+function renderAddVendorOpts(){
+  const sel=document.getElementById('addVendor');
+  if(!_addVendorFullList){ sel.innerHTML='<option value="">거래처 목록 로드 실패</option><option value="__custom__">직접입력</option>'; return; }
+  const prevVal=sel.value;
+  const base='<option value="">선택</option><option value="__custom__">직접입력</option>';
+  const flatOpts=list=>list.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+  const cat=(document.getElementById('addCat')||{}).value||'';
+  let html;
+  if(!cat||cat==='__custom__'){
+    html=base+flatOpts(_addVendorFullList);
+  }else{
+    const freq={};
+    RD.forEach(r=>{ if(r.cat===cat&&r.vendor) freq[r.vendor]=(freq[r.vendor]||0)+1; });
+    const relatedNames=Object.keys(freq).sort((a,b)=>freq[b]-freq[a]);
+    const relatedSet=new Set(relatedNames);
+    const related=relatedNames.map(n=>_addVendorFullList.find(v=>v.name===n)).filter(Boolean);
+    const rest=_addVendorFullList.filter(v=>!relatedSet.has(v.name));
+    html=related.length
+      ? base+`<optgroup label="${esc(cat)} 관련 상호">${flatOpts(related)}</optgroup><optgroup label="전체 거래처">${flatOpts(rest)}</optgroup>`
+      : base+flatOpts(_addVendorFullList);
+  }
+  sel.innerHTML=html;
+  if(prevVal&&[...sel.options].some(o=>o.value===prevVal)) sel.value=prevVal;
 }
 // 직접입력 선택 시: 상호는 신규 거래처명 입력창을 보이고, 사업자등록번호는 신규 거래처라 값이 없으므로 비운다.
 function onAddVendorChange(){
@@ -1079,10 +1141,12 @@ function onAddVendorChange(){
   const hintEl=document.getElementById('addBizNoHint');
   if(sel.value==='__custom__'){
     customEl.style.display=''; customEl.focus();
-    bizEl.value='';
-    hintEl.textContent='신규 거래처 등록 — 사업자등록번호는 비워둡니다(거래처DB에 자동 등록됩니다)';
+    bizEl.value=''; bizEl.readOnly=false; bizEl.placeholder='예) 1234567890';
+    bizEl.style.background=''; bizEl.style.cursor='';
+    hintEl.textContent='신규 거래처 등록 — 사업자등록번호는 알고 있으면 입력(선택), 비워도 됩니다(거래처DB에 자동 등록됩니다)';
   }else{
     customEl.style.display='none'; customEl.value='';
+    bizEl.readOnly=true; bizEl.placeholder=''; bizEl.style.background='rgba(127,127,127,.08)'; bizEl.style.cursor='not-allowed';
     hintEl.textContent='상호 선택 시 자동 입력(거래처DB 기준)';
     bizEl.value=(_addVendorMap[sel.value]||{}).bizNo||'';
   }
@@ -1091,12 +1155,11 @@ async function buildAddVendorOpts(){
   const sel=document.getElementById('addVendor');
   sel.innerHTML='<option value="">불러오는 중...</option>';
   try{
-    const list=await fetchVendorNameList();
-    sel.innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
-      +list.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+    _addVendorFullList=await fetchVendorNameList();
   }catch(e){
-    sel.innerHTML='<option value="">거래처 목록 로드 실패</option><option value="__custom__">직접입력</option>';
+    _addVendorFullList=null;
   }
+  renderAddVendorOpts();
 }
 function openAddModal(){
   EDIT_PAGE_ID=null;
@@ -1107,7 +1170,8 @@ function openAddModal(){
   document.getElementById('addTotal').value='';
   document.getElementById('addHeadcount').value='1';
   document.getElementById('addNote').value='';
-  document.getElementById('addBizNo').value='';
+  const bizNoEl=document.getElementById('addBizNo');
+  bizNoEl.value=''; bizNoEl.readOnly=true; bizNoEl.placeholder=''; bizNoEl.style.background='rgba(127,127,127,.08)'; bizNoEl.style.cursor='not-allowed';
   document.getElementById('addVendorCustom').style.display='none';
   document.getElementById('addVendorCustom').value='';
   document.getElementById('addBizNoHint').textContent='상호 선택 시 자동 입력(거래처DB 기준)';
@@ -1159,6 +1223,7 @@ async function submitAddForm(){
   const vendorSelVal=document.getElementById('addVendor').value;
   const cardSelVal=document.getElementById('addCardName').value;
   const vendorCustomName=document.getElementById('addVendorCustom').value.trim();
+  const vendorCustomBizNo=document.getElementById('addBizNo').value.trim();
   const cardCustomName=document.getElementById('addCardNameCustom').value.trim();
   const cardCustomNo=document.getElementById('addCardNo').value.replace(/[^\d]/g,'');
   const supply=document.getElementById('addSupply').value.replace(/,/g,'').trim();
@@ -1180,7 +1245,9 @@ async function submitAddForm(){
     let vendorId=vendorSelVal;
     if(vendorSelVal==='__custom__'){
       lbl.textContent='거래처 등록 중...';
-      vendorId=await createNotionPage(VENDOR_DB_ID,{ '상호':{ title:[{ text:{ content: vendorCustomName } }] } });
+      const vendorProps={ '상호':{ title:[{ text:{ content: vendorCustomName } }] } };
+      if(vendorCustomBizNo) vendorProps['사업자등록번호']={ rich_text:[{ text:{ content: vendorCustomBizNo } }] };
+      vendorId=await createNotionPage(VENDOR_DB_ID,vendorProps);
     }
     let cardId=cardSelVal;
     if(cardSelVal==='__custom__'){
