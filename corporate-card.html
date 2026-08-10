@@ -125,7 +125,12 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .trend-chart{display:block}
 .trend-svg-lbl{font-size:11px;fill:var(--txt2);font-weight:700}
 .trend-svg-lbl.cur{fill:var(--sky600)}
-.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:700}
+.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:700;paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
+.trend-legend-lbl{color:var(--txt2)}
+.trend-legend-sum{color:var(--teal600);font-weight:700}
+html[data-theme="dark"] #trendYearBtn,html[data-theme="dark"] #trendBadge{color:#fff}
+html[data-theme="dark"] .trend-legend-lbl{color:#fff}
+html[data-theme="dark"] .trend-legend-sum{color:#fff;font-weight:400}
 
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;min-width:300px}
@@ -136,7 +141,7 @@ td{padding:10px 12px;font-size:13px;color:var(--txt);border-bottom:1px solid var
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
 tfoot td{background:var(--sky50);border-top:1.5px solid var(--sky100);border-bottom:none;font-weight:400;color:var(--txt)}
-tfoot td:first-child{font-weight:700}
+tfoot td:first-child{font-weight:400}
 /* 계정 뱃지 — 진한 단색+흰 글자(work-portal 공통 뱃지 규칙, 2026-07-28 확정) */
 .cat-tag{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;color:#fff;border:1px solid rgba(0,0,0,.18)}
 .cat-c0{background:#1565C0}
@@ -807,7 +812,7 @@ function renderMonthly(){
   const totalSum=mTotals.reduce((a,b)=>a+b,0);
   document.getElementById("trendBadge").textContent=activeMonths?`${activeMonths}개월 · ${Math.round(totalSum/10000)}만원`:"데이터 없음";
 
-  const chartW=Math.max(300,months.length*54),chartH=150,padTop=22,padBottom=26,padL=22,padR=22;
+  const chartW=Math.max(300,months.length*54),chartH=150,padTop=32,padBottom=26,padL=22,padR=22;
   const plotH=chartH-padTop-padBottom;
   const stepX=months.length>1?(chartW-padL-padR)/(months.length-1):0;
   const pts=months.map((mon,i)=>{
@@ -833,9 +838,9 @@ function renderMonthly(){
         ${p.isCur?`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="none" stroke="var(--sky)" stroke-width="1.5" opacity="0.4"/>`:""}
       `).join("")}
       ${pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${chartH-6}" text-anchor="middle" class="trend-svg-lbl${p.isCur?" cur":""}">${p.mon.slice(5)}월</text>`).join("")}
-      ${pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${Math.round(p.v/10000)}만</text>`).join("")}
+      ${pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(12,p.y-14).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${Math.round(p.v/10000)}만</text>`).join("")}
     </svg>`;
-  document.getElementById("trendLegend").innerHTML=`<div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--txt2)"><div style="width:10px;height:10px;border-radius:3px;background:var(--sky)"></div>월 합계</div>`+(hasData?`<div style="font-size:12px;color:var(--teal600);font-weight:700">합계 ${fmt(totalSum)}원</div>`:"");
+  document.getElementById("trendLegend").innerHTML=`<div class="trend-legend-lbl" style="display:flex;align-items:center;gap:4px;font-size:12px"><div style="width:10px;height:10px;border-radius:3px;background:var(--sky)"></div>월 합계</div>`+(hasData?`<div class="trend-legend-sum" style="font-size:12px">합계 ${fmt(totalSum)}원</div>`:"");
   document.getElementById("monthlyTableBody").innerHTML=[...months].reverse().map(mon=>{
     const recs=RD.filter(r=>r.month===mon),tot=recs.reduce((s,r)=>s+r.total,0);if(!recs.length)return"";
     const catMap={};recs.forEach(r=>{catMap[r.cat]=(catMap[r.cat]||0)+r.total;});
