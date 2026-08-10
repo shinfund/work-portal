@@ -423,7 +423,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
       </div>
       <div class="detail-count" id="detailCount"></div>
       <div class="tbl-wrap"><table>
-        <thead><tr><th>사용일자</th><th>제목</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정항목</th><th>사용목적 및 지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
+        <thead><tr><th>사용일자</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정항목</th><th>사용목적 및 지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
         <tfoot id="dtTfoot"></tfoot>
       </table></div>
@@ -865,7 +865,6 @@ function renderDetail(){
     const fuelTxt=r.cardName==="주유카드"?`<span style="color:var(--coral)">${esc(r.cardName)}</span>`:esc(r.cardName||"");
     return`<tr>`+
       `<td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td>`+
-      `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.title||"")}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.vat)}</td>`+
       `<td class="r" style="color:var(--txt)">${fmt(r.total)}</td>`+
@@ -878,12 +877,12 @@ function renderDetail(){
       `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.cardNo||"")}</td>`+
       `<td style="font-size:13px;color:var(--txt)">${esc(r.note||"")}</td>`+
     `</tr>`;
-  }).join(""):`<tr><td colspan="13"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
+  }).join(""):`<tr><td colspan="12"><div class="empty"><div class="empty-icon">🔍</div><p>해당 조건의 내역이 없습니다</p></div></td></tr>`;
   // 합계 행 — 페이지네이션과 무관하게 현재 필터(f) 전체 기준으로 집계.
   const tfoot=document.getElementById("dtTfoot");
   if(tfoot){
     tfoot.innerHTML=f.length?`<tr>`+
-      `<td colspan="2">합계</td>`+
+      `<td>합계</td>`+
       `<td class="r">${fmt(f.reduce((s,r)=>s+(r.supply||0),0))}</td>`+
       `<td class="r">${fmt(f.reduce((s,r)=>s+(r.vat||0),0))}</td>`+
       `<td class="r">${fmt(f.reduce((s,r)=>s+(r.total||0),0))}</td>`+
