@@ -331,12 +331,12 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
   .report-paper .modal-hint{font-size:11px}
   .report-paper .detail-modal-hd h3{font-size:14px}
 }
-input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
-input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
-/* 다크모드 달력 아이콘이 기본 검정이라 어두운 배경에서 거의 안 보이는 문제 — 완전 반전으로 확실히
-   밝게(2026-08-06, 부분 반전 invert(.85)로는 불충분해 완전 반전+명시적 순도로 재확정). */
-html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.4);opacity:1}
-.report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
+input[type="date"]{position:relative;padding-left:34px;padding-right:10px}
+input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:8px}
+/* html[data-theme="dark"]에서 color-scheme:dark를 이미 지정 중이라 브라우저가 달력 아이콘 자체를
+   밝은색으로 그려준다 — 여기에 invert(1) 필터까지 겹치면 밝은 아이콘이 다시 어둡게 반전되어 잘
+   안 보이는 역효과가 났다(2026-08-06 invert 도입 당시엔 몰랐던 상호작용, 2026-08-10 확인 후 제거). */
+.report-paper input[type="date"].modal-input{padding-left:34px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
 /* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 인디고 배경(2026-08-03 청록으로 도입 → 2026-08-04
    안전관리 앱(monthly-inspection.html)과 동일하게 인디고로 통일, --rp-filled-bg로 다크/라이트 분리) */

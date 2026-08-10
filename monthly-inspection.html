@@ -168,15 +168,15 @@ html[data-theme="dark"] .rc-monthly-gubun,html[data-theme="dark"] .rc-monthly-se
 }
 /* 날짜칸 달력 아이콘을 우측→좌측으로(2026-07-29 입력폼 탭 우선 적용, 2026-08-03 신규등록/수정 팝업 등
    전체로 확대) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. */
-input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
-input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
-/* 다크모드 달력 아이콘이 기본 검정이라 어두운 배경에서 거의 안 보이는 문제 — 완전 반전으로 확실히
-   밝게(2026-08-06, 부분 반전 invert(.85)로는 불충분해 완전 반전+명시적 순도로 재확정). */
-html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.4);opacity:1}
+input[type="date"]{position:relative;padding-left:34px;padding-right:10px}
+input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:8px}
+/* html[data-theme="dark"]에서 color-scheme:dark를 이미 지정 중이라 브라우저가 달력 아이콘 자체를
+   밝은색으로 그려준다 — 여기에 invert(1) 필터까지 겹치면 밝은 아이콘이 다시 어둡게 반전되어 잘
+   안 보이는 역효과가 났다(2026-08-06 invert 도입 당시엔 몰랐던 상호작용, 2026-08-10 확인 후 제거). */
 /* 위 .report-paper .modal-input 폰트축소 규칙(padding:7px 10px)이 클래스 2개(.report-paper .modal-input)라
    input[type="date"] 단독 규칙보다 우선 적용되어 날짜칸 아이콘 왼쪽 여백이 다시 좁아지는 문제 — 표 안
    날짜칸(월간점검 탭 등)에서 아이콘·숫자 겹침 발생(2026-08-03). 특이도를 더 높여 되돌림. */
-.report-paper input[type="date"].modal-input{padding-left:26px;padding-right:10px}
+.report-paper input[type="date"].modal-input{padding-left:34px;padding-right:10px}
 @media(max-width:480px){ .report-paper{padding:16px 12px} }
 /* 입력폼탭 전체 — 값이 채워진 입력창에 옅은 인디고 배경(2026-08-03 청록으로 최초 도입 → 2026-08-04
    "촌스럽다"는 피드백으로 5가지 색상 미리보기 후 인디고로 교체). 어떤 값이 채워졌는지 한눈에
@@ -6375,8 +6375,7 @@ function renderTaskBody(){
     </div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
-  wrap.querySelectorAll('.tk-company').forEach(sel=>{ sel.style.width='100%'; });
-  autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-note':90});
+  autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-note':90, 'tk-company':150});
 }
 // 표 형식 입력폼(업무처리/고장수리 등) 전용 — 컬럼별 실제 입력값 중 가장 긴 텍스트 폭을 caret 기준으로
 // 측정해 그 컬럼의 모든 입력창 너비를 맞춘다(스프레드시트의 "열 너비 자동맞춤"과 동일 개념). td에
