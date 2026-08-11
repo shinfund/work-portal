@@ -1,5 +1,8 @@
 // ── 배포 시 필요한 환경변수/바인딩 ──────────────────────────
 //   env.AUTH_PASSWORD_HASH   (필수) 공용 비밀번호의 SHA-256 해시
+//   env.MASTER_PASSWORD_HASH (선택) 관리자모드(index.html) 비밀번호의 SHA-256 해시. 미설정 시 /master-login은 404.
+//                            평문/해시 모두 git에는 올리지 않고 Cloudflare 환경변수로만 설정(2026-08-11,
+//                            기존엔 index.html에 해시가 그대로 하드코딩돼 있어 공개 소스에서 크래킹 가능했음).
 //   env.AUTH_TOKEN_SECRET    (필수) 토큰 서명용 HMAC 시크릿
 //   env.NOTION_TOKEN         (필수) Notion Integration 토큰
 //   env.HAJA_BUCKET          (필수, R2 바인딩) 사진/서명 이미지 저장
@@ -19,6 +22,7 @@ const DB_IDS = {
 };
 
 const TOKEN_TTL_SECONDS = 7 * 24 * 3600; // 7일 (사용자 요청으로 원복 — 토큰 폐기는 TOKEN_VERSION으로 대응)
+const MASTER_TOKEN_TTL_SECONDS = 7 * 24 * 3600; // 관리자모드 — index.html의 기존 MASTER_TTL_MS(7일)와 동일
 
 // /signature 전용(결재 서명 이미지) — 서명은 여전히 이미지로만 제한
 const ALLOWED_IMAGE_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -222,6 +226,35 @@ export default {
       await clearLoginFailures(env, ip);
 
       const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
+      const token = await issueToken(env.AUTH_TOKEN_SECRET, exp, tokenVersion);
+      return corsJson({ token, expires: exp * 1000 }, 200, CORS);
+    }
+
+    // ✅ /master-login — 관리자모드(index.html) 비밀번호 검증. 해시를 클라이언트 코드에 두지 않기 위해
+    // /login과 동일하게 서버에서만 비교한다(2026-08-11). 로그인 여부와 무관하게 독립적으로 호출 가능.
+    if (url.pathname === "/master-login" && request.method === "POST") {
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const rl = await checkLoginRateLimit(env, `master:${ip}`);
+      if (!rl.allowed) {
+        return corsJson({ error: "시도가 너무 많습니다. 잠시 후 다시 시도해주세요." }, 429, CORS);
+      }
+
+      let password;
+      try {
+        ({ password } = await request.json());
+      } catch (e) {
+        return corsJson({ error: "body JSON 파싱 실패" }, 400, CORS);
+      }
+      if (!password) return corsJson({ error: "password 필드 누락" }, 400, CORS);
+      if (!env.MASTER_PASSWORD_HASH) return corsJson({ error: "not configured" }, 404, CORS);
+
+      const hash = await sha256Hex(password);
+      if (hash !== env.MASTER_PASSWORD_HASH) {
+        await recordLoginFailure(env, `master:${ip}`, rl.count);
+        return corsJson({ error: "비밀번호가 올바르지 않습니다" }, 401, CORS);
+      }
+
+      const exp = Math.floor(Date.now() / 1000) + MASTER_TOKEN_TTL_SECONDS;
       const token = await issueToken(env.AUTH_TOKEN_SECRET, exp, tokenVersion);
       return corsJson({ token, expires: exp * 1000 }, 200, CORS);
     }

@@ -1345,13 +1345,9 @@ function switchCfgTab(tab) {
 }
 
 // ── 관리자 모드 (연장근무 등 개별 앱의 신규등록·수정·삭제 게이트 — 포털 사이드바에서 전체 앱 공통 관리) ──
-// 비밀번호는 SHA-256 해시로만 코드에 남는다(평문은 코드 어디에도 없음). 개별 앱(overtime-work.html 등)과 동일한 해시를 공유한다.
-const MASTER_PASSWORD_HASH = '981f1cf8823cf90d8618203b33393cf9aa520977989e118e5b985823081dbd2a';
+// 비밀번호 해시를 클라이언트 코드에 두지 않고, /login과 동일하게 Worker에서만 검증한다(2026-08-11 —
+// 기존엔 salt 없는 SHA-256 해시가 공개 소스에 그대로 노출돼 오프라인 크래킹이 가능했음).
 const MASTER_TTL_MS = 7 * 24 * 3600 * 1000; // 7일
-async function sha256HexLocal(text) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
 function isMaster() {
   try {
     const exp = parseInt(localStorage.getItem('wp_masterExpires') || '0', 10) || 0;
@@ -1362,8 +1358,15 @@ async function unlockMaster() {
   const pwEl = document.getElementById('masterPw');
   const pw = (pwEl && pwEl.value) || '';
   if (!pw) return;
-  const h = await sha256HexLocal(pw);
-  if (h === MASTER_PASSWORD_HASH) {
+  try {
+    const res = await fetch(WORKER_URL + '/master-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      showToast(data.error || '비밀번호가 올바르지 않습니다.');
+      return;
+    }
     try {
       localStorage.setItem('wp_masterUnlocked', '1');
       localStorage.setItem('wp_masterExpires', String(Date.now() + MASTER_TTL_MS));
@@ -1372,8 +1375,8 @@ async function unlockMaster() {
     updateMasterStatusHint();
     updateTopbarStatus();
     showToast('관리자 모드가 활성화되었습니다.');
-  } else {
-    showToast('비밀번호가 올바르지 않습니다.');
+  } catch (e) {
+    showToast('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
   }
 }
 function lockMaster() {
