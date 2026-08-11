@@ -283,7 +283,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 // 포털(iframe) 안에서 열렸을 때는 자체 설정/새로고침 버튼을 숨긴다(포털 사이드바 설정이 단일 소스, 로그인 시 포털이 iframe을 재로드해 새로고침을 대신함)
 if (window.self !== window.top) {
   document.addEventListener('DOMContentLoaded', function(){
-    document.querySelector('button[onclick="openCfgModal()"]')?.style.setProperty('display','none');
+    document.getElementById('cfgBtn')?.style.setProperty('display','none');
     document.getElementById('syncBtn')?.style.setProperty('display','none');
   });
 }
@@ -460,7 +460,7 @@ if (window.self !== window.top) {
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
     <div class="header-btns">
-      <button class="hdr-btn" onclick="openCfgModal()">
+      <button class="hdr-btn" id="cfgBtn" onclick="openCfgModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         설정
       </button>
@@ -1007,7 +1007,7 @@ function recomputeDist(){
       }
       return;
     }
-    distEl.value=cum-prevCum;
+    distEl.value=Math.round((cum-prevCum)*100)/100;
     if(hintEl){
       hintEl.textContent=prev
         ? `= 당일 운행누계 ${fmtKm(cum)}km − 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) (자동 계산)`
@@ -1025,7 +1025,7 @@ function recomputeDist(){
       }
       return;
     }
-    cumEl.value=prevCum+dist;
+    cumEl.value=Math.round((prevCum+dist)*100)/100;
     if(hintEl){
       hintEl.textContent=prev
         ? `= 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) + 운행 ${fmtKm(dist)}km (자동 계산)`
@@ -1098,6 +1098,7 @@ function closeAddModal(e){
   document.body.style.overflow='';
   resetModalDragPos('addModal');
 }
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAddModal();});
 function openEditModal(pageId){
   const r = ALL_RECORDS.find(x=>x.id===pageId);
   if(!r) return;
@@ -1254,21 +1255,12 @@ const _now=new Date();
 let curYear=_now.getFullYear(), curMonth=_now.getMonth()+1;
 
 function toggleDD(type){
-  const yMenu=document.getElementById('ddYearMenu');
-  const mMenu=document.getElementById('ddMonthMenu');
-  if(type==='year'){
-    const isOpen=yMenu.classList.contains('open');
-    closeAllDD();
-    if(!isOpen){ renderDDYear(); yMenu.classList.add('open'); }
-  } else {
-    const isOpen=mMenu.classList.contains('open');
-    closeAllDD();
-    if(!isOpen){ renderDDMonth(); mMenu.classList.add('open'); }
-  }
+  if(type==='year') toggleDd('ddYearMenu','ddYearBtn',renderDDYear,closeAllDD);
+  else toggleDd('ddMonthMenu','ddMonthBtn',renderDDMonth,closeAllDD);
 }
 function closeAllDD(){
-  document.getElementById('ddYearMenu').classList.remove('open');
-  document.getElementById('ddMonthMenu').classList.remove('open');
+  closeDd('ddYearMenu','ddYearBtn');
+  closeDd('ddMonthMenu','ddMonthBtn');
 }
 function renderDDYear(){
   const dataYears=new Set(ALL_RECORDS.map(r=>parseInt(r.date.slice(0,4))).filter(Boolean));
@@ -1334,12 +1326,19 @@ document.addEventListener('click',e=>{
   if(mw&&!mw.contains(e.target)) closeDetailMonthDd();
 });
 
-// ── 운행내역 탭 차량/운전자 필터 드롭다운 ──
-function toggleDd(menuId,btnId){
+// ── 공통 드롭다운 토글(운행내역 탭 차량/운전자/연/월 필터 + 상단 연/월 선택기 공용) ──
+// menuId/btnId: 대상 드롭다운의 메뉴·버튼 id
+// onOpen: 열기 직전 실행할 콜백(옵션, 예: 옵션 목록 렌더)
+// closeOthers: 열기 전 다른 드롭다운을 함께 닫는 콜백(옵션, 미지정 시 자기 자신만 닫음)
+function toggleDd(menuId,btnId,onOpen,closeOthers){
   const menu=document.getElementById(menuId),btn=document.getElementById(btnId);
   if(!menu||!btn) return;
-  if(menu.classList.contains('open')){ closeDd(menuId,btnId); }
-  else { menu.classList.add('open'); btn.classList.add('active'); }
+  const isOpen=menu.classList.contains('open');
+  if(closeOthers) closeOthers(); else closeDd(menuId,btnId);
+  if(!isOpen){
+    if(onOpen) onOpen();
+    menu.classList.add('open'); btn.classList.add('active');
+  }
 }
 function closeDd(menuId,btnId){
   document.getElementById(menuId)?.classList.remove('open');
@@ -1653,6 +1652,7 @@ async function loadData(opts){
         if(latest){curYear=parseInt(latest.slice(0,4));curMonth=parseInt(latest.slice(5,7));}
       }
       renderAll();
+      alert('⚠ 실데이터를 불러오지 못해 데모 데이터를 표시합니다.\n지금 화면의 내용은 실제 데이터가 아닙니다 — 설정 버튼에서 로그인/연동 상태를 확인해주세요.');
     }
     let errMsg='⚠ '+msg;
     if(isAuthErr)errMsg='⚠ 로그인 필요 — 포털 설정에서 로그인';
@@ -1842,6 +1842,7 @@ async function deleteSelectedRows(){
     toast(ids.length+'건 삭제되었습니다.');
     DELETE_MODE=false; DELETE_SELECTED=new Set();
     updateDeleteToolbarUI(); updateDeleteHeaderCheckbox();
+    ensureCarColors(); // 삭제로 차량 목록이 바뀔 수 있어 색상 매핑 재계산 후 렌더링
     renderAll();
   }catch(e){
     alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
@@ -2427,6 +2428,10 @@ function buildVehicleReportData(carNo,year,month){
 }
 function buildOneVehicleReport(carNo,year,month){
   const data=buildVehicleReportData(carNo,year,month);
+  // 제목행(2행)·서명행(3행) 높이 — 서명 이미지 크기(sigCellH) 계산에도 동일 값을 참조해야 하므로
+  // 공용 상수로 추출(2026-08-11, 하드코딩 재입력 제거)
+  const TITLE_ROW_H=40;
+  const SIG_ROW3_H=26;
   return loadExcelLib().then(async ()=>{
     const wb=new ExcelJS.Workbook();
     const yy=String(year).slice(2);
@@ -2437,6 +2442,8 @@ function buildOneVehicleReport(carNo,year,month){
     });
     const headerLabels=['일자','운전자','용무','출발지','경유지','도착지','운행(km)','운행누계(km)','비고'];
     const rowKeys=[null,'driver','purpose','from','via','to','dist','cum','note'];
+    // 용무·비고(idx 2,8) 컬럼만 줄바꿈 허용 — excelWrapAwareRowHeight()에 넘길 컬럼 스펙(2026-08-11, 중복 구현 제거)
+    const reportColumns=rowKeys.map((key,i)=>({key,wrap:i===2||i===8}));
     // A열은 "일자"뿐 아니라 A4:B4에 병합되는 전체 날짜 문구(예: "2026년 06월 30일 화요일")와
     // A6:A7에 병합되는 차량번호 값도 담아야 해서, 일자 데이터만 기준으로 자동폭을 잡으면
     // 둘 다 잘려 보인다 — 두 값 길이를 최소폭에 반영한다(2026-07-07 확인된 버그 수정).
@@ -2457,7 +2464,7 @@ function buildOneVehicleReport(carNo,year,month){
     titleCell.value='운     행     일     지';
     titleCell.font=EXCEL_TITLE_FONT;
     titleCell.alignment={vertical:'middle',horizontal:'center'};
-    ws.getRow(2).height=40;
+    ws.getRow(2).height=TITLE_ROW_H;
 
     ws.mergeCells('A4:B4');
     const dateCell=ws.getCell('A4');
@@ -2469,9 +2476,9 @@ function buildOneVehicleReport(carNo,year,month){
 
     // 결재란 (제목 옆 G1:I3 — 담당=이 차량번호 전용 서명, 소장=전 차량 공통 서명, 설정에 등록된
     // 이미지가 있으면 자동 삽입). 행1은 라벨용으로 높이를 조금 키우고, 행3은 서명 이미지 공간
-    // 확보를 위해 늘린다(행2는 제목행이라 이미 40으로 커서 그대로 활용).
+    // 확보를 위해 늘린다(행2는 제목행이라 이미 TITLE_ROW_H로 커서 그대로 활용).
     ws.getRow(1).height=20;
-    ws.getRow(3).height=26;
+    ws.getRow(3).height=SIG_ROW3_H;
     // 결재란 영역 경계 기준으로 바깥=thin·안쪽=hair 자동 계산(2026-07-22) — 병합 범위는 그
     // 범위의 실제 r1~r2/c1~c2로 판정해야 안전하다(monthly-inspection.html의 gridBorder(range)와
     // 동일 원칙). rangeBounds()는 파일 상단에서 정의.
@@ -2494,7 +2501,7 @@ function buildOneVehicleReport(carNo,year,month){
     // 서명란(H2:H3, I2:I3) 전체 크기(px) 기준으로 절반 크기로 축소해 가운데 배치
     const sigCellW_H=excelColWidthToPx(colWidths[7]);
     const sigCellW_I=excelColWidthToPx(colWidths[8]);
-    const sigCellH=excelRowHeightToPx(40)+excelRowHeightToPx(26); // row2(제목행,40)+row3(26)
+    const sigCellH=excelRowHeightToPx(TITLE_ROW_H)+excelRowHeightToPx(SIG_ROW3_H); // row2(제목행)+row3(서명행)
     await ensureSignaturesLoaded();
     const sigDamdang=getSignatureDataUrl('담당_'+carNo);
     const sigSojang=getSignatureDataUrl('소장');
@@ -2551,11 +2558,8 @@ function buildOneVehicleReport(carNo,year,month){
         if(ci===0){ cell.numFmt='d (aaa)'; }
         else if(ci===6||ci===7){ cell.numFmt='#,##0'; }
       });
-      // 용무·비고 컬럼의 줄바꿈을 감안한 행높이(엑셀생성 버튼의 excelWrapAwareRowHeight와 동일 로직)
-      const purposeLines=excelEstimateWrappedLines(r.purpose,colWidths[2]);
-      const noteLines=excelEstimateWrappedLines(r.note,colWidths[8]);
-      const maxLines=Math.max(purposeLines,noteLines,1);
-      row.height=Math.max(22,maxLines*REPORT_BODY_FONT.size*1.4+6);
+      // 용무·비고 컬럼의 줄바꿈을 감안한 행높이(엑셀생성 버튼과 동일한 excelWrapAwareRowHeight 헬퍼 재사용)
+      row.height=excelWrapAwareRowHeight(r, reportColumns, colWidths, REPORT_BODY_FONT.size, 22);
       row.commit();
     });
 

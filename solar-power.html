@@ -10,7 +10,7 @@
 <style>
 :root{
   /* 하자보수현황 앱과 수치 동일(2026-07-05 확정 — work-portal 공통 색상 팔레트 기준) */
-  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
+  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky700:#1565C0;--sky800:#032F62;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
@@ -99,14 +99,14 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 /* 하자보수현황 앱 dd-btn/dd-menu/dd-opt와 수치·색상 완전 동일(2026-07-05 확정 — work-portal 공통 기준) */
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
+.dd-btn.active{background:var(--sky700);color:#fff;border-color:var(--sky700)}
 .dd-btn.active::after{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .dd-menu.open{display:block}
 /* 목록방식(3-9 표준) — 년/월/터널 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
+.dd-opt.sel{background:var(--sky700);color:#fff;font-weight:700}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 
@@ -299,8 +299,8 @@ if (window.self !== window.top) {
 <!-- MODAL -->
 <div id="cfgModal">
   <div class="modal-backdrop" onclick="closeCfgModal(event)">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <div class="modal-title">
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="cfgModalTitleEl" onclick="event.stopPropagation()">
+      <div class="modal-title" id="cfgModalTitleEl">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
         설정
       </div>
@@ -329,7 +329,7 @@ if (window.self !== window.top) {
 <!-- ADD/EDIT MODAL -->
 <div id="addModal">
   <div class="modal-backdrop" onclick="closeAddModal(event)">
-    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+    <div class="modal-box add-modal-box" role="dialog" aria-modal="true" aria-labelledby="addModalTitleText" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="addModalTitleText">신규 발전량 등록</span></h3>
         <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
@@ -400,7 +400,7 @@ if (window.self !== window.top) {
 <!-- DETAIL MODAL (레코드 클릭 시 상세 조회 + 수정/삭제 — 하자보수현황 앱 detailModal 패턴) -->
 <div id="detailModal">
   <div class="modal-backdrop" onclick="closeDetailModal(event)">
-    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+    <div class="modal-box detail-modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3 id="detailModalTitle">발전량 상세</h3>
         <div style="display:flex;gap:14px;align-items:center">
@@ -583,9 +583,9 @@ if (window.self !== window.top) {
       </div>
       <div class="tbl-wrap">
         <table>
-          <!-- ⚠ 터널 컬럼(흥해터널/청하터널(주)/청하터널(부)/남정5터널)은 JS TREND_TUNNEL_COLS와 동일한 순서로 고정 하드코딩됨.
-               터널 추가/삭제 시 TREND_TUNNEL_COLS와 함께 이 행도 수동으로 맞춰야 함(정적 thead라 자동 동기화 안 됨). -->
-          <thead><tr>
+          <!-- 터널 컬럼은 JS renderTrendThead()가 getTrendTunnelCols()(실데이터/데모 분리)로 동적 생성함(C4/B4 리팩터).
+               아래 두 <th>는 JS 미실행 시 대비한 초기 폴백 마크업일 뿐, 실제 표시는 항상 스크립트가 덮어씀. -->
+          <thead><tr id="trendThead">
             <th>월</th><th class="r">발전량(kWh)</th>
             <th class="r">흥해터널</th><th class="r">청하터널(주)</th><th class="r">청하터널(부)</th><th class="r">남정5터널</th>
             <th class="r">발전일수</th>
@@ -706,6 +706,7 @@ function openCfgModal(){
   updateLoginStatusHint();
   syncThemeOptUI();
   const m=document.getElementById('cfgModal');if(m){m.classList.add('modal-open');document.body.style.overflow='hidden';}
+  focusFirstIn('cfgModal');
 }
 // 이 앱 자체에는 로그인 UI가 없음 — 포털 사이드바 하단 설정에서 로그인하면
 // 공유 토큰(wp_authToken)을 storage 이벤트로 감지해 자동으로 데이터를 불러온다.
@@ -720,6 +721,37 @@ function closeCfgModal(e){
   resetModalDragPos('cfgModal');
 }
 
+// ── 우측 슬라이드 드로어(addModal/detailModal) 공용 열기/닫기 헬퍼 (C1/C2 리팩터 — 3곳에
+//    거의 동일하게 반복되던 modal-open 부여→drawer-in 재부여 시퀀스와, 2곳에 반복되던
+//    drawer-in 제거→280ms 후 modal-open 제거 시퀀스를 각각 하나로 통합) ──
+const _drawerCloseTimers={}; // modalId -> 닫힘 슬라이드아웃 애니메이션(.28s) 종료 타이머 핸들
+function openDrawer(modalId){
+  const m=document.getElementById(modalId);
+  if(!m) return;
+  m.classList.add('modal-open');
+  m.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
+  if(_drawerCloseTimers[modalId]){ clearTimeout(_drawerCloseTimers[modalId]); _drawerCloseTimers[modalId]=null; }
+  void m.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
+  m.classList.add('drawer-in');
+  document.body.style.overflow='hidden';
+  focusFirstIn(modalId);
+}
+function closeDrawer(modalId){
+  const m=document.getElementById(modalId);
+  if(!m) return;
+  m.classList.remove('drawer-in');
+  document.body.style.overflow='';
+  resetModalDragPos(modalId);
+  _drawerCloseTimers[modalId]=setTimeout(()=>{ m.classList.remove('modal-open'); _drawerCloseTimers[modalId]=null; }, 280);
+}
+// 모달이 열릴 때 내부 첫 포커스 가능 요소로 포커스 이동(C5 — 키보드/스크린리더 접근성)
+function focusFirstIn(modalId){
+  const root=document.getElementById(modalId);
+  if(!root) return;
+  const el=root.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if(el) el.focus();
+}
+
 // ── 화면모드(테마) ────────────────────────────────────
 function syncThemeOptUI(){
   const cur=document.documentElement.getAttribute('data-theme')||'dark';
@@ -731,15 +763,12 @@ function setAppTheme(theme){
   try{localStorage.setItem('theme',theme);}catch(e){}
   syncThemeOptUI();
 }
+// ── storage 이벤트 통합 핸들러 (테마 동기화 + 로그인 토큰 동기화, C3 리팩터로 단일 등록) ──
 window.addEventListener('storage',e=>{
   if(e.key==='theme'&&e.newValue){
     document.documentElement.setAttribute('data-theme',e.newValue);
     syncThemeOptUI();
-  }
-});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCfgModal();});
-window.addEventListener('storage',e=>{
-  if(e.key==='wp_authToken'){
+  } else if(e.key==='wp_authToken'){
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
@@ -747,10 +776,17 @@ window.addEventListener('storage',e=>{
     else { ALL_RECORDS=DEMO_DATA; ensureTunnelColors(); renderAll(); }
   }
 });
+// ── Escape 키 통합 핸들러 (열려있는 모달을 addModal→detailModal→cfgModal 우선순위로 닫음,
+//    C3 리팩터로 단일 등록 — 각 close 함수는 하단에서 정의됨, 함수 선언 호이스팅으로 참조 가능) ──
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  if(document.getElementById('addModal')?.classList.contains('modal-open')) closeAddModal();
+  else if(document.getElementById('detailModal')?.classList.contains('modal-open')) closeDetailModal();
+  else if(document.getElementById('cfgModal')?.classList.contains('modal-open')) closeCfgModal();
+});
 
 // ── 신규추가/수정/삭제 ────────────────────────────────
 var EDIT_PAGE_ID = null;
-var _addModalCloseTimer = null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 function getUniqueTunnels(){ return [...new Set(ALL_RECORDS.map(r=>r.tunnel).filter(Boolean))].sort(); }
 function getUniqueCapacities(){ return [...new Set(ALL_RECORDS.map(r=>r.capacity).filter(Boolean))].sort((a,b)=>a-b); }
 function getUniqueUnitPrices(){ return [...new Set(ALL_RECORDS.map(r=>r.unitPrice).filter(Boolean))].sort((a,b)=>a-b); }
@@ -768,7 +804,9 @@ function getTunnelCapacity(tunnel){
 // 용량이 다른 계량기가 2개 이상 있으면 같은 날짜에 레코드가 2건 이상 나올 수 있어 모두 포함한다.
 function getTunnelLatestDateRecords(tunnel){
   if(!tunnel) return [];
-  const recs=ALL_RECORDS.filter(r=>r.tunnel===tunnel && r.cumGen!=null);
+  // 누적량이 실제로 기록된(0보다 큰) 레코드만 후보로 삼는다 — parseNotionPage는 값이 없으면
+  // cumGen을 항상 0으로 채우므로 "!=null" 조건은 걸러내는 효과가 없었음(B3 수정)
+  const recs=ALL_RECORDS.filter(r=>r.tunnel===tunnel && r.cumGen>0);
   if(!recs.length) return [];
   const maxDate=recs.reduce((m,r)=>r.date>m?r.date:m, recs[0].date);
   return recs.filter(r=>r.date===maxDate);
@@ -873,21 +911,11 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getTunnelCapacities('').map(String), '');
   buildGenericSelectOpts(document.getElementById('addUnitPrice'), document.getElementById('addUnitPriceCustom'), getUniqueUnitPrices().map(String), '');
   refreshPrevCumOptions('');
-  const am=document.getElementById('addModal');
-  am.classList.add('modal-open');
-  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
-  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
-  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
-  am.classList.add('drawer-in');
-  document.body.style.overflow='hidden';
+  openDrawer('addModal');
 }
 function closeAddModal(e){
   if(e&&e.target!==e.currentTarget)return;
-  const am=document.getElementById('addModal');
-  am.classList.remove('drawer-in');
-  _addModalCloseTimer=setTimeout(()=>{ am.classList.remove('modal-open'); _addModalCloseTimer=null; }, 280);
-  document.body.style.overflow='';
-  resetModalDragPos('addModal');
+  closeDrawer('addModal');
 }
 function openEditModal(pageId){
   const r = ALL_RECORDS.find(x=>x.id===pageId);
@@ -906,13 +934,7 @@ function openEditModal(pageId){
   // 기존 레코드의 전일누적량은 실제 값으로 확정돼 있으므로 직접입력 값으로 표시(과거 기록 드롭다운은 필요시 전환용으로만 남겨둠)
   refreshPrevCumOptions(r.tunnel||'', r.prevCumGen||'');
   recomputeGenAndFee();
-  const am=document.getElementById('addModal');
-  am.classList.add('modal-open');
-  am.classList.remove('drawer-in'); // 재빠르게 닫혔다 다시 열 때 이전 닫힘 타이머의 잔여 상태 제거
-  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
-  void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
-  am.classList.add('drawer-in');
-  document.body.style.overflow='hidden';
+  openDrawer('addModal');
 }
 function submitAddForm(){
   const date = document.getElementById('addDate').value.trim();
@@ -1013,26 +1035,12 @@ function openDetailModal(id){
   document.getElementById('detailModalActions').innerHTML=
     `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
     +`<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>`;
-  { const dm=document.getElementById('detailModal');
-    dm.classList.add('modal-open');
-    dm.classList.remove('drawer-in');
-    if(_detailModalCloseTimer){ clearTimeout(_detailModalCloseTimer); _detailModalCloseTimer=null; }
-    void dm.offsetWidth;
-    dm.classList.add('drawer-in');
-  }
-  document.body.style.overflow='hidden';
+  openDrawer('detailModal');
 }
 function closeDetailModal(e){
   if(e&&e.target!==e.currentTarget)return;
-  const dm=document.getElementById('detailModal');
-  dm.classList.remove('drawer-in');
-  document.body.style.overflow='';
-  resetModalDragPos('detailModal');
-  _detailModalCloseTimer=setTimeout(()=>{ dm.classList.remove('modal-open'); _detailModalCloseTimer=null; }, 280);
+  closeDrawer('detailModal');
 }
-var _detailModalCloseTimer=null;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetailModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAddModal();});
 
 // ── 날짜 ──────────────────────────────────────────────
 const _now=new Date();
@@ -1086,6 +1094,7 @@ function pickYear(y){
   if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
+  else { renderAll(); } // 로그인 전(데모 데이터)이면 loadData/renderAll 모두 안 타던 문제 — 라벨-화면 불일치 방지(B1)
 }
 function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
@@ -1094,6 +1103,7 @@ function pickMonth(m){
   if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
+  else { renderAll(); } // 로그인 전(데모 데이터)이면 loadData/renderAll 모두 안 타던 문제 — 라벨-화면 불일치 방지(B1)
 }
 function updateMonthLabel(){
   document.getElementById('ddYearLabel').textContent=curYear==='ALL'?'전체 연도':curYear+'년';
@@ -1652,10 +1662,14 @@ function renderSummary(recs){
     const allGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
     const allFee=recs.reduce((s,r)=>s+getFeeAmt(r),0);
     const allTunnels=new Set(recs.map(r=>r.tunnel).filter(Boolean)).size;
+    // curMonth가 특정 월이면 recs(filteredRecords())는 실제로 "전 연도의 그 달"만 합산한
+    // 값이므로, 카드 라벨도 그 집계 범위를 그대로 반영한다(B2 — 이전엔 항상 '전체 기간'으로 고정 표시).
+    const periodLabel = curMonth===0 ? '전체 기간' : `전체 연도 ${curMonth}월`;
+    const periodSub = curMonth===0 ? '전체 합산' : `매년 ${curMonth}월 합산`;
     cells=[
-      summaryCell('sky','전체 기간',kwhValue(allGen),'총 발전량'),
-      summaryCell('neutral','절감 전기요금',fmtWon(Math.floor(allFee)),'전체 합산'),
-      summaryCell('teal','가동 터널',`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,'전체 합산')
+      summaryCell('sky',periodLabel,kwhValue(allGen),'총 발전량'),
+      summaryCell('neutral','절감 전기요금',fmtWon(Math.floor(allFee)),periodSub),
+      summaryCell('teal','가동 터널',`${allTunnels}<span style="font-size:12px;font-weight:500">개소</span>`,periodSub)
     ];
   } else if(curMonth===0){
     const allRecs2=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
@@ -1771,11 +1785,22 @@ function renderTunnel(recs){
 }
 
 // ── 월별 추이 ─────────────────────────────────────────
-// 월별추이 "월별 요약" 테이블 고정 컬럼 순서(요청 기준) — 노션에 없는 터널이면 해당 컬럼은 0으로 표시
-// ⚠ TODO: 터널이 추가/삭제되면 이 배열과 함께 HTML <thead>(~line 561, "월별 요약" 테이블 고정 헤더)도 반드시 같이 수동으로 맞출 것.
-//    EXCEL_COLUMNS_TREND는 이 배열에서 파생되어 자동 동기화되지만, 정적 HTML thead는 그렇지 않음(단일 소스화 미완료).
-const TREND_TUNNEL_COLS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널'];
+// 월별추이 "월별 요약" 테이블 컬럼 순서(요청 기준) — 노션에 없는 터널이면 해당 컬럼은 0으로 표시.
+// 실데이터와 DEMO_DATA(시연용)는 터널명 체계가 달라(흥해터널 vs 터널A 등) 컬럼셋을 분리했다(B4).
+// HTML <thead>(#trendThead)는 renderTrendThead()가 getTrendTunnelCols()로 매번 동적 생성하므로
+// 터널 추가/삭제 시 아래 두 배열만 고치면 되고, 정적 마크업을 별도로 손볼 필요가 없다(C4).
+const REAL_TREND_TUNNEL_COLS=['흥해터널','청하터널(주)','청하터널(부)','남정5터널'];
+const DEMO_TREND_TUNNEL_COLS=['터널A','터널B(주)','터널B(부)','터널C'];
+function getTrendTunnelCols(){ return ALL_RECORDS===DEMO_DATA ? DEMO_TREND_TUNNEL_COLS : REAL_TREND_TUNNEL_COLS; }
+function renderTrendThead(){
+  const tr=document.getElementById('trendThead');
+  if(!tr) return;
+  tr.innerHTML = '<th>월</th><th class="r">발전량(kWh)</th>'
+    + getTrendTunnelCols().map(name=>`<th class="r">${esc(name)}</th>`).join('')
+    + '<th class="r">발전일수</th>';
+}
 function renderTrend(){
+  renderTrendThead();
   const months=[];
   // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
   const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
@@ -1853,7 +1878,7 @@ function renderTrend(){
 
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
-    const tunnelCells=TREND_TUNNEL_COLS.map(name=>`<td class="r">${fmtWon(Math.floor(tunnelMap[name]?.gen||0))}</td>`).join('');
+    const tunnelCells=getTrendTunnelCols().map(name=>`<td class="r">${fmtWon(Math.floor(tunnelMap[name]?.gen||0))}</td>`).join('');
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
       <td style="font-weight:${isCur?'700':'400'}">${y}/${String(m).padStart(2,'0')}</td>
       <td class="r">${fmtWon(Math.floor(totalGen))}</td>
@@ -2077,24 +2102,28 @@ function exportSolarExcel(){
     columns:EXCEL_COLUMNS_SOLAR, rows, orientation:'portrait'
   });
 }
-// 터널 컬럼은 TREND_TUNNEL_COLS에서 파생(단일 소스) — 하드코딩 중복 제거, 터널 추가/삭제 시 TREND_TUNNEL_COLS만 고치면 이 배열은 자동 반영됨.
-// (단, ~line 561의 정적 HTML thead는 별도 — 위 TODO 주석 참고)
-const EXCEL_COLUMNS_TREND=[
-  {key:'월',header:'월'},
-  {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0'},
-  ...TREND_TUNNEL_COLS.map(name=>({key:name,header:name,numFmt:'#,##0'})),
-  {key:'발전일수',header:'발전일수',numFmt:'#,##0'}
-];
+// 터널 컬럼은 getTrendTunnelCols()에서 파생(단일 소스, 실데이터/데모 분리) — 엑셀 생성 시점의
+// 현재 모드에 맞는 컬럼셋을 쓰도록 함수로 계산(B4 — 데모 모드에서 터널명 불일치로 0만 찍히던 문제,
+// C4 — thead와 동일한 소스를 공유하도록 단일화).
+function trendExcelColumns(){
+  return [
+    {key:'월',header:'월'},
+    {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0'},
+    ...getTrendTunnelCols().map(name=>({key:name,header:name,numFmt:'#,##0'})),
+    {key:'발전일수',header:'발전일수',numFmt:'#,##0'}
+  ];
+}
 function exportTrendExcel(){
+  const cols=trendExcelColumns();
   const rows=[..._trendData].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const row={월:`${y}/${String(m).padStart(2,'0')}`, 발전량:Math.floor(totalGen), 발전일수:cnt};
-    TREND_TUNNEL_COLS.forEach(name=>{ row[name]=Math.floor(tunnelMap[name]?.gen||0); });
+    getTrendTunnelCols().forEach(name=>{ row[name]=Math.floor(tunnelMap[name]?.gen||0); });
     return row;
   });
   buildExcelReport({
     btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
     sheetName:'월별요약', title:'태양광발전량 월별요약', fnamePrefix:'태양광발전량_월별요약',
-    columns:EXCEL_COLUMNS_TREND, rows, orientation:'portrait'
+    columns:cols, rows, orientation:'portrait'
   });
 }
 

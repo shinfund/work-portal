@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>통합업무포털</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%237FB4FF'/%3E%3Cstop offset='1' stop-color='%23032F62'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M12 3L21 8L12 13L3 8Z' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 12L12 17L21 12' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 16L12 21L21 16' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -18,7 +18,6 @@
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r8:8px;--r12:12px;--r16:16px;--r20:20px;
-  --shadow:none;
   --sidebar-w:210px;
   --header-h:40px;
 
@@ -85,7 +84,6 @@ html[data-theme="dark"]{
   --txt:rgba(255,255,255,.92);
   --txt2:rgba(255,255,255,.75);
   --txt3:rgba(255,255,255,.5);
-  --shadow:none;
 
   --sky:#2E8FFF;
   --sky50:rgba(46,143,255,.16);
@@ -97,6 +95,7 @@ html[data-theme="dark"]{
   --teal100:rgba(29,158,117,.34);
   --teal600:#5FE0B0;
 
+  --coral:#FF8F66;
   --coral50:rgba(216,90,48,.18);
   --coral100:rgba(216,90,48,.34);
 
@@ -524,47 +523,47 @@ body{
   </div>
 
   <nav class="sb-nav">
-    <div class="sb-item sb-home on" id="sbn-home" onclick="go('home')">
+    <div class="sb-item sb-home on" id="sbn-home" role="button" tabindex="0" onclick="go('home')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>홈</span>
     </div>
 
     <div class="sb-sec">업무 앱</div>
-    <div class="sb-item sb-auth-gated" id="sbn-notice" onclick="go('notice')">
+    <div class="sb-item sb-auth-gated" id="sbn-notice" role="button" tabindex="0" onclick="go('notice')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span>공지사항</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-solar" onclick="go('solar')">
+    <div class="sb-item sb-auth-gated" id="sbn-solar" role="button" tabindex="0" onclick="go('solar')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <span>태양광발전량</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-defect" onclick="go('defect')">
+    <div class="sb-item sb-auth-gated" id="sbn-defect" role="button" tabindex="0" onclick="go('defect')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg>
       <span>하자보수현황</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-vehicle" onclick="go('vehicle')">
+    <div class="sb-item sb-auth-gated" id="sbn-vehicle" role="button" tabindex="0" onclick="go('vehicle')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       <span>차량운행일지</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-equip" onclick="go('equip')">
+    <div class="sb-item sb-auth-gated" id="sbn-equip" role="button" tabindex="0" onclick="go('equip')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
       <span>비품대장</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-overtime" onclick="go('overtime')">
+    <div class="sb-item sb-auth-gated" id="sbn-overtime" role="button" tabindex="0" onclick="go('overtime')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span>연장근무</span>
     </div>
-    <div class="sb-item sb-disabled sb-admin-gated" id="sbn-card" onclick="isMaster()&&go('card')">
+    <div class="sb-item sb-disabled sb-admin-gated" id="sbn-card" role="button" tabindex="0" onclick="isMaster()&&go('card')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
       <span>법인카드</span>
       <svg id="sbn-card-lock" viewBox="0 0 24 24" style="width:12px;height:12px" title="관리자모드 전용"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
 
-    <div class="sb-item sb-auth-gated" id="sbn-monthly" onclick="go('monthly')">
+    <div class="sb-item sb-auth-gated" id="sbn-monthly" role="button" tabindex="0" onclick="go('monthly')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       <span>월간점검결과-안전관리</span>
     </div>
-    <div class="sb-item sb-auth-gated" id="sbn-monthlyTeam" onclick="go('monthlyTeam')">
+    <div class="sb-item sb-auth-gated" id="sbn-monthlyTeam" role="button" tabindex="0" onclick="go('monthlyTeam')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
       <span>월간점검결과-점검팀</span>
     </div>
@@ -668,7 +667,7 @@ body{
 
         <div class="sec-hd"><span>업무 앱 바로가기</span></div>
         <div class="app-grid">
-          <div class="app-card" onclick="go('notice')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('notice')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">공지사항</div>
               <div class="ac-kpi" id="kpi-notice">—</div>
@@ -677,7 +676,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('solar')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('solar')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">태양광발전량</div>
               <div class="ac-kpi" id="kpi-solar">—</div>
@@ -686,7 +685,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('defect')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('defect')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">하자보수현황</div>
               <div class="ac-kpi" id="kpi-defect">—</div>
@@ -695,7 +694,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('vehicle')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('vehicle')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">차량운행일지</div>
               <div class="ac-kpi" id="kpi-vehicle">—</div>
@@ -704,7 +703,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('equip')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('equip')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">비품대장</div>
               <div class="ac-kpi" id="kpi-equip">—</div>
@@ -713,7 +712,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('overtime')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('overtime')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">연장근무</div>
               <div class="ac-kpi" id="kpi-overtime">—</div>
@@ -722,7 +721,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('monthly')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('monthly')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">월간점검결과-안전관리</div>
               <div class="ac-kpi" id="kpi-monthly">—</div>
@@ -731,7 +730,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" onclick="go('monthlyTeam')">
+          <div class="app-card" role="button" tabindex="0" onclick="go('monthlyTeam')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">월간점검결과-점검팀</div>
               <div class="ac-kpi" id="kpi-monthlyTeam">—</div>
@@ -740,7 +739,7 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card ac-admin-gated" id="acard-card" onclick="go('card')" style="display:none">
+          <div class="app-card ac-admin-gated" id="acard-card" role="button" tabindex="0" onclick="go('card')" onkeydown="handleActivateKey(event)" style="display:none">
             <div>
               <div class="ac-name">법인카드</div>
               <div class="ac-kpi" id="kpi-card">—</div>
@@ -890,7 +889,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리·월간점검결과-점검팀 7개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 공지사항·하자보수·차량운행·연장근무·태양광·비품대장·월간점검결과-안전관리·월간점검결과-점검팀 8개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -901,11 +900,11 @@ body{
       <div class="modal-tab-panel" id="cfgtab-theme">
         <div class="modal-sec" style="margin-top:0">화면모드</div>
         <div class="theme-opts">
-          <div class="theme-opt" id="theme-opt-dark" onclick="setNavTheme('dark')">
+          <div class="theme-opt" id="theme-opt-dark" role="button" tabindex="0" onclick="setNavTheme('dark')" onkeydown="handleActivateKey(event)">
             <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
             <div class="theme-opt-label">다크</div>
           </div>
-          <div class="theme-opt" id="theme-opt-light" onclick="setNavTheme('light')">
+          <div class="theme-opt" id="theme-opt-light" role="button" tabindex="0" onclick="setNavTheme('light')" onkeydown="handleActivateKey(event)">
             <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
             <div class="theme-opt-label">라이트</div>
           </div>
@@ -955,18 +954,9 @@ const APPS = {
   monthlyTeam: { name:'월간점검결과-점검팀', file:'monthly-inspection-team.html' },
   card:     { name:'법인카드', file:'corporate-card.html' }
 };
-const PAGES = {
-  home:     { mName:'홈' },
-  notice:   { mName:'공지사항' },
-  defect:   { mName:'하자보수현황' },
-  vehicle:  { mName:'차량운행일지' },
-  overtime: { mName:'연장근무' },
-  solar:    { mName:'태양광발전량' },
-  equip:    { mName:'비품대장' },
-  monthly:  { mName:'월간점검결과-안전관리' },
-  monthlyTeam: { mName:'월간점검결과-점검팀' },
-  card:     { mName:'법인카드' }
-};
+// 앱 표시 이름은 APPS[id].name 하나만 소스로 삼는다 — PAGES는 APPS에서 파생(중복 선언 방지)
+const PAGES = { home: { mName: '홈' } };
+Object.keys(APPS).forEach(id => { PAGES[id] = { mName: APPS[id].name }; });
 
 let _cur = 'home';
 const _loaded = {};
@@ -987,12 +977,22 @@ function unloadApp(id) {
   return true;
 }
 
+// 키보드 접근성 — role="button" 요소(사이드바 메뉴·홈 앱카드·화면모드 선택)에서
+// Enter/Space 입력 시 클릭과 동일한 동작을 트리거
+function handleActivateKey(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    e.currentTarget.click();
+  }
+}
+
 // ── 페이지 전환 (사이드바/탭바 공통 진입점) ──────────────
 function go(id, opts) {
   opts = opts || {};
   const record = opts.record !== false;
   const newTab = opts.newTab === true;
   if (id === _cur) return;
+  if (id === 'card' && !isMaster()) return; // 사이드바 onclick 가드와 동일 조건 — 콘솔에서 직접 호출해도 우회 불가
 
   if (id !== 'home' && !isAuthed()) {
     showToast('로그인이 필요합니다.');
@@ -1509,12 +1509,20 @@ function renderHomeKpi() {
     else { mtEl.textContent = emptyKpiLabel(); mtEl.className = 'ac-kpi empty'; }
     renderCardViz('monthlyTeam', s);
   }
+  const cEl = document.getElementById('kpi-card');
+  if (cEl) {
+    const s = readPortalSummary('card');
+    if (s) { cEl.textContent = `이달 ${fmtWonHome(s.thisMonthTotal)}원`; cEl.className = 'ac-kpi'; }
+    else { cEl.textContent = emptyKpiLabel(); cEl.className = 'ac-kpi empty'; }
+    renderCardViz('card', s);
+  }
 }
 renderHomeKpi();
 
 // 설정은 돼 있지만 요약 캐시가 없거나 오래된(10분+) 앱은, 앱 탭을 열지 않아도 홈 진입 시
 // 숨김 iframe으로 잠깐 백그라운드 로딩시켜 자동으로 최신 숫자를 채운다.
 // (각 앱은 로그인 상태면 로드 시 스스로 데이터를 불러오도록 이미 구현돼 있음 — 그 로직을 그대로 재사용)
+const _kpiPreloading = new Set(); // 로딩 중인 id — 재진입(중복 트리거) 방지용 in-flight 가드
 function preloadHomeKpis() {
   const STALE_MS = 10 * 60 * 1000;
   const PRELOAD_TIMEOUT_MS = 20 * 1000; // 레코드 많은 앱(순차 페이지네이션)까지 감안해 8→15→20초로 상향
@@ -1522,9 +1530,13 @@ function preloadHomeKpis() {
   if (!zone) return;
   Object.keys(APPS).forEach(id => {
     if (!isAppConfigured()) return;
+    if (id === 'card' && !isMaster()) return; // 관리자 전용 앱은 관리자모드일 때만 백그라운드 로드
+    if (id === _cur) return; // 현재 활성 탭은 이미 보이는 iframe으로 로드 중 — 중복 인스턴스 방지
+    if (_kpiPreloading.has(id)) return;
     const s = readPortalSummary(id);
     if (s && s.updatedAt && (Date.now() - s.updatedAt) < STALE_MS) return;
     const beforeUpdatedAt = s && s.updatedAt ? s.updatedAt : 0;
+    _kpiPreloading.add(id);
     const ifr = document.createElement('iframe');
     ifr.src = APPS[id].file + '?kpiPreload=1&v=' + Date.now();
     zone.appendChild(ifr);
@@ -1532,7 +1544,7 @@ function preloadHomeKpis() {
     // 여러 페이지를 순차 조회하느라 load 이후에도 한참 걸림) — 요약값이 실제로 갱신됐는지 폴링하고,
     // 못 끝내면 타임아웃에 맞춰 정리(둘 중 먼저 오는 쪽)
     let done = false;
-    const finish = () => { if (done) return; done = true; clearInterval(poll); ifr.remove(); renderHomeKpi(); };
+    const finish = () => { if (done) return; done = true; clearInterval(poll); _kpiPreloading.delete(id); ifr.remove(); renderHomeKpi(); };
     const poll = setInterval(() => {
       const cur = readPortalSummary(id);
       if (cur && cur.updatedAt && cur.updatedAt > beforeUpdatedAt) finish();
@@ -1557,14 +1569,16 @@ function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const collapsed = sb.classList.toggle('collapsed');
   document.getElementById('nav-toggle')?.setAttribute('data-tip', collapsed ? '사이드바 열기' : '사이드바 닫기');
-  localStorage.setItem('sb_collapsed', collapsed ? '1' : '0');
+  try { localStorage.setItem('sb_collapsed', collapsed ? '1' : '0'); } catch (e) {}
 }
 // 새로고침 후 상태 복원
 (function() {
-  if (localStorage.getItem('sb_collapsed') === '1') {
-    document.getElementById('sidebar')?.classList.add('collapsed');
-    document.getElementById('nav-toggle')?.setAttribute('data-tip', '사이드바 열기');
-  }
+  try {
+    if (localStorage.getItem('sb_collapsed') === '1') {
+      document.getElementById('sidebar')?.classList.add('collapsed');
+      document.getElementById('nav-toggle')?.setAttribute('data-tip', '사이드바 열기');
+    }
+  } catch (e) {}
 })();
 
 // ── 토스트 ────────────────────────────────────────────────

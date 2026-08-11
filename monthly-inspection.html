@@ -1032,6 +1032,7 @@ window.addEventListener('storage',e=>{
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
     if(isAuthed()){
+      fetchInspectionAppMeta();
       if(_activePanel==='formEntry') initReportTab();
       else if(_activePanel==='report') initReportGenTab();
       else loadTabData(_activePanel);
@@ -1218,8 +1219,10 @@ const TUNNEL_GENERATOR_FUEL={
   '흥해터널':{종류:'경유', 용량:2000},
   '남정5터널':{종류:'경유', 용량:2000}
 };
-// 발전기점검1DB 점검자 — 터널별 담당자 1:1 고정(노션 실데이터 24건 전수 확인, 2026-07-20) — 터널명 선택 시 자동입력
-const TUNNEL_GENERATOR_INSPECTOR={'청하터널(주)':'김동록', '청하터널(부)':'신종섭', '흥해터널':'공우식', '남정5터널':'김태선'};
+// 발전기점검1DB 점검자 — 터널별 담당자 1:1 고정(노션 실데이터 24건 전수 확인, 2026-07-20) — 터널명 선택 시 자동입력.
+// 실명을 정적 소스에 하드코딩하지 않기 위해 Cloudflare Worker 환경변수(APP_META_JSON, git 미포함)에서
+// 인증된 요청으로만 조회한다(2026-08-11). 조회 전/실패 시엔 빈 값 — fetchInspectionAppMeta()가 채운다.
+let TUNNEL_GENERATOR_INSPECTOR={};
 function generatorInspectorOptions(tunnel){
   const v=TUNNEL_GENERATOR_INSPECTOR[tunnel];
   return v ? [v] : [];
@@ -1361,15 +1364,21 @@ function elecSpecOptions(tunnel, field){
   const v=(TUNNEL_ELEC_SPEC[tunnel]||{})[field];
   return v ? [v] : [];
 }
-// 전기설비기록2(ACB)DB 역률(%) 실데이터 SELECT DISTINCT 결과(2026-07-23 확인, 243건 중 6개 값이
-// 대부분): 99(99건)/100(36)/98(36)/87(36)/91(9)/86(9) — 오름차순 카탈로그로 노출. 1·0.97(각 9건)은
-// 퍼센트를 소수로 잘못 입력한 것으로 보이는 값이라 카탈로그엔 넣지 않음(기존 데이터는 수정하지 않았고,
-// 그 값으로 수정 모드를 열면 "직접입력"으로 정상 표시됨).
-const ELEC_PF_OPTIONS=[86,87,91,98,99,100];
 // 점검담당자/점검확인자 카탈로그(elec3 실데이터 기준 고정 인원) — buildElecFormExtra 렌더와
-// syncElecTunnelDefaults() 자동입력 양쪽에서 공유.
-const ELEC_DAMDANG_OPTIONS=['김동록','신종섭','김태선','공우식'];
-const ELEC_HWAKIN_OPTIONS=['조성섭,강유리','조성섭,배병현'];
+// syncElecTunnelDefaults() 자동입력 양쪽에서 공유. 실명 하드코딩 제거(2026-08-11) — TUNNEL_GENERATOR_INSPECTOR와
+// 동일하게 fetchInspectionAppMeta()가 /app-meta에서 채운다.
+let ELEC_DAMDANG_OPTIONS=[];
+let ELEC_HWAKIN_OPTIONS=[];
+async function fetchInspectionAppMeta(){
+  try{
+    const res=await fetch(CFG.workerUrl+'/app-meta?app=monthly-inspection',{headers:{'Authorization':'Bearer '+CFG.authToken}});
+    if(!res.ok) return;
+    const data=await res.json();
+    TUNNEL_GENERATOR_INSPECTOR=data.generatorInspector||{};
+    ELEC_DAMDANG_OPTIONS=data.damdangOptions||[];
+    ELEC_HWAKIN_OPTIONS=data.hwakinOptions||[];
+  }catch(e){ /* 조회 실패 시 빈 값 유지 — 사용자는 각 select의 "직접입력"으로 계속 입력 가능 */ }
+}
 
 // 변압기온도DB 터널×변압기종류별 고정 용량(노션 실데이터 기준, 2026-07-16 확인) — 조합당 값 1개로 고정
 const TUNNEL_TRANSFORMER_CAPACITY={
@@ -1580,7 +1589,14 @@ function buildPropValue(type, rawValue){
   if(type==='text') return empty?{rich_text:[]}:{rich_text:[{text:{content:String(rawValue)}}]};
   if(type==='select') return empty?{select:null}:{select:{name:String(rawValue)}};
   if(type==='date') return empty?{date:null}:{date:{start:String(rawValue)}};
-  if(type==='number') return empty?{number:null}:{number:parseFloat(rawValue)||0};
+  if(type==='number'){
+    if(empty) return {number:null};
+    const n=parseFloat(rawValue);
+    // 직접입력 숫자 값이 파싱 실패(NaN)하면 예전엔 "NaN||0"으로 조용히 0이 저장됐다 — 사용자에게
+    // 경고하고 그 값은 저장하지 않는다(속성 자체를 생략, 신규는 공란, 수정은 기존값 유지, 2026-08-11).
+    if(isNaN(n)){ alert('숫자 형식이 올바르지 않아 저장되지 않습니다: "'+rawValue+'"'); return {number:null}; }
+    return {number:n};
+  }
   if(type==='file') return {files:(rawValue||[]).map(f=>({name:f.name||'사진',type:'external',external:{url:f.url}}))};
   return null;
 }
@@ -2034,12 +2050,7 @@ function setElecView(v){
   renderTabTable('elec');
 }
 function elecFilteredRecords(){
-  const flt=_tabFilters['elec'];
-  let recs=TAB_STATE['elec'].records;
-  if(flt.year!=='ALL') recs=recs.filter(r=>(r['점검일자']||'').startsWith(flt.year));
-  if(flt.month!=='ALL') recs=recs.filter(r=>(r['점검일자']||'').slice(5,7)===flt.month);
-  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
-  return recs;
+  return filteredTabRecords('elec');
 }
 function renderElecFlatTable(){
   buildTabFilterDd('elec');
@@ -2105,12 +2116,7 @@ function setGeneratorView(v){
   renderTabTable('generator');
 }
 function generatorFilteredRecords(){
-  const flt=_tabFilters['generator'];
-  let recs=TAB_STATE['generator'].records;
-  if(flt.year!=='ALL') recs=recs.filter(r=>(r['가동일자']||'').startsWith(flt.year));
-  if(flt.month!=='ALL') recs=recs.filter(r=>(r['가동일자']||'').slice(5,7)===flt.month);
-  if(flt.tunnel) recs=recs.filter(r=>r['터널명']===flt.tunnel);
-  return recs;
+  return filteredTabRecords('generator');
 }
 function renderGeneratorFlatTable(){
   buildTabFilterDd('generator');
@@ -2153,6 +2159,8 @@ function renderGeneratorFlatTable(){
 // 화면에 선택해둔 연/월/터널과 다운로드 파일 내용이 어긋나지 않는다(2026-07-22 버그 수정 —
 // 이전엔 exportTabExcel/exportElecExcel/exportGeneratorExcel이 TAB_STATE[tabId].records를
 // 필터 없이 그대로 써서, 터널을 골라놓고 엑셀 생성을 눌러도 전체 터널 데이터가 나갔음).
+// tabDef.dateKey로 날짜 필드명을 받으므로 elecFilteredRecords/generatorFilteredRecords도 각자
+// 필드명을 하드코딩하지 않고 이 함수에 위임한다(2026-08-11, 3곳 중복 로직 통합).
 function filteredTabRecords(tabId){
   const tabDef=getTabDef(tabId);
   const flt=_tabFilters[tabId];
@@ -2572,13 +2580,22 @@ function markReportFilledAll(){
   });
   observer.observe(rp, {childList:true, subtree:true});
 })();
+// select값이 "__custom__"(직접입력)이면 짝지어진 입력칸의 값을, 아니면 select 값 그대로 반환하는
+// 공용 헬퍼(2026-08-11, getGridSelectValue/getFieldValue/commonSelectValue/selCustomValue 4곳에
+// 거의 동일하게 재구현돼 있던 패턴을 통합). id 문자열로 넘기면 관례상 "<id>c"를 직접입력 칸으로
+// 찾고, select DOM 엘리먼트를 직접 넘기면(고정 id가 없는 동적 목록 행 등) nextElementSibling을
+// 직접입력 칸으로 본다.
+function selectOrCustomValue(selectRef){
+  const sel = typeof selectRef==='string' ? document.getElementById(selectRef) : selectRef;
+  if(!sel) return '';
+  if(sel.value!=='__custom__') return sel.value;
+  const ci = typeof selectRef==='string' ? document.getElementById(selectRef+'c') : sel.nextElementSibling;
+  return ci ? (ci.value||'').trim() : '';
+}
 // 발전기점검 결과/전기설비기록 판정처럼 TAB_DEFS 필드 루프를 안 거치고 buildFieldHtml 밖에서
 // 직접 만든 select+직접입력 그리드 셀 값을 읽을 때 씀(getFieldValue의 __custom__ 처리와 동일 로직).
 function getGridSelectValue(id){
-  const sel=document.getElementById(id);
-  if(!sel) return '';
-  if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
-  return sel.value;
+  return selectOrCustomValue(id);
 }
 // 캐스케이딩 select 공용 엔진 — dependsOn 필드들의 현재값을 optionsFn에 넘겨 옵션을 재계산.
 // (월간점검 구분+설비명→점검내용, 변압기온도 변압기종류→측정지점, 전력사용량 터널명→제목 등 재사용)
@@ -2639,10 +2656,7 @@ function getFieldValue(f, idx){
     return _photoFiles;
   }
   if(f.type==='select' || f.uiType==='cascade-select' || f.uiType==='fixed-select'){
-    const sel=document.getElementById(id);
-    if(!sel) return '';
-    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
-    return sel.value;
+    return selectOrCustomValue(id);
   }
   const raw=(document.getElementById(id)?.value||'').trim();
   return f.type==='number' ? stripThousands(raw) : raw;
@@ -3494,7 +3508,7 @@ function renderPhotoFileList(fieldId){
   wrap.innerHTML=_photoFiles.map((f,i)=>
     `<div style="position:relative">
       <img src="${esc(f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
+      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" aria-label="사진 삭제" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
     </div>`
   ).join('');
 }
@@ -3604,7 +3618,7 @@ function renderPhotoMultiRows(){
     // 다른 select 필드들과 동일하게 목록 맨 위 고정, 2026-07-28 사용자 요청 — 기존 datalist 방식은
     // 옵션이 눈에 바로 안 보여 발견성이 떨어졌음). 터널명이 카드마다 개별 값이라(2026-08-03) 그 값
     // 기준으로 제안 목록을 좁힌다.
-    const descOptsArr=photoDescOptions(row.tunnel, row.num);
+    const descOptsArr=photoDescOptions(row.tunnel, displayNum);
     // descCustom은 "직접입력" 선택 직후(아직 아무것도 안 쳤을 때도) 입력칸을 계속 보여주기 위한
     // 명시적 플래그 — row.desc만으로 판단하면 빈 문자열일 때 목록으로 되돌아가버리는 버그가 있었다
     // (2026-07-28).
@@ -3621,14 +3635,14 @@ function renderPhotoMultiRows(){
       ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
           <img src="${esc(photo.url)}" alt="사진" style="width:100%;height:100%;object-fit:cover;display:block">
           <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:5px 0">사진 변경</div>
-          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
+          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" aria-label="사진 삭제" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
         </div>`
       // .tb-action-btn은 flex(align-items만 지정, justify-content 없음)라 원래 auto-width 버튼에서는
       // 안 보이던 문제인데, 카드에 맞춰 width:100%로 늘리면 내용이 flex-start(왼쪽)로 쏠린다 —
       // justify-content:center로 직접 보정(2026-08-10, 다른 tb-action-btn 공용 스타일은 건드리지 않음).
       : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-left:4px solid ${accent};border-radius:var(--r8);padding:10px;position:relative">
-      ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
+      ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" aria-label="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
         <span style="font-weight:800;font-size:13px">#${displayNum}</span>
@@ -3880,10 +3894,7 @@ async function submitElecForm(){
     역률:commonSelectValue('ec_yeokryul')
   };
   function commonSelectValue(id){
-    const sel=document.getElementById(id);
-    if(!sel) return '';
-    if(sel.value==='__custom__') return (document.getElementById(id+'c')?.value||'').trim();
-    return sel.value;
+    return selectOrCustomValue(id);
   }
   const commonChk={
     점검담당자:commonSelectValue('ec_damdang'),
@@ -6310,6 +6321,17 @@ function taskAddRow(){
 }
 function taskToggleSelectAll(checked){
   document.querySelectorAll('#rpTaskBody .task-row-chk').forEach(c=>{ c.checked=checked; });
+  taskSyncSelectAllCheckbox();
+}
+// 다른 목록 탭의 syncSelectAllCheckbox(전체선택 체크박스 indeterminate 반영)와 동일 패턴 — 업무처리
+// 표는 별도 탭 렌더링 구조(rpTaskBody, DELETE_SELECTED 미사용)라 행 체크박스를 직접 세어 판단한다.
+function taskSyncSelectAllCheckbox(){
+  const all=document.getElementById('taskDelAll');
+  if(!all) return;
+  const boxes=Array.from(document.querySelectorAll('#rpTaskBody .task-row-chk'));
+  const checkedCount=boxes.filter(c=>c.checked).length;
+  all.checked=boxes.length>0 && checkedCount===boxes.length;
+  all.indeterminate=checkedCount>0 && checkedCount<boxes.length;
 }
 // 체크된 행 일괄 삭제 — 저장된 레코드(data-id)는 노션 휴지통 이동, 아직 저장 안 된 빈 행(data-extra-key)은
 // 배열에서 제거만 한다(2026-07-31 사용자 요청 — 비고 컬럼 뒤 개별 삭제 버튼 대신 체크박스 방식 채택).
@@ -6338,12 +6360,7 @@ function taskCompanyOptions(tunnel){
   return [...set].sort();
 }
 function selCustomValue(selectEl){
-  if(!selectEl) return '';
-  if(selectEl.value==='__custom__'){
-    const ci=selectEl.nextElementSibling;
-    return ci ? ci.value.trim() : '';
-  }
-  return selectEl.value;
+  return selectOrCustomValue(selectEl);
 }
 function renderTaskBody(){
   const wrap=document.getElementById('rpTaskBody');
@@ -6371,7 +6388,7 @@ function renderTaskBody(){
       </td>
       <td><input type="text" class="modal-input tk-note" value="${esc(note)}"></td>`;
   };
-  const chk=(attr)=>`<td><input type="checkbox" class="task-row-chk" ${attr}></td>`;
+  const chk=(attr)=>`<td><input type="checkbox" class="task-row-chk" ${attr} onchange="taskSyncSelectAllCheckbox()"></td>`;
   const existingRows=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${cells('e'+r.id, r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`).join('');
   const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${cells('x'+String(row.key).replace('.','_'), '','','','','')}</tr>`).join('');
   wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
@@ -7460,7 +7477,7 @@ function switchPanel(id){
 }
 
 // ── 초기화 ──
-if(isAuthed()){ initReportTab(); }
+if(isAuthed()){ fetchInspectionAppMeta(); initReportTab(); }
 else { openLoginModal(); }
 </script>
 </div>

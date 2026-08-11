@@ -11,12 +11,12 @@
 :root{
   /* work-portal 공통 색상 팔레트 기준(하자보수현황 앱과 수치 동일 — 2026-07-05 확정) */
   --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
-  --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --gray50:#F1EFE8;--gray100:#D3D1C7;--gray600:#5F5E5A;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
-  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r14:14px;--r16:16px;--r20:20px;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r16:16px;--r20:20px;
   --shadow:none;
   --hdr-bg:#0C447C;
   --hdr-text:#fff;
@@ -141,12 +141,12 @@ html[data-theme="dark"] .detail-count{color:#fff}
 
 /* ── 뱃지 ── */
 .type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
-.tunnel-c0{background:#1565C0}
-.tunnel-c1{background:#147A44}
-.tunnel-c2{background:#B23A12}
-.tunnel-c3{background:#A15C00}
-.tunnel-c4{background:#5B4FBD}
-.tunnel-c5{background:#0D6D63}
+.badge-c0{background:#1565C0}
+.badge-c1{background:#147A44}
+.badge-c2{background:#B23A12}
+.badge-c3{background:#A15C00}
+.badge-c4{background:#5B4FBD}
+.badge-c5{background:#0D6D63}
 .pstat-new{background:#147A44}
 .pstat-used{background:#A15C00}
 .pstat-rental{background:#5B4FBD}
@@ -611,7 +611,7 @@ function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
 })();
 
 function toast(msg){ var t=document.getElementById('toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2600); }
-function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function fmtWonOrDash(v){ return (v==null||v==='') ? '-' : fmtWon(v); }
@@ -733,8 +733,8 @@ window.addEventListener('storage', function(e){
   if(e.key==='theme' && e.newValue){
     document.documentElement.setAttribute('data-theme', e.newValue);
     syncThemeOptUI();
-  } else if(e.key==='wp_authToken'){
-    CFG.authToken=e.newValue||'';
+  } else if(e.key==='wp_authToken' || e.key==='wp_authExpires'){
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
     if(isAuthed()){ ALL_DATA=[]; loadData(); }
@@ -828,6 +828,8 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
+// 업로드 요청별 시퀀스 번호(B2) — 나중 응답이 먼저 선택한 파일의 URL을 덮어쓰지 않도록 최신 요청만 반영
+var _photoUploadSeq = 0;
 function uploadPhoto(input){
   var file = input.files[0];
   if(!file) return;
@@ -835,15 +837,21 @@ function uploadPhoto(input){
   var thumbEl = document.getElementById('photoThumb');
   var urlEl = document.getElementById('addPhoto');
 
-  var reader = new FileReader();
-  reader.onload = function(e){ thumbEl.src=e.target.result; thumbEl.classList.add('show'); };
-  reader.readAsDataURL(file);
-
+  // B1: 인증 체크를 FileReader 실행보다 먼저 수행 — 미인증 상태에서 썸네일이 먼저 표시되는 것을 방지
   if(!isAuthed()){
     statusEl.textContent='⚠ 로그인 필요';
     statusEl.className='photo-upload-status err';
     return;
   }
+
+  // B2: 업로드 중 파일 재선택을 막기 위해 input을 잠그고, 요청별 seq 토큰으로 최신 요청만 결과 반영
+  var seq = ++_photoUploadSeq;
+  input.disabled = true;
+
+  var reader = new FileReader();
+  reader.onload = function(e){ if(seq!==_photoUploadSeq) return; thumbEl.src=e.target.result; thumbEl.classList.add('show'); };
+  reader.readAsDataURL(file);
+
   statusEl.textContent='업로드 중...';
   statusEl.className='photo-upload-status';
 
@@ -856,14 +864,18 @@ function uploadPhoto(input){
     return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
       .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
       .then(function(data){
+        if(seq!==_photoUploadSeq) return;
         urlEl.value=data.url;
         thumbEl.src=data.url;
         statusEl.textContent='✓ 업로드 완료';
         statusEl.className='photo-upload-status ok';
       });
   }).catch(function(e){
+    if(seq!==_photoUploadSeq) return;
     statusEl.textContent='✗ '+e.message;
     statusEl.className='photo-upload-status err';
+  }).then(function(){
+    if(seq===_photoUploadSeq) input.disabled=false;
   });
 }
 function makePhotoThumb(url){
@@ -1128,7 +1140,8 @@ function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn
 function buildStatusDd(){ buildGenericFilterDd('statusDdMenu','statusDdBtn','statusDdLabel',FILTER_STATUS,getUniqueValues('구매상태'),'구매상태 전체', function(v){ FILTER_STATUS=v; }); }
 
 /* ── 색상 뱃지(터널/구매상태) ── */
-var TUNNEL_CLASSES=['tunnel-c0','tunnel-c1','tunnel-c2','tunnel-c3','tunnel-c4','tunnel-c5'];
+// C6: 품목분류 배지가 "tunnel-" 접두 클래스명을 재사용하던 것을 중립적 이름(badge-c0~c5)으로 리네이밍
+var BADGE_CLASSES=['badge-c0','badge-c1','badge-c2','badge-c3','badge-c4','badge-c5'];
 var _tunnelColorMap={};
 var _categoryColorMap={};
 // 색상 뱃지 맵 공통 생성기(2026-07-10) — 값을 등장 순으로 6색 팔레트에 순환 배정
@@ -1137,12 +1150,12 @@ function ensureColorMap(key, map){
   var seen={}, all=[];
   ALL_DATA.forEach(function(r){ var v=r[key]; if(v && !seen[v]){ seen[v]=1; all.push(v); } });
   Object.keys(map).forEach(function(k){ delete map[k]; });
-  all.forEach(function(v,i){ map[v]=TUNNEL_CLASSES[i%TUNNEL_CLASSES.length]; });
+  all.forEach(function(v,i){ map[v]=BADGE_CLASSES[i%BADGE_CLASSES.length]; });
 }
 function ensureTunnelColors(){ ensureColorMap('터널명', _tunnelColorMap); }
-function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'tunnel-c0'; }
+function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'badge-c0'; }
 function ensureCategoryColors(){ ensureColorMap('구분', _categoryColorMap); }
-function categoryBadgeClass(c){ return _categoryColorMap[c]||'tunnel-c0'; }
+function categoryBadgeClass(c){ return _categoryColorMap[c]||'badge-c0'; }
 function statusBadgeClass(s){
   if(s==='신품') return 'pstat-new';
   if(s==='중고') return 'pstat-used';
@@ -1265,6 +1278,9 @@ function loadData(){
         });
       }
       return fetchNext(cursor, hasMore).then(function(){
+        // B3: 새로고침 성공 시 삭제모드 선택을 초기화 — 사라진 레코드ID가 선택 카운트에 남는 것을 방지
+        DELETE_SELECTED = new Set();
+        updateDeleteConfirmLabel();
         var parsed = allPages.map(parseNotionPage).filter(Boolean);
         if(parsed.length>0){
           ALL_DATA=parsed;
@@ -1331,15 +1347,17 @@ function renderAll(){
   renderCategoryPanel();
 }
 
+/* C1: 터널명↓ · 구매일↓ 정렬 비교자 공통화 — 비품내역 목록/삭제모드 표시행/엑셀 내보내기 3곳에서 재사용 */
+function compareTunnelDateDesc(a, b){
+  var at=a['터널명']||'', bt=b['터널명']||'';
+  if(at!==bt) return at<bt?1:-1;
+  var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
+  return ad<bd?1:ad>bd?-1:0;
+}
 /* ── 비품내역 목록 (요청 정렬 표준: 터널명 내림차순 → 구매일 내림차순) ── */
 function renderList(){
   buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
-  var rows = filtered().slice().sort(function(a,b){
-    var at=a['터널명']||'', bt=b['터널명']||'';
-    if(at!==bt) return at<bt?1:-1;
-    var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
-    return ad<bd?1:ad>bd?-1:0;
-  });
+  var rows = filtered().slice().sort(compareTunnelDateDesc);
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
   var colCount = 11 + (DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML = rows.length
@@ -1349,7 +1367,7 @@ function renderList(){
 }
 function buildDetailRow(r){
   var checkCell = DELETE_MODE
-    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
+    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" aria-label="행 선택" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
     : '';
   return '<tr onclick="openDetailModal(\''+r.id+'\')" style="cursor:pointer">' + checkCell
     + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
@@ -1369,12 +1387,7 @@ function buildDetailRow(r){
 var DELETE_MODE = false;
 var DELETE_SELECTED = new Set();
 function getVisibleDetailRows(){
-  return filtered().slice().sort(function(a,b){
-    var at=a['터널명']||'', bt=b['터널명']||'';
-    if(at!==bt) return at<bt?1:-1;
-    var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
-    return ad<bd?1:ad>bd?-1:0;
-  });
+  return filtered().slice().sort(compareTunnelDateDesc);
 }
 function toggleDeleteMode(){
   DELETE_MODE = !DELETE_MODE;
@@ -1408,7 +1421,7 @@ function updateDeleteHeaderCheckbox(){
       th=document.createElement('th');
       th.className='del-col-th';
       th.style.width='36px';
-      th.innerHTML='<input type="checkbox" id="delAll" onchange="toggleSelectAllRows(this.checked)"/>';
+      th.innerHTML='<input type="checkbox" id="delAll" aria-label="전체 선택" onchange="toggleSelectAllRows(this.checked)"/>';
       thead.insertBefore(th, thead.firstChild);
     }
   } else if(th){
@@ -1472,44 +1485,39 @@ function calcGroupMap(rows, key){
   });
   return m;
 }
-function renderTunnelPanel(){
-  // 터널별 현황은 재고 누적 총계이므로 비품내역 탭의 날짜 필터(기본값=최신월)에
-  // 영향받지 않고 항상 ALL_DATA(전체 이력) 기준으로 집계한다 (2026-07-10 수정 —
-  // FILTER_YEAR/MONTH가 최신월로 기본 설정되면서 이전 달에 구매한 비품이 터널별/
-  // 품목분류별 집계에서 통째로 빠지는 버그가 실사용 중 발견됨)
-  var rows=ALL_DATA;
-  var map=calcGroupMap(rows,'터널명');
+// C2: 터널별/품목분류별 패널 렌더 로직(순위뱃지·행HTML·빈상태 처리) 공통화 — key를 인자로 받는다
+// 두 패널 모두 재고 누적 총계이므로 비품내역 탭의 날짜 필터(기본값=최신월)에 영향받지 않고
+// 항상 ALL_DATA(전체 이력) 기준으로 집계한다 (2026-07-10 수정 — FILTER_YEAR/MONTH가 최신월로
+// 기본 설정되면서 이전 달에 구매한 비품이 집계에서 통째로 빠지는 버그가 실사용 중 발견됨)
+function renderGroupPanel(opts){
+  var map=calcGroupMap(ALL_DATA, opts.key);
   var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return b[1].amount-a[1].amount; });
-  document.getElementById('tunnelBadge').textContent=arr.length+'개소';
-  document.getElementById('tunnelTableBody').innerHTML = arr.length
+  document.getElementById(opts.badgeId).textContent=arr.length+opts.badgeSuffix;
+  document.getElementById(opts.bodyId).innerHTML = arr.length
     ? arr.map(function(pair,i){
         var name=pair[0], d=pair[1];
         var rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
         return '<tr><td><div class="rank '+rankCls+'">'+(i+1)+'</div></td>'
-          + '<td><span class="type-badge '+tunnelBadgeClass(name)+'">'+esc(name)+'</span></td>'
+          + '<td>'+opts.nameCell(name)+'</td>'
           + '<td class="r">'+d.count+'</td>'
           + '<td class="r">'+fmtWon(d.qty)+'</td>'
           + '<td class="r">'+fmtWon(d.amount)+'</td></tr>';
       }).join('')
-    : '<tr><td colspan="5">'+emptyState('터널별 데이터가 없습니다.')+'</td></tr>';
+    : '<tr><td colspan="5">'+emptyState(opts.emptyDesc)+'</td></tr>';
+}
+function renderTunnelPanel(){
+  renderGroupPanel({
+    key:'터널명', badgeId:'tunnelBadge', bodyId:'tunnelTableBody', badgeSuffix:'개소',
+    emptyDesc:'터널별 데이터가 없습니다.',
+    nameCell:function(name){ return '<span class="type-badge '+tunnelBadgeClass(name)+'">'+esc(name)+'</span>'; }
+  });
 }
 function renderCategoryPanel(){
-  // renderTunnelPanel과 동일한 이유로 ALL_DATA 기준 집계 (2026-07-10 수정)
-  var rows=ALL_DATA;
-  var map=calcGroupMap(rows,'구분');
-  var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return b[1].amount-a[1].amount; });
-  document.getElementById('categoryBadge').textContent=arr.length+'종';
-  document.getElementById('categoryTableBody').innerHTML = arr.length
-    ? arr.map(function(pair,i){
-        var name=pair[0], d=pair[1];
-        var rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
-        return '<tr><td><div class="rank '+rankCls+'">'+(i+1)+'</div></td>'
-          + '<td>'+esc(name)+'</td>'
-          + '<td class="r">'+d.count+'</td>'
-          + '<td class="r">'+fmtWon(d.qty)+'</td>'
-          + '<td class="r">'+fmtWon(d.amount)+'</td></tr>';
-      }).join('')
-    : '<tr><td colspan="5">'+emptyState('품목분류별 데이터가 없습니다.')+'</td></tr>';
+  renderGroupPanel({
+    key:'구분', badgeId:'categoryBadge', bodyId:'categoryTableBody', badgeSuffix:'종',
+    emptyDesc:'품목분류별 데이터가 없습니다.',
+    nameCell:function(name){ return esc(name); }
+  });
 }
 
 /* ── 엑셀 생성 (하자보수현황 앱의 buildExcelReport 패턴 재사용 — 사진 컬럼 포함 세로모드) ──
@@ -1751,12 +1759,7 @@ function buildExcelReport(opts){
 // 엑셀 생성은 세로모드(portrait) + 첫번째 컬럼(터널명) 기준 오름차순 정렬(요청 사항 —
 // 화면 목록의 "터널명 내림차순" 정렬과는 별개로 엑셀만 오름차순 적용)
 function exportEquipExcel(){
-  var rows=filtered().slice().sort(function(a,b){
-    var at=a['터널명']||'', bt=b['터널명']||'';
-    if(at!==bt) return at<bt?-1:1;
-    var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
-    return ad<bd?-1:ad>bd?1:0;
-  });
+  var rows=filtered().slice().sort(compareTunnelDateDesc);
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'비품내역', title:'비품대장', fnamePrefix:'비품대장',

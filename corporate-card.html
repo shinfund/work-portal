@@ -421,7 +421,7 @@ if (window.self !== window.top) {
           <div class="dd-btn" id="catDdBtn" onclick="toggleDD('cat')"><span id="catDdLabel">전체 계정</span></div>
           <div class="dd-menu" id="catDdMenu"><div id="catDdOpts"></div></div>
         </div>
-        <input class="search-box" id="srch" placeholder="🔍 지출내역, 상호 검색..." oninput="renderDetail()"/>
+        <input class="search-box" id="srch" placeholder="🔍 지출내역, 상호 검색..." oninput="dtPage=1;renderDetail()"/>
         <button class="tb-action-btn tb-add" onclick="openAddModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
@@ -681,7 +681,7 @@ function renderDDCat(){
     });
   }
 }
-function pickCat(c){catFilter=c;document.getElementById("catDdLabel").textContent=c||"전체 계정";document.getElementById("catDdBtn").classList.toggle("active",!!c);closeAllDD();renderDetail();}
+function pickCat(c){catFilter=c;dtPage=1;document.getElementById("catDdLabel").textContent=c||"전체 계정";document.getElementById("catDdBtn").classList.toggle("active",!!c);closeAllDD();renderDetail();}
 function buildYearOpts(base,dataYears,selYear,onPickFn,{allLabel,allPickVal}={}){
   const minY=Math.min(base-1,...dataYears),maxY=Math.max(base+1,...dataYears);
   const years=[];for(let y=minY;y<=maxY;y++)years.push(y);
@@ -698,8 +698,8 @@ function renderDDMonth(){
   const all=`<div class="dd-opt${!curMonth?" sel":""}" onclick="pickMonth(0)">전체</div>`;
   document.getElementById("ddMonthOpts").innerHTML=all+ML.map((lbl,i)=>{const m=i+1,ym=`${curYear}-${String(m).padStart(2,"0")}`,has=RD.some(r=>r.date.startsWith(ym));return`<div class="dd-opt${m===curMonth?" sel":""}${has&&m!==curMonth?" has":""}" onclick="pickMonth(${m})">${lbl}</div>`;}).join("");
 }
-function pickYear(y){curYear=y;closeAllDD();renderAll();}
-function pickMonth(m){curMonth=m;closeAllDD();renderAll();}
+function pickYear(y){curYear=y;dtPage=1;closeAllDD();renderAll();}
+function pickMonth(m){curMonth=m;dtPage=1;closeAllDD();renderAll();}
 function updateMonthLabel(){
   document.getElementById("ddYearLabel").textContent=curYear+"년";
   document.getElementById("ddMonthLabel").textContent=curMonth?curMonth+"월":"전체";
@@ -759,7 +759,7 @@ function renderAccount(recs){
   document.getElementById("accCatBars").innerHTML=catArr.length?buildCatBars(catArr,maxVal,total):emptyHTML();
   document.getElementById("accTableBody").innerHTML=catArr.length?catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/total*100);return`<tr><td><span class="cat-tag ${c.cls}">${esc(cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt)">${cntMap[cat]}건</td><td class="r" style="font-size:13px;color:var(--txt)">${fmt(amt)}</td><td class="r" style="font-size:13px;color:var(--txt)">${pct}%</td></tr>`;}).join(""):`<tr><td colspan="4">${emptyHTML("데이터 없음")}</td></tr>`;
 }
-function unifiedAccount(r){const cat=r.cat||"",desc=r.desc||"";if(cat==="비급여성(생수)")return"생수대금";if(cat==="도서인쇄비")return"도서인쇄비";if(cat==="차량비(법인카드)")return"차량비(법인카드)";if(cat==="차량비"){if(/순찰차|875너|\*{3}너/.test(desc))return"차량비(점검차)";if(/업무차|396거|\*{3}거/.test(desc))return"차량비(업무차)";return"차량비(점검차)";}if(cat==="비급여성"){if(/회식/.test(desc))return"직원회식";if(/중식/.test(desc))return"중식대";if(/석식/.test(desc))return"석식대";return"다과부식";}if(cat==="소모품비")return"소모품비";return null;}
+function unifiedAccount(r){const cat=r.cat||"",desc=r.desc||"";if(cat==="비급여성(생수)")return"생수대금";if(cat==="도서인쇄비")return"도서인쇄비";if(cat==="차량비(법인카드)")return"차량비(법인카드)";if(cat==="차량비"){if(/순찰차|\*{3}너/.test(desc))return"차량비(점검차)";if(/업무차|\*{3}거/.test(desc))return"차량비(업무차)";return"차량비(점검차)";}if(cat==="비급여성"){if(/회식/.test(desc))return"직원회식";if(/중식/.test(desc))return"중식대";if(/석식/.test(desc))return"석식대";return"다과부식";}if(cat==="소모품비")return"소모품비";return null;}
 function renderLimit(recs){
   if(curMonth&&!recs.length){
     const monLbl=`${curYear}년 ${curMonth}월`;
@@ -915,6 +915,8 @@ function emptyHTML(msg){return`<div class="empty"><div class="empty-icon">📭</
 // ── 모달 드래그 이동 ──────────────────────────────────
 function makeModalDraggable(box, handle){
   if(!box||!handle) return;
+  if(box.dataset.dragBound==='1') return; // 이미 리스너가 바인딩된 모달은 재바인딩하지 않음(재오픈 시 리스너 누적 방지)
+  box.dataset.dragBound='1';
   handle.style.cursor='move';
   handle.style.userSelect='none';
   let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
@@ -1014,7 +1016,6 @@ window.addEventListener('storage',e=>{
 });
 
 // ── 신규등록 드로어 ───────────────────────────────────
-var EDIT_PAGE_ID=null; // 이 앱은 등록만 지원(수정/삭제 없음) — 항상 null
 var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 // 금액 입력창(공급가/부가세) 천 단위 콤마 실시간 표시 — 값 자체는 콤마 제거 후 숫자로 읽는다(submitAddForm).
 function formatCommaInput(el){
@@ -1047,6 +1048,7 @@ function buildAddCatOpts(){
   document.getElementById('addCat').innerHTML='<option value="">선택</option><option value="__custom__">직접입력</option>'
     +all.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   document.getElementById('addCatCustom').style.display='none';
+  document.getElementById('addCatCustom').value='';
 }
 // 최근 지출내역 30건(날짜 최신순, 중복 제거)을 드롭다운으로 제공 — 반복 지출(주유 등) 입력 편의용.
 function buildAddDescOpts(){
@@ -1176,7 +1178,6 @@ async function buildAddVendorOpts(){
   renderAddVendorOpts();
 }
 function openAddModal(){
-  EDIT_PAGE_ID=null;
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   document.getElementById('addSupply').value='';
@@ -1471,17 +1472,29 @@ function exportCardExcel(){
 // 노션 DB엔 아직 터널 구분 필드가 없어 이 앱은 흥해터널 단일 데이터만 다룬다(코드 전역에도
 // "터널" 개념 자체가 없음) — 참고 엑셀 파일명과 동일하게 고정.
 const CARD_REPORT_TUNNEL='흥해터널';
-// 직급·성명은 노션 DB에 없는 필드 — 참고 엑셀 전체 행에 고정값으로 들어있던 것과 동일하게 고정
-// (2026-08-06 사용자 확인, 담당자가 바뀌면 이 상수만 수정).
-const CARD_REPORT_PREPARER={title:'소장', name:'신종섭'};
+// 직급·성명은 노션 DB에 없는 필드 — 참고 엑셀 전체 행에 고정값으로 들어있던 것과 동일하게 고정.
+// 실명을 정적 소스에 하드코딩하지 않기 위해 Cloudflare Worker 환경변수(APP_META_JSON, git 미포함)에서
+// 인증된 요청으로만 조회한다(2026-08-11). 조회 전/실패 시엔 빈 값 — buildOneCardReport()가 보고서
+// 생성 직전에 fetchCardReportPreparer()로 채운다.
+let CARD_REPORT_PREPARER={title:'', name:''};
+async function fetchCardReportPreparer(){
+  try{
+    const res=await fetch(CFG.workerUrl+'/app-meta?app=corporate-card',{headers:{'Authorization':'Bearer '+CFG.authToken}});
+    if(!res.ok) return;
+    const data=await res.json();
+    CARD_REPORT_PREPARER={title:data.preparerTitle||'', name:data.preparerName||''};
+  }catch(e){ /* 조회 실패 시 빈 값 유지 */ }
+}
 // 카드명(relation)은 Worker 화이트리스트상 GET /v1/pages/{id}가 막혀 있어 관계 대상 페이지의
 // 제목을 직접 조회할 수 없다 — 대신 이미 롤업으로 내려오는 카드번호(카드마다 고유)로 역추적한다.
-// 참고 엑셀 43행 전체에서 검증된 매핑(법인카드·주유카드 두 장뿐).
-// '4518444511736552'는 재발급 이전 구 법인카드 번호(2026-05-27 이전 기록에 남아있음, 2026-08-06 사용자 확인).
-const CARD_NAME_BY_NO={'5585269627183851':'법인카드','9410499201259867':'주유카드','4518444511736552':'법인카드'};
-// 신규등록폼 "카드명" 선택 시 "카드번호" 자동 입력용 역방향 매핑 — 재발급 이전 구 법인카드 번호는
-// 신규 입력 기준에서 제외(현재 사용 중인 번호만, 2026-08-07).
-const CARD_NO_BY_NAME={'법인카드':'5585269627183851','주유카드':'9410499201259867'};
+// 참고 엑셀 43행 전체에서 검증된 매핑(법인카드·주유카드 두 장뿐)이었으나, 실제 카드번호는
+// 정적 소스에 하드코딩하지 않기 위해 제거함(2026-08-11) — 평상시엔 fetchCardTypeList()가
+// 노션 법인카드종류DB를 인증된 Worker 경로로 실시간 조회해 채우므로 정상 동작에는 영향 없음.
+// 이 폴백은 그 조회가 실패했을 때만 쓰이며, 그 경우 카드명은 빈 값으로 표시된다.
+const CARD_NAME_BY_NO={};
+// 신규등록폼 "카드명" 선택 시 "카드번호" 자동 입력용 역방향 매핑 — 위와 동일한 이유로 실제
+// 카드번호는 비워둠(조회 실패 시에도 "직접입력"으로 사용자가 채울 수 있음).
+const CARD_NO_BY_NAME={};
 // 신규등록폼 "카드명" 드롭다운용 폴백 — relation 대상 페이지ID는 API로 이름을 못 가져와 실측으로 고정(2026-08-06).
 // 평상시엔 fetchCardTypeList()로 CARD_TYPE_DB_ID를 직접 조회해 최신 목록(직접입력으로 신규 등록된 카드 포함)을
 // 쓰고, 조회 실패 시에만 이 폴백을 사용한다.
@@ -1497,17 +1510,22 @@ const CARD_REPORT_CAT_ORDER=['차량비','도서인쇄비','소모품비','비�
 // 카드번호(rollup) → 카드명 조회용 캐시. loadData()에서 CARD_TYPE_DB_ID를 조회해 채운다 — 직접입력으로
 // 새 카드가 등록돼도(코드 수정 없이) 다음 새로고침부터 이름이 정상 표시된다. 조회 실패 시 CARD_NAME_BY_NO로 폴백.
 let CARD_NO_NAME_MAP={};
-async function fetchCardTypeList(){
-  const list=[];
-  let data=await fetchNotion({page_size:100},CARD_TYPE_DB_ID);
+// Notion DB 페이지네이션 순회 공용 헬퍼 — cursor 기반으로 max 페이지까지 이어받아 전체 results를 합쳐 반환.
+// fetchCardTypeList·fetchVendorFullMap·fetchCardReportRows·fetchVendorMap·loadData 공용(2026-08-11 중복 제거).
+async function fetchAllPages(dbId, body, max){
+  let data=await fetchNotion(Object.assign({page_size:100},body),dbId);
   let pages=data.results||[];
   let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-  const MAX=5;
-  while(cursor&&hasMore&&++pageCount<MAX){
-    const d2=await fetchNotion({page_size:100,start_cursor:cursor},CARD_TYPE_DB_ID);
+  while(cursor&&hasMore&&++pageCount<max){
+    const d2=await fetchNotion(Object.assign({page_size:100,start_cursor:cursor},body),dbId);
     pages=[...pages,...(d2.results||[])];
     cursor=d2.next_cursor;hasMore=d2.has_more;
   }
+  return pages;
+}
+async function fetchCardTypeList(){
+  const list=[];
+  const pages=await fetchAllPages(CARD_TYPE_DB_ID,{},5);
   pages.forEach(p=>{
     const props=p.properties||{};
     const nameProp=props['카드명'];
@@ -1521,15 +1539,7 @@ async function fetchCardTypeList(){
 
 async function fetchVendorFullMap(){
   const map={};
-  let data=await fetchNotion({page_size:100},VENDOR_DB_ID);
-  let pages=data.results||[];
-  let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-  const MAX=10;
-  while(cursor&&hasMore&&++pageCount<MAX){
-    const d2=await fetchNotion({page_size:100,start_cursor:cursor},VENDOR_DB_ID);
-    pages=[...pages,...(d2.results||[])];
-    cursor=d2.next_cursor;hasMore=d2.has_more;
-  }
+  const pages=await fetchAllPages(VENDOR_DB_ID,{},10);
   pages.forEach(p=>{
     const props=p.properties||{};
     const tp=Object.values(props).find(v=>v.type==='title');
@@ -1540,30 +1550,40 @@ async function fetchVendorFullMap(){
   });
   return map;
 }
+// Notion 속성 값 파싱 공용 헬퍼(parseCardReportPage·parseNotionPage 공용) — 두 파서가 각자 정의하던
+// 거의 동일한 로컬 getText()/getNum()를 모듈 스코프로 통합.
+function notionGetText(p){
+  if(!p)return"";
+  if(p.type==="title")return(p.title||[]).map(t=>t.plain_text||"").join("");
+  if(p.type==="rich_text")return(p.rich_text||[]).map(t=>t.plain_text||"").join("");
+  if(p.type==="select")return p.select?.name||"";
+  if(p.type==="number")return String(p.number??0);
+  if(p.type==="formula")return String(p.formula?.number??p.formula?.string??"");
+  if(p.type==="rollup"){
+    const a=p.rollup?.array||[];
+    if(a.length)return notionGetText(a[0]);
+    return String(p.rollup?.number??p.rollup?.string??"");
+  }
+  if(p.type==="relation")return(p.relation||[]).map(r=>r.id).join(",");
+  return"";
+}
+function notionGetNum(p){
+  if(!p)return 0;
+  if(p.type==="number")return parseFloat(p.number||0)||0;
+  if(p.type==="formula")return parseFloat(p.formula?.number||0)||0;
+  return parseFloat(notionGetText(p))||0;
+}
 function parseCardReportPage(page,vendorMap){
   const props=page.properties||{};
-  function getText(p){
-    if(!p)return'';
-    if(p.type==='title')return(p.title||[]).map(t=>t.plain_text||'').join('');
-    if(p.type==='rich_text')return(p.rich_text||[]).map(t=>t.plain_text||'').join('');
-    if(p.type==='select')return p.select?.name||'';
-    if(p.type==='number')return String(p.number??0);
-    if(p.type==='rollup'){
-      const a=p.rollup?.array||[];
-      if(a.length)return getText(a[0]);
-      return String(p.rollup?.number??p.rollup?.string??'');
-    }
-    return'';
-  }
   const date=props['사용일자']?.date?.start?.slice(0,10)||'';
   if(!date)return null;
-  const desc=getText(props['사용목적 및 지출내역']);
+  const desc=notionGetText(props['사용목적 및 지출내역']);
   const supply=props['공급가']?.number||0;
   const vat=props['부가세']?.number||0;
-  const cat=normalizeCategory(getText(props['계정항목']));
+  const cat=normalizeCategory(notionGetText(props['계정항목']));
   const headcount=props['총인원']?.number||1;
-  const bizNo=getText(props['사업자등록번호']);
-  const cardNo=getText(props['카드번호']);
+  const bizNo=notionGetText(props['사업자등록번호']);
+  const cardNo=notionGetText(props['카드번호']);
   const cardName=CARD_NO_NAME_MAP[cardNo]||CARD_NAME_BY_NO[cardNo]||'';
   const vendorRel=(props['상호']?.relation||[])[0];
   const vendor=vendorRel?(vendorMap[vendorRel.id]?.name||''):'';
@@ -1571,21 +1591,17 @@ function parseCardReportPage(page,vendorMap){
 }
 async function fetchCardReportRows(year,month){
   const ym=`${year}-${String(month).padStart(2,'0')}`;
-  const [vendorMap,data,cardTypeList]=await Promise.all([fetchVendorFullMap(),fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}]}),fetchCardTypeList().catch(()=>[])]);
+  const [vendorMap,pages,cardTypeList]=await Promise.all([
+    fetchVendorFullMap(),
+    fetchAllPages(undefined,{sorts:[{property:'사용일자',direction:'ascending'}]},20),
+    fetchCardTypeList().catch(()=>[])
+  ]);
   if(cardTypeList.length){ CARD_NO_NAME_MAP={}; cardTypeList.forEach(c=>{ if(c.cardNo) CARD_NO_NAME_MAP[c.cardNo]=c.name; }); }
-  let pages=data.results||[];
-  let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-  const MAX=20;
-  while(cursor&&hasMore&&++pageCount<MAX){
-    const d2=await fetchNotion({page_size:100,sorts:[{property:'사용일자',direction:'ascending'}],start_cursor:cursor});
-    pages=[...pages,...(d2.results||[])];
-    cursor=d2.next_cursor;hasMore=d2.has_more;
-  }
   const rows=pages.map(p=>parseCardReportPage(p,vendorMap)).filter(r=>r&&r.month===ym);
   return {rows};
 }
 
-function buildCardSummarySheet(wb,rows,tunnel,year,month){
+function buildCardSummarySheet(wb,rows,tunnel){
   const ws=wb.addWorksheet('요약',{
     views:[{state:'frozen', ySplit:2, showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'2:2'},
@@ -1621,7 +1637,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
     return {width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)).concat(extra), 8, 40, extra.length?7:5)};
   });
 
-  ws.getRow(1).height=60;
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   const titleCell=ws.getCell('A1');
   titleCell.value=`법인/주유카드 계정항목별 요약 (${tunnel})`;
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
@@ -1682,7 +1698,7 @@ function buildCardSummarySheet(wb,rows,tunnel,year,month){
   return ws;
 }
 
-function buildCardDetailSheet(wb,rows,tunnel,year,month){
+function buildCardDetailSheet(wb,rows,tunnel){
   const ws=wb.addWorksheet('사용내역',{
     views:[{state:'frozen', ySplit:2, showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.landscape, printTitlesRow:'2:2'},
@@ -1710,13 +1726,13 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   ];
   ws.columns=colGetters.map((get,i)=>({width: excelAutoWidth([headerLabels[i]].concat(rows.map(get)))}));
 
-  ws.getRow(1).height=60;
+  ws.getRow(1).height=EXCEL_ROW_HEIGHTS.title;
   const titleCell=ws.getCell('A1');
   titleCell.value=`법인/주유카드 사용대장 (${tunnel})`;
   titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment=LEFT;
 
   const headerRow=ws.getRow(2);
-  headerRow.height=30;
+  headerRow.height=EXCEL_ROW_HEIGHTS.header;
   headerLabels.forEach((h,i)=>{
     const cell=headerRow.getCell(i+1);
     cell.value=h; cell.font=BODY; cell.alignment=CENTER; cell.fill=HEADER_FILL;
@@ -1728,7 +1744,7 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
   sorted.forEach((r,i)=>{
     const rn=3+i;
     const row=ws.getRow(rn);
-    row.height=30;
+    row.height=EXCEL_ROW_HEIGHTS.data;
     const dc=row.getCell(1); const d=excelParseDate(r.date); if(d){dc.value=d;dc.numFmt='mm-dd-yy';}
     row.getCell(2).value=r.supply; row.getCell(2).numFmt=NUMFMT;
     row.getCell(3).value=r.vat; row.getCell(3).numFmt=NUMFMT;
@@ -1754,12 +1770,13 @@ function buildCardDetailSheet(wb,rows,tunnel,year,month){
 }
 
 async function buildOneCardReport(year,month){
+  await fetchCardReportPreparer();
   const {rows}=await fetchCardReportRows(year,month);
   if(!rows.length) throw new Error('해당 연월에 데이터가 없습니다.');
   await loadExcelLib();
   const wb=new ExcelJS.Workbook();
-  buildCardSummarySheet(wb,rows,CARD_REPORT_TUNNEL,year,month);
-  buildCardDetailSheet(wb,rows,CARD_REPORT_TUNNEL,year,month);
+  buildCardSummarySheet(wb,rows,CARD_REPORT_TUNNEL);
+  buildCardDetailSheet(wb,rows,CARD_REPORT_TUNNEL);
   const buf=await wb.xlsx.writeBuffer();
   const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url=URL.createObjectURL(blob);
@@ -1783,14 +1800,6 @@ function exportCardReport(){
   }).finally(()=>{ btn.disabled=false; });
 }
 
-function maskVal(v){
-  if(!v)return"";
-  if(v.startsWith("http")){
-    try{const u=new URL(v);const h=u.hostname;const parts=h.split(".");const masked=parts[0].length>4?parts[0].slice(0,2)+"XX"+parts[0].slice(-2)+"."+parts.slice(1).join("."):("XX."+parts.slice(1).join("."));return u.protocol+"//"+masked;}
-    catch(e){return v.slice(0,6)+"XX...XX"+v.slice(-4);}
-  }
-  return v.slice(0,3)+"XX...XX"+v.slice(-3);
-}
 // ── Notion 파싱 ───────────────────────────────────────
 function normalizeCategory(cat){
   if(!cat)return"";
@@ -1800,27 +1809,6 @@ function normalizeCategory(cat){
 function parseNotionPage(page,vendorMap){
   vendorMap=vendorMap||{};
   const props=page.properties||{};
-  function getText(p){
-    if(!p)return"";
-    if(p.type==="title")return(p.title||[]).map(t=>t.plain_text||"").join("")||"";
-    if(p.type==="rich_text")return(p.rich_text||[]).map(t=>t.plain_text||"").join("")||"";
-    if(p.type==="select")return p.select?.name||"";
-    if(p.type==="number")return String(p.number??0);
-    if(p.type==="formula")return String(p.formula?.number??p.formula?.string??"");
-    if(p.type==="rollup"){
-      const a=p.rollup?.array||[];
-      if(a.length)return getText(a[0]);
-      return String(p.rollup?.number??p.rollup?.string??"");
-    }
-    if(p.type==="relation")return(p.relation||[]).map(r=>r.id).join(",");
-    return"";
-  }
-  function getNum(p){
-    if(!p)return 0;
-    if(p.type==="number")return parseFloat(p.number||0)||0;
-    if(p.type==="formula")return parseFloat(p.formula?.number||0)||0;
-    return parseFloat(getText(p))||0;
-  }
   let date="";
   for(const[,v] of Object.entries(props)){
     if(v.type==="date"&&v.date?.start){date=v.date.start.slice(0,10);break;}
@@ -1828,28 +1816,28 @@ function parseNotionPage(page,vendorMap){
   // "사용목적 및 지출내역"을 먼저 명시적으로 시도 — 2026-08-06부터 title 속성이 "제목"(월별 고정
   // 라벨용)으로 분리되면서, title 여부만으로 desc를 고르던 예전 방식은 "제목" 값을 잘못 집어올 수
   // 있다(둘 다 존재하는 상태). 정확한 필드명을 우선하고, 없을 때만 예전 방식으로 폴백한다.
-  let desc=getText(props["사용목적 및 지출내역"]);
+  let desc=notionGetText(props["사용목적 및 지출내역"]);
   let supply=0,vat=0,cat="",vendor="";
   for(const[k,v] of Object.entries(props)){
     const lk=k.toLowerCase().replace(/\s/g,"");
-    if(!desc&&(v.type==="title"||lk.includes("사용목적")||lk.includes("지출내역")))desc=getText(v);
-    if(!supply&&(lk==="공급가"||lk.includes("공급가")))supply=getNum(v);
-    if(!vat&&(lk==="부가세"||lk.includes("부가세")))vat=getNum(v);
-    if(!cat&&(lk==="계정항목"||lk.includes("계정")))cat=normalizeCategory(getText(v));
+    if(!desc&&(v.type==="title"||lk.includes("사용목적")||lk.includes("지출내역")))desc=notionGetText(v);
+    if(!supply&&(lk==="공급가"||lk.includes("공급가")))supply=notionGetNum(v);
+    if(!vat&&(lk==="부가세"||lk.includes("부가세")))vat=notionGetNum(v);
+    if(!cat&&(lk==="계정항목"||lk.includes("계정")))cat=normalizeCategory(notionGetText(v));
     if(!vendor&&(lk==="상호"||lk.includes("상호"))){
       if(v.type==="relation"){const rel=v.relation||[];if(rel.length)vendor=vendorMap[rel[0].id]||"";}
-      else vendor=getText(v);
+      else vendor=notionGetText(v);
     }
   }
-  if(!desc){const tp=Object.values(props).find(p=>p.type==="title");if(tp)desc=getText(tp);}
+  if(!desc){const tp=Object.values(props).find(p=>p.type==="title");if(tp)desc=notionGetText(tp);}
   if(!date)return null;
   const total=(supply+vat)||0;
-  const bizNo=getText(props["사업자등록번호"]);
-  const cardNo=getText(props["카드번호"]);
+  const bizNo=notionGetText(props["사업자등록번호"]);
+  const cardNo=notionGetText(props["카드번호"]);
   const cardName=CARD_NO_NAME_MAP[cardNo]||CARD_NAME_BY_NO[cardNo]||"";
   const headcount=props["총인원"]?.number||1;
-  const note=getText(props["비고"]);
-  const title=getText(props["제목"]);
+  const note=notionGetText(props["비고"]);
+  const title=notionGetText(props["제목"]);
   return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),bizNo,cardNo,cardName,headcount,note,title};
 }
 // ── Notion fetch 헬퍼 ────────────────────────────────
@@ -1866,15 +1854,7 @@ async function fetchNotion(body,dbId){
 async function fetchVendorMap(){
   const map={};
   try{
-    let data=await fetchNotion({page_size:100},VENDOR_DB_ID);
-    let pages=data.results||[];
-    let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-    const MAX=10;
-    while(cursor&&hasMore&&++pageCount<MAX){
-      const d2=await fetchNotion({page_size:100,start_cursor:cursor},VENDOR_DB_ID);
-      pages=[...pages,...(d2.results||[])];
-      cursor=d2.next_cursor;hasMore=d2.has_more;
-    }
+    const pages=await fetchAllPages(VENDOR_DB_ID,{},10);
     pages.forEach(p=>{
       const tp=Object.values(p.properties||{}).find(v=>v.type==="title");
       const name=tp?(tp.title||[]).map(t=>t.plain_text||"").join(""):"";
@@ -1886,7 +1866,6 @@ async function fetchVendorMap(){
 // ── 데이터 로드 ──────────────────────────────────────
 async function loadData(){
   if(!isAuthed()){openLoginModal();return;}
-  if(!LD.length)LD=BUILT_LIM;
   const btn=document.getElementById("syncBtn"),lbl=document.getElementById("syncLabel"),ico=document.getElementById("syncIco"),lu=document.getElementById("lastUpdate");
   if(btn)btn.disabled=true;if(ico)ico.classList.add("spinning");if(lbl)lbl.textContent="불러오는 중...";if(lu)lu.textContent="";
   try{
@@ -1896,18 +1875,13 @@ async function loadData(){
       const pp=probe.results[0].properties||{};
       for(const[k,v] of Object.entries(pp)){if(v.type==="date"){dateProp=k;break;}}
     }
-    const body={page_size:100,sorts:[{property:dateProp,direction:"ascending"}]};
-    const [data,vendorMap,cardTypeList]=await Promise.all([fetchNotion(body),fetchVendorMap(),fetchCardTypeList().catch(()=>[])]);
+    const [pages,vendorMap,cardTypeList]=await Promise.all([
+      fetchAllPages(undefined,{sorts:[{property:dateProp,direction:"ascending"}]},20),
+      fetchVendorMap(),
+      fetchCardTypeList().catch(()=>[])
+    ]);
     CARD_NO_NAME_MAP={};
     cardTypeList.forEach(c=>{ if(c.cardNo) CARD_NO_NAME_MAP[c.cardNo]=c.name; });
-    let pages=data.results||[];
-    let cursor=data.next_cursor,hasMore=data.has_more,pageCount=0;
-    const MAX=20;
-    while(cursor&&hasMore&&++pageCount<MAX){
-      const d2=await fetchNotion({...body,start_cursor:cursor});
-      pages=[...pages,...(d2.results||[])];
-      cursor=d2.next_cursor;hasMore=d2.has_more;
-    }
     const parsed=pages.map(p=>parseNotionPage(p,vendorMap)).filter(Boolean);
     const seen=new Set();
     const deduped=parsed.filter(r=>{const key=r.date+"|"+r.supply+"|"+r.desc;if(seen.has(key))return false;seen.add(key);return true;});

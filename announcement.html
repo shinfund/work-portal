@@ -53,6 +53,7 @@ html[data-theme="dark"]{
   --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
   --teal600:#4FD8AC;
   --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+  --gray50:rgba(255,255,255,.08);--gray100:rgba(255,255,255,.18);--gray600:rgba(255,255,255,.75);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
@@ -120,8 +121,6 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
 .tb-action-btn.tb-delete.on:hover{background:#962f25}
 .tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
-.tb-action-btn.tb-m365{background:#217346}
-.tb-action-btn.tb-m365:hover{background:#1a5c38}
 
 /* ── 카테고리 뱃지 ── */
 .cat-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;color:#fff;border:1px solid rgba(0,0,0,.18)}
@@ -450,7 +449,7 @@ if (window.self !== window.top) {
         </button>
         <div class="dd-menu" id="categoryDdMenu"></div>
       </div>
-      <input class="search-box" id="searchBox" placeholder="🔍 제목, 내용, 작성자 검색..." aria-label="공지 검색" oninput="renderList()"/>
+      <input class="search-box" id="searchBox" placeholder="🔍 제목, 내용, 작성자 검색..." aria-label="공지 검색" oninput="renderRows()"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
@@ -775,18 +774,20 @@ function buildAuthorSelectOpts(){
 
 /* ── 첨부파일(파일 업로드 + M365 링크) ── */
 var ADD_ATTACHMENTS = [];
-function renderAttachmentChips(){
-  var box = document.getElementById('attachList');
+/* ── 첨부 칩(공지 첨부·회신 첨부 공통) — list/boxId/removeFnName만 다르고 로직 동일해 통합(2026-08-11) ── */
+function renderAttachChips(list, boxId, removeFnName){
+  var box = document.getElementById(boxId);
   if(!box) return;
-  box.innerHTML = ADD_ATTACHMENTS.map(function(a, i){
+  box.innerHTML = list.map(function(a, i){
     var isLink = isM365Link(a.url);
     return '<div class="attach-chip">'
       + '<span class="ac-kind '+(isLink?'link':'file')+'">'+(isLink?'🔗 공동편집':'📎 파일')+'</span>'
       + '<span class="ac-name">'+esc(a.name||a.url)+'</span>'
-      + '<button type="button" class="ac-remove" onclick="removeAttachment('+i+')" aria-label="제거">✕</button>'
+      + '<button type="button" class="ac-remove" onclick="'+removeFnName+'('+i+')" aria-label="제거">✕</button>'
       + '</div>';
   }).join('');
 }
+function renderAttachmentChips(){ renderAttachChips(ADD_ATTACHMENTS, 'attachList', 'removeAttachment'); }
 function removeAttachment(i){
   ADD_ATTACHMENTS.splice(i,1);
   renderAttachmentChips();
@@ -839,18 +840,18 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
-function uploadAttachments(input){
+/* ── 첨부파일 업로드(공지 첨부·회신 첨부 공통) — 압축·검증·순차업로드·상태표시 로직이 동일해
+   target(첨부배열/상태엘리먼트 id/칩 렌더 함수)만 매개변수화해 통합(2026-08-11) ── */
+function uploadAttachmentsGeneric(input, targetList, statusId, renderFn){
   var files = Array.prototype.slice.call(input.files||[]);
   if(!files.length) return;
+  var statusEl = document.getElementById(statusId);
   if(!isAuthed()){
-    document.getElementById('attachStatus').textContent='⚠ 로그인 필요';
-    document.getElementById('attachStatus').className='attach-status err';
+    if(statusEl){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='attach-status err'; }
     return;
   }
-  var statusEl = document.getElementById('attachStatus');
   var done=0, total=files.length, failed=[];
-  statusEl.textContent='업로드 중... (0/'+total+')';
-  statusEl.className='attach-status';
+  if(statusEl){ statusEl.textContent='업로드 중... (0/'+total+')'; statusEl.className='attach-status'; }
   function uploadOne(file){
     var isImage = file.type && file.type.indexOf('image/')===0;
     var prep = isImage
@@ -863,19 +864,20 @@ function uploadAttachments(input){
       return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
         .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
         .then(function(data){
-          ADD_ATTACHMENTS.push({ name:file.name, url:data.url });
+          targetList.push({ name:file.name, url:data.url });
         });
     }).catch(function(e){
       failed.push(file.name+' ('+e.message+')');
     }).then(function(){
       done++;
-      statusEl.textContent='업로드 중... ('+done+'/'+total+')';
-      renderAttachmentChips();
+      if(statusEl) statusEl.textContent='업로드 중... ('+done+'/'+total+')';
+      renderFn();
     });
   }
   files.reduce(function(p, file){ return p.then(function(){ return uploadOne(file); }); }, Promise.resolve())
     .then(function(){
       input.value='';
+      if(!statusEl) return;
       if(failed.length){
         statusEl.textContent='⚠ '+(total-failed.length)+'/'+total+'건 업로드 완료, 실패: '+failed.join(', ');
         statusEl.className='attach-status err';
@@ -885,6 +887,7 @@ function uploadAttachments(input){
       }
     });
 }
+function uploadAttachments(input){ uploadAttachmentsGeneric(input, ADD_ATTACHMENTS, 'attachStatus', renderAttachmentChips); }
 
 /* ── 회신(직원별 회신파일 제출) — 회신DB(공지사항DB와 "공지" relation), 속성명 고정 ── */
 var REPLY_ATTACHMENTS = [];
@@ -913,11 +916,12 @@ function loadReplyNames(){
     REPLY_NAMES_LOADED = true;
     var sel=document.getElementById('replyNameSelect');
     var ci=document.getElementById('replyNameCustom');
-    if(sel && ci){
+    // 수정 중(EDIT_REPLY_ID!==null)에는 select 재생성(innerHTML) 자체를 건너뛴다 — 재생성하면
+    // 수정 중이던 선택값이 초기화돼버리는 문제가 있었다(2026-08-11).
+    if(sel && ci && EDIT_REPLY_ID===null){
       sel.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
         + REPLY_NAMES.map(function(n){ return '<option value="'+esc(n)+'">'+esc(n)+'</option>'; }).join('');
-      // 로드 완료 전에 이미 성명을 입력/수정 중이면 값을 건드리지 않는다.
-      if(EDIT_REPLY_ID===null && !ci.value){
+      if(!ci.value){
         applyCustomSelectDefault('replyNameSelect','replyNameCustom', REPLY_NAMES.length>0);
       }
     }
@@ -952,10 +956,12 @@ function loadReplies(noticeId){
     method:'POST', headers:{'Content-Type':'application/json'},
     body:JSON.stringify({ filter:{ property:'공지', relation:{ contains:noticeId } }, sorts:[{ property:'제출일자', direction:'descending' }] })
   }).then(function(r){ return r.json(); }).then(function(data){
+    if(noticeId!==CURRENT_NOTICE_ID) return; // 응답 도착 시점에 다른 공지로 전환됐으면 렌더링 스킵(레이스컨디션 방지, 2026-08-11)
     if(data && data.error) throw new Error(data.error.message||data.error);
     CURRENT_REPLIES = (data.results||[]).map(parseReplyPage);
     wrap.innerHTML = buildReplyListHtml(CURRENT_REPLIES);
   }).catch(function(e){
+    if(noticeId!==CURRENT_NOTICE_ID) return;
     wrap.innerHTML = '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3)">회신 목록을 불러오지 못했습니다: '+esc(e.message)+'</div>';
   });
 }
@@ -1005,65 +1011,12 @@ function deleteReply(replyId){
       console.error(e);
     });
 }
-function renderReplyAttachmentChips(){
-  var box=document.getElementById('replyAttachList');
-  if(!box) return;
-  box.innerHTML = REPLY_ATTACHMENTS.map(function(a,i){
-    return '<div class="attach-chip">'
-      + '<span class="ac-kind file">📎 파일</span>'
-      + '<span class="ac-name">'+esc(a.name||a.url)+'</span>'
-      + '<button type="button" class="ac-remove" onclick="removeReplyAttachment('+i+')" aria-label="제거">✕</button>'
-      + '</div>';
-  }).join('');
-}
+function renderReplyAttachmentChips(){ renderAttachChips(REPLY_ATTACHMENTS, 'replyAttachList', 'removeReplyAttachment'); }
 function removeReplyAttachment(i){
   REPLY_ATTACHMENTS.splice(i,1);
   renderReplyAttachmentChips();
 }
-function uploadReplyAttachments(input){
-  var files = Array.prototype.slice.call(input.files||[]);
-  if(!files.length) return;
-  if(!isAuthed()){
-    document.getElementById('replyAttachStatus').textContent='⚠ 로그인 필요';
-    document.getElementById('replyAttachStatus').className='attach-status err';
-    return;
-  }
-  var statusEl=document.getElementById('replyAttachStatus');
-  var done=0, total=files.length, failed=[];
-  statusEl.textContent='업로드 중... (0/'+total+')';
-  statusEl.className='attach-status';
-  function uploadOne(file){
-    var isImage = file.type && file.type.indexOf('image/')===0;
-    var prep = isImage
-      ? compressImageToLimit(file, IMAGE_MAX_BYTES)
-      : (file.size>FILE_MAX_BYTES ? Promise.reject(new Error('파일 용량 초과 (최대 '+FILE_MAX_LABEL+')')) : Promise.resolve(file));
-    return prep.then(function(outFile){
-      var formData = new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'notice');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(function(data){ REPLY_ATTACHMENTS.push({ name:file.name, url:data.url }); });
-    }).catch(function(e){
-      failed.push(file.name+' ('+e.message+')');
-    }).then(function(){
-      done++;
-      statusEl.textContent='업로드 중... ('+done+'/'+total+')';
-      renderReplyAttachmentChips();
-    });
-  }
-  files.reduce(function(p, file){ return p.then(function(){ return uploadOne(file); }); }, Promise.resolve())
-    .then(function(){
-      input.value='';
-      if(failed.length){
-        statusEl.textContent='⚠ '+(total-failed.length)+'/'+total+'건 업로드 완료, 실패: '+failed.join(', ');
-        statusEl.className='attach-status err';
-      } else {
-        statusEl.textContent='✓ 업로드 완료 ('+total+'건)';
-        statusEl.className='attach-status ok';
-      }
-    });
-}
+function uploadReplyAttachments(input){ uploadAttachmentsGeneric(input, REPLY_ATTACHMENTS, 'replyAttachStatus', renderReplyAttachmentChips); }
 function submitReply(noticeId){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
   var name=getSelectValue('replyNameSelect','replyNameCustom').trim();
@@ -1158,7 +1111,7 @@ function openEditModal(pageId){
   document.getElementById('attachStatus').className='attach-status';
   document.getElementById('addLinkUrl').value='';
   renderAttachmentChips();
-  var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display='none';
+  var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display=''; // 수정 시에도 날짜는 필수(2026-08-11, 신규/수정 공통)
   openModal('addModal');
 }
 function submitAddForm(){
@@ -1169,7 +1122,7 @@ function submitAddForm(){
   if(!title){ alert('제목을 입력해주세요.'); document.getElementById('addTitle').focus(); return; }
   if(!category){ alert('구분을 선택해주세요.'); return; }
   if(!content){ alert('내용을 입력해주세요.'); document.getElementById('addContent').focus(); return; }
-  if(!EDIT_PAGE_ID && !date){ alert('게시일을 입력해주세요.'); document.getElementById('addDate').focus(); return; }
+  if(!date){ alert('게시일을 입력해주세요.'); document.getElementById('addDate').focus(); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
   var attachStatusText = (document.getElementById('attachStatus')||{}).textContent||'';
@@ -1485,7 +1438,7 @@ function parseNotionPage(page){
 
 /* ── 데이터 로드(공지사항은 대량 데이터가 아니므로 windowing 없이 전체 로드) ── */
 var ALL_DATA = [];
-var MAX_PAGES = 20;
+var MAX_PAGES = 50;
 function loadData(){
   if(!isAuthed()){ openLoginModal(); return; }
   var btn=document.getElementById('syncBtn'), lu=document.getElementById('lastUpdate');
@@ -1503,10 +1456,14 @@ function loadData(){
     var body={ page_size:100, sorts:[{ property:sortProp, direction:'descending' }] };
     return fetchNotion(body).then(function(data){
       var allPages=data.results||[];
-      var cursor=data.next_cursor, hasMore=data.has_more, pageCount=0;
+      var cursor=data.next_cursor, hasMore=data.has_more, pageCount=0, pageCapHit=false;
       function fetchNext(cur, more){
         if(!cur||!more) return Promise.resolve();
-        if(pageCount++>=MAX_PAGES) return Promise.resolve();
+        if(pageCount++>=MAX_PAGES){
+          pageCapHit=true;
+          console.warn('공지사항 로드: MAX_PAGES('+MAX_PAGES+') 도달 — 일부 데이터만 로드되었습니다.');
+          return Promise.resolve();
+        }
         return fetchNotion(Object.assign({},body,{start_cursor:cur})).then(function(d2){
           allPages=allPages.concat(d2.results||[]);
           return fetchNext(d2.next_cursor, d2.has_more);
@@ -1528,7 +1485,8 @@ function loadData(){
           renderAll();
           var now2=new Date();
           var upTxt='Update '+fmt(now2.getMonth()+1)+'.'+fmt(now2.getDate())+' '+fmt(now2.getHours())+':'+fmt(now2.getMinutes());
-          if(lu){ lu.textContent=upTxt; lu.style.color=''; }
+          if(pageCapHit) upTxt += ' · ⚠ 일부만 로드됨('+MAX_PAGES+'페이지 초과)';
+          if(lu){ lu.textContent=upTxt; lu.style.color = pageCapHit ? 'var(--hdr-error-text)' : ''; }
         } else {
           if(!ALL_DATA.length){ ALL_DATA=DEMO_DATA.slice(); renderAll(); }
           if(lu){ lu.textContent='⚠ 데이터 없음 — DB ID 또는 Worker 설정 확인'; lu.style.color='var(--hdr-error-text)'; }
@@ -1583,6 +1541,11 @@ function renderAll(){
 
 function renderList(){
   buildCategoryDd();
+  renderRows();
+}
+/* 검색어 입력 등 목록만 다시 그리면 되는 경우 — 구분 드롭다운(buildCategoryDd)은 옵션 목록이
+   실제로 바뀔 때만(데이터 로드·필터 변경·삭제모드 토글 시) renderList()에서 재빌드한다(2026-08-11). */
+function renderRows(){
   var rows = sortedRows(filtered());
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
   var colCount = 6 + (DELETE_MODE?1:0);
@@ -1593,7 +1556,7 @@ function renderList(){
 }
 function buildDetailRow(r){
   var checkCell = DELETE_MODE
-    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
+    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" aria-label="행 선택" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
     : '';
   var attachCount = (r['첨부파일']||[]).length;
   var replyCount = r['회신수']||0;
@@ -1644,7 +1607,7 @@ function updateDeleteHeaderCheckbox(){
       th=document.createElement('th');
       th.className='del-col-th';
       th.style.width='36px';
-      th.innerHTML='<input type="checkbox" id="delAll" onchange="toggleSelectAllRows(this.checked)"/>';
+      th.innerHTML='<input type="checkbox" id="delAll" aria-label="전체 선택" onchange="toggleSelectAllRows(this.checked)"/>';
       thead.insertBefore(th, thead.firstChild);
     }
   } else if(th){

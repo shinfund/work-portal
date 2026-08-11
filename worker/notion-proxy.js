@@ -6,6 +6,10 @@
 //   env.R2_PUBLIC_URL        (필수) HAJA_BUCKET의 공개 접근 URL
 //   env.TOKEN_VERSION        (선택) 문자열. 값을 바꾸면 기존 발급 토큰이 즉시 전부 무효화됨(폐기 수단). 미설정 시 "1"
 //   env.LOGIN_ATTEMPTS_KV    (선택, KV 바인딩) /login 브루트포스 방어용. 미바인딩 시 rate limit은 자동 스킵됨
+//   env.APP_META_JSON       (선택) 앱별 민감 정적 설정(JSON 문자열). git에는 절대 커밋하지 않고
+//                            Cloudflare 대시보드/wrangler secret으로만 설정. /app-meta 엔드포인트가 서빙.
+//                            형식: {"corporate-card":{"preparerTitle":"...","preparerName":"..."},
+//                                   "monthly-inspection":{"generatorInspector":{...},"damdangOptions":[...],"hwakinOptions":[...]}}
 
 const NOTION_API = "https://api.notion.com";
 
@@ -304,6 +308,24 @@ export default {
       } catch (e) {
         return corsJson({ error: e.message }, 500, CORS);
       }
+    }
+
+    // ✅ /app-meta — 정적 HTML에 하드코딩하면 안 되는 앱별 민감 설정(직원 실명 등)을
+    // env.APP_META_JSON(Cloudflare 환경변수, git 미포함)에서 읽어 인증된 요청에만 반환.
+    if (url.pathname === "/app-meta" && request.method === "GET") {
+      const app = url.searchParams.get("app") || "";
+      if (!app) return corsJson({ error: "app 파라미터 누락" }, 400, CORS);
+      if (!env.APP_META_JSON) return corsJson({ error: "not configured" }, 404, CORS);
+      let all;
+      try {
+        all = JSON.parse(env.APP_META_JSON);
+      } catch (e) {
+        return corsJson({ error: "APP_META_JSON 파싱 실패" }, 500, CORS);
+      }
+      if (!Object.prototype.hasOwnProperty.call(all, app)) {
+        return corsJson({ error: "not found" }, 404, CORS);
+      }
+      return corsJson(all[app], 200, CORS);
     }
 
     // ✅ /signature — 차량운행일지 결재 서명 기본값 (R2 signatures/ 전용, role 화이트리스트)

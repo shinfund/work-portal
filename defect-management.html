@@ -54,7 +54,6 @@ html[data-theme="dark"]{
   --shadow:none;
   --hdr-bg:#24292E;
   --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
-  --hdr-error-text:rgba(255,150,130,.9);
   --sky:#2E8FFF;
   /* 색상군 50/100 틴트 → 다크 카드 위 반투명 오버레이로 전환 */
   --sky50:rgba(46,143,255,.16); --sky100:rgba(46,143,255,.32);
@@ -160,6 +159,7 @@ tbody tr:last-child td{border-bottom:none}
 .tunnel-c5{background:#0D6D63}
 .mgr-safety{background:#1565C0}
 .mgr-check{background:#0D6D63}
+.mgr-custom{background:var(--gray600)}
 
 /* ── DASHBOARD ── */
 .sc{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -1863,7 +1863,7 @@ function closeUnprocStatusDd() { closeDd('unprocStatusDdMenu','unprocStatusDdBtn
 
 /* ── FILTER ── */
 function filtered(){
-  var q = (document.getElementById('searchBox').value||'').trim().toLowerCase();
+  var q = (document.getElementById('searchBox')||{value:''}).value.trim().toLowerCase();
   return ALL_DATA.filter(function(r){
     var stMatch = FILTER.status==='ALL' || r['조치여부']===FILTER.status;
     var tnMatch = FILTER.tunnel==='ALL' || r['터널명']===FILTER.tunnel;
@@ -2094,7 +2094,7 @@ function ensureTunnelColors(){
   _tunnelColorsDirty = false;
 }
 function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'tunnel-c0'; }
-function managerBadgeClass(m){ return m==='안전관리자'?'mgr-safety':m==='점검팀'?'mgr-check':'mgr-safety'; }
+function managerBadgeClass(m){ return m==='안전관리자'?'mgr-safety':m==='점검팀'?'mgr-check':'mgr-custom'; }
 function renderList(){
   ensureTunnelColors();
   var rows = filtered();
@@ -2743,20 +2743,68 @@ function openEditModal(idx){
   setTimeout(function(){ document.getElementById('addContent').focus(); }, 100);
 }
 
-/* ── 삭제 확인 ── */
-function showDeleteConfirm(idx){
-  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !isAuthed() || !r._pageId){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
-  var footer = document.getElementById('detailFooter');
-  if(!footer) return;
-  footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
-    +'<div style="display:flex;gap:6px">'
-    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
-    +'<button class="detail-act-btn detail-del-btn" id="deleteExecBtn" onclick="deleteItem('+idx+')">삭제 확인</button>'
-    +'</div></div>';
-  footer.scrollIntoView({ behavior:'smooth', block:'nearest' });
+/* ── 삭제 확인(단건) 공통 헬퍼 — 하자내역/업체연락처/하자관리 3탭 공용(2026-08-11 중복 제거) ──
+   cfg: dataVar(전역 데이터배열명 문자열), execBtnId, execFnName(삭제확인 버튼 onclick에 쓰일 실행함수명),
+        reload, setLoaded(옵션), loginHint(옵션, 미로그인 alert 추가 문구) */
+function createSingleDeleteController(cfg){
+  function data(){ return window[cfg.dataVar]; }
+  function show(idx){
+    var r = data().find(function(d){ return d._idx===idx; });
+    if(!r || !isAuthed() || !r._pageId){ alert('로그인 후 사용 가능합니다.'+(cfg.loginHint||'')); return; }
+    var footer = document.getElementById('detailFooter');
+    if(!footer) return;
+    footer.innerHTML = '<div class="del-confirm-bar">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
+      +'<button class="detail-act-btn detail-del-btn" id="'+cfg.execBtnId+'" onclick="'+cfg.execFnName+'('+idx+')">삭제 확인</button>'
+      +'</div></div>';
+    footer.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+  function exec(idx){
+    var r = data().find(function(d){ return d._idx===idx; });
+    if(!r || !r._pageId) return;
+    var btn = document.getElementById(cfg.execBtnId);
+    if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
+    fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ in_trash: true })
+    })
+    .then(function(res){
+      if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
+      return res.json();
+    })
+    .then(function(){
+      closeDetail();
+      if(cfg.setLoaded) cfg.setLoaded();
+      cfg.reload();
+      toast('삭제되었습니다.');
+    })
+    .catch(function(e){
+      if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
+      // 이미 삭제(휴지통 이동)된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
+      // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침(2026-07-06 수정)
+      if((e.message||'').indexOf('archived')>-1){
+        closeDetail();
+        if(cfg.setLoaded) cfg.setLoaded();
+        cfg.reload();
+        toast('이미 삭제된 항목입니다.');
+        return;
+      }
+      alert('삭제 실패: '+e.message);
+      console.error(e);
+    });
+  }
+  return { show:show, exec:exec };
 }
+
+var _defectSingleDelCtl = createSingleDeleteController({
+  dataVar:'ALL_DATA', execBtnId:'deleteExecBtn', execFnName:'deleteItem',
+  reload:function(){ loadData(); }, loginHint:'\n설정 버튼에서 로그인해주세요.'
+});
+function showDeleteConfirm(idx){ _defectSingleDelCtl.show(idx); }
+function deleteItem(idx){ _defectSingleDelCtl.exec(idx); }
 
 function hideDeleteConfirm(){
   var footer = document.getElementById('detailFooter');
@@ -2782,109 +2830,113 @@ function toast(msg){
   setTimeout(function(){ t.classList.remove('show'); },2600);
 }
 
-function deleteItem(idx){
-  var r = ALL_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId) return;
-  var btn = document.getElementById('deleteExecBtn');
-  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
-  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ in_trash: true })
-  })
-  .then(function(res){
-    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
-    return res.json();
-  })
-  .then(function(){
-    closeDetail();
-    loadData();
-    toast('삭제되었습니다.');
-  })
-  .catch(function(e){
-    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
-    // 이미 삭제(휴지통 이동)된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
-    // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침(2026-07-06 수정)
-    if((e.message||'').indexOf('archived')>-1){
-      closeDetail();
-      loadData();
-      toast('이미 삭제된 항목입니다.');
-      return;
+
+/* ── 행 삭제(체크박스로 전체/개별 선택 후 일괄 삭제) 공통 헬퍼 — 하자내역/업체연락처/하자관리 3탭 공용(2026-08-11 중복 제거) ──
+   cfg: modeVar/selVar/dataVar(전역 변수명 문자열), toggleBtnId/toggleLblId/confirmBtnId/allCheckboxId,
+        rebuildHeader(컬럼 재생성식 헤더, 하자내역 전용) 또는 theadId+selectAllFnName(컬럼 삽입식 헤더, 업체연락처/하자관리),
+        filterFn, render, reload, setLoaded(옵션), trashWording(옵션, 하자내역만 true) */
+function createDeleteModeController(cfg){
+  function mode(){ return window[cfg.modeVar]; }
+  function sel(){ return window[cfg.selVar]; }
+  function updateLabel(){
+    var confirmBtn=document.getElementById(cfg.confirmBtnId);
+    if(!confirmBtn) return;
+    var n=sel().size;
+    confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+    confirmBtn.disabled = n===0;
+    confirmBtn.style.opacity = n===0 ? '.45' : '1';
+    confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
+  }
+  function updateToolbarUI(){
+    var toggleBtn=document.getElementById(cfg.toggleBtnId);
+    var toggleLbl=document.getElementById(cfg.toggleLblId);
+    var confirmBtn=document.getElementById(cfg.confirmBtnId);
+    if(toggleBtn) toggleBtn.style.background = mode() ? '#B23A2E' : '#495057';
+    if(toggleLbl) toggleLbl.textContent = mode() ? '삭제 취소' : '삭제';
+    if(confirmBtn) confirmBtn.style.display = mode() ? '' : 'none';
+    updateLabel();
+  }
+  function toggle(){
+    window[cfg.modeVar] = !mode();
+    window[cfg.selVar] = new Set();
+    updateToolbarUI();
+    if(cfg.rebuildHeader){
+      cfg.rebuildHeader();
+    } else if(cfg.theadId){
+      var thead=document.getElementById(cfg.theadId);
+      var th=thead&&thead.querySelector('.del-col-th');
+      if(mode()){
+        if(!th){
+          th=document.createElement('th');
+          th.className='del-col-th'; th.style.width='36px';
+          th.innerHTML='<input type="checkbox" id="'+cfg.allCheckboxId+'" onchange="'+cfg.selectAllFnName+'(this.checked)"/>';
+          thead.insertBefore(th, thead.firstChild);
+        }
+      } else if(th){ th.remove(); }
     }
-    alert('삭제 실패: '+e.message);
-    console.error(e);
-  });
+    cfg.render();
+  }
+  function syncAll(rows){
+    var all=document.getElementById(cfg.allCheckboxId);
+    if(!all) return;
+    all.checked = rows.length>0 && rows.every(function(r){ return sel().has(r._idx); });
+    all.indeterminate = !all.checked && rows.some(function(r){ return sel().has(r._idx); });
+  }
+  function selectAllRows(checked){
+    var rows=cfg.filterFn();
+    rows.forEach(function(r){ if(checked) sel().add(r._idx); else sel().delete(r._idx); });
+    cfg.render();
+    updateLabel();
+  }
+  function selectRow(idx, checked){
+    if(checked) sel().add(idx); else sel().delete(idx);
+    updateLabel();
+    syncAll(cfg.filterFn());
+  }
+  function deleteSelected(){
+    if(!sel().size) return;
+    var msg = sel().size+'건을 삭제'+(cfg.trashWording?'(휴지통 이동)':'')+'할까요? 이 작업은 되돌릴 수 없습니다.';
+    if(!confirm(msg)) return;
+    var idxs=Array.from(sel());
+    var data=window[cfg.dataVar];
+    var pageIds=idxs.map(function(idx){ var r=data.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
+    var confirmBtn=document.getElementById(cfg.confirmBtnId);
+    if(confirmBtn) confirmBtn.disabled=true;
+    var done=0;
+    excelBatchPromises(pageIds, function(pageId){
+      return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
+    }, 6).then(function(){
+      toast(pageIds.length+'건 삭제되었습니다.');
+      if(cfg.setLoaded) cfg.setLoaded();
+      toggle();
+      cfg.reload();
+    }).catch(function(e){
+      alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+      if(confirmBtn) confirmBtn.disabled=false;
+      updateLabel();
+      console.error(e);
+    });
+  }
+  return { toggle:toggle, syncAll:syncAll, selectAllRows:selectAllRows, selectRow:selectRow, deleteSelected:deleteSelected };
 }
 
-/* ── 행 삭제(체크박스로 전체/개별 선택 후 일괄 삭제) — 하자내역 탭 ── */
+/* ── 하자내역 탭 ── */
 var DELETE_MODE = false;
 var DELETE_SELECTED = new Set();
-function toggleDeleteMode(){
-  DELETE_MODE = !DELETE_MODE;
-  DELETE_SELECTED = new Set();
-  updateDeleteToolbarUI();
-  rebuildListHeader();
-  renderList();
-}
-function updateDeleteToolbarUI(){
-  var toggleBtn=document.getElementById('delToggleBtn');
-  var toggleLbl=document.getElementById('delToggleLbl');
-  var confirmBtn=document.getElementById('delConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 취소' : '삭제';
-  if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
-  updateDeleteConfirmLabel();
-}
-function updateDeleteConfirmLabel(){
-  var confirmBtn=document.getElementById('delConfirmBtn');
-  if(!confirmBtn) return;
-  var n=DELETE_SELECTED.size;
-  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
-  confirmBtn.disabled = n===0;
-  confirmBtn.style.opacity = n===0 ? '.45' : '1';
-  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
-}
-function syncSelectAllCheckbox(rows){
-  var all=document.getElementById('delAll');
-  if(!all) return;
-  all.checked = rows.length>0 && rows.every(function(r){ return DELETE_SELECTED.has(r._idx); });
-  all.indeterminate = !all.checked && rows.some(function(r){ return DELETE_SELECTED.has(r._idx); });
-}
-function toggleSelectAllRows(checked){
-  var rows=filtered();
-  rows.forEach(function(r){ if(checked) DELETE_SELECTED.add(r._idx); else DELETE_SELECTED.delete(r._idx); });
-  renderList();
-  updateDeleteConfirmLabel();
-}
-function toggleRowSelect(idx, checked){
-  if(checked) DELETE_SELECTED.add(idx); else DELETE_SELECTED.delete(idx);
-  updateDeleteConfirmLabel();
-  syncSelectAllCheckbox(filtered());
-}
-function deleteSelectedRows(){
-  if(!DELETE_SELECTED.size) return;
-  if(!confirm(DELETE_SELECTED.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
-  var idxs=Array.from(DELETE_SELECTED);
-  var pageIds=idxs.map(function(idx){ var r=ALL_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
-  var confirmBtn=document.getElementById('delConfirmBtn');
-  if(confirmBtn) confirmBtn.disabled=true;
-  var done=0;
-  excelBatchPromises(pageIds, function(pageId){
-    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
-      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
-  }, 6).then(function(){
-    toast(pageIds.length+'건 삭제되었습니다.');
-    DELETE_MODE=false; DELETE_SELECTED=new Set();
-    updateDeleteToolbarUI();
-    loadData();
-  }).catch(function(e){
-    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
-    if(confirmBtn) confirmBtn.disabled=false;
-    updateDeleteConfirmLabel();
-    console.error(e);
-  });
-}
+var _defectDelCtl = createDeleteModeController({
+  modeVar:'DELETE_MODE', selVar:'DELETE_SELECTED', dataVar:'ALL_DATA',
+  toggleBtnId:'delToggleBtn', toggleLblId:'delToggleLbl', confirmBtnId:'delConfirmBtn', allCheckboxId:'delAll',
+  rebuildHeader: function(){ rebuildListHeader(); },
+  filterFn: function(){ return filtered(); }, render: function(){ renderList(); }, reload: function(){ loadData(); },
+  trashWording: true
+});
+function toggleDeleteMode(){ _defectDelCtl.toggle(); }
+function syncSelectAllCheckbox(rows){ _defectDelCtl.syncAll(rows); }
+function toggleSelectAllRows(checked){ _defectDelCtl.selectAllRows(checked); }
+function toggleRowSelect(idx, checked){ _defectDelCtl.selectRow(idx, checked); }
+function deleteSelectedRows(){ _defectDelCtl.deleteSelected(); }
 
 /* ── 신규 하자 등록 모달 ── */
 function openAddModal(){
@@ -2993,7 +3045,7 @@ function submitAddForm(confirmed){
   var loc     = getSelectValue('addLoc','addLocCustom');
   var content = document.getElementById('addContent').value.trim();
 
-  if(!EDIT_PAGE_ID && !date) { alert('날짜를 입력해주세요.'); document.getElementById('addDate').focus(); return; }
+  if(!date) { alert('날짜를 입력해주세요.'); document.getElementById('addDate').focus(); return; }
   if(!type)    { alert('공종을 선택해주세요.'); document.getElementById('addType').focus(); return; }
   if(!tunnel)  { alert('터널명을 선택해주세요.'); document.getElementById('addTunnel').focus(); return; }
   if(!loc)     { alert('위치를 입력해주세요.'); document.getElementById('addLoc').focus(); return; }
@@ -3512,6 +3564,8 @@ function submitContactForm(confirmed){
     return;
   }
 
+  if(!isAuthed()) { alert('로그인이 필요합니다.'); closeContactEditModal(); openCfgModal(); return; }
+
   var btn = document.getElementById('ceSubmitBtn');
   var lbl = document.getElementById('ceSubmitLabel');
   btn.disabled=true;
@@ -3530,7 +3584,7 @@ function submitContactForm(confirmed){
 
   if(isAdd){
     // 노션 미연동: 로컬에 추가
-    if(!isAuthed() || !CFG.contactDbId){
+    if(!CFG.contactDbId){
       var newIdx = CONTACT_DATA.length
         ? Math.max.apply(null, CONTACT_DATA.map(function(d){ return d._idx; })) + 1
         : 1;
@@ -3622,53 +3676,12 @@ function submitContactForm(confirmed){
   }
 }
 
-function showContactDeleteConfirm(idx){
-  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId || !isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
-  var footer = document.getElementById('detailFooter');
-  if(!footer) return;
-  footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
-    +'<div style="display:flex;gap:6px">'
-    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
-    +'<button class="detail-act-btn detail-del-btn" id="cDeleteExecBtn" onclick="deleteContactItem('+idx+')">삭제 확인</button>'
-    +'</div></div>';
-  footer.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function deleteContactItem(idx){
-  var r = CONTACT_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId) return;
-  var btn = document.getElementById('cDeleteExecBtn');
-  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
-  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
-    method:'PATCH',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ in_trash: true })
-  })
-  .then(function(res){
-    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
-    return res.json();
-  })
-  .then(function(){
-    closeDetail();
-    CONTACT_LOADED=false;
-    loadContactData();
-    toast('삭제되었습니다.');
-  })
-  .catch(function(e){
-    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
-    if((e.message||'').indexOf('archived')>-1){
-      closeDetail();
-      CONTACT_LOADED=false;
-      loadContactData();
-      toast('이미 삭제된 항목입니다.');
-      return;
-    }
-    alert('삭제 실패: '+e.message);
-    console.error(e);
-  });
-}
+var _contactSingleDelCtl = createSingleDeleteController({
+  dataVar:'CONTACT_DATA', execBtnId:'cDeleteExecBtn', execFnName:'deleteContactItem',
+  reload:function(){ loadContactData(); }, setLoaded:function(){ CONTACT_LOADED=false; }
+});
+function showContactDeleteConfirm(idx){ _contactSingleDelCtl.show(idx); }
+function deleteContactItem(idx){ _contactSingleDelCtl.exec(idx); }
 
 function renderContactTable(){
   var rows = filteredContacts();
@@ -3714,81 +3727,21 @@ function renderContactTable(){
   }).join('');
   if(CONTACT_DELETE_MODE) syncContactSelectAllCheckbox(rows);
 }
-/* ── 업체연락처 행 삭제 ── */
+/* ── 업체연락처 행 삭제 (공통 헬퍼: createDeleteModeController, 하자내역 탭 정의 참고) ── */
 var CONTACT_DELETE_MODE = false;
 var CONTACT_DELETE_SELECTED = new Set();
-function toggleContactDeleteMode(){
-  CONTACT_DELETE_MODE = !CONTACT_DELETE_MODE;
-  CONTACT_DELETE_SELECTED = new Set();
-  var toggleBtn=document.getElementById('cDelToggleBtn');
-  var toggleLbl=document.getElementById('cDelToggleLbl');
-  var confirmBtn=document.getElementById('cDelConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = CONTACT_DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = CONTACT_DELETE_MODE ? '삭제 취소' : '삭제';
-  if(confirmBtn) confirmBtn.style.display = CONTACT_DELETE_MODE ? '' : 'none';
-  updateContactDeleteConfirmLabel();
-  var thead=document.getElementById('contactThead');
-  var th=thead&&thead.querySelector('.del-col-th');
-  if(CONTACT_DELETE_MODE){
-    if(!th){
-      th=document.createElement('th');
-      th.className='del-col-th'; th.style.width='36px';
-      th.innerHTML='<input type="checkbox" id="cDelAll" onchange="toggleContactSelectAllRows(this.checked)"/>';
-      thead.insertBefore(th, thead.firstChild);
-    }
-  } else if(th){ th.remove(); }
-  renderContactTable();
-}
-function updateContactDeleteConfirmLabel(){
-  var confirmBtn=document.getElementById('cDelConfirmBtn');
-  if(!confirmBtn) return;
-  var n=CONTACT_DELETE_SELECTED.size;
-  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
-  confirmBtn.disabled = n===0;
-  confirmBtn.style.opacity = n===0 ? '.45' : '1';
-  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
-}
-function syncContactSelectAllCheckbox(rows){
-  var all=document.getElementById('cDelAll');
-  if(!all) return;
-  all.checked = rows.length>0 && rows.every(function(r){ return CONTACT_DELETE_SELECTED.has(r._idx); });
-  all.indeterminate = !all.checked && rows.some(function(r){ return CONTACT_DELETE_SELECTED.has(r._idx); });
-}
-function toggleContactSelectAllRows(checked){
-  var rows=filteredContacts();
-  rows.forEach(function(r){ if(checked) CONTACT_DELETE_SELECTED.add(r._idx); else CONTACT_DELETE_SELECTED.delete(r._idx); });
-  renderContactTable();
-  updateContactDeleteConfirmLabel();
-}
-function toggleContactRowSelect(idx, checked){
-  if(checked) CONTACT_DELETE_SELECTED.add(idx); else CONTACT_DELETE_SELECTED.delete(idx);
-  updateContactDeleteConfirmLabel();
-  syncContactSelectAllCheckbox(filteredContacts());
-}
-function deleteSelectedContactRows(){
-  if(!CONTACT_DELETE_SELECTED.size) return;
-  if(!confirm(CONTACT_DELETE_SELECTED.size+'건을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
-  var idxs=Array.from(CONTACT_DELETE_SELECTED);
-  var pageIds=idxs.map(function(idx){ var r=CONTACT_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
-  var confirmBtn=document.getElementById('cDelConfirmBtn');
-  if(confirmBtn) confirmBtn.disabled=true;
-  var done=0;
-  excelBatchPromises(pageIds, function(pageId){
-    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
-      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
-  }, 6).then(function(){
-    toast(pageIds.length+'건 삭제되었습니다.');
-    CONTACT_LOADED=false;
-    toggleContactDeleteMode();
-    loadContactData();
-  }).catch(function(e){
-    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
-    if(confirmBtn) confirmBtn.disabled=false;
-    updateContactDeleteConfirmLabel();
-    console.error(e);
-  });
-}
+var _contactDelCtl = createDeleteModeController({
+  modeVar:'CONTACT_DELETE_MODE', selVar:'CONTACT_DELETE_SELECTED', dataVar:'CONTACT_DATA',
+  toggleBtnId:'cDelToggleBtn', toggleLblId:'cDelToggleLbl', confirmBtnId:'cDelConfirmBtn', allCheckboxId:'cDelAll',
+  theadId:'contactThead', selectAllFnName:'toggleContactSelectAllRows',
+  filterFn: function(){ return filteredContacts(); }, render: function(){ renderContactTable(); }, reload: function(){ loadContactData(); },
+  setLoaded: function(){ CONTACT_LOADED=false; }
+});
+function toggleContactDeleteMode(){ _contactDelCtl.toggle(); }
+function syncContactSelectAllCheckbox(rows){ _contactDelCtl.syncAll(rows); }
+function toggleContactSelectAllRows(checked){ _contactDelCtl.selectAllRows(checked); }
+function toggleContactRowSelect(idx, checked){ _contactDelCtl.selectRow(idx, checked); }
+function deleteSelectedContactRows(){ _contactDelCtl.deleteSelected(); }
 
 /* ── 엑셀 생성 (하자내역 탭) ──
    2026-07-03 손상 문제의 진짜 원인은 xlsx 템플릿에 걸린 조건부 서식(한글 formula)을
@@ -4667,81 +4620,21 @@ function renderMgmtTable(){
   }).join('');
   if(MGMT_DELETE_MODE) syncMgmtSelectAllCheckbox(rows);
 }
-/* ── 하자관리(보증) 행 삭제 ── */
+/* ── 하자관리(보증) 행 삭제 (공통 헬퍼: createDeleteModeController, 하자내역 탭 정의 참고) ── */
 var MGMT_DELETE_MODE = false;
 var MGMT_DELETE_SELECTED = new Set();
-function toggleMgmtDeleteMode(){
-  MGMT_DELETE_MODE = !MGMT_DELETE_MODE;
-  MGMT_DELETE_SELECTED = new Set();
-  var toggleBtn=document.getElementById('mDelToggleBtn');
-  var toggleLbl=document.getElementById('mDelToggleLbl');
-  var confirmBtn=document.getElementById('mDelConfirmBtn');
-  if(toggleBtn) toggleBtn.style.background = MGMT_DELETE_MODE ? '#B23A2E' : '#495057';
-  if(toggleLbl) toggleLbl.textContent = MGMT_DELETE_MODE ? '삭제 취소' : '삭제';
-  if(confirmBtn) confirmBtn.style.display = MGMT_DELETE_MODE ? '' : 'none';
-  updateMgmtDeleteConfirmLabel();
-  var thead=document.getElementById('mgmtThead');
-  var th=thead&&thead.querySelector('.del-col-th');
-  if(MGMT_DELETE_MODE){
-    if(!th){
-      th=document.createElement('th');
-      th.className='del-col-th'; th.style.width='36px';
-      th.innerHTML='<input type="checkbox" id="mDelAll" onchange="toggleMgmtSelectAllRows(this.checked)"/>';
-      thead.insertBefore(th, thead.firstChild);
-    }
-  } else if(th){ th.remove(); }
-  renderMgmtTable();
-}
-function updateMgmtDeleteConfirmLabel(){
-  var confirmBtn=document.getElementById('mDelConfirmBtn');
-  if(!confirmBtn) return;
-  var n=MGMT_DELETE_SELECTED.size;
-  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
-  confirmBtn.disabled = n===0;
-  confirmBtn.style.opacity = n===0 ? '.45' : '1';
-  confirmBtn.style.cursor = n===0 ? 'not-allowed' : 'pointer';
-}
-function syncMgmtSelectAllCheckbox(rows){
-  var all=document.getElementById('mDelAll');
-  if(!all) return;
-  all.checked = rows.length>0 && rows.every(function(r){ return MGMT_DELETE_SELECTED.has(r._idx); });
-  all.indeterminate = !all.checked && rows.some(function(r){ return MGMT_DELETE_SELECTED.has(r._idx); });
-}
-function toggleMgmtSelectAllRows(checked){
-  var rows=filteredMgmt();
-  rows.forEach(function(r){ if(checked) MGMT_DELETE_SELECTED.add(r._idx); else MGMT_DELETE_SELECTED.delete(r._idx); });
-  renderMgmtTable();
-  updateMgmtDeleteConfirmLabel();
-}
-function toggleMgmtRowSelect(idx, checked){
-  if(checked) MGMT_DELETE_SELECTED.add(idx); else MGMT_DELETE_SELECTED.delete(idx);
-  updateMgmtDeleteConfirmLabel();
-  syncMgmtSelectAllCheckbox(filteredMgmt());
-}
-function deleteSelectedMgmtRows(){
-  if(!MGMT_DELETE_SELECTED.size) return;
-  if(!confirm(MGMT_DELETE_SELECTED.size+'건을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
-  var idxs=Array.from(MGMT_DELETE_SELECTED);
-  var pageIds=idxs.map(function(idx){ var r=MGMT_DATA.find(function(d){ return d._idx===idx; }); return r&&r._pageId; }).filter(Boolean);
-  var confirmBtn=document.getElementById('mDelConfirmBtn');
-  if(confirmBtn) confirmBtn.disabled=true;
-  var done=0;
-  excelBatchPromises(pageIds, function(pageId){
-    return fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
-      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+pageIds.length+')'; });
-  }, 6).then(function(){
-    toast(pageIds.length+'건 삭제되었습니다.');
-    MGMT_LOADED=false;
-    toggleMgmtDeleteMode();
-    loadMgmtData();
-  }).catch(function(e){
-    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
-    if(confirmBtn) confirmBtn.disabled=false;
-    updateMgmtDeleteConfirmLabel();
-    console.error(e);
-  });
-}
+var _mgmtDelCtl = createDeleteModeController({
+  modeVar:'MGMT_DELETE_MODE', selVar:'MGMT_DELETE_SELECTED', dataVar:'MGMT_DATA',
+  toggleBtnId:'mDelToggleBtn', toggleLblId:'mDelToggleLbl', confirmBtnId:'mDelConfirmBtn', allCheckboxId:'mDelAll',
+  theadId:'mgmtThead', selectAllFnName:'toggleMgmtSelectAllRows',
+  filterFn: function(){ return filteredMgmt(); }, render: function(){ renderMgmtTable(); }, reload: function(){ loadMgmtData(); },
+  setLoaded: function(){ MGMT_LOADED=false; }
+});
+function toggleMgmtDeleteMode(){ _mgmtDelCtl.toggle(); }
+function syncMgmtSelectAllCheckbox(rows){ _mgmtDelCtl.syncAll(rows); }
+function toggleMgmtSelectAllRows(checked){ _mgmtDelCtl.selectAllRows(checked); }
+function toggleMgmtRowSelect(idx, checked){ _mgmtDelCtl.selectRow(idx, checked); }
+function deleteSelectedMgmtRows(){ _mgmtDelCtl.deleteSelected(); }
 
 /* ── 하자관리 상세 (detailModal 재사용) ── */
 function openMgmtDetail(idx){
@@ -4896,6 +4789,8 @@ function submitMgmtForm(confirmed){
     return;
   }
 
+  if(!isAuthed()) { alert('로그인이 필요합니다.'); closeMgmtEditModal(); openCfgModal(); return; }
+
   var btn = document.getElementById('mgSubmitBtn');
   var lbl = document.getElementById('mgSubmitLabel');
   btn.disabled=true;
@@ -4938,7 +4833,7 @@ function submitMgmtForm(confirmed){
   }
 
   if(isAdd){
-    if(!isAuthed() || !CFG.mgmtDbId){
+    if(!CFG.mgmtDbId){
       var newIdx = MGMT_DATA.length
         ? Math.max.apply(null, MGMT_DATA.map(function(d){ return d._idx; })) + 1
         : 1;
@@ -5013,53 +4908,12 @@ function submitMgmtForm(confirmed){
   }
 }
 
-function showMgmtDeleteConfirm(idx){
-  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId || !isAuthed()){ alert('로그인 후 사용 가능합니다.'); return; }
-  var footer = document.getElementById('detailFooter');
-  if(!footer) return;
-  footer.innerHTML = '<div class="del-confirm-bar">'
-    +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
-    +'<div style="display:flex;gap:6px">'
-    +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
-    +'<button class="detail-act-btn detail-del-btn" id="mDeleteExecBtn" onclick="deleteMgmtItem('+idx+')">삭제 확인</button>'
-    +'</div></div>';
-  footer.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function deleteMgmtItem(idx){
-  var r = MGMT_DATA.find(function(d){ return d._idx===idx; });
-  if(!r || !r._pageId) return;
-  var btn = document.getElementById('mDeleteExecBtn');
-  if(btn){ btn.disabled=true; btn.textContent='삭제 중...'; }
-  fetch(CFG.workerUrl+'/v1/pages/'+r._pageId, {
-    method:'PATCH',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ in_trash: true })
-  })
-  .then(function(res){
-    if(!res.ok) return res.text().then(function(t){ throw new Error('HTTP '+res.status+': '+t); });
-    return res.json();
-  })
-  .then(function(){
-    closeDetail();
-    MGMT_LOADED=false;
-    loadMgmtData();
-    toast('삭제되었습니다.');
-  })
-  .catch(function(e){
-    if(btn){ btn.disabled=false; btn.textContent='삭제 확인'; }
-    if((e.message||'').indexOf('archived')>-1){
-      closeDetail();
-      MGMT_LOADED=false;
-      loadMgmtData();
-      toast('이미 삭제된 항목입니다.');
-      return;
-    }
-    alert('삭제 실패: '+e.message);
-    console.error(e);
-  });
-}
+var _mgmtSingleDelCtl = createSingleDeleteController({
+  dataVar:'MGMT_DATA', execBtnId:'mDeleteExecBtn', execFnName:'deleteMgmtItem',
+  reload:function(){ loadMgmtData(); }, setLoaded:function(){ MGMT_LOADED=false; }
+});
+function showMgmtDeleteConfirm(idx){ _mgmtSingleDelCtl.show(idx); }
+function deleteMgmtItem(idx){ _mgmtSingleDelCtl.exec(idx); }
 
 // 헤더 라벨은 노션 하자관리DB 실제 속성명과 동일. 공사명·위치만 자동폭+줄바꿈,
 // 계약금액(원)·보증금액(원)은 정수 numFmt('#,##0', 소수점 서식 없음), 나머지는 자동폭

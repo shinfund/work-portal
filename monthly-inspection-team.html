@@ -91,9 +91,6 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 html[data-theme="dark"] .top-tab.active{color:#fff}
 .top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
 .top-tab.active .tt-label{border-bottom-color:var(--sky)}
-/* "기록관리" 하위 탭 — report-page-chip을 그대로 재사용(보라색)해 입력폼 탭 안 페이지 칩과 같은
-   "하위 탭" 시각 언어를 유지한다(2026-08-05). */
-.db-subnav{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;gap:6px;padding:8px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 html[data-theme="dark"] .form-group-hd,
 html[data-theme="dark"] .report-section-hd,
 html[data-theme="dark"] th,
@@ -137,12 +134,6 @@ td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--sky50)}
 
-/* ── 전기설비기록 탭 — 기본정보/ACB 상세/설비현황 뷰 전환 토글 (연/월 등 dd-btn과 동일 색상 체계) ── */
-.view-toggle{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.view-toggle-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s}
-.view-toggle-btn.active{background:var(--sky800);color:#fff;border-color:var(--sky800)}
-html[data-theme="dark"] .view-toggle-btn.active{background:#0C447C;border-color:#0C447C}
-
 /* ── FILTER / 툴바 (목록 탭 툴바 표준) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
@@ -157,10 +148,6 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
-.tb-action-btn.tb-report{background:#534AB7}
-.tb-action-btn.tb-report:hover{background:#443a94}
-.tb-action-btn.tb-unified{background:#B45309}
-.tb-action-btn.tb-unified:hover{background:#94400a}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -315,15 +302,13 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .rc-date{font-size:14px;font-weight:400;text-align:left;margin-top:16px}
 .rc-toc-hd{font-size:14px;font-weight:400;text-align:left;margin-top:56px;letter-spacing:6px}
 .rc-toc-list{margin-top:14px;font-size:14px;line-height:2.2;text-align:left;color:var(--txt)}
-.rc-monthly-sub{font-size:14px;font-weight:800;color:var(--txt);margin:2px 0 16px}
 .rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
 .rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
 .rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
 .rc-monthly-gubun{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
 .rc-monthly-content{text-align:left;max-width:520px}
-.elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
 .elec-grid-select{width:64px;padding:4px 4px;font-size:13px}
-@media(max-width:480px){ .elec-grid-input,.elec-grid-select{font-size:16px} }
+@media(max-width:480px){ .elec-grid-select{font-size:16px} }
 @media(min-width:481px){
   .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
   .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
@@ -668,6 +653,8 @@ function titleWithMonth(dateStr, suffix){
 // ── 모달 드래그 이동 ──
 function makeModalDraggable(box, handle){
   if(!box||!handle) return;
+  if(handle.dataset.dragBound) return; // initDraggableModals()가 모달을 열 때마다 재호출되며 동일 handle에 리스너가 계속 누적되는 것 방지
+  handle.dataset.dragBound='1';
   handle.style.cursor='move';
   handle.style.userSelect='none';
   let dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
@@ -753,11 +740,7 @@ window.addEventListener('storage',e=>{
   if(e.key==='theme'&&e.newValue){
     document.documentElement.setAttribute('data-theme',e.newValue);
     syncThemeOptUI();
-  }
-});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();if(!document.getElementById('addModal').classList.contains('modal-inline')) closeAddModal();closeDetailModal();}});
-window.addEventListener('storage',e=>{
-  if(e.key==='wp_authToken'){
+  }else if(e.key==='wp_authToken'){
     CFG.authToken=e.newValue||'';
     CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
     updateLoginStatusHint();
@@ -768,12 +751,12 @@ window.addEventListener('storage',e=>{
     }
   }
 });
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCfgModal();if(!document.getElementById('addModal').classList.contains('modal-inline')) closeAddModal();closeDetailModal();}});
 
 // ══════════════════════════════════════════════════════
 // ── 탭 정의(TAB_DEFS) — DB별 필드 스키마(2026-07-24 notion-fetch로 실스키마 확인 후 하드코딩) ──
 // ══════════════════════════════════════════════════════
 const TUNNEL_OPTIONS_STD=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
-const TUNNEL_OPTIONS_ELEC=TUNNEL_OPTIONS_STD;
 // 점검사진 카드 그리드는 여러 터널이 섞여 나열돼(전체 터널 통합 보고서) 터널별 구분이 어렵다는
 // 사용자 피드백(2026-08-03) — 터널명 배열 순서에 고정 팔레트를 매핑해 카드 왼쪽에 색상 띠를 넣는다.
 // 배열 인덱스 기반이라 같은 터널은 앱을 다시 열어도 항상 같은 색이 나온다.
@@ -830,7 +813,7 @@ const TAB_DEFS=[
   {
     id:'elecinsp', label:'전기시설점검', dbId:DB_IDS.elecinsp, titleKey:'제목', dateKey:'날짜',
     fields:[
-      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_ELEC, required:true, cascadeTrigger:true},
+      {key:'터널명', type:'select', options:TUNNEL_OPTIONS_STD, required:true, cascadeTrigger:true},
       {key:'날짜', type:'date', required:true, cascadeTrigger:true},
       {key:'제목', type:'title', required:true, uiType:'cascade-select', dependsOn:['날짜'],
         optionsFn:dep=>{ const t=titleWithMonth(dep['날짜'],'전기시설점검표'); return t?[t]:[]; },
@@ -1921,7 +1904,7 @@ function renderPhotoFileList(fieldId){
   wrap.innerHTML=_photoFiles.map((f,i)=>
     `<div style="position:relative">
       <img src="${esc(f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
-      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
+      <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" aria-label="사진 삭제" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
     </div>`
   ).join('');
 }
@@ -2026,11 +2009,11 @@ function renderPhotoMultiRows(){
       ? `<div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer" onclick="document.getElementById('pmf_${row.key}').click()">
           <img src="${esc(photo.url)}" alt="사진" style="width:100%;height:100%;object-fit:cover;display:block">
           <div style="position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);color:#fff;font-size:11px;text-align:center;padding:5px 0">사진 변경</div>
-          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
+          <button type="button" onclick="event.stopPropagation();removePhotoMultiFile(${row.key},0)" aria-label="사진 삭제" style="position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer">✕</button>
         </div>`
       : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-left:4px solid ${accent};border-radius:var(--r8);padding:10px;position:relative">
-      <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
+      <button type="button" onclick="removePhotoMultiRow(${row.key})" title="행 삭제" aria-label="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer;flex-shrink:0">✕</button>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
         <span id="pmn_${row.key}" style="font-weight:800;font-size:13px">#${esc(row.num||'-')}</span>
@@ -2712,7 +2695,7 @@ function initReportTab(){
       </div>
       <div class="dd-wrap" id="rpTunnelWrap" style="display:none">
         <button class="dd-btn" id="rpTunnelBtn" type="button" onclick="toggleDd('rpTunnelMenu','rpTunnelBtn')" aria-haspopup="listbox" aria-label="구간 선택"><span id="rpTunnelLabel"></span></button>
-        <div class="dd-menu" id="rpTunnelMenu">${TUNNEL_OPTIONS_ELEC.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
+        <div class="dd-menu" id="rpTunnelMenu">${TUNNEL_OPTIONS_STD.map(t=>`<div class="dd-opt" data-val="${esc(t)}">${esc(t)}</div>`).join('')}</div>
       </div>
       <div class="report-toolbar-sep"></div>
       <div class="report-page-chips" id="reportPageChips"></div>`;
@@ -2839,7 +2822,7 @@ function renderReportPage_divider(){
 // 실제 엑셀 시트(구분·점검내용·점검방법·점검결과·점검일자·비고)를 그대로 재현하는 표 UI로 렌더링
 // (2026-07-31 사용자 요청 — 안전관리 앱 월간점검 페이지와 동일한 방식). 기존 신규등록 체크박스
 // 모달 방식은 폐기하고, 카탈로그 전 항목을 표로 펼쳐 결과·일자·비고를 바로 입력/수정한다.
-let _teamElecTunnel=TUNNEL_OPTIONS_ELEC[0];
+let _teamElecTunnel=TUNNEL_OPTIONS_STD[0];
 async function renderReportPage_elecinsp(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
@@ -2976,6 +2959,7 @@ function repairRowCells(rowKey, tunnel, occur, issue, fixDate, fixNote, worker){
   const workerOpts=getRepairWorkerOptions().map(w=>`<option value="${esc(w)}"${w===worker?' selected':''}>${esc(w)}</option>`).join('');
   return `<td>
         <select class="modal-select rp-tunnel" onchange="onSelectChange(this,'rpt_${rowKey}')">
+          <option value=""${tunnel?'':' selected'}>선택</option>
           <option value="__custom__"${isCustomTunnel?' selected':''}>직접입력</option>
           ${tunnelOpts}
         </select>
@@ -3239,7 +3223,7 @@ function generateTeamReport(){
   });
 }
 
-const ELECINSP_SHEET_GROUPS=TUNNEL_OPTIONS_ELEC.map(t=>({name:tunnelFnameAbbr(t), tunnels:[t]}));
+const ELECINSP_SHEET_GROUPS=TUNNEL_OPTIONS_STD.map(t=>({name:tunnelFnameAbbr(t), tunnels:[t]}));
 const ELECINSP_GUBUN_ORDER=['자동제어','조명설비','방재설비','관리동설비','터널진입차단설비'];
 function elecInspTunnelRecs(tunnel, year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
@@ -3594,7 +3578,7 @@ function exportRepairReport(){
 // 번호 오름차순 정렬만으로도 터널 순서(흥해→청하→남정1·2~9→강구1~3)가 자동으로 맞았다. 번호를
 // 터널별 1부터 시작하는 순번으로 바꾸면서(2026-07-29) 번호만으로는 더 이상 터널 순서를 보장할
 // 수 없어, 터널명을 1순위로 명시 정렬하도록 변경 — 원본 템플릿 순서 그대로 유지.
-const PHOTO_TUNNEL_ORDER=['흥해터널','청하터널','남정1·2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+const PHOTO_TUNNEL_ORDER=TUNNEL_OPTIONS_STD;
 function buildPhotoTeamReportRows(year, month){
   const ymStr=`${year}-${String(month).padStart(2,'0')}`;
   return (TAB_STATE.photo.records||[])
