@@ -12,12 +12,13 @@
   /* GitHub Desktop 실제 소스(desktop/desktop app/styles/_variables.scss, primer-support classic 팔레트) 기준 액센트·중립색 */
   --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
-  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;
   --purple:#534AB7;--purple50:#EEEDFE;--purple100:#CECBF6;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
   --r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:none;
   --sidebar-w:210px;
   --header-h:40px;
 
@@ -98,6 +99,8 @@ html[data-theme="dark"]{
   --coral:#FF8F66;
   --coral50:rgba(216,90,48,.18);
   --coral100:rgba(216,90,48,.34);
+  --coral800:#F0916A;
+  --shadow:none;
 
   --amber50:rgba(186,117,23,.22);
   --amber100:rgba(186,117,23,.38);
@@ -112,7 +115,7 @@ html,body{height:100%;overflow:hidden;}
 body{
   font-family:'Noto Sans KR',-apple-system,sans-serif;
   background:var(--bg);color:var(--txt);
-  font-size:15px;line-height:1.6;
+  font-size:14.5px;line-height:1.6;
   word-break:keep-all;-webkit-font-smoothing:antialiased;
   display:flex;height:100dvh;
 }

@@ -10,7 +10,7 @@
 <style>
 :root{
   /* 하자보수현황 앱과 수치 동일(2026-07-05 확정 — work-portal 공통 색상 팔레트 기준) */
-  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky700:#1565C0;--sky800:#032F62;
+  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
   --teal:#1D9E75;--teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
   --amber:#BA7517;--amber50:#FAEEDA;--amber100:#FAC775;--amber800:#633806;
@@ -67,6 +67,8 @@ html[data-theme="dark"]{
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-width:none}
+html::-webkit-scrollbar{display:none}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
 /* ── HEADER ── */
@@ -99,14 +101,15 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 /* 하자보수현황 앱 dd-btn/dd-menu/dd-opt와 수치·색상 완전 동일(2026-07-05 확정 — work-portal 공통 기준) */
 .dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
-.dd-btn.active{background:var(--sky700);color:#fff;border-color:var(--sky700)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
-.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:none}
+.dd-menu::-webkit-scrollbar{display:none}
 .dd-menu.open{display:block}
 /* 목록방식(3-9 표준) — 년/월/터널 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:var(--sky700);color:#fff;font-weight:700}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 

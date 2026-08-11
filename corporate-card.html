@@ -60,8 +60,9 @@ html[data-theme="dark"]{
   --purple50:rgba(83,74,183,.18);--purple100:rgba(83,74,183,.34);
 }
 html[data-theme="dark"] th{color:#fff}
-html[data-theme="dark"] td{color:#fff}
 *{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-width:none}
+html::-webkit-scrollbar{display:none}
 body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
 
 /* ── HEADER (work-portal 표준 구조 — 아이콘뱃지/부제 없이 텍스트 로고 하나, 2026-08-04) ── */
@@ -93,7 +94,8 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
-.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:none}
+.dd-menu::-webkit-scrollbar{display:none}
 .dd-menu.open{display:block}
 .dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
@@ -209,7 +211,7 @@ tfoot td:first-child{font-weight:400}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-required{color:var(--coral);margin-left:2px}
-.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s;box-sizing:border-box}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s;box-sizing:border-box}
 .modal-input::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
@@ -242,8 +244,8 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 
 @media(max-width:480px){
   .main{padding:10px}
-  td{font-size:13px;padding:9px 10px}
-  th{font-size:12px;padding:9px 10px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
   .kpi-val{font-size:14px}
   .lim-cat-grid{grid-template-columns:1fr}
   .modal-select,.modal-input,.search-box{font-size:16px}
