@@ -362,6 +362,15 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:8px
 </head>
 <body>
 <script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+<script>
+// 포털(iframe) 안에서 열렸을 때는 자체 설정/새로고침 버튼을 숨긴다(포털 사이드바 설정이 단일 소스, 로그인 시 포털이 iframe을 재로드해 새로고침을 대신함)
+if (window.self !== window.top) {
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelector('button[onclick="openCfgModal()"]')?.style.setProperty('display','none');
+    document.getElementById('syncBtn')?.style.setProperty('display','none');
+  });
+}
+</script>
 
 <!-- MODAL: 설정(로그인 안내+테마) -->
 <div id="cfgModal">
