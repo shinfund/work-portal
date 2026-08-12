@@ -308,10 +308,19 @@ html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
 .rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
 .rc-monthly-table th{background:var(--sky50);color:var(--sky800);border:1px solid var(--border);padding:7px 8px;text-align:center;font-weight:800}
 .rc-monthly-table td{border:1px solid var(--border);padding:6px 8px;vertical-align:middle}
-.rc-monthly-gubun{text-align:center;font-weight:700;color:var(--txt2);white-space:nowrap}
+.rc-monthly-gubun{text-align:center;font-weight:400;color:var(--txt2);white-space:nowrap}
+html[data-theme="dark"] .rc-monthly-gubun{color:#fff}
 .rc-monthly-content{text-align:left;max-width:520px}
+.rc-monthly-method{text-align:center;color:var(--txt2)}
+html[data-theme="dark"] .rc-monthly-method{color:#fff}
 .elec-grid-select{width:64px;padding:4px 4px;font-size:13px}
 @media(max-width:480px){ .elec-grid-select{font-size:16px} }
+.elec-row-btn{width:24px;height:24px;border-radius:var(--r8);border:1px solid var(--border);background:var(--bg);color:var(--txt2);font-size:15px;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.elec-row-btn:hover{background:var(--sky50);color:var(--sky600)}
+.elec-row-btn.elec-row-del{color:#B23A2E}
+.elec-row-btn.elec-row-del:hover{background:rgba(178,58,46,.12)}
+html[data-theme="dark"] .elec-row-btn{color:#fff}
+html[data-theme="dark"] .elec-row-btn.elec-row-del{color:#ff8a80}
 @media(min-width:481px){
   .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
   .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
@@ -768,9 +777,8 @@ function tunnelColor(tunnel){
   const idx=TUNNEL_OPTIONS_STD.indexOf(tunnel);
   return idx>=0 ? TUNNEL_COLOR_PALETTE[idx % TUNNEL_COLOR_PALETTE.length] : 'var(--border)';
 }
-// 전기시설점검 "점검내용" 캐스케이드 — 구분별 표준 점검항목 후보(원본 엑셀 템플릿 실측, 터널별로
-// 실제 적용 항목 수는 다르지만(예: 남정3터널은 자탐설비 항목이 없음) 구분당 전체 후보를 모아
-// 두고 필요한 것만 골라 쓰는 방식 — 터널별 정확한 부분집합은 앱에서 강제하지 않는다.
+// 전기시설점검 "점검내용" 캐스케이드 — 구분별 표준 점검항목 후보(원본 엑셀 템플릿 실측). 터널별
+// 실제 적용 항목은 다르며, 그 부분집합은 TEAM_TUNNEL_ITEM_OVERRIDES로 아래에서 강제한다.
 const TEAM_CHECKLIST_BY_GUBUN={
   '자동제어':['RTU','DLP','MMI'],
   '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등','실내 조명등 및 공동구 조명'],
@@ -784,11 +792,84 @@ function teamChecklistOptions(gubun){ return TEAM_CHECKLIST_BY_GUBUN[gubun] || [
 const TEAM_METHOD_BY_ITEM={
   '자동제어':{'RTU':'목시','DLP':'목시','MMI':'목시'},
   '조명설비':{'조명제어기(리산테크)':'조작','거리유도표시등':'스캔','소화기표시등':'스캔','시선유도등':'스캔','실내 조명등 및 공동구 조명':'조작'},
-  '방재설비':{'자탐설비 외관상태 점검':'스캔','자탐설비 시스템 안정성 확인':'스캔','중계기 발신기 경종 표시등 외관 점검':'스캔','비상콘센트 전원투입 상태':'스캔','옥외 수배전반 소화기 외관 상태':'스캔'},
+  '방재설비':{'자탐설비 외관상태 점검':'스캔','자탐설비 시스템 안정성 확인':'스캔','중계기 발신기 경종 표시등 외관 점검':'스캔','비상콘센트 전원투입 상태':'스캔','옥외 수배전반 소화기 외관 상태':'스캔','화재수신기':'조작'},
   '관리동설비':{'화재수신기':'조작'},
   '터널진입차단설비':{'현장제어반 및 차단막 프레임 등 외관':'조작','전원공급 및 차단기 투입상태':'조작','전원 및 제어케이블 외관 및 단자 결선':'조작','관리동, 상황실, 현장제어반 동작상태':'조작','차단막 원단 파손 및 음향, 경광등 상태':'조작'}
 };
 function teamMethodFor(gubun, item){ return (TEAM_METHOD_BY_ITEM[gubun]||{})[item] || ''; }
+// 터널별 실제 점검항목 오버라이드(2026-08-12, 전기시설점검DB 1,126건 실데이터 전수 조회로 확정) —
+// 장대터널(흥해·청하·남정5)만 표준 카탈로그 전체를 그대로 쓰고, 나머지 단터널은 설비 자체가 없는
+// 항목이 많다(자동제어 DLP·MMI, 조명설비 실내조명, 방재설비 자탐 2종 등). 여기 명시된 구분만 표준
+// 카탈로그를 대체하고, 명시 안 된 구분(예: 남정4의 조명설비·터널진입차단설비)은 표준 그대로 쓴다.
+// 남정6·7·8터널은 관리동 자체가 없어 화재수신기가 관리동설비가 아니라 방재설비 항목으로 운용된다
+// (2026-08-12 사용자 확인 — 데이터 오류가 아니라 실제 운용 방식).
+const TEAM_TUNNEL_ITEM_OVERRIDES={
+  '남정1·2터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['중계기 발신기 경종 표시등 외관 점검','비상콘센트 전원투입 상태','옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '남정3터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '남정4터널':{
+    '자동제어':['RTU'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[]
+  },
+  '남정6터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['중계기 발신기 경종 표시등 외관 점검','비상콘센트 전원투입 상태','옥외 수배전반 소화기 외관 상태','화재수신기'],
+    '관리동설비':[]
+  },
+  '남정7터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['중계기 발신기 경종 표시등 외관 점검','비상콘센트 전원투입 상태','옥외 수배전반 소화기 외관 상태','화재수신기'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '남정8터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['중계기 발신기 경종 표시등 외관 점검','비상콘센트 전원투입 상태','옥외 수배전반 소화기 외관 상태','화재수신기'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '남정9터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '강구1터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '강구2터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  },
+  '강구3터널':{
+    '자동제어':['RTU'],
+    '조명설비':['조명제어기(리산테크)','거리유도표시등','소화기표시등','시선유도등'],
+    '방재설비':['옥외 수배전반 소화기 외관 상태'],
+    '관리동설비':[], '터널진입차단설비':[]
+  }
+};
+function teamChecklistOptionsForTunnel(tunnel, gubun){
+  const ov=TEAM_TUNNEL_ITEM_OVERRIDES[tunnel];
+  if(ov && gubun in ov) return ov[gubun];
+  return teamChecklistOptions(gubun);
+}
+function teamGubunApplicable(tunnel, gubun){ return teamChecklistOptionsForTunnel(tunnel, gubun).length>0; }
 // 전기시설점검 탭 — 구분(5종) 뱃지 색상 매핑(gubun-c0~c4 클래스는 CSS에 이미 정의됨)
 function gubunSlug(v){
   const map={'자동제어':'gubun-c1','조명설비':'gubun-c4','방재설비':'gubun-c0','관리동설비':'gubun-c5','터널진입차단설비':'gubun-c2'};
@@ -1611,15 +1692,26 @@ function refreshAllCascadeSelects(tabId){
   const tabDef=getTabDef(tabId);
   if(!tabDef) return;
   tabDef.fields.forEach((f,idx)=>{ if(f.uiType==='cascade-select') refreshCascadeSelect(tabId, idx); });
+  // 전기시설점검 신규등록 체크리스트는 터널별로 실제 적용 항목이 달라(TEAM_TUNNEL_ITEM_OVERRIDES)
+  // 터널명이 바뀌면 구분 체크박스·점검항목 체크리스트를 전부 다시 그려야 한다(2026-08-12).
+  if(tabId==='elecinsp' && document.getElementById('elecinspGubunWrap')){
+    document.getElementById('elecinspGubunWrap').innerHTML=buildElecinspGubunHtml();
+    refreshElecinspChecklist();
+  }
 }
 // 전기시설점검 신규등록 — "구분" 값이 바뀔 때마다 그 구분의 표준 점검항목 전체를 기본 체크된
 // 상태로 다시 그린다(체크 해제로 이번엔 해당 없는 항목만 뺄 수 있음).
 // 신규등록 전용 "구분" 다중선택 — 한 터널·날짜에 여러 구분이 함께 점검되는 실사용 패턴 반영(2026-07-25)
-function elecinspGubunOptions(){
-  return getTabDef('elecinsp').fields.find(f=>f.key==='구분')?.options || [];
+// 2026-08-12: 터널별로 실제 없는 구분(예: 단터널의 관리동설비·터널진입차단설비)은 체크박스 자체를
+// 숨긴다 — teamGubunApplicable 기준.
+function elecinspModalTunnel(){ return document.getElementById('ff_0')?.value || ''; }
+function elecinspGubunOptions(tunnel){
+  const opts=getTabDef('elecinsp').fields.find(f=>f.key==='구분')?.options || [];
+  return tunnel ? opts.filter(g=>teamGubunApplicable(tunnel, g)) : opts;
 }
 function buildElecinspGubunHtml(){
-  const opts=elecinspGubunOptions();
+  const tunnel=elecinspModalTunnel();
+  const opts=elecinspGubunOptions(tunnel);
   const boxes=opts.map((g,gi)=>`<label style="display:flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:13px;font-weight:600">
       <input type="checkbox" id="eig_chk_${gi}" onchange="refreshElecinspChecklist()"/> ${esc(g)}
     </label>`).join('');
@@ -1630,7 +1722,7 @@ function buildElecinspGubunHtml(){
   </div>`;
 }
 function elecinspCheckedGubuns(){
-  const opts=elecinspGubunOptions();
+  const opts=elecinspGubunOptions(elecinspModalTunnel());
   const checked=[];
   opts.forEach((g,gi)=>{ if(document.getElementById('eig_chk_'+gi)?.checked) checked.push({gubun:g, gi}); });
   return checked;
@@ -1638,7 +1730,7 @@ function elecinspCheckedGubuns(){
 // 구분 하나의 표준 점검항목 체크리스트 — id를 구분 인덱스(gi)로 네임스페이스해서 여러 구분이
 // 동시에 펼쳐져도 항목 인덱스가 겹치지 않게 한다.
 function buildElecinspChecklistHtml(gubun, gi){
-  const items=teamChecklistOptions(gubun);
+  const items=teamChecklistOptionsForTunnel(elecinspModalTunnel(), gubun);
   if(!items.length) return '';
   let rows='';
   items.forEach((item,i)=>{
@@ -1681,7 +1773,7 @@ function refreshElecinspChecklist(){
 function toggleElecinspGroupAll(gi, checked){
   const found=elecinspCheckedGubuns().find(x=>x.gi===gi);
   if(!found) return;
-  teamChecklistOptions(found.gubun).forEach((item,i)=>{
+  teamChecklistOptionsForTunnel(elecinspModalTunnel(), found.gubun).forEach((item,i)=>{
     const chk=document.getElementById('eic_chk_'+gi+'_'+i);
     if(chk) chk.checked=checked;
   });
@@ -2279,7 +2371,7 @@ async function submitElecinspChecklist(){
 
   const selected=[];
   checkedGubuns.forEach(({gubun,gi})=>{
-    teamChecklistOptions(gubun).forEach((item,i)=>{
+    teamChecklistOptionsForTunnel(shared['터널명'], gubun).forEach((item,i)=>{
       const chk=document.getElementById('eic_chk_'+gi+'_'+i);
       if(chk && chk.checked){
         selected.push({ gubun, item, method:teamMethodFor(gubun,item), result:document.getElementById('eic_result_'+gi+'_'+i)?.value||'양호' });
@@ -2835,6 +2927,7 @@ async function renderReportPage_elecinsp(){
     <div id="rpLoading" style="text-align:center;color:var(--txt3);font-size:12px;margin-bottom:14px">불러오는 중...</div>
     <div id="rpElecinspBody"></div>`;
   syncTeamElecTunnelLabel();
+  _elecinspExtraCount={};
   if(!TAB_STATE.elecinsp.loaded) await loadTabData('elecinsp');
   if(_reportCurPage!=='elecinsp') return;
   document.getElementById('rpLoading')?.remove();
@@ -2845,9 +2938,12 @@ function syncTeamElecTunnelLabel(){
   document.querySelectorAll('#rpTunnelMenu .dd-opt').forEach(o=>o.classList.toggle('sel', o.dataset.val===_teamElecTunnel));
   document.getElementById('rpTunnelBtn')?.classList.add('active');
 }
-// 이번 달 이미 저장된 값(정확한 터널·구분·점검내용·연월 일치)
-function elecInspRowDatedRecord(tunnel, gubun, content, ym){
-  return (TAB_STATE.elecinsp.records||[]).find(r=>r['터널명']===tunnel && r['구분']===gubun && r['점검내용']===content && (r['날짜']||'').slice(0,7)===ym) || null;
+// 이번 달 이미 저장된 값(정확한 터널·구분·점검내용·연월 일치) — 같은 항목이 그 달에 여러 번(월 2회
+// 등) 점검됐을 수 있어 배열로 반환하고, 날짜 오름차순으로 정렬해 항목당 여러 행에 순서대로 채운다.
+function elecInspRowDatedRecords(tunnel, gubun, content, ym){
+  return (TAB_STATE.elecinsp.records||[])
+    .filter(r=>r['터널명']===tunnel && r['구분']===gubun && r['점검내용']===content && (r['날짜']||'').slice(0,7)===ym)
+    .sort((a,b)=>(a['날짜']||'').localeCompare(b['날짜']||''));
 }
 // 이번 달 이력이 없을 때 "점검결과" 기본값으로 쓸 가장 최근 이력(안전관리 앱 monthlyLatestRecord와 동일 패턴)
 function elecInspRowLatestRecord(tunnel, gubun, content){
@@ -2855,28 +2951,65 @@ function elecInspRowLatestRecord(tunnel, gubun, content){
   if(!recs.length) return null;
   return recs.reduce((a,b)=>(a['날짜']>b['날짜']?a:b));
 }
+// 항목별 기본 표시 행 수 — "터널진입차단설비"는 월 2회 고정이라 기본 2행, 나머지 항목은 기본 1행
+// (2026-08-12 사용자 요청). 이미 그 달에 저장된 레코드가 기본값보다 많으면(예외적으로 그 이상 점검)
+// 그만큼 자동으로 늘어나고, 어떤 항목이든 "+" 버튼으로 행을 더 늘릴 수 있다.
+function elecinspDefaultCount(gubun){ return gubun==='터널진입차단설비' ? 2 : 1; }
+function elecinspItemKey(gi, ci){ return gi+'_'+ci; }
+let _elecinspExtraCount={};
+function elecinspRowCount(gi, ci, gubun, existingCount){
+  return Math.max(elecinspDefaultCount(gubun), existingCount) + (_elecinspExtraCount[elecinspItemKey(gi,ci)]||0);
+}
+function elecinspAddRow(gi, ci){
+  const key=elecinspItemKey(gi,ci);
+  _elecinspExtraCount[key]=(_elecinspExtraCount[key]||0)+1;
+  renderElecinspGrid();
+}
+function elecinspRemoveRow(gi, ci){
+  const key=elecinspItemKey(gi,ci);
+  if(_elecinspExtraCount[key]>0){ _elecinspExtraCount[key]--; renderElecinspGrid(); }
+}
 function renderElecinspGrid(){
   const wrap=document.getElementById('rpElecinspBody'); if(!wrap) return;
   const tunnel=_teamElecTunnel;
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
-  let html=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:100px">구분</th><th>점검내용</th><th style="width:90px">점검방법</th><th style="width:120px">점검결과</th><th style="width:150px">점검일자</th><th style="width:140px">비&nbsp;&nbsp;고</th></tr></thead><tbody>`;
+  let html=`<div class="tbl-wrap"><table class="rc-monthly-table"><thead><tr><th style="width:100px">구분</th><th>점검내용</th><th style="width:90px">점검방법</th><th style="width:120px">점검결과</th><th style="width:150px">점검일자</th><th style="width:140px">비&nbsp;&nbsp;고</th><th style="width:64px"></th></tr></thead><tbody>`;
+  // 구분(gubun) rowspan은 그 구분에 속한 모든 항목의 총 행수(항목당 다중 행 포함) 합계.
+  const gubunTotalRows={};
   ELECINSP_GUBUN_ORDER.forEach((gubun, gi)=>{
-    const contents=teamChecklistOptions(gubun);
+    gubunTotalRows[gubun]=teamChecklistOptionsForTunnel(tunnel, gubun).reduce((sum,content,ci)=>{
+      const existingCount=elecInspRowDatedRecords(tunnel, gubun, content, ym).length;
+      return sum + elecinspRowCount(gi, ci, gubun, existingCount);
+    }, 0);
+  });
+  ELECINSP_GUBUN_ORDER.forEach((gubun, gi)=>{
+    const contents=teamChecklistOptionsForTunnel(tunnel, gubun);
+    let gubunPrinted=false;
     contents.forEach((content, ci)=>{
       const method=teamMethodFor(gubun, content);
-      const dated=elecInspRowDatedRecord(tunnel, gubun, content, ym);
-      const latest=dated || elecInspRowLatestRecord(tunnel, gubun, content);
-      const curVal=latest ? latest['점검결과'] : '양호';
-      const opts=['양호','불량','점검요','-'].map(v=>`<option value="${esc(v)}"${curVal===v?' selected':''}>${esc(v)}</option>`).join('');
-      const rid='eig_'+gi+'_'+ci, did='eigd_'+gi+'_'+ci, bid='eigb_'+gi+'_'+ci;
-      html+='<tr>';
-      if(ci===0) html+=`<td rowspan="${contents.length}" class="rc-monthly-gubun">${esc(gubun)}</td>`;
-      html+=`<td class="rc-monthly-content">${esc(content)}</td>`;
-      html+=`<td style="text-align:center;color:var(--txt2)">${esc(method)}</td>`;
-      html+=`<td><select id="${rid}" class="modal-select elec-grid-select" style="width:100%" data-gubun="${esc(gubun)}" data-content="${esc(content)}">${opts}</select></td>`;
-      html+=`<td><input type="date" id="${did}" class="modal-input" style="width:100%" value="${esc(dated?dated['날짜']:'')}"></td>`;
-      html+=`<td><input type="text" id="${bid}" class="modal-input" style="width:100%" value="${esc(dated?dated['비고']:'')}"></td>`;
-      html+='</tr>';
+      const dateds=elecInspRowDatedRecords(tunnel, gubun, content, ym);
+      const rowCount=elecinspRowCount(gi, ci, gubun, dateds.length);
+      const baseCount=Math.max(elecinspDefaultCount(gubun), dateds.length);
+      for(let ri=0; ri<rowCount; ri++){
+        const dated=dateds[ri] || null;
+        const latest=dated || elecInspRowLatestRecord(tunnel, gubun, content);
+        const curVal=latest ? latest['점검결과'] : '양호';
+        const opts=['양호','불량','점검요','-'].map(v=>`<option value="${esc(v)}"${curVal===v?' selected':''}>${esc(v)}</option>`).join('');
+        const rid='eig_'+gi+'_'+ci+'_'+ri, did='eigd_'+gi+'_'+ci+'_'+ri, bid='eigb_'+gi+'_'+ci+'_'+ri;
+        html+='<tr>';
+        if(!gubunPrinted){ html+=`<td rowspan="${gubunTotalRows[gubun]}" class="rc-monthly-gubun">${esc(gubun)}</td>`; gubunPrinted=true; }
+        if(ri===0) html+=`<td rowspan="${rowCount}" class="rc-monthly-content">${esc(content)}</td>`;
+        if(ri===0) html+=`<td rowspan="${rowCount}" class="rc-monthly-method">${esc(method)}</td>`;
+        html+=`<td><select id="${rid}" class="modal-select elec-grid-select" style="width:100%" data-gubun="${esc(gubun)}" data-content="${esc(content)}">${opts}</select></td>`;
+        html+=`<td><input type="date" id="${did}" class="modal-input" style="width:100%" value="${esc(dated?dated['날짜']:'')}" data-existing-id="${dated?esc(dated.id):''}"></td>`;
+        html+=`<td><input type="text" id="${bid}" class="modal-input" style="width:100%" value="${esc(dated?dated['비고']:'')}"></td>`;
+        const isLast=ri===rowCount-1, isExtra=ri>=baseCount;
+        html+=`<td style="text-align:center;white-space:nowrap"><div style="display:flex;gap:4px;justify-content:center">`;
+        if(isLast) html+=`<button type="button" class="elec-row-btn" onclick="elecinspAddRow(${gi},${ci})" title="행 추가">+</button>`;
+        if(isExtra) html+=`<button type="button" class="elec-row-btn elec-row-del" onclick="elecinspRemoveRow(${gi},${ci})" title="행 삭제">×</button>`;
+        html+=`</div></td>`;
+        html+='</tr>';
+      }
     });
   });
   html+=`</tbody></table></div>
@@ -2905,7 +3038,9 @@ async function submitElecinspGridForm(){
     const bEl=document.getElementById('eigb_'+suffix);
     const gubun=sel.dataset.gubun, content=sel.dataset.content;
     const dateVal=inp.value;
-    const existing=elecInspRowDatedRecord(tunnel, gubun, content, ym);
+    // 항목당 여러 행이 있을 수 있어 (터널·구분·점검내용·연월)만으로는 레코드를 특정할 수 없다 —
+    // 렌더 시점에 행별로 매겨둔 기존 레코드 id(data-existing-id)로 PATCH/POST를 구분한다.
+    const existingId=inp.dataset.existingId || '';
     const props={
       '터널명':buildPropValue('select', tunnel),
       '날짜':buildPropValue('date', dateVal),
@@ -2917,8 +3052,8 @@ async function submitElecinspGridForm(){
       '비고':buildPropValue('text', bEl.value)
     };
     try{
-      const page=existing
-        ? await notionFetch('/v1/pages/'+existing.id, 'PATCH', {properties:props})
+      const page=existingId
+        ? await notionFetch('/v1/pages/'+existingId, 'PATCH', {properties:props})
         : await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
       done++; bar.style.width=Math.round(done/dateInputs.length*100)+'%';
       return page;
