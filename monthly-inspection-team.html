@@ -264,6 +264,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:100px}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.photo-sort-hint{font-size:13.5px;font-weight:400;color:var(--txt2);margin-bottom:2px}
+html[data-theme="dark"] .photo-sort-hint{color:#fff}
 .pm-card-label{font-size:13px;font-weight:400;color:var(--txt);margin:0 0 5px}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 /* 전기설비기록·발전기점검처럼 부모+자식 여러 건을 나눠 저장하는 탭 전용 진행률 바(등록 중... n/총 과 함께 표시) */
@@ -2082,7 +2084,7 @@ function buildPhotoMultiRowsFromExisting(){
 // 직접 입력하고 "+ 행 추가"로 새 카드를 늘리는 안전관리 앱과 동일한 방식으로 단순화.
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
-    <div class="modal-hint">등록을 완료하면 터널명·일자 순으로 카드가 자동 정렬됩니다 (편집 중에는 카드 위치가 그대로 유지됩니다)</div>
+    <div class="photo-sort-hint">등록을 완료하면 터널명·일자 순으로 카드가 자동 정렬됩니다 (편집 중에는 카드 위치가 그대로 유지됩니다)</div>
     <div id="photoMultiRowsList" style="margin-top:8px"></div>
     <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="addPhotoMultiRow()">+ 행 추가</button>
   </div>`;
