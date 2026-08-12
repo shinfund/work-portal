@@ -2040,11 +2040,18 @@ function photoDescOptionsTeam(tunnel){
 }
 // 모달을 열 때마다 빈 칸으로 시작하면 이미 등록해둔 사진도 매번 새로 입력하는 것처럼 보인다
 // (안전관리 앱과 동일한 문제, 2026-08-10). 점검팀은 REPORT_SEL에 터널 구분이 없어(전체 터널
-// 월간 보고서) 이번 달 전체 터널의 기존 레코드를 터널명순·번호순으로 불러와 카드로 만든다.
+// 월간 보고서) 이번 달 전체 터널의 기존 레코드를 터널명순(표준 순서)·일자 오름차순으로 불러와
+// 카드로 만든다 — 실제 "보고서 생성" 출력물(buildPhotoTeamReportRows)도 터널별로 배치되므로
+// 입력 화면에서부터 같은 순서로 보여야 계속 데이터를 추가하는 중에도 육안 확인이 쉽다(2026-08-12).
 function buildPhotoMultiRowsFromExisting(){
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const recs=(TAB_STATE.photo.records||[]).filter(r=>(r['일자']||'').startsWith(ym))
-    .sort((a,b)=>(a['일자']||'').localeCompare(b['일자']||'') || (a['터널명']||'').localeCompare(b['터널명']||'') || (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0));
+    .sort((a,b)=>{
+      const ta=TUNNEL_OPTIONS_STD.indexOf(a['터널명']), tb=TUNNEL_OPTIONS_STD.indexOf(b['터널명']);
+      if(ta!==tb) return (ta<0?999:ta)-(tb<0?999:tb);
+      if((a['일자']||'')!==(b['일자']||'')) return (a['일자']||'').localeCompare(b['일자']||'');
+      return (parseInt(a['번호'],10)||0)-(parseInt(b['번호'],10)||0);
+    });
   // 등록된 기록이 하나도 없어도 빈 화면 대신 바로 입력을 시작할 수 있게 빈 카드를 기본으로
   // 보여준다(2026-08-03) — 몇 장을 보여줄지는 가장 최근에 실제 등록이 있었던 달의 카드 수를
   // 그대로 참고한다(예: 이번 달이 비어있고 지난달에 10장을 등록했으면 10장짜리 빈 카드로 시작).
@@ -2121,7 +2128,7 @@ function renderPhotoMultiRows(){
         </div>
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">일자</div>
-          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
+          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSetDate(${row.key},this.value)"/>
         </div>
       </div>
       <div class="pm-card-label" style="margin-top:8px">번호</div>
@@ -2157,11 +2164,30 @@ function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row[field]=val;
 }
+// 터널명순(표준 순서)·일자 오름차순 정렬 — buildPhotoMultiRowsFromExisting의 초기 정렬과 동일한
+// 기준. 카드에서 터널명·일자를 고르거나 바꿀 때마다 다시 불러 카드가 해당 터널 위치로 즉시
+// 이동해 보이게 한다(2026-08-12 사용자 요청 — 계속 데이터를 추가하는 중에도 터널별로 한눈에 확인).
+function sortPhotoMultiRows(){
+  _photoMultiRows.sort((a,b)=>{
+    const ta=TUNNEL_OPTIONS_STD.indexOf(a.tunnel), tb=TUNNEL_OPTIONS_STD.indexOf(b.tunnel);
+    if(ta!==tb) return (ta<0?999:ta)-(tb<0?999:tb);
+    if(a.date!==b.date) return (a.date||'').localeCompare(b.date||'');
+    return (parseInt(a.num,10)||0)-(parseInt(b.num,10)||0);
+  });
+}
 function _photoMultiSetTunnel(key, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(!row) return;
   row.tunnel=val;
   if(val) row.num=String(nextNumberForTunnel(val, key));
+  sortPhotoMultiRows();
+  renderPhotoMultiRows();
+}
+function _photoMultiSetDate(key, val){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  row.date=val;
+  sortPhotoMultiRows();
   renderPhotoMultiRows();
 }
 function _photoMultiDescChange(key, selEl){
