@@ -2128,7 +2128,7 @@ function renderPhotoMultiRows(){
         </div>
         <div style="flex:1;min-width:0">
           <div class="pm-card-label">일자</div>
-          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSetDate(${row.key},this.value)"/>
+          <input type="date" class="modal-input" style="width:100%" value="${esc(row.date||'')}" onchange="_photoMultiSet(${row.key},'date',this.value)"/>
         </div>
       </div>
       <div class="pm-card-label" style="margin-top:8px">번호</div>
@@ -2164,30 +2164,11 @@ function _photoMultiSet(key, field, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(row) row[field]=val;
 }
-// 터널명순(표준 순서)·일자 오름차순 정렬 — buildPhotoMultiRowsFromExisting의 초기 정렬과 동일한
-// 기준. 카드에서 터널명·일자를 고르거나 바꿀 때마다 다시 불러 카드가 해당 터널 위치로 즉시
-// 이동해 보이게 한다(2026-08-12 사용자 요청 — 계속 데이터를 추가하는 중에도 터널별로 한눈에 확인).
-function sortPhotoMultiRows(){
-  _photoMultiRows.sort((a,b)=>{
-    const ta=TUNNEL_OPTIONS_STD.indexOf(a.tunnel), tb=TUNNEL_OPTIONS_STD.indexOf(b.tunnel);
-    if(ta!==tb) return (ta<0?999:ta)-(tb<0?999:tb);
-    if(a.date!==b.date) return (a.date||'').localeCompare(b.date||'');
-    return (parseInt(a.num,10)||0)-(parseInt(b.num,10)||0);
-  });
-}
 function _photoMultiSetTunnel(key, val){
   const row=_photoMultiRows.find(r=>r.key===key);
   if(!row) return;
   row.tunnel=val;
   if(val) row.num=String(nextNumberForTunnel(val, key));
-  sortPhotoMultiRows();
-  renderPhotoMultiRows();
-}
-function _photoMultiSetDate(key, val){
-  const row=_photoMultiRows.find(r=>r.key===key);
-  if(!row) return;
-  row.date=val;
-  sortPhotoMultiRows();
   renderPhotoMultiRows();
 }
 function _photoMultiDescChange(key, selEl){
