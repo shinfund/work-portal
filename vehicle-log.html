@@ -198,7 +198,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
-.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
@@ -232,7 +232,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
-.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
 .modal-input::placeholder,.modal-textarea::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 /* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정(2026-07-10) */
@@ -243,6 +243,11 @@ input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+/* 신규등록/수정·설정 모달의 라벨·힌트는 다크모드에서 실제 값이 보이는 요소로 취급해 흰색으로
+   통일(monthly-inspection.html 2026-08-13 확립 기준과 동일). placeholder(빈 칸 안내문)만은
+   예외로 흐림 유지 — .modal-input::placeholder 등 별도 규칙이 이미 var(--txt3)를 유지한다. */
+html[data-theme="dark"] .modal-label,
+html[data-theme="dark"] .modal-hint{color:#fff}
 .sig-preview{height:56px;border:1.5px dashed var(--border);border-radius:var(--r8);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg)}
 .sig-preview img{max-width:100%;max-height:100%;object-fit:contain}
 .sig-slot{flex:1;min-width:120px;text-align:center}
@@ -415,7 +420,7 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">운행누계(km) <span class="modal-required">*</span></label>
-        <input id="addCumDist" class="modal-input" type="number" step="0.1" placeholder="예) 45230" oninput="recomputeDist()"/>
+        <input id="addCumDist" class="modal-input" type="text" inputmode="decimal" placeholder="예) 45,230" oninput="recomputeDist()" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
@@ -699,6 +704,16 @@ function fmtDate(d){
   return String(d).slice(0,10); // yyyy-mm-dd 고정
 }
 function fmtKm(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+// 운행누계(km, 계기판 누적값 — 통상 5자리 이상)만 콤마 서식 대상. type="number"는 콤마 표시가
+// 안 되므로 text+inputmode="decimal"로 전환하고 포커스/블러 시 변환한다(monthly-inspection.html
+// 패턴과 동일, 2026-08-13 타이포그래피 통일 작업).
+function formatThousands(v){
+  if(v===''||v==null) return '';
+  const n=Number(String(v).replace(/,/g,''));
+  if(isNaN(n)) return String(v);
+  return n.toLocaleString('ko-KR',{maximumFractionDigits:2});
+}
+function stripThousands(v){ return String(v||'').replace(/,/g,'').trim(); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function routeStr(r){ return [r.from,r.via,r.to].filter(Boolean).join(' → ') || '-'; }
 
@@ -999,7 +1014,7 @@ function recomputeDist(){
   const prev=getCarPrevCum(carNo,date);
   const prevCum=prev?prev.cum:0;
   if(mode==='cum'){
-    const cumVal=cumEl.value;
+    const cumVal=stripThousands(cumEl.value);
     const cum=parseFloat(cumVal);
     if(cumVal===''||isNaN(cum)){
       distEl.value='';
@@ -1028,7 +1043,7 @@ function recomputeDist(){
       }
       return;
     }
-    cumEl.value=Math.round((prevCum+dist)*100)/100;
+    cumEl.value=formatThousands(Math.round((prevCum+dist)*100)/100);
     if(hintEl){
       hintEl.textContent=prev
         ? `= 전일 운행누계 ${fmtKm(prevCum)}km(${prev.date}) + 운행 ${fmtKm(dist)}km (자동 계산)`
@@ -1110,7 +1125,7 @@ function openEditModal(pageId){
   document.getElementById('addModalTitleText').textContent='운행 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value = r.date||'';
-  document.getElementById('addCumDist').value = r.cumDist||'';
+  document.getElementById('addCumDist').value = formatThousands(r.cumDist||'');
   document.getElementById('addNote').value = r.note||'';
   const cumModeRadioEdit=document.querySelector('input[name="addInputMode"][value="cum"]');
   if(cumModeRadioEdit) cumModeRadioEdit.checked=true;
@@ -1136,7 +1151,7 @@ function submitAddForm(){
   const driver = getSelectValue('addDriver','addDriverCustom');
   const purpose = getSelectValue('addPurpose','addPurposeCustom');
   const dist = document.getElementById('addDist').value.trim();
-  const cumDist = document.getElementById('addCumDist').value.trim();
+  const cumDist = stripThousands(document.getElementById('addCumDist').value.trim());
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!carNo){ alert('차량번호를 선택해주세요.'); return; }
   if(!purpose){ alert('용무를 선택해주세요.'); return; }
