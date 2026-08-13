@@ -6979,7 +6979,7 @@ function renderPowerGrid(){
     const mainV=rec&&rec['MAIN(kWh)']!=null?rec['MAIN(kWh)']:'';
     const lightV=rec&&rec['조명용(kWh)']!=null?rec['조명용(kWh)']:'';
     rows+=`<tr data-date="${dateStr}">
-      <td style="padding:4px 8px;font-size:12.5px;text-align:center">${month}월 ${d}일</td>
+      <td style="padding:4px 8px;text-align:center">${month}월 ${d}일</td>
       <td><input class="modal-input pw-main" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(mainV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
       <td><input class="modal-input pw-light" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(lightV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
       <td><input class="modal-input pw-note" type="text" style="width:100%" value="${esc((rec&&rec['비고'])||'')}"></td>
