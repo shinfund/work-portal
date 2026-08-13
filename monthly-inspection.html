@@ -397,17 +397,21 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .form-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
-/* 발전기점검 탭 전용(#generatorFormWrap) — 다크모드에서 카드 제목(sky색)·라벨·힌트·표 텍스트가
-   서로 다른 톤이라 산만해 보인다는 피드백(2026-08-13) — 실제 값이 있는 요소는 전부 흰색으로 통일.
+/* 입력폼 탭(#reportPaper) 전체 공통 — 다크모드에서 카드 제목(sky색)·라벨·힌트·표 텍스트가
+   서로 다른 톤이라 산만해 보인다는 피드백(2026-08-13, 발전기점검 탭에서 시작해 전 탭으로 확대
+   적용) — 실제 값이 있는 요소는 전부 흰색으로 통일. 원래 #generatorFormWrap 하나로 발전기점검
+   탭에만 스코프돼 있었으나, #reportPaper는 모든 탭의 입력폼이 공유하는 컨테이너(탭 전환 시
+   innerHTML만 교체)라 여기로 옮기면 별도 작업 없이 전 탭에 동일하게 적용된다(#reportGenPaper는
+   보고서 인쇄 미리보기라 별개 — 이 규칙 영향 밖).
    입력창 placeholder(빈 칸 안내문)만은 예외로 남겨둠 — 흰색으로 같이 바꾸면 입력된 값과 빈 칸을
    눈으로 구분할 수 없어짐. */
-html[data-theme="dark"] #generatorFormWrap .form-group-hd,
-html[data-theme="dark"] #generatorFormWrap .modal-label,
-html[data-theme="dark"] #generatorFormWrap .modal-hint,
-html[data-theme="dark"] #generatorFormWrap td,
-html[data-theme="dark"] #generatorFormWrap .modal-input,
-html[data-theme="dark"] #generatorFormWrap .modal-select,
-html[data-theme="dark"] #generatorFormWrap .modal-textarea{color:#fff}
+html[data-theme="dark"] #reportPaper .form-group-hd,
+html[data-theme="dark"] #reportPaper .modal-label,
+html[data-theme="dark"] #reportPaper .modal-hint,
+html[data-theme="dark"] #reportPaper td,
+html[data-theme="dark"] #reportPaper .modal-input,
+html[data-theme="dark"] #reportPaper .modal-select,
+html[data-theme="dark"] #reportPaper .modal-textarea{color:#fff}
 /* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
    PC/태블릿은 13px로 축소(2026-07-29 사용자 요청), 모바일(480px 이하)은 iOS Safari 자동 확대 방지를 위해 16px 유지(아래 미디어쿼리) */
 .elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
@@ -2989,9 +2993,9 @@ function buildElecFormExtra(r){
   const acb0 = (r && r._acb && r._acb[0]) || null;
   const acbCommonHtml=`<div class="form-group-hd" style="font-size:12px">구 분 (역률·전력량 요약)</div>
     <div class="form-group-grid">
-      <div class="modal-field"><label class="modal-label">유효전력량(kWh)</label><input class="modal-input" id="ec_yuhyo" type="number" step="0.01" value="${acb0&&acb0.유효전력량!=null?acb0.유효전력량:''}"/></div>
+      <div class="modal-field"><label class="modal-label">유효전력량(kWh)</label><input class="modal-input" id="ec_yuhyo" type="text" inputmode="decimal" value="${acb0&&acb0.유효전력량!=null?esc(formatThousands(acb0.유효전력량)):''}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/></div>
       <div class="modal-field"><label class="modal-label">무효전력량(kVar)</label><input class="modal-input" id="ec_muhyo" type="text" value="${esc(acb0?acb0.무효전력량:'')}"/></div>
-      <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="number" step="0.01" value="${acb0&&acb0.최대전력!=null?acb0.최대전력:''}"/></div>
+      <div class="modal-field"><label class="modal-label">최대전력(kW)</label><input class="modal-input" id="ec_choidae" type="text" inputmode="decimal" value="${acb0&&acb0.최대전력!=null?esc(formatThousands(acb0.최대전력)):''}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/></div>
       <div class="modal-field"><label class="modal-label">배율</label><input class="modal-input" id="ec_baeyul" type="number" step="1" value="${acb0&&acb0.배율!=null?acb0.배율:''}"/></div>
       <div class="modal-field"><label class="modal-label">역률(%)</label>${buildElecYeokryulSelectHtml(acb0&&acb0.역률!=null?acb0.역률:'')}</div>
     </div>`;
@@ -3984,9 +3988,9 @@ async function submitElecForm(){
   // ACB 9건·설비현황 32건에 공통으로 반복 저장되는 값(elec1이 아니라 elec2/elec3의 실제 속성,
   // buildElecFormExtra의 "공통값" 입력 섹션 참고)
   const commonAcb={
-    유효전력량:document.getElementById('ec_yuhyo')?.value,
+    유효전력량:stripThousands(document.getElementById('ec_yuhyo')?.value),
     무효전력량:document.getElementById('ec_muhyo')?.value,
-    최대전력:document.getElementById('ec_choidae')?.value,
+    최대전력:stripThousands(document.getElementById('ec_choidae')?.value),
     배율:document.getElementById('ec_baeyul')?.value,
     // 2026-08-03 사용자 요청으로 select+직접입력 드롭다운으로 재변경(2026-07-31엔 "직접입력으로
     // 항상 떨어진다"는 이유로 일반 숫자 입력으로 단순화했었음 — 이번엔 "직접입력 맨 위" 공통
