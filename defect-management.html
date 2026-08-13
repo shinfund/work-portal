@@ -206,6 +206,9 @@ input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+/* 다크모드: 실제 값이 보이는 텍스트 요소(라벨/힌트/표/입력값)는 흰색 계열로 통일(월간점검 앱 기준,
+   2026-08-13) — placeholder만 예외로 흐림 유지(위 ::placeholder 규칙은 그대로 둠) */
+html[data-theme="dark"] .modal-hint{color:#fff}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
@@ -311,7 +314,6 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   /* 모달 */
   .modal-box{padding:18px;border-radius:var(--r16)}
   .detail-modal-box{max-height:90vh}
-  .modal-input{font-size:16px}
 
   .modal-backdrop{padding:0;align-items:flex-end}
   .detail-modal-box{max-width:100%;width:100%;border-radius:var(--r20) var(--r20) 0 0;max-height:92vh}
@@ -353,18 +355,15 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-section{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
 .modal-section:first-child{margin-top:0}
 .modal-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:80px;transition:border .18s}
+.modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:80px;transition:border .18s}
 .modal-textarea:focus{border-color:var(--sky);background:var(--card)}
-.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:480px){
   .modal-form-row{grid-template-columns:1fr}
-  /* select/textarea 정의가 이 아래(cascade 순서상 나중)에 있어 위쪽 모바일
-     블록의 16px 지정이 무효화됨 — 여기서 다시 지정해 iOS 자동 확대 방지 */
-  .modal-select,.modal-textarea{font-size:16px}
 }
 
 /* ── PHOTO UPLOAD ── */
@@ -534,11 +533,11 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">계약금액(원)</label>
-        <input id="mgAmt" class="modal-input" type="number" placeholder="숫자만 입력" autocomplete="off"/>
+        <input id="mgAmt" class="modal-input" type="text" inputmode="decimal" placeholder="숫자만 입력" autocomplete="off" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">보증금액(원)</label>
-        <input id="mgGuaranteeAmt" class="modal-input" type="number" placeholder="숫자만 입력" autocomplete="off"/>
+        <input id="mgGuaranteeAmt" class="modal-input" type="text" inputmode="decimal" placeholder="숫자만 입력" autocomplete="off" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">보증율</label>
@@ -4355,6 +4354,17 @@ function fmtWon(v){
   return n.toLocaleString('ko-KR')+'원';
 }
 
+// 계약금액/보증금액 입력창(mgAmt/mgGuaranteeAmt) 천단위 콤마 서식 — type="number"는 콤마 표시가
+// 안 되어 type="text"+inputmode="decimal"로 전환하고 focus 시 콤마 제거, blur 시 다시 콤마를 붙인다.
+// 저장 시엔 항상 stripThousands로 콤마를 제거하고 숫자로 변환(월간점검 앱 패턴과 동일, 2026-08-13).
+function formatThousands(v){
+  if(v===''||v==null) return '';
+  const n=Number(String(v).replace(/,/g,''));
+  if(isNaN(n)) return String(v);
+  return n.toLocaleString('ko-KR',{maximumFractionDigits:2});
+}
+function stripThousands(v){ return String(v||'').replace(/,/g,'').trim(); }
+
 function buildMgmtPropMap(page){
   if(!page || !page.properties) return;
   var keys = Object.keys(page.properties);
@@ -4762,8 +4772,8 @@ function openMgmtEditModal(idx){
   buildGenericSelectOpts(document.getElementById('mgContractor'), document.getElementById('mgContractorCustom'), mgContractors, r['계약자']||'');
 
   buildGenericSelectOpts(document.getElementById('mgCategory'), document.getElementById('mgCategoryCustom'), ['전기공사','소방(전기)','지급자재'], r['구분']||'');
-  document.getElementById('mgAmt').value = r['계약금액(원)']||'';
-  document.getElementById('mgGuaranteeAmt').value = r['보증금액(원)']||'';
+  document.getElementById('mgAmt').value = formatThousands(r['계약금액(원)']||'');
+  document.getElementById('mgGuaranteeAmt').value = formatThousands(r['보증금액(원)']||'');
   buildGenericSelectOpts(document.getElementById('mgRate'), document.getElementById('mgRateCustom'), ['2%','3%','5%'], r['보증율']||'');
   document.getElementById('mgStart').value = r['하자보수시작일']||'';
   document.getElementById('mgEnd').value = r['하자보수종료일']||'';
@@ -4802,8 +4812,8 @@ function submitMgmtForm(confirmed){
   var no          = getSelectValue('mgNo','mgNoCustom');
   var loc         = getSelectValue('mgLoc','mgLocCustom');
   var type        = getSelectValue('mgType','mgTypeCustom');
-  var amtRaw      = document.getElementById('mgAmt').value.trim();
-  var gAmtRaw     = document.getElementById('mgGuaranteeAmt').value.trim();
+  var amtRaw      = stripThousands(document.getElementById('mgAmt').value.trim());
+  var gAmtRaw     = stripThousands(document.getElementById('mgGuaranteeAmt').value.trim());
   var rate        = getSelectValue('mgRate','mgRateCustom');
   var start       = document.getElementById('mgStart').value;
   var end         = document.getElementById('mgEnd').value;
