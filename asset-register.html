@@ -367,11 +367,11 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">단가(원)</label>
-        <input id="addPrice" class="modal-input" type="number" step="1" placeholder="예) 17000" oninput="recomputeAmount()"/>
+        <input id="addPrice" class="modal-input" type="text" inputmode="decimal" placeholder="예) 17000" oninput="recomputeAmount()" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">금액(원)</label>
-        <input id="addAmount" class="modal-input" type="number" step="1" placeholder="수량 × 단가 자동 계산(직접 수정 가능)"/>
+        <input id="addAmount" class="modal-input" type="text" inputmode="decimal" placeholder="수량 × 단가 자동 계산(직접 수정 가능)" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
         <div class="modal-hint">기본값 = 수량 × 단가(자동 계산). 실제 금액이 다르면 직접 수정하세요.</div>
       </div>
       <div class="modal-field">
@@ -619,6 +619,16 @@ function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function fmtWonOrDash(v){ return (v==null||v==='') ? '-' : fmtWon(v); }
 function fmt(n){ return n<10 ? '0'+n : String(n); }
+// 천단위 콤마 표시(monthly-inspection.html의 formatThousands/stripThousands 패턴 그대로 이식,
+// 2026-08-13 단가·금액 필드 통일) — focus 시 원값으로 풀고 blur 시 다시 콤마를 붙인다.
+// 저장 시엔 항상 stripThousands로 콤마를 제거하고 숫자로 변환.
+function formatThousands(v){
+  if(v===''||v==null) return '';
+  var n=Number(String(v).replace(/,/g,''));
+  if(isNaN(n)) return String(v);
+  return n.toLocaleString('ko-KR',{maximumFractionDigits:2});
+}
+function stripThousands(v){ return String(v||'').replace(/,/g,'').trim(); }
 
 /* ── 모달 드래그 이동 ── */
 function makeModalDraggable(box, handle){
@@ -788,10 +798,10 @@ function setFixedSelectValue(selectId, customInputId, value){
    직접 수정 가능한 readonly 아님(현장에서 실제 결제금액이 수량×단가와 다를 수 있어 override 허용) ── */
 function recomputeAmount(){
   var qty = parseFloat(document.getElementById('addQty').value);
-  var price = parseFloat(document.getElementById('addPrice').value);
+  var price = parseFloat(stripThousands(document.getElementById('addPrice').value));
   var amtEl = document.getElementById('addAmount');
   if(isNaN(price)) amtEl.value = '';
-  else if(!isNaN(qty)) amtEl.value = qty*price;
+  else if(!isNaN(qty)) amtEl.value = formatThousands(qty*price);
   else amtEl.value = '';
 }
 
@@ -921,8 +931,8 @@ function openEditModal(pageId){
   document.getElementById('addName').value = r['품명']||'';
   document.getElementById('addSpec').value = r['규격']||'';
   document.getElementById('addQty').value = (r['수량']!=null && r['수량']!=='') ? r['수량'] : '';
-  document.getElementById('addPrice').value = (r['단가']!=null && r['단가']!=='') ? r['단가'] : '';
-  document.getElementById('addAmount').value = (r['금액']!=null && r['금액']!=='') ? r['금액'] : '';
+  document.getElementById('addPrice').value = (r['단가']!=null && r['단가']!=='') ? formatThousands(r['단가']) : '';
+  document.getElementById('addAmount').value = (r['금액']!=null && r['금액']!=='') ? formatThousands(r['금액']) : '';
   document.getElementById('addDate').value = r['구매일']||'';
   document.getElementById('addNote').value = r['비고']||'';
   document.getElementById('addPhoto').value = r['사진']||'';
@@ -951,8 +961,8 @@ function submitAddForm(){
 
   var spec = document.getElementById('addSpec').value.trim();
   var qty = document.getElementById('addQty').value.trim();
-  var price = document.getElementById('addPrice').value.trim();
-  var amount = document.getElementById('addAmount').value.trim();
+  var price = stripThousands(document.getElementById('addPrice').value.trim());
+  var amount = stripThousands(document.getElementById('addAmount').value.trim());
   var status = getSelectValue('addStatus','addStatusCustom');
   var photo = document.getElementById('addPhoto').value.trim();
   var note = document.getElementById('addNote').value.trim();
