@@ -297,14 +297,17 @@ html[data-theme="dark"] .photo-sort-hint{color:#fff}
 html[data-theme="dark"] .report-page-chip{color:#fff}
 .report-paper{background:var(--card);color:var(--txt);max-width:1400px;margin:0 auto;border:1px solid var(--border);border-radius:var(--r16);box-shadow:0 6px 24px rgba(0,0,0,.10);padding:28px 26px;min-height:200px}
 html[data-theme="dark"] .report-paper{box-shadow:0 6px 28px rgba(0,0,0,.5)}
-.report-title-band{text-align:left;font-weight:900;font-size:19px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
+.report-title-band{text-align:left;font-weight:600;font-size:18px;padding-bottom:10px;margin-bottom:14px;border-bottom:2.5px solid var(--sky)}
 .report-subtitle{text-align:center;font-size:14px;color:var(--txt2);margin-bottom:18px}
 .report-section-hd{font-size:13.5px;font-weight:800;background:var(--sky50);color:var(--sky800);padding:7px 12px;border-radius:6px;margin:16px 0 8px}
 /* 표지 페이지 — 다른 입력폼 페이지와 동일하게 제목띠(title-band) 하나만 쓰고 전체 좌측 정렬로 통일
    (2026-08-07 사용자 요청, 안전관리 앱과 동일). 예전엔 실제 엑셀 표지 시트의 셀 정렬을 그대로 재현해
    중앙 배열된 A4 박스 안에 제목을 한 번 더 표시했었으나, title-band와 내용이 중복되고 다른 탭과 정렬
    방식이 달라 혼란을 준다는 피드백에 따라 제거. */
-.rc-date{font-size:14px;font-weight:400;text-align:left;margin-top:16px}
+/* rc-date 크기·굵기는 안전관리 앱(monthly-inspection.html) 레코드 소제목 표준(16px/600)을 그대로
+   맞춤(2026-08-13, 두 앱 타이포그래피 통일 요청) — 색상은 이 앱 자체 컬러 체계(var(--txt) 상속,
+   다크모드 92% 흰색)를 그대로 따르므로 별도 지정 안 함. */
+.rc-date{font-size:16px;font-weight:600;text-align:left;margin-top:16px}
 .rc-toc-hd{font-size:14px;font-weight:400;text-align:left;margin-top:56px;letter-spacing:6px}
 .rc-toc-list{margin-top:14px;font-size:14px;line-height:2.2;text-align:left;color:var(--txt)}
 .rc-monthly-table{border-collapse:collapse;width:auto;max-width:100%;font-size:13px}
@@ -322,10 +325,10 @@ html[data-theme="dark"] .rc-monthly-method{color:#fff}
 .elec-row-btn.elec-row-del{background:#B23A2E}
 .elec-row-btn.elec-row-del:hover{background:#962f25}
 @media(min-width:481px){
-  .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
+  .report-paper .modal-input,.report-paper .modal-select{font-size:13px;padding:7px 10px}
   .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
-  .report-paper .modal-label{font-size:12.5px}
-  .report-paper .modal-hint{font-size:11px}
+  .report-paper .modal-label{font-size:13px}
+  .report-paper .modal-hint{font-size:12px}
   .report-paper .detail-modal-hd h3{font-size:14px}
 }
 input[type="date"]{position:relative;padding-left:34px;padding-right:10px}
