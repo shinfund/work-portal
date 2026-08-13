@@ -144,9 +144,10 @@ html[data-theme="dark"] .report-title-band,html[data-theme="dark"] .rc-monthly-s
    (2026-08-07 사용자 요청). 예전엔 실제 엑셀 표지 시트의 셀 정렬을 그대로 재현해 중앙 배열된 A4 박스
    안에 제목을 한 번 더 표시했었으나, title-band와 내용이 중복되고 다른 탭과 정렬 방식이 달라 혼란을
    준다는 피드백에 따라 제거. */
-/* 날짜·목차는 vw 기반 clamp를 쓰면 넓은 창에서 제목(title-band, 19px/900)보다 커져버렸다
-   (2026-08-07 사용자 제보 — 24px/800까지 커짐). 고정 크기로 바꿔 제목보다 작고 가볍게 통일. */
-.rc-date{font-size:14px;font-weight:400;text-align:left;margin-top:16px}
+/* 목차는 vw 기반 clamp를 쓰면 넓은 창에서 제목(title-band, 19px/900)보다 커져버렸다
+   (2026-08-07 사용자 제보 — 24px/800까지 커짐). 고정 크기로 바꿔 제목보다 작고 가볍게 통일.
+   표지의 날짜("2026년 8월")는 다른 탭의 레코드 소제목과 같은 성격이라 .rc-monthly-sub를
+   그대로 재사용(2026-08-13, 원래 전용 클래스 .rc-date=14px/400이었으나 통일 요청으로 대체). */
 .rc-toc-hd{font-size:14px;font-weight:400;text-align:left;margin-top:56px;letter-spacing:6px}
 .rc-toc-list{margin-top:14px;font-size:14px;line-height:2.2;text-align:left;color:var(--txt)}
 /* 월간점검 페이지 — 실제 엑셀 시트(월간점검표1~3)의 표 구조(구분·설비명 세로병합) 재현 */
@@ -6261,7 +6262,7 @@ function renderReportPage_cover(){
   const letter=TUNNEL_REPORT_LETTER[tunnel]||'';
   document.getElementById('reportPaper').innerHTML=`
     <div class="report-title-band">${letter?letter+'. ':''}${esc(tunnel)}</div>
-    <div class="rc-date">${year}년 ${month}월</div>
+    <div class="rc-monthly-sub">${year}년 ${month}월</div>
     <div class="rc-toc-hd">목&nbsp;&nbsp;&nbsp;&nbsp;차</div>
     <div class="rc-toc-list">${UNIFIED_TOC_ITEMS.map(item=>`<div>${esc(item)}</div>`).join('')}</div>`;
 }
