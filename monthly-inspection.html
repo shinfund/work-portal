@@ -164,7 +164,7 @@ html[data-theme="dark"] .rc-monthly-gubun,html[data-theme="dark"] .rc-monthly-se
 @media(min-width:481px){
   .report-paper .modal-input,.report-paper .modal-select{font-size:13.5px;padding:7px 10px}
   .report-paper .modal-select{padding-right:28px;background-position:right 10px center}
-  .report-paper .modal-label{font-size:13px;font-weight:500}
+  .report-paper .modal-label{font-size:13px;font-weight:400}
   .report-paper .modal-hint{font-size:12px;color:var(--txt2)}
   .report-paper .detail-modal-hd h3{font-size:14px}
   /* 발전기점검 등 3열 그리드(form-group-grid) 안 라벨은 별도로 11.5px까지 더 눌려있어(전기설비기록
@@ -173,7 +173,7 @@ html[data-theme="dark"] .rc-monthly-gubun,html[data-theme="dark"] .rc-monthly-se
   .report-paper .form-group-grid .modal-label{font-size:13px}
   /* .modal-textarea는 위 축소 규칙 대상에서 빠져있어 '특이사항' 같은 textarea만 원래 16px 그대로
      남아 다른 입력창(13.5px)보다 눈에 띄게 커 보였다(2026-08-13 사용자 피드백). */
-  .report-paper .modal-textarea{font-size:13.5px}
+  .report-paper .modal-textarea{font-size:13px}
   /* 점검사항 표의 결과/특이사항 그리드 입력창(.elec-grid-input/select)은 위 .modal-input/.modal-select
      축소 규칙(13.5px, 클래스 2개)에 클래스 개수로 밀려 13.5px가 되고, 옆의 점검내용 텍스트(일반 td,
      13px)와 0.5px 어긋나 있었다 — "점검내용 컬럼 글자가 제각각"으로 보이던 원인이라 여기서 맞춤. */
@@ -392,10 +392,21 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .modal-progress-bar{height:100%;width:0%;background:var(--sky);transition:width .25s ease}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 /* 전기설비기록 등 필드 그룹(조명용/일반용/동력용 ACB) 섹션 헤더 + 3열 그리드 */
-.form-group-hd{font-size:15px;font-weight:800;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
+.form-group-hd{font-size:14px;font-weight:400;color:var(--sky800);margin:18px 0 8px;padding-bottom:5px;border-bottom:1.5px solid var(--sky100)}
 .form-group-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;border:1px solid var(--border);border-radius:var(--r8);padding:10px}
 .form-group-grid .modal-field{margin-bottom:0}
 .form-group-grid .modal-label{font-size:11.5px}
+/* 발전기점검 탭 전용(#generatorFormWrap) — 다크모드에서 카드 제목(sky색)·라벨·힌트·표 텍스트가
+   서로 다른 톤이라 산만해 보인다는 피드백(2026-08-13) — 실제 값이 있는 요소는 전부 흰색으로 통일.
+   입력창 placeholder(빈 칸 안내문)만은 예외로 남겨둠 — 흰색으로 같이 바꾸면 입력된 값과 빈 칸을
+   눈으로 구분할 수 없어짐. */
+html[data-theme="dark"] #generatorFormWrap .form-group-hd,
+html[data-theme="dark"] #generatorFormWrap .modal-label,
+html[data-theme="dark"] #generatorFormWrap .modal-hint,
+html[data-theme="dark"] #generatorFormWrap td,
+html[data-theme="dark"] #generatorFormWrap .modal-input,
+html[data-theme="dark"] #generatorFormWrap .modal-select,
+html[data-theme="dark"] #generatorFormWrap .modal-textarea{color:#fff}
 /* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
    PC/태블릿은 13px로 축소(2026-07-29 사용자 요청), 모바일(480px 이하)은 iOS Safari 자동 확대 방지를 위해 16px 유지(아래 미디어쿼리) */
 .elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
