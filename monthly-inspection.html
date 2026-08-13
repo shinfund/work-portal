@@ -1509,7 +1509,14 @@ const TAB_DEFS=[
       {key:'전력(kW)', type:'number'},
       {key:'주파수(Hz)', type:'number', uiType:'fixed-select', options:['59','59.5','60','60.5','61']},
       {key:'역률(%)', type:'number', uiType:'fixed-select', options:['90','91','92','93','94','95','96','97','98','99','100']},
-      {key:'비고', type:'select', options:['부하 시운전','무부하 시운전','부하운전','감축시험']}
+      {key:'비고', type:'select', options:['부하 시운전','무부하 시운전','부하운전','감축시험']},
+      // 원본 종이양식 "점검사항" 표 아래 손글씨 비고란(엑셀 24~29행) 대응 필드 — 발전기 운전용
+      // '비고'와 이름이 겹쳐 '특이사항'으로 추가(2026-08-13, 사용자 확정). 점검체크리스트
+      // 20개 항목별 '특이사항'(발전기점검3DB, 각 행 옆 입력칸)과는 이름만 같고 서로 다른
+      // DB·범위(이건 부모DB에 report 전체 1건)라 혼동 주의. 값 자체는 tabDef.fields 공용 로직
+      // (파싱/저장/필수값 스킵)에 그대로 태우되, hidden:true로 표준 렌더 루프는 건너뛰고
+      // buildGeneratorFormExtra()가 점검사항 표 바로 아래 textarea로 직접 그린다.
+      {key:'특이사항', type:'text', hidden:true}
     ],
     listCols:['터널명','가동일자','점검자','가동시간','전압(V)','전류(A)','전력(kW)','비고']
   },
@@ -3188,6 +3195,11 @@ function buildGeneratorFormExtra(r){
   let chkHtml=`<div class="form-group-hd">점 검 사 항</div>`;
   chkHtml+=`<div id="generatorChkHintWrap">${!r ? buildGeneratorChkHintHtml(chkSrc) : ''}</div>`;
   chkHtml+=`<div id="generatorChkGridWrap">${buildGeneratorChkGridHtml(chkSrc)}</div>`;
+  // 원본 종이양식의 점검사항 표 아래 손글씨 비고란(엑셀 보고서 24~29행 테두리 박스) 대응 —
+  // 신규등록은 매번 다른 내용이라 이전 레코드 값을 기본으로 채우지 않고 항상 빈칸으로 시작한다
+  // (다른 체크리스트 항목들과 달리 반복되는 값이 아님, 2026-08-13).
+  const noteIdx=getTabDef('generator').fields.findIndex(f=>f.key==='특이사항');
+  chkHtml+=`<div class="modal-field" style="margin-top:10px"><label class="modal-label">특이사항</label><textarea class="modal-textarea" id="ff_${noteIdx}" placeholder="점검사항 표 아래 비고란에 들어갈 내용을 입력하세요(줄바꿈으로 여러 줄 구분)">${esc(r?r['특이사항']:'')}</textarea></div>`;
   return fuelHtml+chkHtml;
 }
 // 신규등록 시 "가장 최근 등록 값을 기본값으로 채웠습니다" 안내문 — 터널명 변경으로 기준 레코드가 바뀔 때마다
@@ -3409,6 +3421,9 @@ function openAddModal(tabId, recordId){
       return;
     }
     if(MULTI_ITEM_FIELDS && MULTI_ITEM_FIELDS.includes(f.key)) return;
+    // hidden:true — 표준 위치가 아니라 탭 전용 buildXFormExtra()가 원하는 자리에 직접 그리는 필드
+    // (예: 발전기점검 '특이사항'). 값 읽기/저장/파싱은 tabDef.fields 공용 로직 그대로 탄다.
+    if(f.hidden) return;
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     html+=buildFieldHtml(f, idx, curVal, tabId);
     // 체크리스트는 그 값을 좌우하는 트리거 필드 바로 아래 배치한다 — 맨 아래(제목·비고 뒤)에
@@ -5450,13 +5465,17 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
     mc(`Q${rn}:R${rn}`, gen2?gen2.결과:'', F(13), CENTER_SHRINK);
   });
 
-  // 원본 템플릿의 점검사항 표 아래엔 라벨 없는 여백 박스(6행)가 있음 — 손글씨 특이사항 기재용으로
-  // 추정되나 노션에 대응 필드가 없어 원본은 항상 빈칸이었다. 대신 점검체크리스트 20개 중 "특이사항"이
-  // 실제로 입력된 항목이 있으면 이 칸에 채워 넣는다(없으면 원본과 동일하게 빈 박스만 유지).
+  // 원본 템플릿의 점검사항 표 아래엔 라벨 없는 여백 박스(6행)가 있음 — 손글씨 비고 기재용.
+  // 부모DB 전용 필드 '특이사항'(2026-08-13 추가, 줄바꿈으로 여러 줄 구분)이 있으면 그대로 쓰고,
+  // 그 필드가 아직 없던 과거 레코드는 예전처럼 점검체크리스트 20개 항목별 '특이사항'(발전기점검3DB,
+  // 이름만 같고 범위가 다른 별개 필드)이 입력된 것을 모아 대신 채운다(하위 호환).
   const BOX_LR={left:{style:'thin'}, right:{style:'thin'}};
   const BOX_TOP=Object.assign({}, BOX_LR, {top:{style:'thin'}});
   const BOX_BOTTOM=Object.assign({}, BOX_LR, {bottom:{style:'thin'}});
-  const notes=(r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
+  const noteField=(r['특이사항']||'').trim();
+  const notes=noteField
+    ? noteField.split('\n')
+    : (r._chk||[]).filter(c=>c.특이사항).map(c=>`${c.점검내용}: ${c.특이사항}`);
   // 박스는 고정 6칸(양식 변경 불가) — 7건 이상이면 앞 5건은 각 칸에, 6건째부터는 마지막 칸에 "; "로
   // 이어붙여 초과분이 누락되지 않게 한다(2026-07-25 버그 수정).
   const notesDisplay = notes.length>6 ? notes.slice(0,5).concat([notes.slice(5).join('; ')]) : notes;
