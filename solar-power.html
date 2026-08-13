@@ -256,6 +256,14 @@ input[type="date"]{position:relative;padding-left:26px;padding-right:10px}
 input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:6px}
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(.85)}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+/* 신규등록/수정 모달(#addModal)의 라벨=var(--txt)(92%)·힌트=var(--txt3)(50%)가 다크모드에서
+   서로 다른 톤이라 산만해 보이는 문제를, monthly-inspection.html #reportPaper 패턴(2026-08-13
+   확립, overtime-work.html #addModal에도 동일 적용)과 동일하게 흰색으로 통일한다.
+   placeholder만 예외로 흐림 유지(placeholder는 .modal-input::placeholder가 별도로 처리). */
+html[data-theme="dark"] #addModal .modal-label,
+html[data-theme="dark"] #addModal .modal-hint,
+html[data-theme="dark"] #addModal .modal-input,
+html[data-theme="dark"] #addModal .modal-select{color:#fff}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
 
@@ -360,7 +368,7 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">누적량(kWh) <span class="modal-required">*</span></label>
-        <input id="addCumGen" class="modal-input" type="number" step="0.1" placeholder="예) 185,334" oninput="recomputeGenAndFee()"/>
+        <input id="addCumGen" class="modal-input" type="text" inputmode="decimal" placeholder="예) 185,334" oninput="recomputeGenAndFee()" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
         <div class="modal-hint">계량기에 표시된 누적 발전량을 직접 입력하는 값입니다.</div>
       </div>
       <div class="modal-field">
@@ -368,11 +376,11 @@ if (window.self !== window.top) {
         <select id="addPrevCumGen" class="modal-select" onchange="onPrevCumSelectChange()">
           <option value="">선택</option>
         </select>
-        <input id="addPrevCumGenCustom" class="modal-input" type="number" step="0.1" placeholder="예) 184,919" style="display:none;margin-top:6px" oninput="recomputeGenAndFee()"/>
+        <input id="addPrevCumGenCustom" class="modal-input" type="text" inputmode="decimal" placeholder="예) 184,919" style="display:none;margin-top:6px" oninput="recomputeGenAndFee()" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">발전량(kWh)</label>
-        <input id="addGen" class="modal-input" type="number" step="0.1" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <input id="addGen" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint">= 누적량 − 전일누적량 (자동 계산)</div>
       </div>
       <div class="modal-field">
@@ -384,7 +392,7 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">요금(원)</label>
-        <input id="addFee" class="modal-input" type="number" step="1" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <input id="addFee" class="modal-input" type="text" readonly style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint">= 발전량 × 단가 (자동 계산, 노션 수식 컬럼과 동일)</div>
       </div>
       <div class="modal-field">
@@ -647,6 +655,15 @@ function getFeeAmt(r){ return r.fee||0; }
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function fmtKw(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:1}); }
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// 천단위 콤마 표시(monthly-inspection.html과 동일 패턴, 2026-08-13 타이포그래피 통일 작업으로 이식) —
+// focus 시 원값으로 풀고 blur 시 다시 콤마를 붙인다. 저장 시엔 항상 stripThousands로 콤마를 제거하고 숫자로 변환.
+function formatThousands(v){
+  if(v===''||v==null) return '';
+  const n=Number(String(v).replace(/,/g,''));
+  if(isNaN(n)) return String(v);
+  return n.toLocaleString('ko-KR',{maximumFractionDigits:2});
+}
+function stripThousands(v){ return String(v||'').replace(/,/g,'').trim(); }
 
 // ── 모달 드래그 이동 (헤더를 클릭+드래그하면 팝업창 위치 이동, 모든 .modal-box 공통) ──
 function makeModalDraggable(box, handle){
@@ -839,13 +856,13 @@ function buildGenericSelectOpts(selectEl, customInputEl, values, currentValue){
 function getPrevCumGenValue(){
   const sel=document.getElementById('addPrevCumGen');
   if(!sel) return '';
-  if(sel.value==='__custom__') return ((document.getElementById('addPrevCumGenCustom')||{}).value||'').trim();
+  if(sel.value==='__custom__') return stripThousands((document.getElementById('addPrevCumGenCustom')||{}).value||'');
   if(sel.value==='') return '';
   const opt=sel.options[sel.selectedIndex];
-  return (opt && opt.dataset.val) || '';
+  return stripThousands((opt && opt.dataset.val) || '');
 }
 function recomputeGenAndFee(){
-  const cumGen=parseFloat(document.getElementById('addCumGen').value);
+  const cumGen=parseFloat(stripThousands(document.getElementById('addCumGen').value));
   const prevCumGen=parseFloat(getPrevCumGenValue());
   const unitPrice=parseFloat(getSelectValue('addUnitPrice','addUnitPriceCustom'));
   const genEl=document.getElementById('addGen'), feeEl=document.getElementById('addFee');
@@ -856,8 +873,8 @@ function recomputeGenAndFee(){
       genEl.value=''; feeEl.value='';
       return;
     }
-    genEl.value=gen;
-    feeEl.value=!isNaN(unitPrice) ? Math.round(gen*unitPrice) : '';
+    genEl.value=formatThousands(gen);
+    feeEl.value=!isNaN(unitPrice) ? formatThousands(Math.round(gen*unitPrice)) : '';
   } else {
     genEl.value=''; feeEl.value='';
   }
@@ -887,7 +904,7 @@ function refreshPrevCumOptions(tunnel, currentCustomValue){
         return `<option value="__hist_${i}__" data-val="${r.cumGen}">${esc(label)}</option>`;
       }).join('');
   if(currentCustomValue){
-    sel.value='__custom__'; ci.value=currentCustomValue; ci.style.display='';
+    sel.value='__custom__'; ci.value=formatThousands(currentCustomValue); ci.style.display='';
   } else {
     sel.value=''; ci.value=''; ci.style.display='none';
   }
@@ -929,7 +946,7 @@ function openEditModal(pageId){
   document.getElementById('addModalTitleText').textContent='발전량 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value = r.date||'';
-  document.getElementById('addCumGen').value = r.cumGen||'';
+  document.getElementById('addCumGen').value = r.cumGen ? formatThousands(r.cumGen) : '';
   document.getElementById('addNote').value = r.note||'';
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueTunnels(), r.tunnel||'');
   buildGenericSelectOpts(document.getElementById('addCapacity'), document.getElementById('addCapacityCustom'), getTunnelCapacities(r.tunnel||'').map(String), r.capacity?String(r.capacity):'');
@@ -942,7 +959,7 @@ function openEditModal(pageId){
 function submitAddForm(){
   const date = document.getElementById('addDate').value.trim();
   const tunnel = getSelectValue('addTunnel','addTunnelCustom');
-  const cumGen=document.getElementById('addCumGen').value.trim();
+  const cumGen=stripThousands(document.getElementById('addCumGen').value.trim());
   const prevCumGen=getPrevCumGenValue();
   if(!date){ alert('날짜를 입력해주세요.'); return; }
   if(!tunnel){ alert('터널을 선택해주세요.'); return; }
@@ -951,10 +968,10 @@ function submitAddForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
   recomputeGenAndFee();
-  const gen=document.getElementById('addGen').value.trim();
+  const gen=stripThousands(document.getElementById('addGen').value.trim());
   if(gen===''){ return; }
   const capacity=getSelectValue('addCapacity','addCapacityCustom');
-  const fee=document.getElementById('addFee').value.trim();
+  const fee=stripThousands(document.getElementById('addFee').value.trim());
   const unitPrice=getSelectValue('addUnitPrice','addUnitPriceCustom');
   const note=document.getElementById('addNote').value.trim();
 
