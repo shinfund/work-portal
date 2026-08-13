@@ -107,7 +107,7 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
 .month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
-.sc-hd{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
 .kpi-card{border-radius:var(--r12);padding:10px 12px}
@@ -214,7 +214,7 @@ tfoot td:first-child{font-weight:400}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s;box-sizing:border-box}
 .modal-input::placeholder,.search-box::placeholder{color:var(--txt3)}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
-.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:14px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 /* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정 */
 /* 날짜칸 달력 아이콘을 우측→좌측으로(월간점검 안전관리·점검팀 앱과 동일 패턴, 2026-08-05 전체 앱 확대
@@ -742,7 +742,7 @@ function renderOverview(recs){
     buildCatBars(catArr,maxVal,totalThis)
     :emptyHTML();
   const top5=[...recs].sort((a,b)=>b.total-a.total).slice(0,5);
-  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:14px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
+  document.getElementById("topTbody").innerHTML=top5.map(r=>{const c=clr(r.cat);return`<tr><td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td><td style="font-size:13px">${esc(r.desc)}</td><td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td><td class="r" style="font-size:13px;color:var(--txt);white-space:nowrap">${fmt(r.total)}</td></tr>`;}).join("")||`<tr><td colspan="4">${emptyHTML()}</td></tr>`;
 }
 function buildCatBars(catArr,maxVal,totalRef){
   return catArr.map(([cat,amt])=>{const c=clr(cat),pct=Math.round(amt/totalRef*100),barW=Math.round(amt/maxVal*100);return`<div class="catbar-row"><div class="catbar-name">${esc(cat)}</div><div class="catbar-track"><div class="catbar-fill" style="width:${barW}%;background:${c.dot}">${barW>=18?fmt(amt):""}</div></div><div class="catbar-amt">${fmt(amt)}원</div><div class="catbar-pct">${pct}%</div></div>`;}).join("");
@@ -887,7 +887,7 @@ function renderDetail(){
       `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${vendorTxt}</td>`+
       `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.bizNo||"")}</td>`+
       `<td><span class="cat-tag ${c.cls}">${esc(r.cat)}</span></td>`+
-      `<td style="font-size:14px">${esc(r.desc)}</td>`+
+      `<td style="font-size:13px">${esc(r.desc)}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${r.headcount||1}</td>`+
       `<td style="font-size:13px;white-space:nowrap">${fuelTxt}</td>`+
       `<td style="font-size:13px;color:var(--txt);white-space:nowrap">${esc(r.cardNo||"")}</td>`+
