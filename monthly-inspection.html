@@ -319,6 +319,18 @@ html[data-theme="dark"] .detail-count{color:#fff}
    (Windows Chrome 등) option 자체에 명시적 배경·글자색을 지정 — 2026-08-06 다크모드 흰 배경/흰 글자
    실사례로 확인 후 추가. */
 .modal-select option{background-color:var(--card);color:var(--txt)}
+/* select+직접입력 쌍(공통규칙, 2026-08-03) 중 실제 값이 프리셋에 없어 직접입력 상태인 경우 —
+   드롭다운("직접입력"이라는 라벨)과 실제 입력값이 동시에 노출돼 "2개가 보인다"는 2026-08-13
+   사용자 지적으로, 평소엔 입력값+토글버튼만 컴팩트하게 보여주고 드롭다운은 토글버튼을 눌러야
+   나타나게 한다(toggleSelCustom/setSelCustomDisplay 참고). */
+.sel-custom-wrap{position:relative}
+.sel-custom-wrap>select{display:block;width:100%}
+.sel-custom-wrap>input{width:100%}
+.sel-custom-wrap>input.modal-input{padding-right:26px}
+.sel-custom-wrap>input.elec-grid-input{padding-right:16px}
+.sel-custom-toggle{position:absolute;top:0;right:0;bottom:0;width:24px;border:none;background:transparent;color:var(--txt3);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.sel-custom-toggle:hover{color:var(--sky800)}
+.sel-custom-toggle.mini{width:16px;font-size:9px}
 .modal-required{color:var(--coral);margin-left:2px}
 .add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
@@ -2484,10 +2496,13 @@ function buildFieldHtml(f, idx, curVal, tabId){
     const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
     const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
-        <option value="">${esc(f.emptyHint||'선택')}</option>
-      </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      <div class="sel-custom-wrap">
+        <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+          <option value="">${esc(f.emptyHint||'선택')}</option>
+        </select>
+        <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+        <button type="button" class="sel-custom-toggle" style="display:none" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div>
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -2500,12 +2515,15 @@ function buildFieldHtml(f, idx, curVal, tabId){
     if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
     if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="${onchangeParts.join(';')}">
-        <option value="">선택</option>
-        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
-        ${opts}
-      </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+      <div class="sel-custom-wrap">
+        <select id="${id}" class="modal-select" style="display:${isCustom?'none':''}" onchange="${onchangeParts.join(';')}">
+          <option value="">선택</option>
+          <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+          ${opts}
+        </select>
+        <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+        <button type="button" class="sel-custom-toggle" style="display:${isCustom?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div>
     </div>`;
   }
   if(f.type==='file'){
@@ -2524,12 +2542,15 @@ function buildFieldHtml(f, idx, curVal, tabId){
     const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
     const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
-        <option value="">선택</option>
-        <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
-        ${opts}
-      </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+      <div class="sel-custom-wrap">
+        <select id="${id}" class="modal-select" style="display:${isCustom?'none':''}" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+          <option value="">선택</option>
+          <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
+          ${opts}
+        </select>
+        <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(curVal):''}"/>
+        <button type="button" class="sel-custom-toggle" style="display:${isCustom?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div>
     </div>`;
   }
   if(f.type==='date'){
@@ -2552,6 +2573,25 @@ function onSelectChange(selectEl, customInputId){
   if(!ci) return;
   if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
   else { ci.style.display='none'; ci.value=''; }
+}
+// select+직접입력 쌍 하나의 표시 상태를 맞춘다 — isCustom이면 드롭다운을 숨기고 입력값+토글버튼만
+// 컴팩트하게, 아니면 드롭다운만 보여준다(select/input을 만드는 모든 곳이 이 함수 하나로 통일, 2026-08-13).
+function setSelCustomDisplay(sel, ci, isCustom){
+  if(!sel || !ci) return;
+  const btn=sel.parentElement && sel.parentElement.querySelector(':scope>.sel-custom-toggle');
+  sel.style.display = isCustom ? 'none' : '';
+  ci.style.display = isCustom ? '' : 'none';
+  if(!isCustom) ci.value='';
+  if(btn) btn.style.display = isCustom ? '' : 'none';
+}
+// 컴팩트 모드(입력값+토글버튼)에서 토글버튼 클릭 시 드롭다운을 다시 꺼내 다른 값을 고를 수 있게 한다.
+function toggleSelCustom(btn){
+  const wrap=btn.parentElement;
+  const sel=wrap && wrap.querySelector('select');
+  if(!sel) return;
+  sel.style.display='';
+  btn.style.display='none';
+  sel.focus();
 }
 // 입력폼탭 전체 입력창 채움 표시(.rp-filled, 2026-08-03) — 입력폼탭 페이지 렌더 함수가 9개+동적
 // 행 추가 로직(월간점검/변압기/사진/업무처리 등)까지 제각각이라 렌더 지점마다 일일이 표시 갱신
@@ -2636,9 +2676,7 @@ function refreshCascadeSelect(tabId, contentIdx, initialValue){
     + `<option value="__custom__"${isCustom?' selected':''}>직접입력</option>`
     + opts.map(o=>`<option value="${esc(o)}"${curVal===o?' selected':''}>${esc(o)}</option>`).join('');
   if(!isCustom && opts.includes(curVal)) sel.value=curVal;
-  if(ci){
-    if(isCustom){ ci.style.display=''; ci.value=curVal; } else { ci.style.display='none'; ci.value=''; }
-  }
+  if(ci){ if(isCustom) ci.value=curVal; setSelCustomDisplay(sel, ci, isCustom); }
   // 의존값에 따라 안내 문구 자체를 바꿔야 하는 필드용(예: 월간점검 설비명이 구분="기타"/"태양광
   // 발전설비"일 때 "입력하지 마세요"로 바뀌는 경우, 2026-07-23) — hintFn 없으면 기존 고정 문구 유지.
   const hintEl=document.getElementById('ff_'+contentIdx+'_hint');
@@ -2848,13 +2886,16 @@ function buildElecChkSideTable(chkSrc, items, startIdx, label){
     // padding-right:28px(화살표 자리)까지 더해지며 글자가 잘렸던 문제도 함께 해결(80px로 확장).
     const isCustom = cur!=='' && !['○','×','/'].includes(cur);
     html+=`<tr><td>${esc(c.설비항목)}</td>
-      <td><select class="modal-select elec-grid-select" style="width:80px" id="chkr_${idx}" onchange="onSelectChange(this,'chkr_${idx}c')">
+      <td><div class="sel-custom-wrap" style="width:80px">
+      <select class="modal-select elec-grid-select" style="display:${isCustom?'none':''}" id="chkr_${idx}" onchange="onSelectChange(this,'chkr_${idx}c')">
         <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
         <option value="○"${cur==='○'?' selected':''}>○</option>
         <option value="×"${cur==='×'?' selected':''}>×</option>
         <option value="/"${cur==='/'?' selected':''}>/</option>
       </select>
-      <input id="chkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};width:80px;margin-top:4px" value="${isCustom?esc(cur):''}"/></td>
+      <input id="chkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:4px" value="${isCustom?esc(cur):''}"/>
+      <button type="button" class="sel-custom-toggle mini" style="display:${isCustom?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div></td>
       <td><input class="modal-input elec-grid-input" style="width:56px" type="number" step="1" id="chkc_${idx}" value="${rec&&rec.개수!=null?rec.개수:''}"/></td>
       <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chki_${idx}" value="${rec&&rec.증!=null?rec.증:''}"/></td>
       <td><input class="modal-input elec-grid-input" style="width:50px" type="number" step="1" id="chkd_${idx}" value="${rec&&rec.감!=null?rec.감:''}"/></td>
@@ -2885,12 +2926,15 @@ function buildElecYeokryulSelectHtml(curVal){
   const strVal = curVal!=null ? String(curVal) : '';
   const isCustom = strVal!=='' && !ELEC_YEOKRYUL_OPTIONS.includes(strVal);
   const opts=ELEC_YEOKRYUL_OPTIONS.map(o=>`<option value="${esc(o)}"${strVal===o?' selected':''}>${esc(o)}</option>`).join('');
-  return `<select class="modal-select" id="ec_yeokryul" onchange="onSelectChange(this,'ec_yeokryulc')">
+  return `<div class="sel-custom-wrap">
+    <select class="modal-select" style="display:${isCustom?'none':''}" id="ec_yeokryul" onchange="onSelectChange(this,'ec_yeokryulc')">
       <option value="">선택</option>
       <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
       ${opts}
     </select>
-    <input id="ec_yeokryulc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(strVal):''}"/>`;
+    <input id="ec_yeokryulc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:6px" value="${isCustom?esc(strVal):''}"/>
+    <button type="button" class="sel-custom-toggle" style="display:${isCustom?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+    </div>`;
 }
 // 전기설비기록 신규등록/수정 — ACB 9개 + 설비현황 32개 입력 그리드(부모 필드 뒤에 덧붙임)
 function buildElecFormExtra(r){
@@ -2939,22 +2983,30 @@ function buildElecFormExtra(r){
   const chk0 = (r && r._chk && r._chk[0]) || null;
   // 종합의견을 먼저, 점검담당자/점검확인자(서명란 성격)는 맨 아래로(2026-07-29 사용자 요청 — 실제
   // 보고서 지면에서도 종합의견 다음에 확인자 서명이 오는 흐름과 맞춤).
+  const isCustomDamdang = !!(chk0&&chk0.점검담당자&&!ELEC_DAMDANG_OPTIONS.includes(chk0.점검담당자));
+  const isCustomHwakin = !!(chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자));
   const chkCommonHtml=`<div class="form-group-hd">3. 종 합 의 견</div>
     <div class="modal-field"><label class="modal-label">종합의견</label><textarea class="modal-textarea" id="ec_jonghap">${esc(chk0?chk0.종합의견:'적합함')}</textarea></div>
     <div class="form-group-grid">
       <div class="modal-field"><label class="modal-label">점검담당자</label>
-        <select class="modal-select" id="ec_damdang" onchange="onSelectChange(this,'ec_damdangc')">
-          <option value="">선택</option><option value="__custom__">직접입력</option>
+        <div class="sel-custom-wrap">
+        <select class="modal-select" style="display:${isCustomDamdang?'none':''}" id="ec_damdang" onchange="onSelectChange(this,'ec_damdangc')">
+          <option value="">선택</option><option value="__custom__"${isCustomDamdang?' selected':''}>직접입력</option>
           ${ELEC_DAMDANG_OPTIONS.map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검담당자===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <input id="ec_damdangc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검담당자&&!ELEC_DAMDANG_OPTIONS.includes(chk0.점검담당자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검담당자&&!ELEC_DAMDANG_OPTIONS.includes(chk0.점검담당자)?esc(chk0.점검담당자):''}"/>
+        <input id="ec_damdangc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomDamdang?'':'none'};margin-top:6px" value="${isCustomDamdang?esc(chk0.점검담당자):''}"/>
+        <button type="button" class="sel-custom-toggle" style="display:${isCustomDamdang?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+        </div>
       </div>
       <div class="modal-field"><label class="modal-label">점검확인자</label>
-        <select class="modal-select" id="ec_hwakin" onchange="onSelectChange(this,'ec_hwakinc')">
-          <option value="">선택</option><option value="__custom__">직접입력</option>
+        <div class="sel-custom-wrap">
+        <select class="modal-select" style="display:${isCustomHwakin?'none':''}" id="ec_hwakin" onchange="onSelectChange(this,'ec_hwakinc')">
+          <option value="">선택</option><option value="__custom__"${isCustomHwakin?' selected':''}>직접입력</option>
           ${ELEC_HWAKIN_OPTIONS.map(o=>`<option value="${esc(o)}"${chk0&&chk0.점검확인자===o?' selected':''}>${esc(o)}</option>`).join('')}
         </select>
-        <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?'':'none'};margin-top:6px" value="${chk0&&chk0.점검확인자&&!ELEC_HWAKIN_OPTIONS.includes(chk0.점검확인자)?esc(chk0.점검확인자):''}"/>
+        <input id="ec_hwakinc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomHwakin?'':'none'};margin-top:6px" value="${isCustomHwakin?esc(chk0.점검확인자):''}"/>
+        <button type="button" class="sel-custom-toggle" style="display:${isCustomHwakin?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+        </div>
       </div>
     </div>`;
   return acbHtml+acbCommonHtml+chkHtml+chkCommonHtml;
@@ -2972,10 +3024,11 @@ function setSelectOrCustom(selId, customId, value, options){
   if(!sel || !value) return;
   if(options.includes(value)){
     sel.value=value;
-    if(ci){ ci.style.display='none'; ci.value=''; }
+    setSelCustomDisplay(sel, ci, false);
   } else {
     sel.value='__custom__';
-    if(ci){ ci.style.display=''; ci.value=value; }
+    if(ci) ci.value=value;
+    setSelCustomDisplay(sel, ci, true);
   }
 }
 // 전기설비기록 탭 전용 — 터널명 select(ff_0) 변경 시 배율(터널별 고정 스펙)·점검담당자·점검확인자를
@@ -3073,12 +3126,15 @@ function buildGeneratorChkSideTable(chkSrc, items, startIdx, label){
     const resultOpts=GENERATOR_CHK_RESULT_OPTIONS.map(o=>`<option value="${esc(o)}"${resultVal===o?' selected':''}>${esc(o)}</option>`).join('');
     html+=`<tr><td>${esc(c.점검내용)}</td>
       <td>
-        <select class="modal-select elec-grid-select" style="width:104px" id="gchkr_${idx}" onchange="onSelectChange(this,'gchkr_${idx}c')">
+        <div class="sel-custom-wrap" style="width:104px">
+        <select class="modal-select elec-grid-select" style="display:${isCustom?'none':''}" id="gchkr_${idx}" onchange="onSelectChange(this,'gchkr_${idx}c')">
           <option value="">선택</option>
           <option value="__custom__"${isCustom?' selected':''}>직접입력</option>
           ${resultOpts}
         </select>
-        <input id="gchkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};width:104px;margin-top:4px" value="${isCustom?esc(resultVal):''}"/>
+        <input id="gchkr_${idx}c" class="modal-input elec-grid-input" type="text" placeholder="직접 입력" style="display:${isCustom?'':'none'};margin-top:4px" value="${isCustom?esc(resultVal):''}"/>
+        <button type="button" class="sel-custom-toggle mini" style="display:${isCustom?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+        </div>
       </td>
       <td><input class="modal-input elec-grid-input" style="width:120px" type="text" id="gchks_${idx}" value="${esc(rec?rec.특이사항:'')}"/></td>
     </tr>`;
@@ -3664,12 +3720,15 @@ function renderPhotoMultiRows(){
         </div>
       </div>
       <div class="pm-card-label" style="margin-top:8px">사진설명</div>
-      <select class="modal-select" style="width:100%;padding:8px" onchange="_photoMultiDescChange(${row.key},this)">
+      <div class="sel-custom-wrap">
+      <select class="modal-select" style="width:100%;padding:8px;display:${isCustomDesc?'none':''}" onchange="_photoMultiDescChange(${row.key},this)">
         <option value="">선택</option>
         <option value="__custom__"${isCustomDesc?' selected':''}>직접입력</option>
         ${descOpts}
       </select>
-      <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px;width:100%" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+      <input type="text" class="modal-input" id="pmfdescc_${row.key}" placeholder="직접 입력" style="display:${isCustomDesc?'':'none'};margin-top:6px;padding:8px;padding-right:26px;width:100%" value="${isCustomDesc?esc(row.desc):''}" oninput="_photoMultiSet(${row.key},'desc',this.value)"/>
+      <button type="button" class="sel-custom-toggle" style="display:${isCustomDesc?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div>
       <div class="pm-card-label" style="margin-top:8px">점검사진</div>
       ${photoArea}
       <input type="file" id="pmf_${row.key}" accept="image/*" style="display:none" onchange="uploadPhotoMultiFile(this,${row.key})"/>
@@ -6382,12 +6441,15 @@ function renderTaskBody(){
       <td><input type="text" class="modal-input tk-content" value="${esc(content)}"></td>
       <td><input type="text" class="modal-input tk-action" value="${esc(action)}"></td>
       <td>
-        <select class="modal-select tk-company" onchange="onSelectChange(this,'tkc_${rowKey}')">
+        <div class="sel-custom-wrap">
+        <select class="modal-select tk-company" style="display:${isCustomCompany?'none':''}" onchange="onSelectChange(this,'tkc_${rowKey}')">
           <option value=""${company?'':' selected'}>선택</option>
           <option value="__custom__"${isCustomCompany?' selected':''}>직접입력</option>
           ${companyOpts.map(v=>`<option value="${esc(v)}"${v===company?' selected':''}>${esc(v)}</option>`).join('')}
         </select>
         <input id="tkc_${rowKey}" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomCompany?'':'none'};margin-top:4px" value="${isCustomCompany?esc(company):''}">
+        <button type="button" class="sel-custom-toggle" style="display:${isCustomCompany?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+        </div>
       </td>
       <td><input type="text" class="modal-input tk-note" value="${esc(note)}"></td>`;
   };
