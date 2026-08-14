@@ -413,6 +413,12 @@ html[data-theme="dark"] #reportPaper td,
 html[data-theme="dark"] #reportPaper .modal-input,
 html[data-theme="dark"] #reportPaper .modal-select,
 html[data-theme="dark"] #reportPaper .modal-textarea{color:#fff}
+/* 업무처리 페이지 체크박스(전체선택·행선택) — 다른 입력요소는 전부 --border 테마 변수를 쓰는데
+   체크박스만 브라우저 기본 테두리(라이트=검정 #000/다크=흰색 #fff)를 그대로 노출해 색이 어긋나 있었다
+   (2026-08-14 input-audit 발견). 네이티브 checkbox는 이 Chrome 빌드에서 border-color를 CSS로
+   덮어써도 무시된다(appearance:auto 위젯이 테두리색을 직접 그림, 실측 확인) — accent-color만
+   적용해 체크 상태 색상은 테마와 맞추고, 비체크 테두리(검정/흰색)는 브라우저 기본값 그대로 둔다. */
+#reportPaper input[type="checkbox"]{accent-color:var(--sky600)}
 /* 전기설비기록(ACB 9행·설비현황 32행)·발전기점검(점검체크리스트 20행) 등 신규등록/수정 모달 내 자식 표 전용 컴팩트 입력
    PC/태블릿은 13px로 축소(2026-07-29 사용자 요청), 모바일(480px 이하)은 iOS Safari 자동 확대 방지를 위해 16px 유지(아래 미디어쿼리) */
 .elec-grid-input{width:72px;padding:4px 6px;font-size:13px}
@@ -6635,6 +6641,10 @@ function renderTransformerReportBody(){
   const monthRecs=(TAB_STATE.transformer.records||[]).filter(r=>r['터널명']===tunnel && (r['측정일자']||'').slice(0,7)===ym);
   const latestDate=monthRecs.length ? monthRecs.reduce((a,b)=>(a['측정일자']>b['측정일자']?a:b))['측정일자'] : '';
   const latestInspector=(monthRecs.find(r=>r['점검자'])||{})['점검자'] || '';
+  // 점검자는 전기설비기록 페이지의 점검담당자(ec_damdang)와 같은 ELEC_DAMDANG_OPTIONS 카탈로그를
+  // 쓰면서도 직접입력 escape hatch가 빠져 있었다(2026-08-14 input-audit 발견) — ec_damdang과
+  // 동일한 select+직접입력 쌍 구조로 통일.
+  const isCustomInspector = !!(latestInspector && !ELEC_DAMDANG_OPTIONS.includes(latestInspector));
 
   let html=`<div id="trfTopRow" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">
     <div class="modal-field" style="flex:1;min-width:160px;margin-bottom:0">
@@ -6643,10 +6653,14 @@ function renderTransformerReportBody(){
     </div>
     <div class="modal-field" style="flex:1;min-width:160px;margin-bottom:0">
       <label class="modal-label">점검자</label>
-      <select id="trfInspector" class="modal-select">
-        <option value="">선택</option>
+      <div class="sel-custom-wrap">
+      <select id="trfInspector" class="modal-select" style="display:${isCustomInspector?'none':''}" onchange="onSelectChange(this,'trfInspectorc')">
+        <option value="">선택</option><option value="__custom__"${isCustomInspector?' selected':''}>직접입력</option>
         ${ELEC_DAMDANG_OPTIONS.map(n=>`<option value="${esc(n)}"${latestInspector===n?' selected':''}>${esc(n)}</option>`).join('')}
       </select>
+      <input id="trfInspectorc" class="modal-input" type="text" placeholder="직접 입력" style="display:${isCustomInspector?'':'none'};margin-top:6px" value="${isCustomInspector?esc(latestInspector):''}"/>
+      <button type="button" class="sel-custom-toggle" style="display:${isCustomInspector?'':'none'}" onclick="toggleSelCustom(this)" title="목록에서 선택">▾</button>
+      </div>
     </div>
   </div>`;
 
@@ -6698,7 +6712,7 @@ async function submitTransformerReportForm(){
   const tunnel=REPORT_SEL.tunnel;
   const dateVal=document.getElementById('trfDate').value;
   if(!dateVal){ alert('측정일자를 입력해주세요.'); return; }
-  const inspector=document.getElementById('trfInspector').value;
+  const inspector=selectOrCustomValue('trfInspector');
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   const dbId=getTabDef('transformer').dbId;
 
