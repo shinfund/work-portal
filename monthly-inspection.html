@@ -1937,65 +1937,6 @@ document.addEventListener('scroll', e=>{
 const _tabFilters={};
 const _tabFilterUserPicked={};
 TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
-// 목록에 기본 표시되지 않는 컬럼(ACB 상세 등)을 사용자가 선택해서 추가로 켜볼 수 있게 하는 상태 — 탭별로 localStorage에 저장
-const _tabExtraCols={};
-TAB_DEFS.forEach(t=>{
-  try{ _tabExtraCols[t.id]=JSON.parse(localStorage.getItem('mi_extracols_'+t.id)||'[]'); }
-  catch(e){ _tabExtraCols[t.id]=[]; }
-});
-function extraColCandidates(tabDef){
-  return dataFields(tabDef).filter(f=>!tabDef.listCols.includes(f.key) && f.type!=='file');
-}
-// ACB 필드처럼 그룹(조명용/일반용/동력용)이 있으면 "전압 R-S" 같은 짧은 label만으론 구분이 안 되므로 그룹명을 붙인다
-function fieldDisplayLabel(f){
-  return f.group ? f.group+' '+(f.label||f.key) : (f.label||f.key);
-}
-function toggleExtraCol(tabId, key, checked){
-  const list=_tabExtraCols[tabId]||(_tabExtraCols[tabId]=[]);
-  const i=list.indexOf(key);
-  if(checked && i<0) list.push(key);
-  else if(!checked && i>=0) list.splice(i,1);
-  localStorage.setItem('mi_extracols_'+tabId, JSON.stringify(list));
-  syncExtraHeaderCols(tabId);
-  renderTabTable(tabId);
-  const lbl=document.getElementById('colToggleLabel-'+tabId);
-  if(lbl) lbl.textContent = list.length ? `확인자 +${list.length}` : '확인자';
-  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!list.length);
-}
-function syncExtraHeaderCols(tabId){
-  const tabDef=getTabDef(tabId);
-  const row=document.getElementById('thead-'+tabId);
-  if(!tabDef || !row) return;
-  row.querySelectorAll('th[data-extra]').forEach(th=>th.remove());
-  (_tabExtraCols[tabId]||[]).forEach(key=>{
-    const f=dataFields(tabDef).find(x=>x.key===key);
-    if(!f) return;
-    const th=document.createElement('th');
-    th.dataset.extra='1';
-    if(f.type==='number') th.className='r';
-    th.textContent=fieldDisplayLabel(f);
-    row.appendChild(th);
-  });
-}
-function buildColToggleDd(tabId){
-  const tabDef=getTabDef(tabId);
-  const candidates=extraColCandidates(tabDef);
-  const wrap=document.getElementById('colToggleWrap-'+tabId);
-  if(!wrap) return; // 추가로 보여줄 컬럼이 없는 탭은 buildTabFilterDd에서 애초에 렌더링하지 않음
-  const menu=document.getElementById('colToggleMenu-'+tabId);
-  const selected=_tabExtraCols[tabId]||[];
-  if(!menu.dataset.built){
-    menu.dataset.built='1';
-    menu.innerHTML=candidates.map(f=>`
-      <label class="dd-opt" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-        <input type="checkbox" value="${esc(f.key)}" ${selected.includes(f.key)?'checked':''} onchange="toggleExtraCol('${tabId}','${esc(f.key)}',this.checked)"/>
-        ${esc(fieldDisplayLabel(f))}
-      </label>`).join('');
-  }
-  document.getElementById('colToggleLabel-'+tabId).textContent = selected.length ? `확인자 +${selected.length}` : '확인자';
-  document.getElementById('colToggleBtn-'+tabId)?.classList.toggle('active', !!selected.length);
-  syncExtraHeaderCols(tabId);
-}
 // 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
 // (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
 function applyLatestFilterDefault(tabId){
@@ -2031,13 +1972,8 @@ function buildTabFilterDd(tabId){
         <button class="dd-btn" id="ddTunnelBtn-${tabId}" type="button" onclick="toggleDd('ddTunnelMenu-${tabId}','ddTunnelBtn-${tabId}')" aria-haspopup="listbox" aria-label="터널 선택"><span id="ddTunnelLabel-${tabId}">전체 터널</span></button>
         <div class="dd-menu" id="ddTunnelMenu-${tabId}"></div>
       </div>`:''}
-      ${(tabId!=='generator' && extraColCandidates(tabDef).length)?`<div class="dd-wrap" id="colToggleWrap-${tabId}">
-        <button class="dd-btn" id="colToggleBtn-${tabId}" type="button" onclick="toggleDd('colToggleMenu-${tabId}','colToggleBtn-${tabId}')" aria-haspopup="listbox" aria-label="확인자 선택"><span id="colToggleLabel-${tabId}">확인자</span></button>
-        <div class="dd-menu" id="colToggleMenu-${tabId}"></div>
-      </div>`:''}
     `;
   }
-  buildColToggleDd(tabId);
   // 연도 옵션 — 로드된 레코드의 실제 연도들
   const years=[...new Set(TAB_STATE[tabId].records.map(r=>(r[tabDef.dateKey]||'').slice(0,4)).filter(Boolean))].sort().reverse();
   const yearMenu=document.getElementById('ddYearMenu-'+tabId);
@@ -2103,7 +2039,6 @@ function setElecView(v){
   if(search) search.placeholder=ELEC_SEARCH_PLACEHOLDERS[v];
   if(v==='base'){
     if(ELEC_BASE_THEAD!=null) document.getElementById('thead-elec').innerHTML=ELEC_BASE_THEAD;
-    syncExtraHeaderCols('elec');
   }
   renderTabTable('elec');
 }
@@ -2169,7 +2104,6 @@ function setGeneratorView(v){
   if(search) search.placeholder=GENERATOR_SEARCH_PLACEHOLDERS[v];
   if(v==='base'){
     if(GENERATOR_BASE_THEAD!=null) document.getElementById('thead-generator').innerHTML=GENERATOR_BASE_THEAD;
-    syncExtraHeaderCols('generator');
   }
   renderTabTable('generator');
 }
@@ -2251,7 +2185,7 @@ function renderTabTable(tabId){
   if(!tbody) return;
   const delMode=!!DELETE_MODE[tabId];
   if(!recs.length){
-    const colCount=tabDef.listCols.length + (_tabExtraCols[tabId]||[]).length + (delMode?1:0) + (tabId==='elec'?3:0);
+    const colCount=tabDef.listCols.length + (delMode?1:0) + (tabId==='elec'?3:0);
     tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
     return;
   }
@@ -2277,9 +2211,6 @@ function buildRow(tabDef, r){
   const cells=tabDef.listCols.map(key=>{
     const f=dataFields(tabDef).find(x=>x.key===key);
     return f ? buildCellHtml(f, r) : '<td>-</td>';
-  }).join('') + (_tabExtraCols[tabDef.id]||[]).map(key=>{
-    const f=dataFields(tabDef).find(x=>x.key===key);
-    return f ? buildCellHtml(f, r) : '';
   }).join('') + (tabDef.id==='elec' ? elecBaseChildCellsHtml(r) : '');
   const delMode=!!DELETE_MODE[tabDef.id];
   const checked=(DELETE_SELECTED[tabDef.id]&&DELETE_SELECTED[tabDef.id].has(r.id));
