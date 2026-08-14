@@ -87,7 +87,7 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 /* ── MONTH SELECTOR ── */
 .month-sel{background:var(--card);border:1px solid var(--border);border-radius:var(--r12);margin-bottom:10px;box-shadow:var(--shadow);padding:6px 12px;display:flex;align-items:center;gap:8px}
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:400;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
@@ -1914,18 +1914,18 @@ function renderVehicle(recs){
     const allDist=recs.reduce((s,r)=>s+(r.dist||0),0);
     const allCars=new Set(recs.map(r=>r.carNo).filter(Boolean)).size;
     document.getElementById('vehCompare').innerHTML=buildCompareCard([
-      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtKm(allDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:'총 운행거리'},
-      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${recs.length}<span style="font-size:12px;font-weight:500">건</span>`,sub:'전체 합산'},
-      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${allCars}<span style="font-size:12px;font-weight:500">대</span>`,sub:'전체 합산'}
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전체 기간',value:`${fmtKm(allDist)}<span style="font-size:12px;font-weight:400">km</span>`,sub:'총 운행거리'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${recs.length}<span style="font-size:12px;font-weight:400">건</span>`,sub:'전체 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${allCars}<span style="font-size:12px;font-weight:400">대</span>`,sub:'전체 합산'}
     ]);
   } else if(curMonth===0){
     const yearRecs=ALL_RECORDS.filter(r=>r.date.startsWith(String(curYear)));
     const yearDist=yearRecs.reduce((s,r)=>s+(r.dist||0),0);
     const yearCars=new Set(yearRecs.map(r=>r.carNo).filter(Boolean)).size;
     document.getElementById('vehCompare').innerHTML=buildCompareCard([
-      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtKm(yearDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:'총 운행거리'},
-      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${yearRecs.length}<span style="font-size:12px;font-weight:500">건</span>`,sub:'연간 합산'},
-      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${yearCars}<span style="font-size:12px;font-weight:500">대</span>`,sub:'연간 합산'}
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:`${curYear}년 연간`,value:`${fmtKm(yearDist)}<span style="font-size:12px;font-weight:400">km</span>`,sub:'총 운행거리'},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'운행 건수',value:`${yearRecs.length}<span style="font-size:12px;font-weight:400">건</span>`,sub:'연간 합산'},
+      {bg:'var(--teal50)',border:'var(--teal100)',labelColor:'var(--teal600)',label:'운행 차량',value:`${yearCars}<span style="font-size:12px;font-weight:400">대</span>`,sub:'연간 합산'}
     ]);
   } else {
     let pm=curMonth-1,py=curYear;
@@ -1939,8 +1939,8 @@ function renderVehicle(recs){
     const diffBg=isUp?'var(--teal50)':'var(--coral50)';
     const diffBorder=isUp?'var(--teal100)':'var(--coral100)';
     document.getElementById('vehCompare').innerHTML=buildCompareCard([
-      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 운행거리',value:`${fmtKm(prevDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:`${py}년 ${pm}월`},
-      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 운행거리',value:`${fmtKm(totalDist)}<span style="font-size:12px;font-weight:500">km</span>`,sub:`${curYear}년 ${curMonth}월`},
+      {bg:'var(--sky50)',border:'var(--sky100)',labelColor:'var(--sky800)',label:'전월 운행거리',value:`${fmtKm(prevDist)}<span style="font-size:12px;font-weight:400">km</span>`,sub:`${py}년 ${pm}월`},
+      {bg:'var(--card)',border:'var(--border)',labelColor:'var(--txt)',label:'당월 운행거리',value:`${fmtKm(totalDist)}<span style="font-size:12px;font-weight:400">km</span>`,sub:`${curYear}년 ${curMonth}월`},
       {bg:diffBg,border:diffBorder,labelColor:diffColor,label:'전월 대비',value:`${sign(diffDist)}${fmtKm(Math.abs(diffDist))}km`,sub:diffDist===0?'변동 없음':isUp?'증가':'감소',subColor:diffColor}
     ]);
   }
@@ -2065,19 +2065,19 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:500">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
-          <div style="font-size:16px;font-weight:500;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
+          <div style="font-size:16px;font-weight:500;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:400;color:var(--txt2)">개월</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 운행거리</div>
-          <div style="font-size:15px;font-weight:500;color:var(--sky600)">${fmtKm(totalAllDist)}<span style="font-size:11px;font-weight:500">km</span></div>
+          <div style="font-size:15px;font-weight:500;color:var(--sky600)">${fmtKm(totalAllDist)}<span style="font-size:11px;font-weight:400">km</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 운행건수</div>
-          <div style="font-size:15px;font-weight:500;color:var(--teal600)">${ALL_RECORDS.length}<span style="font-size:11px;font-weight:500">건</span></div>
+          <div style="font-size:15px;font-weight:500;color:var(--teal600)">${ALL_RECORDS.length}<span style="font-size:11px;font-weight:400">건</span></div>
         </div>
       </div>
     </div>`;

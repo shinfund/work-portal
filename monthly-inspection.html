@@ -128,7 +128,7 @@ html[data-theme="dark"] .rc-monthly-table th{color:#fff;font-weight:400}
 .report-page-chips{display:flex;gap:6px;flex-shrink:0}
 /* 보고서 페이지 칩은 필터 드롭다운(--sky)과 색을 분리해 한눈에 구분되게 --purple 계열 사용(앱 전체에서
    "보고서 생성" 버튼에 이미 쓰이는 색과 통일), 모양도 완전 알약형(16px)에서 둥근 사각형(10px)으로 변경 */
-.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12.5px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.report-page-chip{background:var(--purple50);border:1.5px solid var(--purple100);color:var(--purple);border-radius:var(--r10);padding:5px 12px;font-size:12.5px;font-weight:400;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0}
 .report-page-chip.active{background:var(--purple);color:#fff;border-color:var(--purple)}
 /* --purple는 --sky/--sky600과 달리 다크모드용 밝은 변형이 없어(:root에 고정값) 미선택 칩 글자가 어두운
    배경 위에서 거의 안 보였다(2026-07-29 사용자 제보) — 다크모드에서는 흰색으로 오버라이드(가독성 최우선,
@@ -200,7 +200,7 @@ input[type="date"]::-webkit-calendar-picker-indicator{position:absolute;left:8px
 
 /* ── DD (목록방식 드롭다운, 3-9 표준) ── */
 .dd-wrap{position:relative;display:inline-block}
-.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:400;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
 .dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
 .dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
 .dd-btn.active::after{color:#fff}
