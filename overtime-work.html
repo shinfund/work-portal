@@ -63,7 +63,7 @@ body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);co
 /* ── HEADER ── */
 .header{background:var(--hdr-bg);min-height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
 .header-left{display:flex;align-items:center;gap:10px}
-.logo-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.logo-title{font-size:14.5px;font-weight:500;color:var(--hdr-text);letter-spacing:-.02em}
 .header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
 .header-btns{display:flex;gap:6px}
 .hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
@@ -95,27 +95,27 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .dd-menu::-webkit-scrollbar{display:none}
 .dd-menu.open{display:block}
 /* 목록방식(3-9 표준) — 년/월 등 모든 dd-menu는 세로 리스트, 그리드·이전/다음 네비 사용 안 함 */
-.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:500;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:500}
 .dd-opt.has{color:var(--sky600)}
 .dd-sep{font-size:14px;font-weight:300;color:var(--border)}
-.month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:600}
+.month-sub-row{font-size:12px;color:var(--txt2);margin-left:auto;font-weight:500}
 
 /* ── 근무형태 가로 바 차트 ── */
 .typebar-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border2)}
 .typebar-row:last-child{border-bottom:none}
-.typebar-name{font-size:14px;font-weight:700;color:var(--txt);width:64px;flex-shrink:0}
+.typebar-name{font-size:14px;font-weight:500;color:var(--txt);width:64px;flex-shrink:0}
 .typebar-track{flex:1;height:22px;background:var(--border);border-radius:5px;overflow:hidden}
 .typebar-fill{height:100%;border-radius:5px;transition:width .5s ease}
-.typebar-pay{font-size:14px;font-weight:800;color:var(--txt);white-space:nowrap;text-align:right;width:95px;flex-shrink:0}
-.typebar-cnt{font-size:13px;font-weight:700;color:var(--txt2);white-space:nowrap;width:38px;flex-shrink:0;text-align:right}
-.typebar-pct{font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
+.typebar-pay{font-size:14px;font-weight:500;color:var(--txt);white-space:nowrap;text-align:right;width:95px;flex-shrink:0}
+.typebar-cnt{font-size:13px;font-weight:500;color:var(--txt2);white-space:nowrap;width:38px;flex-shrink:0;text-align:right}
+.typebar-pct{font-size:12px;font-weight:500;color:var(--txt2);white-space:nowrap;width:34px;flex-shrink:0;text-align:right}
 
 /* ── SECTION CARD ── */
 .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
-.sc-hd{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.badge{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+.sc-hd{font-size:14px;font-weight:500;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 
 /* ── PANEL ── */
 .panel{display:none}.panel.active{display:block}
@@ -124,9 +124,9 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 /* ── TREND CHART ── */
 .trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .trend-chart{display:block}
-.trend-svg-lbl{font-size:11px;fill:var(--txt2);font-weight:700}
+.trend-svg-lbl{font-size:11px;fill:var(--txt2);font-weight:500}
 .trend-svg-lbl.cur{fill:var(--sky600)}
-.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:700}
+.trend-svg-val{font-size:10px;fill:var(--sky600);font-weight:500}
 
 /* ── TABLE ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
@@ -150,19 +150,19 @@ tr:hover td{background:var(--sky50)}
 .pay-cell{font-weight:400;color:var(--txt)}
 
 /* ── RANK ── */
-.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
 .r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#2b1400}.rn{background:var(--sky50);color:var(--sky800)}
 
 /* ── FILTER (목록/엑셀 탭 표준 툴바 — 하자보수현황 앱 dd-btn/dd-menu 패턴 재사용) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
-.detail-count{font-size:12px;font-weight:700;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+.detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 #empDdMenu .dd-opt,#typeDdMenu .dd-opt,#detailYearDdMenu .dd-opt,#detailMonthDdMenu .dd-opt{text-align:left}
-.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .tb-action-btn.tb-add{background:#185FA5}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
@@ -189,27 +189,27 @@ html[data-theme="dark"] .detail-count{color:#fff}
 /* ── EMPTY ── */
 .empty{text-align:center;padding:40px 16px;color:var(--txt3)}
 .empty-icon{font-size:34px;margin-bottom:10px}
-.empty-title{font-size:14px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.empty-title{font-size:14px;font-weight:500;color:var(--txt2);margin-bottom:4px}
 .empty-desc{font-size:13px}
 
 /* ── 첨부파일(한글/엑셀 등) ── */
 .col-file{width:70px;min-width:64px;text-align:center}
 /* 예금주·입금은행·계좌번호는 관리자 모드가 아니면 화면/엑셀 어디서도 노출하지 않는다(2026-07-10) */
 #overtimeTable.bank-hidden .col-bank,#overtimeTable.bank-hidden .col-file{display:none}
-.file-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--sky600);text-decoration:none;padding:3px 8px;border-radius:20px;background:var(--sky50);border:1px solid var(--sky100);white-space:nowrap}
+.file-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:var(--sky600);text-decoration:none;padding:3px 8px;border-radius:20px;background:var(--sky50);border:1px solid var(--sky100);white-space:nowrap}
 .file-link:hover{background:var(--sky100)}
 .file-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
 .file-upload-box:hover{border-color:var(--sky100)}
 .file-upload-row{display:flex;align-items:center;gap:10px}
 .file-list-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
 .file-list-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--teal600)}
-.file-list-del{background:var(--coral50);border:1.5px solid var(--coral100);color:var(--coral);border-radius:var(--r6);padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0}
+.file-list-del{background:var(--coral50);border:1.5px solid var(--coral100);color:var(--coral);border-radius:var(--r6);padding:3px 9px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;flex-shrink:0}
 .file-list-del:hover{background:var(--coral100)}
-.file-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
+.file-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .file-upload-file-btn:hover{background:var(--sky100)}
 .file-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-upload-status.ok{color:var(--teal600);font-weight:700}
-.file-upload-status.err{color:var(--coral);font-weight:700}
+.file-upload-status.ok{color:var(--teal600);font-weight:500}
+.file-upload-status.err{color:var(--coral);font-weight:500}
 
 /* ── MODAL ── */
 #cfgModal{display:none}
@@ -219,7 +219,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 #detailModal{display:none}
 #detailModal.modal-open{display:block}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
+.detail-modal-hd h3{font-size:15px;font-weight:500;color:var(--txt)}
 .detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r12);overflow:hidden;margin-bottom:14px}
 .detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
 .detail-info-row:last-child{border-bottom:none}
@@ -227,10 +227,10 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .detail-info-row:nth-child(even){background:var(--sky50)}
 .detail-info-key{font-size:12px;font-weight:400;color:var(--txt);min-width:88px;width:88px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
 .detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
-.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
-.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
 .detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
 .detail-edit-btn:hover{background:var(--sky100)}
 .detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral)}
@@ -256,7 +256,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
   #addModal .add-modal-box,#detailModal .detail-modal-box{width:100vw;max-width:100vw;border-radius:0}
 }
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
@@ -273,25 +273,25 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
-.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 .modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
 /* 라벨 안 괄호 부기(예금주 계좌정보/첨부파일 등) — modal-hint와 톤은 같지만 라벨 옆 인라인으로
    붙는 짧은 보조설명(monthly-inspection.html #reportPaper 패턴과 동일하게 다크모드 흰색 통일 대상) */
 .modal-note{font-weight:400;color:var(--txt3)}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px}
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
 .theme-opt.on{border-color:var(--sky);}
-.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;}
 .theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
 .theme-swatch-light{background:#F8FAFC;}
 .theme-swatch-dark{background:#24292E;}
 .ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
 .theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
 .theme-swatch-dark .ts-side{background:#24292E;border-right:1px solid rgba(255,255,255,.08);}
-.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+.theme-opt-label{font-size:12.5px;font-weight:500;color:var(--txt2);}
 
 /* ── 모바일: 폼 입력 확대(iOS 자동 줌 방지) + 터치 타겟 확보(2026-08-05: 480 단일 브레이크포인트로 통일, 이전 640 별도단계 폐지) ── */
 @media(max-width:480px){
@@ -304,7 +304,7 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
   .hdr-btn{min-height:34px;padding:6px 12px}
   .top-tab{min-height:38px;padding:9px 4px}
 }
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100% - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;line-height:1.5}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);max-width:calc(100% - 32px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:normal;text-align:center;line-height:1.5}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 </style>
 </head>
@@ -1433,9 +1433,9 @@ function buildCompareCard(cells){
   return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px">`+
     cells.map(({bg,border,labelColor,label,value,sub,subColor})=>`
       <div style="background:${bg};border:1px solid ${border};border-radius:var(--r12);padding:10px 12px">
-        <div style="font-size:12px;font-weight:600;color:${labelColor};margin-bottom:3px">${label}</div>
-        <div style="font-size:15px;font-weight:800;color:${labelColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div>
-        <div style="font-size:12px;${subColor?'color:'+subColor+';font-weight:600':'color:var(--txt2)'};margin-top:2px">${sub}</div>
+        <div style="font-size:12px;font-weight:500;color:${labelColor};margin-bottom:3px">${label}</div>
+        <div style="font-size:15px;font-weight:500;color:${labelColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${value}</div>
+        <div style="font-size:12px;${subColor?'color:'+subColor+';font-weight:500':'color:var(--txt2)'};margin-top:2px">${sub}</div>
       </div>`).join('')+
   `</div>`;
 }
@@ -1453,7 +1453,7 @@ function buildStackBars(arr, typeList, valueKey, totalKey, labelFn){
       if(!v) return '';
       const segPct=(v/total*100).toFixed(1);
       const lbl=labelFn(v,t);
-      return `<div style="width:${segPct}%;background:${typeColor(t)};height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;transition:width .5s ease;padding:0 6px">${parseFloat(segPct)>=18?lbl:''}</div>`;
+      return `<div style="width:${segPct}%;background:${typeColor(t)};height:100%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;transition:width .5s ease;padding:0 6px">${parseFloat(segPct)>=18?lbl:''}</div>`;
     }).join('');
     const typeLabels=typeList.filter(t=>valueKey==='pay'?(d.typePay?.[t]):(d.types?.[t])).map(t=>{
       const v=valueKey==='pay'?(d.typePay[t]):(d.types[t]);
@@ -1464,10 +1464,10 @@ function buildStackBars(arr, typeList, valueKey, totalKey, labelFn){
     return `<div style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:700;color:var(--txt);min-width:44px">${esc(name)}</span>
+          <span style="font-size:13px;font-weight:500;color:var(--txt);min-width:44px">${esc(name)}</span>
           <div style="display:flex;gap:8px;flex-wrap:wrap">${typeLabels}</div>
         </div>
-        <span style="font-size:13px;font-weight:800;color:var(--txt);margin-left:8px;flex-shrink:0">${totalLbl}</span>
+        <span style="font-size:13px;font-weight:500;color:var(--txt);margin-left:8px;flex-shrink:0">${totalLbl}</span>
       </div>
       <div style="width:${pct}%;max-width:100%;height:22px;border-radius:4px;overflow:hidden;background:var(--border);display:flex">${segs}</div>
     </div>`;
@@ -1751,9 +1751,9 @@ function renderDonut(typeMap){
   document.getElementById('donutBadge').textContent=`${arr.length}종`;
   document.getElementById('donutInline').innerHTML=`
     <div class="typebar-row" style="background:var(--sky50);border-radius:var(--r8);padding:8px 10px;margin-bottom:6px;border:1px solid var(--sky100)">
-      <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:700">합계</div>
+      <div class="typebar-name" style="font-size:12px;color:var(--sky600);font-weight:500">합계</div>
       <div style="flex:1"></div>
-      <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:900">${fmtWon(totalPay)}원</div>
+      <div class="typebar-pay" style="color:var(--sky800);font-size:14px;font-weight:500">${fmtWon(totalPay)}원</div>
       <div class="typebar-cnt" style="color:var(--sky600)">${totalCnt}건</div>
       <div class="typebar-pct" style="color:var(--sky600)">100%</div>
     </div>`+
@@ -1762,7 +1762,7 @@ function renderDonut(typeMap){
     const payPct=totalPay>0?Math.round(d.pay/totalPay*100):0;
     return `<div class="typebar-row">
       <div class="typebar-name">${esc(t)}</div>
-      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${typeColor(t)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtWon(d.pay):''}</div></div>
+      <div class="typebar-track"><div class="typebar-fill" style="width:${barPct}%;background:${typeColor(t)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;overflow:hidden;padding:0 6px;white-space:nowrap">${barPct>=18?fmtWon(d.pay):''}</div></div>
       <div class="typebar-pay">${fmtWon(d.pay)}원</div>
       <div class="typebar-cnt">${d.cnt}건</div>
       <div class="typebar-pct">${payPct}%</div>
@@ -1795,7 +1795,7 @@ function renderEmployee(recs){
     const empRecs = recs.filter(r=>r.employee===name).sort((a,b)=>a.date.localeCompare(b.date));
     return `<div class="sc" style="margin-bottom:10px">
       <div class="sc-hd" style="margin-bottom:8px">
-        <span style="font-weight:700">${esc(name)}</span>
+        <span style="font-weight:500">${esc(name)}</span>
         <span class="badge">${empRecs.length}건</span>
       </div>
       <div class="tbl-wrap">
@@ -1806,9 +1806,9 @@ function renderEmployee(recs){
           <tbody>
             ${empRecs.map(r=>buildEmpDetailRow(r)).join('')}
             <tr style="background:var(--sky50);border-top:2px solid var(--sky100)">
-              <td colspan="2" style="font-weight:700">합계</td>
-              <td class="r" style="font-weight:700;color:var(--sky600)">${fmtH(empRecs.reduce((s,r)=>s+r.hours,0))}h</td>
-              <td class="r" style="font-weight:900;color:var(--teal600);font-size:14px">${fmtWon(empRecs.reduce((s,r)=>s+getPayAmt(r),0))}</td>
+              <td colspan="2" style="font-weight:500">합계</td>
+              <td class="r" style="font-weight:500;color:var(--sky600)">${fmtH(empRecs.reduce((s,r)=>s+r.hours,0))}h</td>
+              <td class="r" style="font-weight:500;color:var(--teal600);font-size:14px">${fmtWon(empRecs.reduce((s,r)=>s+getPayAmt(r),0))}</td>
               <td></td>
             </tr>
           </tbody>
@@ -1858,15 +1858,15 @@ function renderTrend(){
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
-          <div style="font-size:16px;font-weight:800;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
+          <div style="font-size:16px;font-weight:500;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:500;color:var(--txt2)">개월</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 건수</div>
-          <div style="font-size:16px;font-weight:800;color:var(--txt)">${totalAllCnt}<span style="font-size:12px;font-weight:500;color:var(--txt2)">건</span></div>
+          <div style="font-size:16px;font-weight:500;color:var(--txt)">${totalAllCnt}<span style="font-size:12px;font-weight:500;color:var(--txt2)">건</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 지급액</div>
-          <div style="font-size:15px;font-weight:800;color:var(--teal600)">${fmtWon(totalAllPay)}</div>
+          <div style="font-size:15px;font-weight:500;color:var(--teal600)">${fmtWon(totalAllPay)}</div>
         </div>
       </div>
     </div>`;

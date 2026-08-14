@@ -83,7 +83,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--txt)
 /* ── HEADER ── */
 .hdr{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease;}
 .hdr-left{display:flex;align-items:center;gap:10px}
-.hdr-title{font-size:14.5px;font-weight:700;color:var(--hdr-text);letter-spacing:-.02em}
+.hdr-title{font-size:14.5px;font-weight:500;color:var(--hdr-text);letter-spacing:-.02em}
 .hdr-right{display:flex;flex-direction:row;align-items:center;gap:10px}
 .hdr-btns{display:flex;gap:6px}
 .hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;min-height:27px;white-space:nowrap;-webkit-tap-highlight-color:transparent;transition:background .15s}
@@ -112,7 +112,7 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .filter-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;align-items:center}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky100);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
-.filter-count{font-size:12.5px;color:var(--txt);font-weight:600;white-space:nowrap;padding:3px 0}
+.filter-count{font-size:12.5px;color:var(--txt);font-weight:500;white-space:nowrap;padding:3px 0}
 
 /* ── TABLE ── */
 .tbl-wrap{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
@@ -166,18 +166,18 @@ tbody tr:last-child td{border-bottom:none}
 /* ── DASHBOARD ── */
 .sc{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
 .sc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sc-hd h3{font-size:13px;font-weight:700;color:var(--txt)}
+.sc-hd h3{font-size:13px;font-weight:500;color:var(--txt)}
 .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .bar-label{font-size:13px;color:var(--txt2);min-width:64px;flex-shrink:0;font-weight:500}
 .bar-track{flex:1;height:18px;background:var(--bg);border-radius:20px;overflow:hidden}
 .bar-fill{height:100%;border-radius:20px;transition:width .4s ease}
-.bar-val{font-size:13px;font-weight:700;color:var(--txt);min-width:28px;text-align:right;flex-shrink:0}
-.bar-sub{font-size:12px;font-weight:700;color:var(--teal600);min-width:36px;text-align:right;flex-shrink:0}
+.bar-val{font-size:13px;font-weight:500;color:var(--txt);min-width:28px;text-align:right;flex-shrink:0}
+.bar-sub{font-size:12px;font-weight:500;color:var(--teal600);min-width:36px;text-align:right;flex-shrink:0}
 .status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .status-card{padding:12px;border-radius:var(--r12);text-align:center}
-.status-card .num{font-size:24px;font-weight:900;line-height:1}
-.status-card .lbl{font-size:12px;margin-top:4px;font-weight:600}
+.status-card .num{font-size:24px;font-weight:500;line-height:1}
+.status-card .lbl{font-size:12px;margin-top:4px;font-weight:500}
 .status-done{background:var(--teal50);color:var(--teal600)}
 .status-prog{background:var(--sky50);color:var(--sky800)}
 .status-poor{background:var(--coral50);color:var(--coral800)}
@@ -192,7 +192,7 @@ tbody tr:last-child td{border-bottom:none}
 }
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:7px;color:var(--txt)}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:7px;color:var(--txt)}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
@@ -210,13 +210,13 @@ html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator{fi
    2026-08-13) — placeholder만 예외로 흐림 유지(위 ::placeholder 규칙은 그대로 둠) */
 html[data-theme="dark"] .modal-hint{color:#fff}
 .modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
-.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px}
-.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-save{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px}
 
 /* 툴바 버튼("월간점검-안전관리" 앱 기준 통일, 2026-07-27) — 신규등록/엑셀생성 버튼이 기존엔
    인라인 style로 var(--sky600)/var(--teal600)를 그대로 써서 다크모드에서 다른 앱보다 밝게
    보이던 문제를 tb-action-btn 클래스 체계로 교체해 해결. */
-.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:700;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .tb-action-btn.tb-add{background:#185FA5}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
@@ -227,20 +227,20 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 .theme-opts{display:flex;gap:12px;}
 .theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent;}
 .theme-opt.on{border-color:var(--sky);}
-.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center;}
 .theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px;}
 .theme-swatch-light{background:#F8FAFC;}
 .theme-swatch-dark{background:#24292E;}
 .ts-side{position:absolute;left:0;top:0;bottom:0;width:34%;}
 .theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7;}
 .theme-swatch-dark .ts-side{background:#1C2024;border-right:1px solid rgba(255,255,255,.08);}
-.theme-opt-label{font-size:12.5px;font-weight:700;color:var(--txt2);}
+.theme-opt-label{font-size:12.5px;font-weight:500;color:var(--txt2);}
 
 /* ── DETAIL MODAL ── */
 .detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.detail-modal-hd h3{font-size:15px;font-weight:700;color:var(--txt)}
-.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-hd h3{font-size:15px;font-weight:500;color:var(--txt)}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
 .detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
 .detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
@@ -254,14 +254,14 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 /* ── 사진 영역 ── */
 .photo-section{padding:10px 0;border-bottom:1px solid var(--border2)}
 .photo-section:last-child{border-bottom:none}
-.photo-label{font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:6px}
+.photo-label{font-size:12px;font-weight:500;color:var(--txt3);margin-bottom:6px}
 .photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
 .photo-wrap a{display:block}
 .photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
 .photo-img.loading{opacity:0}
 .photo-img.loaded{opacity:1}
 .photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
-.photo-err a{color:var(--sky600);font-weight:700;text-decoration:none}
+.photo-err a{color:var(--sky600);font-weight:500;text-decoration:none}
 .photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
 .photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
 
@@ -352,7 +352,7 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 @media(max-width:480px){
   #addModal .add-modal-box,#detailModal .detail-modal-box{width:100vw;max-width:100vw;border-radius:0}
 }
-.modal-section{font-size:11px;font-weight:700;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
+.modal-section{font-size:11px;font-weight:500;color:var(--txt3);letter-spacing:.06em;text-transform:uppercase;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border2)}
 .modal-section:first-child{margin-top:0}
 .modal-form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .modal-textarea{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;resize:vertical;min-height:80px;transition:border .18s}
@@ -360,7 +360,7 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
 .modal-required{color:var(--coral);margin-left:2px}
-.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
 .add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:480px){
   .modal-form-row{grid-template-columns:1fr}
@@ -370,16 +370,16 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 .photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
 .photo-upload-box:hover{border-color:var(--sky100)}
 .photo-upload-row{display:flex;align-items:center;gap:10px}
-.photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
+.photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .photo-upload-file-btn:hover{background:var(--sky100)}
 .photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.photo-upload-status.ok{color:var(--teal600);font-weight:700}
-.photo-upload-status.err{color:var(--coral800);font-weight:700}
+.photo-upload-status.ok{color:var(--teal600);font-weight:500}
+.photo-upload-status.err{color:var(--coral800);font-weight:500}
 .photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);display:none;margin-top:10px;cursor:zoom-in}
 .photo-thumb.show{display:block}
 
 /* ── DETAIL ACTION BUTTONS ── */
-.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
 .detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
 .detail-edit-btn:hover{background:var(--sky100)}
 .detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
@@ -389,7 +389,7 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 #confirmModal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .15s}
 #confirmModal.open{opacity:1;pointer-events:auto}
 .confirm-box{background:var(--card);border-radius:14px;padding:26px 22px 20px;min-width:260px;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
-.confirm-msg{font-size:14px;font-weight:600;color:var(--txt);margin:0 0 18px;line-height:1.6}
+.confirm-msg{font-size:14px;font-weight:500;color:var(--txt);margin:0 0 18px;line-height:1.6}
 .confirm-btns{display:flex;gap:8px;justify-content:center}
 
 /* ── TUNNEL DROPDOWN ── */
@@ -402,12 +402,12 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 .dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:none}
 .dd-menu::-webkit-scrollbar{display:none}
 .dd-menu.open{display:block}
-.dd-opt{padding:9px 14px;font-size:13px;font-weight:600;color:var(--txt);cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2);white-space:nowrap}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:500;color:var(--txt);cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2);white-space:nowrap}
 .dd-opt:last-child{border-bottom:none}
 .dd-opt:hover{background:var(--sky50)}
-.dd-opt.sel{background:#1565C0;color:#fff;font-weight:700}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:500}
 
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;transition:.3s;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
 </style>
@@ -915,11 +915,11 @@ if (window.self !== window.top) {
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
     <div class="filter-count" id="filterCount"></div>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <button id="delToggleBtn" onclick="toggleDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:500;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         <span id="delToggleLbl">삭제</span>
       </button>
-      <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+      <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -1032,11 +1032,11 @@ if (window.self !== window.top) {
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
     <div class="filter-count" id="contactCount"></div>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <button id="cDelToggleBtn" onclick="toggleContactDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:500;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         <span id="cDelToggleLbl">삭제</span>
       </button>
-      <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+      <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -1101,11 +1101,11 @@ if (window.self !== window.top) {
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
     <div class="filter-count" id="mgmtCount"></div>
     <div style="display:flex;gap:8px;flex-shrink:0">
-      <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:600;white-space:nowrap">
+      <button id="mDelToggleBtn" onclick="toggleMgmtDeleteMode()" style="background:#495057;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;display:flex;align-items:center;gap:5px;border:none;cursor:pointer;font-weight:500;white-space:nowrap">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         <span id="mDelToggleLbl">삭제</span>
       </button>
-      <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:600;white-space:nowrap" disabled>선택 삭제</button>
+      <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
   </div>
   <div class="tbl-wrap">
@@ -1947,7 +1947,7 @@ function renderKpiCountLine(elId, parts){
   var el = document.getElementById(elId);
   if(!el) return;
   el.innerHTML = parts.map(function(p, i){
-    var style = i===0 ? 'font-weight:700;color:var(--txt)' : 'font-weight:600;color:'+(p.color||'var(--txt2)');
+    var style = i===0 ? 'font-weight:500;color:var(--txt)' : 'font-weight:500;color:'+(p.color||'var(--txt2)');
     return '<span style="'+style+'">'+esc(p.label)+' '+esc(String(p.value))+'</span>';
   }).join('<span style="color:var(--border2);margin:0 8px">·</span>');
 }
@@ -1975,8 +1975,8 @@ function updateKPI(){
   var rate = d.length>0?Math.round(c.done/d.length*100):0;
   document.getElementById('rateWrap').innerHTML =
     '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-    +'<span style="font-size:32px;font-weight:900;color:var(--teal600)">'+rate+'%</span>'
-    +'<span style="font-size:13px;font-weight:600;color:var(--txt2)">하자 완료율</span></div>'
+    +'<span style="font-size:32px;font-weight:500;color:var(--teal600)">'+rate+'%</span>'
+    +'<span style="font-size:13px;font-weight:500;color:var(--txt2)">하자 완료율</span></div>'
     +'<div class="bar-track" style="height:12px">'
     +'<div class="bar-fill" style="width:'+rate+'%;background:var(--teal600)"></div></div>';
 }
@@ -2047,7 +2047,7 @@ function renderUnprocPanel(){
   var tbody = document.getElementById('unprocBody');
   if(!tbody) return;
   if(!rows.length){
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--teal600);font-weight:700">🎉 미처리 하자가 없습니다!</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--teal600);font-weight:500">🎉 미처리 하자가 없습니다!</td></tr>';
     return;
   }
   var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
@@ -2212,7 +2212,7 @@ function renderDashboard(){
     var col  = colors[ci2++ % colors.length];
     var unproc = prog + poor;
     var unprocBadge = unproc > 0
-      ? '<span style="font-size:10px;font-weight:700;color:var(--coral800);background:var(--coral50);border-radius:10px;padding:1px 6px;margin-left:4px">미처리 '+unproc+'</span>'
+      ? '<span style="font-size:10px;font-weight:500;color:var(--coral800);background:var(--coral50);border-radius:10px;padding:1px 6px;margin-left:4px">미처리 '+unproc+'</span>'
       : '';
     return buildBarRow(cp, rows.length, cmax, col, rate, unprocBadge, 'min-width:80px;max-width:80px;overflow:hidden;text-overflow:ellipsis');
   }).join('');
@@ -2364,7 +2364,7 @@ function buildPanelCard(title, subHtml, rows, thead, tbody, showRate){
     +'<span class="badge badge-done">완료 '+done+'</span>'
     +'<span class="badge badge-prog">진행중 '+prog+'</span>'
     +(poor>0?'<span class="badge badge-poor">미흡 '+poor+'</span>':'')
-    +(showRate?'<span style="font-size:12px;font-weight:700;color:var(--teal600)">'+rate+'%</span>':'')
+    +(showRate?'<span style="font-size:12px;font-weight:500;color:var(--teal600)">'+rate+'%</span>':'')
     +'</div></div>'
     +'<div class="tbl-wrap"><div class="tbl-scroll">'
     +'<table><thead><tr>'+thead+'</tr></thead><tbody>'+tbody+'</tbody></table>'
@@ -2755,7 +2755,7 @@ function createSingleDeleteController(cfg){
     var footer = document.getElementById('detailFooter');
     if(!footer) return;
     footer.innerHTML = '<div class="del-confirm-bar">'
-      +'<span style="font-size:13px;font-weight:700;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
+      +'<span style="font-size:13px;font-weight:500;color:var(--coral800)">이 항목을 휴지통으로 이동할까요?</span>'
       +'<div style="display:flex;gap:6px">'
       +'<button class="modal-cancel" onclick="hideDeleteConfirm()" style="font-size:12px;padding:6px 12px;min-height:32px">취소</button>'
       +'<button class="detail-act-btn detail-del-btn" id="'+cfg.execBtnId+'" onclick="'+cfg.execFnName+'('+idx+')">삭제 확인</button>'
@@ -3458,9 +3458,9 @@ function openContactDetail(idx){
   var tel = r.전화번호||'';
   var telHtml = tel ? '<a href="tel:'+esc(tel)+'" style="color:var(--txt);text-decoration:none">'+esc(tel)+'</a>' : '-';
   var gBadge = r.관리구분==='안전관리자'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">안전관리자</span>'
+    ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">안전관리자</span>'
     : r.관리구분==='점검팀'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">점검팀</span>'
+    ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">점검팀</span>'
     : esc(r.관리구분||'-');
 
   var rows = [
@@ -3705,9 +3705,9 @@ function renderContactTable(){
   }
   tbody.innerHTML = rows.map(function(r){
     var gBadge = r.관리구분==='안전관리자'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">안전관리자</span>'
+      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">안전관리자</span>'
       : r.관리구분==='점검팀'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">점검팀</span>'
+      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">점검팀</span>'
       : esc(r.관리구분);
     var tel = r.전화번호||'-';
     var telHtml = tel!=='-'
@@ -4606,11 +4606,11 @@ function renderMgmtTable(){
   }
   tbody.innerHTML = rows.map(function(r){
     var cBadge = r['구분']==='전기공사'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
+      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
       : r['구분']==='소방(전기)'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800);white-space:nowrap">소방(전기)</span>'
+      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800);white-space:nowrap">소방(전기)</span>'
       : r['구분']==='지급자재'
-      ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
+      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
       : esc(r['구분']);
     var checkCell = MGMT_DELETE_MODE
       ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(MGMT_DELETE_SELECTED.has(r._idx)?'checked':'')+' onchange="toggleMgmtRowSelect('+r._idx+',this.checked)"/></td>'
@@ -4666,11 +4666,11 @@ function openMgmtDetail(idx){
   if(footer) footer.innerHTML = '';
 
   var cBadge = r['구분']==='전기공사'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">전기공사</span>'
+    ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800)">전기공사</span>'
     : r['구분']==='소방(전기)'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800)">소방(전기)</span>'
+    ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800)">소방(전기)</span>'
     : r['구분']==='지급자재'
-    ? '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">지급자재</span>'
+    ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600)">지급자재</span>'
     : esc(r['구분']||'-');
 
   var rows = [
