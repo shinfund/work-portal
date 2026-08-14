@@ -1744,22 +1744,22 @@ function selectYear(val, el){
   document.querySelectorAll('#yearDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
   document.getElementById('yearDdLabel').textContent = val==='ALL' ? '전체 연도' : val+'년';
-  var btn = document.getElementById('yearDdBtn');
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.year = val;
   _filterDateUserPicked = true;
   closeYearDd();
+  var btn = document.getElementById('yearDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   renderList();
 }
 function selectMonth(val, el){
   document.querySelectorAll('#monthDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
   document.getElementById('monthDdLabel').textContent = val==='ALL' ? '전체 월' : parseInt(val,10)+'월';
-  var btn = document.getElementById('monthDdBtn');
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.month = val;
   _filterDateUserPicked = true;
   closeMonthDd();
+  var btn = document.getElementById('monthDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   renderList();
 }
 
@@ -1783,10 +1783,10 @@ function selectManager(val, el){
   document.querySelectorAll('#managerDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
   document.getElementById('managerDdLabel').textContent = val==='ALL' ? '관리 전체' : val;
-  var btn = document.getElementById('managerDdBtn');
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.manager = val;
   closeManagerDd();
+  var btn = document.getElementById('managerDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   renderList();
 }
 
@@ -1828,11 +1828,11 @@ function selectStatus(val, el){
   if(el) el.classList.add('sel');
   var labelMap = { ALL:'조치여부 전체', '진행중':'진행중', '완료':'완료', '미흡':'미흡' };
   document.getElementById('statusDdLabel').textContent = labelMap[val] || val;
-  var btn = document.getElementById('statusDdBtn');
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.status = val;
   _filterStatusUserPicked = true;
   closeStatusDd();
+  var btn = document.getElementById('statusDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   renderList();
 }
 
@@ -1855,9 +1855,9 @@ function closeUnprocStatusDd() { closeDd('unprocStatusDdMenu','unprocStatusDdBtn
       opt.classList.add('sel');
       var labelMap = { ALL:'전체 미처리', '진행중':'진행중', '미흡':'미흡' };
       document.getElementById('unprocStatusDdLabel').textContent = labelMap[val] || val;
+      closeUnprocStatusDd();
       var btn = document.getElementById('unprocStatusDdBtn');
       if(btn) btn.classList.toggle('active', val!=='ALL');
-      closeUnprocStatusDd();
       setUnprocFilter(val);
     });
   }
@@ -1918,11 +1918,11 @@ function selectTunnel(val, el){
   document.querySelectorAll('#tunnelDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
   document.getElementById('tunnelDdLabel').textContent = val==='ALL' ? '터널명 전체' : val;
-  var btn = document.getElementById('tunnelDdBtn');
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   FILTER.tunnel = val;
   _filterTunnelUserPicked = true;
   closeTunnelDd();
+  var btn = document.getElementById('tunnelDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   renderList();
 }
 
@@ -2286,10 +2286,10 @@ function selectTabDd(kind, val, el){
   document.querySelectorAll('#'+menuId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
   document.getElementById(labelId).textContent = val==='ALL' ? defLabel : val;
-  var btn = document.getElementById(btnId);
-  if(btn) btn.classList.toggle('active', val!=='ALL');
   TAB_FILTER[kind] = val;
   closeTabDd(menuId, btnId);
+  var btn = document.getElementById(btnId);
+  if(btn) btn.classList.toggle('active', val!=='ALL');
   if(kind==='tunnel'){ renderTunnelPanel(); }
   else               { renderCompanyPanel(); }
   updateTabCounts();
@@ -3384,10 +3384,10 @@ function buildContactTunnelDd(){
       menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
       opt.classList.add('sel');
       document.getElementById('contactTunnelDdLabel').textContent = val==='ALL'?'터널 전체':val;
-      var btn=document.getElementById('contactTunnelDdBtn');
-      if(btn) btn.classList.toggle('active', val!=='ALL');
       CONTACT_FILTER.tunnel = val;
       closeDd('contactTunnelDdMenu','contactTunnelDdBtn');
+      var btn=document.getElementById('contactTunnelDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
       renderContactTable();
     });
     document.addEventListener('click', function(e){
@@ -3416,10 +3416,10 @@ function buildContactManagerDd(){
       menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
       opt.classList.add('sel');
       document.getElementById('contactManagerDdLabel').textContent = val==='ALL'?'관리 전체':val;
-      var btn=document.getElementById('contactManagerDdBtn');
-      if(btn) btn.classList.toggle('active', val!=='ALL');
       CONTACT_FILTER.group = val;
       closeDd('contactManagerDdMenu','contactManagerDdBtn');
+      var btn=document.getElementById('contactManagerDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
       renderContactTable();
     });
     document.addEventListener('click', function(e){
@@ -4522,10 +4522,10 @@ function buildMgmtFilterDd(opts){
       menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
       opt.classList.add('sel');
       document.getElementById(opts.labelId).textContent = val==='ALL'?opts.allLabel:val;
-      var btn=document.getElementById(opts.btnId);
-      if(btn) btn.classList.toggle('active', val!=='ALL');
       MGMT_FILTER[opts.filterKey] = val;
       closeDd(opts.menuId, opts.btnId);
+      var btn=document.getElementById(opts.btnId);
+      if(btn) btn.classList.toggle('active', val!=='ALL');
       renderMgmtTable();
     });
     document.addEventListener('click', function(e){
@@ -4563,10 +4563,10 @@ function buildMgmtCategoryDd(){
       menu.querySelectorAll('.dd-opt').forEach(function(o){o.classList.remove('sel');});
       opt.classList.add('sel');
       document.getElementById('mgmtCategoryDdLabel').textContent = val==='ALL'?'구분 전체':val;
-      var btn=document.getElementById('mgmtCategoryDdBtn');
-      if(btn) btn.classList.toggle('active', val!=='ALL');
       MGMT_FILTER.category = val;
       closeDd('mgmtCategoryDdMenu','mgmtCategoryDdBtn');
+      var btn=document.getElementById('mgmtCategoryDdBtn');
+      if(btn) btn.classList.toggle('active', val!=='ALL');
       renderMgmtTable();
     });
     document.addEventListener('click', function(e){

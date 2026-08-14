@@ -1059,13 +1059,14 @@ let _empFilter='';
 let _typeFilter='';
 // 공통: 필터 드롭다운(직원별/근무형태별) 렌더+바인딩 — 두 드롭다운이 필터 변수명만
 // 다르고 나머지 로직이 동일해서 하나로 통합
-function buildFilterDd(menuId, labelId, getFilter, setFilter, closeFn, items, allLabel){
+function buildFilterDd(menuId, labelId, btnId, getFilter, setFilter, closeFn, items, allLabel){
   const menu=document.getElementById(menuId);
   if(!menu) return;
   const opts=[{val:'',label:allLabel}].concat(items.map(v=>({val:v,label:v})));
   const cur=getFilter();
   menu.innerHTML=opts.map(o=>`<div class="dd-opt${cur===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
   document.getElementById(labelId).textContent=cur||allLabel;
+  document.getElementById(btnId)?.classList.toggle('active', !!cur);
   if(!menu._bound){
     menu._bound=true;
     menu.addEventListener('click',e=>{
@@ -1078,10 +1079,10 @@ function buildFilterDd(menuId, labelId, getFilter, setFilter, closeFn, items, al
   }
 }
 function buildEmpDd(emps){
-  buildFilterDd('empDdMenu','empDdLabel',()=>_empFilter,v=>{_empFilter=v;},closeEmpDd,emps,'전체 직원');
+  buildFilterDd('empDdMenu','empDdLabel','empDdBtn',()=>_empFilter,v=>{_empFilter=v;},closeEmpDd,emps,'전체 직원');
 }
 function buildTypeDd(types){
-  buildFilterDd('typeDdMenu','typeDdLabel',()=>_typeFilter,v=>{_typeFilter=v;},closeTypeDd,types,'전체 근무형태');
+  buildFilterDd('typeDdMenu','typeDdLabel','typeDdBtn',()=>_typeFilter,v=>{_typeFilter=v;},closeTypeDd,types,'전체 근무형태');
 }
 
 // ── 근무내역 탭 전용 연/월 필터(목록방식, 기본값=데이터가 있는 최신 연/월 — 비품대장 앱과

@@ -1170,6 +1170,7 @@ function buildDetailTunnelDd(tunnels){
   const opts=[{val:'',label:'전체 터널'}].concat(tunnels.map(t=>({val:t,label:t})));
   menu.innerHTML=opts.map(o=>`<div class="dd-opt${_detailTunnelFilter===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
   document.getElementById('tunnelDdLabel').textContent = _detailTunnelFilter || '전체 터널';
+  document.getElementById('tunnelDdBtn')?.classList.toggle('active', !!_detailTunnelFilter);
   if(!menu._bound){
     menu._bound=true;
     menu.addEventListener('click',e=>{
