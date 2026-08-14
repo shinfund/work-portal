@@ -1327,10 +1327,17 @@ function closeAllDd(){
   ['categoryDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
   ['categoryDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
+// 외부 클릭 시 닫기 — 이미 닫힌(=.open 없는) 메뉴는 건드리지 않는다. select 핸들러가
+// menu.innerHTML을 재생성하면 클릭된 .dd-opt(e.target)가 DOM에서 분리돼 wrap.contains(e.target)가
+// false로 오판되는데, .open 클래스로 먼저 걸러내면 이미 닫힌 메뉴는 애초에 대상에서 빠져
+// 방금 재설정된 .active가 다시 지워지는 버그를 피한다(monthly-inspection.html과 동일 패턴).
 document.addEventListener('click', function(e){
-  ['categoryDdWrap'].forEach(function(id){
-    var w=document.getElementById(id);
-    if(w && !w.contains(e.target)) closeDd(id.replace('Wrap','Menu'), id.replace('Wrap','Btn'));
+  document.querySelectorAll('.dd-menu.open').forEach(function(menu){
+    var wrap=menu.closest('.dd-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      menu.classList.remove('open');
+      var btn=wrap.querySelector('.dd-btn'); if(btn) btn.classList.remove('active');
+    }
   });
 });
 

@@ -947,18 +947,18 @@ function updateMonthLabel(){
   const n=filteredRecords().length;
   document.getElementById('monthSub').textContent=n?`총 ${n}건`:'데이터 없음';
 }
-// 외부 클릭 시 닫기 (버블링 중복 호출 방지)
+// 외부 클릭 시 닫기 — 이미 닫힌(=.open 없는) 메뉴는 건드리지 않는다. select 핸들러가
+// menu.innerHTML을 재생성하면 클릭된 .dd-opt(e.target)가 DOM에서 분리돼 wrap.contains(e.target)가
+// false로 오판되는데, .open 클래스로 먼저 걸러내면 이미 닫힌 메뉴는 애초에 대상에서 빠져
+// 방금 재설정된 .active가 다시 지워지는 버그를 피한다(monthly-inspection.html과 동일 패턴).
 document.addEventListener('click',e=>{
-  const sel=document.getElementById('monthSel');
-  if(sel&&!sel.contains(e.target)) closeAllDD();
-  const ew=document.getElementById('empDdWrap');
-  if(ew&&!ew.contains(e.target)) closeEmpDd();
-  const tw=document.getElementById('typeDdWrap');
-  if(tw&&!tw.contains(e.target)) closeTypeDd();
-  const dyw=document.getElementById('detailYearDdWrap');
-  if(dyw&&!dyw.contains(e.target)) closeDd('detailYearDdMenu','detailYearDdBtn');
-  const dmw=document.getElementById('detailMonthDdWrap');
-  if(dmw&&!dmw.contains(e.target)) closeDd('detailMonthDdMenu','detailMonthDdBtn');
+  document.querySelectorAll('.dd-menu.open').forEach(menu=>{
+    const wrap=menu.closest('.dd-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      menu.classList.remove('open');
+      wrap.querySelector('.dd-btn')?.classList.remove('active');
+    }
+  });
 });
 
 // ── 상세내역 탭 필터 드롭다운 (하자보수현황 앱 dd-btn/dd-menu 패턴 재사용, 기본값=전체) ──
