@@ -1501,9 +1501,9 @@ function makeFileLink(r){
   const files=r.files||[];
   if(!files.length) return '<span style="color:var(--txt3)">-</span>';
   if(files.length===1){
-    return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}',0)">📎 1개</a>`;
+    return `<a class="file-link" href="javascript:void(0)" onclick="event.stopPropagation();downloadOvertimeFile('${r.id}',0)">1개</a>`;
   }
-  return `<span class="file-link" style="cursor:pointer" onclick="event.stopPropagation();openDetailModal('${r.id}')">📎 ${files.length}개</span>`;
+  return `<span class="file-link" style="cursor:pointer" onclick="event.stopPropagation();openDetailModal('${r.id}')">${files.length}개</span>`;
 }
 // R2 파일은 이 사이트와 다른 origin이라 <a download> 속성이 브라우저에서 무시됨(크로스오리진
 // 다운로드는 서버의 Content-Disposition 헤더 없이는 파일명 지정 불가) — blob으로 직접 받아
