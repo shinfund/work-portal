@@ -187,7 +187,7 @@ tfoot td:first-child{font-weight:400}
 #cfgModal.modal-open{display:flex;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:18px}
 #addModal{display:none}
 #addModal.modal-open{display:block}
-.modal-backdrop{width:100%;display:flex;align-items:center;justify-content:center}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
 /* 신규등록(#addModal)만 중앙 팝업 대신 우측 슬라이드인 드로어로 표시(work-portal 전체 앱 공통 패턴,
