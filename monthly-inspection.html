@@ -3648,8 +3648,20 @@ function photoMultiAddRow(){
   _photoMultiRows.push(row);
   renderPhotoMultiRows();
 }
-function photoMultiRemoveExtraRow(key){
-  _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
+// 팀 앱(monthly-inspection-team.html)과 동일하게 모든 칸에 ✕ 버튼을 두되(2026-08-19 사용자 요청),
+// 기본 6칸은 실제 보고서 "사진1~사진6" 지면 위치가 고정이라 칸 자체를 없앨 순 없다 — 내용만 비워서
+// "이 칸을 삭제하겠다"는 뜻으로 만든다. row.id(이미 저장된 슬롯)가 있으면 submitPhotoMulti의
+// deletedRows 판정(내용 없음+id 있음)에 그대로 걸려 "등록"을 눌러야 노션에서도 실제 삭제된다 —
+// ✕를 누른 즉시 지워지는 게 아니라 팀 앱과 동일하게 등록 시점에 반영된다. 추가행(row.extra)은
+// 원래대로 칸 자체를 없앤다.
+function photoMultiRemoveRow(key){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(!row) return;
+  if(row.extra){
+    _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
+  } else {
+    row.tunnel=''; row.date=''; row.desc=''; row.descCustom=false; row.files=[];
+  }
   renderPhotoMultiRows();
 }
 function renderPhotoMultiRows(){
@@ -3690,7 +3702,7 @@ function renderPhotoMultiRows(){
       // justify-content:center로 직접 보정(2026-08-10, 다른 tb-action-btn 공용 스타일은 건드리지 않음).
       : `<button type="button" class="tb-action-btn tb-add" style="width:100%;padding:16px 0;justify-content:center" onclick="document.getElementById('pmf_${row.key}').click()">사진 선택</button>`;
     return `<div style="border:1px solid var(--border);border-left:4px solid ${accent};border-radius:var(--r8);padding:10px;position:relative">
-      ${row.extra?`<button type="button" onclick="photoMultiRemoveExtraRow(${row.key})" title="행 삭제" aria-label="행 삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>`:''}
+      <button type="button" onclick="photoMultiRemoveRow(${row.key})" title="삭제" aria-label="삭제" style="position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:transparent;color:var(--coral);border:1px solid var(--border);cursor:pointer">✕</button>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
         <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${accent};flex-shrink:0"></span>
         <span style="font-weight:500;font-size:13px">#${displayNum}</span>
