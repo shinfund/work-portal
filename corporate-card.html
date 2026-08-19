@@ -18,7 +18,7 @@
   --gray50:#F1EFE8;--gray100:#D3D1C7;--gray200:#B4B2A9;--gray600:#5F5E5A;
   --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
   --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
-  --r6:6px;--r8:8px;--r12:12px;--r16:16px;--r20:20px;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r16:16px;--r20:20px;
   --shadow:none;
   --hdr-bg:#032F62;
   --hdr-text:#fff;
@@ -187,6 +187,8 @@ tfoot td:first-child{font-weight:400}
 #cfgModal.modal-open{display:flex;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,.55);z-index:9000;align-items:center;justify-content:center;padding:18px}
 #addModal{display:none}
 #addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
 .modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
@@ -194,21 +196,35 @@ tfoot td:first-child{font-weight:400}
    2026-08-04). 열기는 modal-open 부여 직후 강제 리플로우(void offsetWidth)로 시작 상태를 확정한 뒤
    drawer-in을 붙여 트랜지션이 실제로 재생되게 하고, 닫기는 drawer-in만 먼저 떼 슬라이드아웃시킨 뒤
    트랜지션 시간만큼 지나서 modal-open을 떼 display:none 처리한다(closeAddModal/openAddModal 참고). */
-#addModal .modal-backdrop{justify-content:flex-end;padding:0}
-#addModal .add-modal-box{
+#addModal .modal-backdrop,#detailModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal .add-modal-box,#detailModal .detail-modal-box{
   height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
   border-radius:20px 0 0 20px;
   transform:translateX(100%);
   transition:transform .28s cubic-bezier(.22,.8,.25,1);
 }
-#addModal.drawer-in .add-modal-box{transform:translateX(0)}
+#addModal.drawer-in .add-modal-box,#detailModal.drawer-in .detail-modal-box{transform:translateX(0)}
 @media(max-width:480px){
-  #addModal .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+  #addModal .add-modal-box,#detailModal .detail-modal-box{width:100vw;max-width:100vw;border-radius:0}
 }
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
 .detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
 .detail-modal-hd h3{font-size:15px;font-weight:500;color:var(--txt)}
 .detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
 .detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:400;color:var(--txt);min-width:100px;width:100px;flex-shrink:0;padding:10px 12px;background:rgba(55,138,221,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
 .modal-title{font-size:16px;font-weight:500;color:var(--txt);margin-bottom:18px;display:flex;align-items:center;gap:7px}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
@@ -301,7 +317,7 @@ if (window.self !== window.top) {
   <div class="modal-backdrop" onclick="closeAddModal(event)">
     <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
-        <h3>신규 사용내역 등록</h3>
+        <h3 id="addModalTitleText">신규 사용내역 등록</h3>
         <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
       </div>
       <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
@@ -372,6 +388,23 @@ if (window.self !== window.top) {
         <button class="modal-cancel" onclick="closeAddModal()">취소</button>
         <button class="modal-save" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 상세 모달 (레코드 클릭 시 조회 + 수정/삭제 — 태양광발전량 앱 detailModal 패턴, 2026-08-19 추가) -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">사용내역 상세</h3>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">닫기</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
     </div>
   </div>
 </div>
@@ -567,6 +600,9 @@ const BUILT_RD=[
   {date:"2026-03-31",month:"2026-03",desc:"제본비(3월,1분기)",cat:"도서인쇄비",supply:18182,vat:1818,total:20000,vendor:"●●인쇄소",isDemo:true},
   {date:"2026-03-31",month:"2026-03",desc:"커피 등 구입",cat:"비급여성",supply:69682,vat:6968,total:76650,vendor:"●●편의점",isDemo:true},
 ];
+// 데모 데이터도 상세 클릭이 가능해야 하므로(수정/삭제는 클릭 시점에 안내) 실제 노션 ID와 겹치지 않는
+// 가짜 id를 부여한다(태양광발전량 앱 DEMO_DATA id 패턴과 동일, 2026-08-19).
+BUILT_RD.forEach((r,i)=>{ r.id='demo-'+i; });
 // 참고 엑셀 "카드한도" 시트(2026-08-06 갱신) 기준 — 비급여성 중석식대 통합 항목을 중식대·석식대로
 // 분리(각 400,000원, 780,000→1,180,000). 차량비(법인카드) 항목은 참고 엑셀엔 별도 한도 행이
 // 없지만(대신 "고속도로통행료"라는 별개 항목이 있음), 실제 노션 거래 데이터의 계정항목이자
@@ -883,7 +919,7 @@ function renderDetail(){
     const c=clr(r.cat);
     const vendorTxt=r.isDemo?`<span style="color:var(--txt3);letter-spacing:.05em">${esc(r.vendor||"")}</span>`:esc(r.vendor||"");
     const fuelTxt=r.cardName==="주유카드"?`<span style="color:var(--coral)">${esc(r.cardName)}</span>`:esc(r.cardName||"");
-    return`<tr>`+
+    return`<tr onclick="openDetailModal('${esc(r.id||"")}')" style="cursor:pointer">`+
       `<td style="white-space:nowrap;font-size:13px;color:var(--txt)">${r.date}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.supply)}</td>`+
       `<td class="r" style="font-size:13px;color:var(--txt)">${fmt(r.vat)}</td>`+
@@ -965,7 +1001,7 @@ function resetModalDragPos(modalId){
 }
 function initDraggableModals(){
   document.querySelectorAll('.modal-box').forEach(box=>{
-    if(box.closest('#addModal')) return; // #addModal은 우측 고정 드로어라 드래그 이동 대상에서 제외
+    if(box.closest('#addModal')||box.closest('#detailModal')) return; // 우측 고정 드로어는 드래그 이동 대상에서 제외
     const handle=box.querySelector('.modal-title, .detail-modal-hd');
     if(handle) makeModalDraggable(box, handle);
   });
@@ -995,7 +1031,7 @@ function closeCfgModal(e){
   if(e&&e.target!==e.currentTarget)return;
   closeModal();
 }
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCfgModal();closeAddModal();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCfgModal();closeAddModal();closeDetailModal();}});
 
 // ── 화면모드(테마) ────────────────────────────────────
 function syncThemeOptUI(){
@@ -1021,7 +1057,19 @@ window.addEventListener('storage',e=>{
   }
 });
 
-// ── 신규등록 드로어 ───────────────────────────────────
+// ── 신규등록/수정 드로어 ─────────────────────────────
+var EDIT_PAGE_ID=null; // null이면 신규등록, 페이지ID면 해당 레코드 수정 모드(2026-08-19 추가)
+function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
+// select+직접입력 쌍에 기존 값을 되채울 때 공용으로 쓰는 헬퍼 — 옵션에 있으면 그대로 선택, 없으면
+// "직접입력"으로 전환해 커스텀 입력창에 채운다(태양광발전량 앱 buildGenericSelectOpts와 동일 원리).
+function selectValueOrCustom(selectId, customId, currentValue){
+  const sel=document.getElementById(selectId), ci=document.getElementById(customId);
+  if(!sel) return;
+  if(!currentValue){ sel.value=''; if(ci){ ci.style.display='none'; ci.value=''; } return; }
+  const has=[...sel.options].some(o=>o.value===currentValue);
+  if(has){ sel.value=currentValue; if(ci){ ci.style.display='none'; ci.value=''; } }
+  else{ sel.value='__custom__'; if(ci){ ci.style.display=''; ci.value=currentValue; } }
+}
 var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 // 금액 입력창(공급가/부가세) 천 단위 콤마 실시간 표시 — 값 자체는 콤마 제거 후 숫자로 읽는다(submitAddForm).
 function formatCommaInput(el){
@@ -1184,6 +1232,8 @@ async function buildAddVendorOpts(){
   renderAddVendorOpts();
 }
 function openAddModal(){
+  EDIT_PAGE_ID=null;
+  document.getElementById('addModalTitleText').textContent='신규 사용내역 등록';
   const today=new Date();
   document.getElementById('addDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   document.getElementById('addSupply').value='';
@@ -1224,6 +1274,127 @@ function closeAddModal(e){
   document.body.style.overflow='';
   resetModalDragPos('addModal');
 }
+// 기존 레코드를 신규등록 드로어에 그대로 재사용해 수정 모드로 연다(태양광발전량 앱 openEditModal과
+// 동일 패턴, 2026-08-19 추가). 상호·카드명은 relation select라 옵션 로드(비동기)가 끝난 뒤에
+// 값을 채워야 해서 openAddModal과 달리 async로 분리했다.
+async function openEditModal(id){
+  const r=RD.find(x=>x.id===id);
+  if(!r) return;
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isRealPageId(id)){ alert('데모 데이터는 수정/삭제할 수 없습니다.'); return; }
+  EDIT_PAGE_ID=id;
+  document.getElementById('addModalTitleText').textContent='사용내역 수정';
+  document.getElementById('addSubmitLabel').textContent='수정';
+  document.getElementById('addDate').value=r.date||'';
+  document.getElementById('addSupply').value=r.supply?Number(r.supply).toLocaleString('ko-KR'):'';
+  document.getElementById('addVat').value=r.vat?Number(r.vat).toLocaleString('ko-KR'):'';
+  recomputeAddTotal();
+  document.getElementById('addHeadcount').value=r.headcount||1;
+  document.getElementById('addNote').value=r.note||'';
+
+  buildAddCatOpts();
+  selectValueOrCustom('addCat','addCatCustom', r.cat||'');
+  buildAddDescOpts();
+  selectValueOrCustom('addDesc','addDescCustom', r.desc||'');
+
+  await buildAddVendorOpts(); // 계정항목(addCat) 값을 참고해 관련 거래처를 위쪽에 묶어 보여준다
+  if(r.vendorId){
+    selectValueOrCustom('addVendor','addVendorCustom', r.vendorId);
+  }else if(r.vendor){
+    document.getElementById('addVendor').value='__custom__';
+    document.getElementById('addVendorCustom').value=r.vendor;
+    document.getElementById('addVendorCustom').style.display='';
+  }else{
+    document.getElementById('addVendor').value='';
+  }
+  onAddVendorChange();
+  if(document.getElementById('addVendor').value==='__custom__'&&!r.vendorId){
+    document.getElementById('addBizNo').value=r.bizNo||''; // onAddVendorChange가 직접입력 모드에서 비워버린 값 복원
+  }
+
+  await buildAddCardNameOpts(); // 내부에서 계정항목 기본 카드값(applyCatCardDefault)을 먼저 채우므로 아래에서 덮어쓴다
+  if(r.cardId){
+    selectValueOrCustom('addCardName','addCardNameCustom', r.cardId);
+  }else if(r.cardName){
+    document.getElementById('addCardName').value='__custom__';
+    document.getElementById('addCardNameCustom').value=r.cardName;
+    document.getElementById('addCardNameCustom').style.display='';
+  }else{
+    document.getElementById('addCardName').value='';
+  }
+  onAddCardNameChange();
+  if(document.getElementById('addCardName').value==='__custom__'&&!r.cardId){
+    const noEl=document.getElementById('addCardNo');
+    noEl.value=r.cardNo||''; noEl.readOnly=false; noEl.style.background=''; noEl.style.cursor=''; // 직접입력 모드에서 비워버린 값 복원
+  }
+
+  const am=document.getElementById('addModal');
+  am.classList.add('modal-open');
+  am.classList.remove('drawer-in');
+  if(_addModalCloseTimer){ clearTimeout(_addModalCloseTimer); _addModalCloseTimer=null; }
+  void am.offsetWidth;
+  am.classList.add('drawer-in');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function deleteRecord(pageId){
+  if(!isAuthed()){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!isRealPageId(pageId)){ alert('데모 데이터는 수정/삭제할 수 없습니다.'); return; }
+  if(!confirm('이 사용내역을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({in_trash:true}) })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(()=>{ closeDetailModal(); RD=[]; loadData(); toast('삭제되었습니다.'); })
+    .catch(e=>{
+      // 이미 휴지통으로 이동된 레코드를 다시 삭제 시도하면 Notion이 "archived" 오류를 반환함 —
+      // 실패가 아니라 이미 지워진 상태이므로 목록만 새로고침.
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); RD=[]; loadData(); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+// ── 상세 모달 (레코드 클릭 시 조회 + 수정/삭제) ──────────
+var _detailModalCloseTimer=null;
+function openDetailModal(id){
+  const r=RD.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent=`${r.date||'—'} · ${fmt(r.total)}원`;
+  const rows=[
+    ['사용일자', esc(r.date||'-')],
+    ['공급가', fmt(r.supply)+'원'],
+    ['부가세', fmt(r.vat)+'원'],
+    ['합계', fmt(r.total)+'원'],
+    ['상호', esc(r.vendor||'-')],
+    ['사업자등록번호', esc(r.bizNo||'-')],
+    ['계정항목', esc(r.cat||'-')],
+    ['사용목적 및 지출내역', esc(r.desc||'-')],
+    ['총인원', (r.headcount||1)+'명'],
+    ['카드명', esc(r.cardName||'-')],
+    ['카드번호', esc(r.cardNo||'-')],
+    ['비고', esc(r.note||'-')]
+  ];
+  document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'
+    +rows.map(rv=>`<div class="detail-info-row"><div class="detail-info-key">${rv[0]}</div><div class="detail-info-val">${rv[1]}</div></div>`).join('')
+    +'</div>';
+  document.getElementById('detailModalActions').innerHTML=
+    `<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal('${id}')">수정</button>`
+    +`<button class="detail-act-btn detail-del-btn" onclick="deleteRecord('${id}')">삭제</button>`;
+  const dm=document.getElementById('detailModal');
+  dm.classList.add('modal-open');
+  dm.classList.remove('drawer-in');
+  if(_detailModalCloseTimer){ clearTimeout(_detailModalCloseTimer); _detailModalCloseTimer=null; }
+  void dm.offsetWidth;
+  dm.classList.add('drawer-in');
+  document.body.style.overflow='hidden';
+  initDraggableModals();
+}
+function closeDetailModal(e){
+  if(e&&e.target!==e.currentTarget)return;
+  const dm=document.getElementById('detailModal');
+  if(!dm.classList.contains('modal-open')) return;
+  dm.classList.remove('drawer-in');
+  _detailModalCloseTimer=setTimeout(()=>{ dm.classList.remove('modal-open'); _detailModalCloseTimer=null; }, 280);
+  document.body.style.overflow='';
+  resetModalDragPos('detailModal');
+}
 // Notion DB 실스키마 확인(2026-08-04 probe, 2026-08-06 상호·카드명 relation 지원 추가) 기준 —
 // 상호·카드명은 관계형(relation) 속성이라 대상 페이지ID를 보낸다. 목록에 없는 상호·카드명은
 // "직접입력" 선택 시 거래처DB(VENDOR_DB_ID)·법인카드종류DB(CARD_TYPE_DB_ID)에 신규 페이지를
@@ -1257,10 +1428,11 @@ async function submitAddForm(){
   if(cardSelVal==='__custom__'&&(!cardCustomName||!cardCustomNo)){ alert('신규 카드명과 카드번호를 입력해주세요.'); return; }
   if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
 
+  const isEdit=!!EDIT_PAGE_ID;
   const btn=document.getElementById('addSubmitBtn');
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
-  lbl.textContent='등록 중...';
+  lbl.textContent=isEdit?'수정 중...':'등록 중...';
 
   try{
     let vendorId=vendorSelVal;
@@ -1278,7 +1450,7 @@ async function submitAddForm(){
         '카드번호':{ rich_text:[{ text:{ content: cardCustomNo } }] }
       });
     }
-    lbl.textContent='등록 중...';
+    lbl.textContent=isEdit?'수정 중...':'등록 중...';
 
     // 2026-08-06부터 title 속성이 "제목"(연월 고정 라벨)으로 분리되고 "사용목적 및 지출내역"은
     // 일반 텍스트(rich_text) 속성이 됨 — "제목"은 입력받은 사용일자 기준으로 자동 생성한다.
@@ -1297,14 +1469,20 @@ async function submitAddForm(){
     if(headcount!=='') properties['총인원']={ number: parseInt(headcount,10)||1 };
     if(note) properties['비고']={ rich_text: [{ text:{ content: note } }] };
 
-    await createNotionPage(CFG.dbId, properties);
-    btn.disabled=false; lbl.textContent='등록';
+    if(isEdit){
+      const res=await fetch(CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({properties}) });
+      if(!res.ok){ const t=await res.text(); throw new Error('HTTP '+res.status+': '+t); }
+    }else{
+      await createNotionPage(CFG.dbId, properties);
+    }
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
     closeAddModal();
+    EDIT_PAGE_ID=null;
     RD=[];loadData();
-    toast('등록되었습니다.');
+    toast(isEdit?'수정되었습니다.':'등록되었습니다.');
   }catch(e){
-    btn.disabled=false; lbl.textContent='등록';
-    alert('등록 실패: '+e.message);
+    btn.disabled=false; lbl.textContent=isEdit?'수정':'등록';
+    alert((isEdit?'수정':'등록')+' 실패: '+e.message);
     console.error(e);
   }
 }
@@ -1823,7 +2001,7 @@ function parseNotionPage(page,vendorMap){
   // 라벨용)으로 분리되면서, title 여부만으로 desc를 고르던 예전 방식은 "제목" 값을 잘못 집어올 수
   // 있다(둘 다 존재하는 상태). 정확한 필드명을 우선하고, 없을 때만 예전 방식으로 폴백한다.
   let desc=notionGetText(props["사용목적 및 지출내역"]);
-  let supply=0,vat=0,cat="",vendor="";
+  let supply=0,vat=0,cat="",vendor="",vendorId="",cardId="";
   for(const[k,v] of Object.entries(props)){
     const lk=k.toLowerCase().replace(/\s/g,"");
     if(!desc&&(v.type==="title"||lk.includes("사용목적")||lk.includes("지출내역")))desc=notionGetText(v);
@@ -1831,9 +2009,12 @@ function parseNotionPage(page,vendorMap){
     if(!vat&&(lk==="부가세"||lk.includes("부가세")))vat=notionGetNum(v);
     if(!cat&&(lk==="계정항목"||lk.includes("계정")))cat=normalizeCategory(notionGetText(v));
     if(!vendor&&(lk==="상호"||lk.includes("상호"))){
-      if(v.type==="relation"){const rel=v.relation||[];if(rel.length)vendor=vendorMap[rel[0].id]||"";}
+      if(v.type==="relation"){const rel=v.relation||[];if(rel.length){vendor=vendorMap[rel[0].id]||"";vendorId=rel[0].id;}}
       else vendor=notionGetText(v);
     }
+    // 카드명 relation id — 수정 모달에서 기존 카드를 다시 선택 상태로 보여주기 위함(2026-08-19 추가,
+    // 없으면 카드번호 rollup만으로 이름을 역추정해 새 카드로 오인될 수 있음).
+    if(!cardId&&lk==="카드명"&&v.type==="relation"){const rel=v.relation||[];if(rel.length)cardId=rel[0].id;}
   }
   if(!desc){const tp=Object.values(props).find(p=>p.type==="title");if(tp)desc=notionGetText(tp);}
   if(!date)return null;
@@ -1844,7 +2025,7 @@ function parseNotionPage(page,vendorMap){
   const headcount=props["총인원"]?.number||1;
   const note=notionGetText(props["비고"]);
   const title=notionGetText(props["제목"]);
-  return{date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),bizNo,cardNo,cardName,headcount,note,title};
+  return{id:page.id,date,month:date.slice(0,7),supply,vat,total,cat,desc:desc.trim(),vendor:vendor.trim(),vendorId,bizNo,cardNo,cardName,cardId,headcount,note,title};
 }
 // ── Notion fetch 헬퍼 ────────────────────────────────
 async function fetchNotion(body,dbId){
