@@ -1994,9 +1994,9 @@ function updateKpiForList(){
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
   renderKpiCountLine('filterCount', [
     { label:isFiltered?'필터 결과':'전체', value:rows.length },
-    { label:'진행중', value:c.prog, color:'var(--coral800)' },
+    { label:'진행중', value:c.prog, color:'var(--sky600)' },
     { label:'완료', value:c.done, color:'var(--teal600)' },
-    { label:'미흡', value:c.poor, color:'var(--amber800)' }
+    { label:'미흡', value:c.poor, color:'var(--coral)' }
   ]);
 }
 
@@ -2045,8 +2045,8 @@ function renderUnprocPanel(){
   var uc = countStatus(rows);
   renderKpiCountLine('unprocCount', [
     { label:'미처리 전체', value:rows.length },
-    { label:'진행중', value:uc.prog, color:'var(--coral800)' },
-    { label:'미흡', value:uc.poor, color:'var(--amber800)' }
+    { label:'진행중', value:uc.prog, color:'var(--sky600)' },
+    { label:'미흡', value:uc.poor, color:'var(--coral)' }
   ]);
 
   var tbody = document.getElementById('unprocBody');
