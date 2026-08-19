@@ -1538,6 +1538,10 @@ var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메�
 var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
 var _photoMultiRows=[]; // [{key,num,desc,files:[{url,name}]}] — 점검사진탭 신규등록 다중행 입력 전용
 var _photoMultiNextKey=1;
+// ✕로 카드를 지우면 _photoMultiRows에서 바로 빠져나가 그 카드의 origId(이미 저장돼 있던 노션
+// 페이지 id)를 잃어버린다 — 등록 시 이 목록에 담긴 id들을 노션에서도 휴지통 이동시켜야 실제
+// 삭제가 반영된다(2026-08-19 사용자 신고: 카드 삭제 후 등록해도 원본이 안 지워지고 되살아나던 버그).
+var _photoMultiDeletedIds=[];
 // readOnly는 점검사진 탭 기존 레코드를 "상세보기→수정"의 일반 단일필드 폼으로 열었을 때 일자·번호에만
 // 쓴다(2026-08-19) — 이 폼은 다중카드 입력폼과 달리 일자가 바뀌어도 번호를 재계산하지 않아서, 여기서
 // 일자만 고치고 번호를 그대로 두면(또는 번호를 직접 잘못 입력하면) 둘이 다시 어긋난다. 두 값 다
@@ -1835,7 +1839,7 @@ function openAddModal(tabId, recordId){
   // (2026-07-27 도입, 2026-08-10 안전관리 앱과 동일한 카드 UI로 전면 재구성 — 터널명·일자도
   // 카드 안으로 이동하고 이미 등록된 슬롯은 빈 칸이 아니라 기존 값을 채워서 보여준다).
   const isPhotoMulti = tabId==='photo' && !r;
-  if(isPhotoMulti){ _photoMultiRows=[]; _photoMultiNextKey=1; }
+  if(isPhotoMulti){ _photoMultiRows=[]; _photoMultiNextKey=1; _photoMultiDeletedIds=[]; }
   // 필드 배열 순서대로 렌더링 — {header:true} 마커를 만나면 이전 그룹 grid div를 닫고 새로 연다
   // (안전관리 앱과 동일 패턴, 2026-07-31 이식 — 그룹 없는 일반 필드는 grid 밖에 그대로 쌓인다).
   let html='';
@@ -2215,6 +2219,8 @@ function addPhotoMultiRow(){
   renderPhotoMultiRows();
 }
 function removePhotoMultiRow(key){
+  const row=_photoMultiRows.find(r=>r.key===key);
+  if(row && row.origId) _photoMultiDeletedIds.push(row.origId);
   _photoMultiRows=_photoMultiRows.filter(r=>r.key!==key);
   resortPhotoMultiRows();
   renderPhotoMultiRows();
@@ -2255,7 +2261,7 @@ async function submitPhotoMulti(){
   // 기본으로 채워지는 번호(placeholder)만으로 "작성됨"으로 잘못 인식하면, 날짜별로 나눠 며칠에
   // 걸쳐 일부 카드만 등록하는 실사용 흐름에서 아직 안 건드린 카드까지 필수값 누락으로 막혀버린다.
   const usedRows=_photoMultiRows.filter(row=>row.desc.trim() || row.files.length);
-  if(!usedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
+  if(!usedRows.length && !_photoMultiDeletedIds.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
   const missingRow=usedRows.find(row=>!row.tunnel || !row.date || !String(row.num||'').trim());
   if(missingRow){ alert('#'+(missingRow.num||'-')+' 카드의 터널명·일자·번호를 입력해주세요.'); return; }
 
@@ -2263,7 +2269,7 @@ async function submitPhotoMulti(){
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
   showAddModalProgress();
-  const total=usedRows.length;
+  const total=usedRows.length+_photoMultiDeletedIds.length;
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
@@ -2290,21 +2296,30 @@ async function submitPhotoMulti(){
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
     return req.then(page=>{ progress(); return {page, existingId:existing?existing.id:null}; });
   });
+  // ✕로 카드를 지웠을 때(_photoMultiDeletedIds, 2026-08-19) — work-portal 다른 삭제 기능과 동일하게
+  // 휴지통 이동(in_trash)으로 노션 원본까지 실제로 삭제한다.
+  const deleteIds=_photoMultiDeletedIds.slice();
+  const deleteTasks=deleteIds.map(id=>()=>notionFetch('/v1/pages/'+id,'PATCH',{in_trash:true}).then(()=>{ progress(); }));
 
   try{
-    const results=await runWithConcurrency(tasks, 6);
+    const [results]=await Promise.all([runWithConcurrency(tasks, 6), runWithConcurrency(deleteTasks, 6)]);
     const arr=TAB_STATE['photo'].records;
     results.forEach(({page,existingId})=>{
       const parsed=parseRecord(tabDef, page);
       const idx=existingId ? arr.findIndex(r=>r.id===existingId) : -1;
       if(idx>=0) arr[idx]=parsed; else arr.push(parsed);
     });
+    deleteIds.forEach(id=>{ const idx=arr.findIndex(r=>r.id===id); if(idx>=0) arr.splice(idx,1); });
+    _photoMultiDeletedIds=[];
     applyLatestFilterDefault('photo');
     renderTabTable('photo');
     updateLastUpdate();
     btn.disabled=false; lbl.textContent='등록';
     closeAddModal();
-    toast(total+'건 등록되었습니다.');
+    const parts=[];
+    if(usedRows.length) parts.push(usedRows.length+'건 등록');
+    if(deleteIds.length) parts.push(deleteIds.length+'건 삭제');
+    toast(parts.join(', ')+'되었습니다.');
   }catch(e){
     btn.disabled=false; lbl.textContent='등록';
     alert('등록 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');

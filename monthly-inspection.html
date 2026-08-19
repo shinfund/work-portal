@@ -3794,7 +3794,13 @@ async function submitPhotoMulti(){
   // 둘 다 없음)은 등록 대상에서 제외한다(2026-07-28).
   const sortedRows=_photoMultiRows.slice().sort(photoMultiDateSortKey);
   const usedEntries=sortedRows.map((row,idx)=>({row, displayNum:idx+1})).filter(e=>e.row.desc.trim() || e.row.files.length);
-  if(!usedEntries.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
+  // 이미 저장돼 있던 슬롯(row.id 있음)의 사진설명·사진을 전부 지운 채 등록을 누르면 "이 슬롯을
+  // 삭제하겠다"는 뜻이다 — 예전엔 빈 슬롯을 그냥 등록 대상에서만 제외해서 노션 원본 레코드가
+  // 그대로 남아있었고, 폼을 다시 열면(buildPhotoMultiRowsFromExisting이 노션에서 다시 불러오므로)
+  // 지운 내용이 그대로 복귀돼 보이는 버그가 있었다(2026-08-19 사용자 신고). 여기서 실제로
+  // 휴지통 이동(in_trash) 처리까지 해줘야 한다.
+  const deletedRows=sortedRows.filter(row=>row.id && !(row.desc.trim() || row.files.length));
+  if(!usedEntries.length && !deletedRows.length){ alert('사진설명·사진을 하나 이상 입력해주세요.'); return; }
   const missing=usedEntries.find(e=>!e.row.tunnel || !e.row.date);
   if(missing){ alert('#'+missing.displayNum+' 칸의 터널명·일자를 입력해주세요.'); return; }
   // "현재 화면 연월과 다른 날짜" 경고는 REPORT_SEL(입력폼 탭 상단 연월 선택)이 실제로 화면에 보이는
@@ -3809,7 +3815,7 @@ async function submitPhotoMulti(){
   const lbl=document.getElementById('addSubmitLabel');
   btn.disabled=true;
   showAddModalProgress();
-  const total=usedEntries.length;
+  const total=usedEntries.length+deletedRows.length;
   let done=0;
   const progress=()=>{ lbl.textContent='등록 중... ('+(++done)+'/'+total+')'; updateAddModalProgress(done,total); };
 
@@ -3831,13 +3837,18 @@ async function submitPhotoMulti(){
       : notionFetch('/v1/pages','POST',{parent:{database_id:tabDef.dbId}, properties});
     return req.then(page=>{ progress(); return page; });
   });
+  // 위 deletedRows(2026-08-19) — 휴지통 이동(work-portal 다른 삭제 기능과 동일하게 in_trash 사용).
+  const deleteTasks=deletedRows.map(row=>()=>notionFetch('/v1/pages/'+row.id,'PATCH',{in_trash:true}).then(()=>{ progress(); }));
 
   try{
-    await runWithConcurrency(tasks, 6);
+    await Promise.all([runWithConcurrency(tasks, 6), runWithConcurrency(deleteTasks, 6)]);
     btn.disabled=false; lbl.textContent='등록';
     closeAddModal();
     loadTabData('photo');
-    toast(total+'건 등록되었습니다.');
+    const parts=[];
+    if(usedEntries.length) parts.push(usedEntries.length+'건 등록');
+    if(deletedRows.length) parts.push(deletedRows.length+'건 삭제');
+    toast(parts.join(', ')+'되었습니다.');
   }catch(e){
     btn.disabled=false; lbl.textContent='등록';
     alert('등록 실패: '+e.message+' — 일부 항목은 이미 저장되었을 수 있어 새로고침 후 확인해주세요.');
