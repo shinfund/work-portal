@@ -1538,20 +1538,26 @@ var _addModalCloseTimer=null; // 드로어 닫힘 슬라이드아웃 애니메�
 var _photoFiles=[]; // [{url,name}] — 점검사진 필드(type:'file') 전용, 모달 하나만 열리므로 전역 하나로 충분
 var _photoMultiRows=[]; // [{key,num,desc,files:[{url,name}]}] — 점검사진탭 신규등록 다중행 입력 전용
 var _photoMultiNextKey=1;
-function buildFieldHtml(f, idx, curVal, tabId){
+// readOnly는 점검사진 탭 기존 레코드를 "상세보기→수정"의 일반 단일필드 폼으로 열었을 때 일자·번호에만
+// 쓴다(2026-08-19) — 이 폼은 다중카드 입력폼과 달리 일자가 바뀌어도 번호를 재계산하지 않아서, 여기서
+// 일자만 고치고 번호를 그대로 두면(또는 번호를 직접 잘못 입력하면) 둘이 다시 어긋난다. 두 값 다
+// 다중카드 입력폼(신규등록/입력폼 탭)에서만 고치게 하고 여기선 조회만 되게 잠근다.
+function buildFieldHtml(f, idx, curVal, tabId, readOnly){
   if(f.key==='제목') return '';
   const id='ff_'+idx;
   const req=f.required?'<span class="modal-required">*</span>':'';
-  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}</label>`;
+  const lockHint = readOnly ? ' <span style="font-weight:400;color:var(--txt2)">(다중카드 입력폼에서 수정)</span>' : '';
+  const label=`<label class="modal-label">${esc(f.label||f.key)} ${req}${lockHint}</label>`;
+  const dis = readOnly ? ' disabled' : '';
   if(f.uiType==='cascade-select'){
     // 옵션은 refreshCascadeSelect()가 openAddModal에서 DOM 삽입 직후 채워준다(dependsOn 필드 현재값 기준)
     const cascadeCall = f.cascadeTrigger ? `;refreshAllCascadeSelects('${tabId}')` : '';
     const extraCall = f.extraOnChange ? `;${f.extraOnChange}` : '';
     return `<div class="modal-field">${label}
-      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}">
+      <select id="${id}" class="modal-select" onchange="onSelectChange(this,'${id}c')${cascadeCall}${extraCall}"${dis}>
         <option value="">${esc(f.emptyHint||'선택')}</option>
       </select>
-      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+      <input id="${id}c" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"${dis}/>
     </div>`;
   }
   if(f.uiType==='fixed-select'){
@@ -1601,7 +1607,7 @@ function buildFieldHtml(f, idx, curVal, tabId){
     if(f.cascadeTrigger) onchangeParts.push(`refreshAllCascadeSelects('${tabId}')`);
     if(f.extraOnChange) onchangeParts.push(f.extraOnChange);
     const onchangeAttr = onchangeParts.length ? ` onchange="${onchangeParts.join(';')}"` : '';
-    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}/></div>`;
+    return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="date" value="${esc(curVal||'')}"${onchangeAttr}${dis}/></div>`;
   }
   if(f.type==='number'){
     return `<div class="modal-field">${label}<input id="${id}" class="modal-input" type="number" step="0.01" value="${curVal!=null&&curVal!==''?esc(curVal):''}"/></div>`;
@@ -1863,7 +1869,8 @@ function openAddModal(tabId, recordId){
       return;
     }
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
-    html+=buildFieldHtml(f, idx, curVal, tabId);
+    const readOnly = tabId==='photo' && !!r && (f.key==='일자' || f.key==='번호');
+    html+=buildFieldHtml(f, idx, curVal, tabId, readOnly);
   });
   if(groupOpen) html+='</div>';
   document.getElementById('addModalFields').innerHTML=html;
