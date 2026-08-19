@@ -3032,50 +3032,72 @@ function renderElecinspGrid(){
 async function submitElecinspGridForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
   const tunnel=_teamElecTunnel;
+  const allDateInputs=[...document.querySelectorAll('#rpElecinspBody input[id^="eigd_"]')];
   // 월간점검 페이지와 동일 기준 — 점검일자를 실제로 입력한 행만 저장 대상(결과는 항상 기본값이
   // 채워져 있어 "선택됨" 여부로는 저장 대상을 구분할 수 없음).
-  const dateInputs=[...document.querySelectorAll('#rpElecinspBody input[id^="eigd_"]')].filter(inp=>inp.value);
-  if(!dateInputs.length){ alert('등록할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
+  const dateInputs=allDateInputs.filter(inp=>inp.value);
+  // 기존 레코드(data-existing-id)가 있던 행의 날짜를 지운 채 등록하면 삭제 의도로 간주해 노션
+  // 레코드를 휴지통 이동한다(안전관리 앱 submitMonthlyReportForm과 동일 버그·동일 수정, 2026-08-19
+  // 사용자 제보 — 기존엔 이런 행이 그냥 무시돼 잘못 입력한 기록이 노션에 계속 남아 있다가 재조회 때마다
+  // 다시 나타났다).
+  const deleteTargets=allDateInputs.filter(inp=>!inp.value && inp.dataset.existingId);
+  if(!dateInputs.length && !deleteTargets.length){ alert('등록할 항목의 점검일자를 하나 이상 입력해주세요.'); return; }
   const ym=REPORT_SEL.year+'-'+REPORT_SEL.month;
   if(!confirmDateOutOfMonth(dateInputs.map(inp=>inp.value), ym)) return;
+  if(deleteTargets.length && !confirm(deleteTargets.length+'건은 점검일자가 비어 있어 기존 기록을 삭제(휴지통 이동)합니다. 계속할까요?')) return;
   const dbId=getTabDef('elecinsp').dbId;
   const btn=document.getElementById('rpElecinspSubmitBtn');
   btn.disabled=true; btn.textContent='등록 중...';
   const wrap=document.getElementById('rpElecinspProgressWrap'), bar=document.getElementById('rpElecinspProgressBar');
   wrap.style.display=''; bar.style.width='0%';
   let done=0, failed=0;
-  const tasks=dateInputs.map(inp=>async ()=>{
-    const suffix=inp.id.slice(5); // 'eigd_'.length===5
-    const sel=document.getElementById('eig_'+suffix);
-    const bEl=document.getElementById('eigb_'+suffix);
-    const gubun=sel.dataset.gubun, content=sel.dataset.content;
-    const dateVal=inp.value;
-    // 항목당 여러 행이 있을 수 있어 (터널·구분·점검내용·연월)만으로는 레코드를 특정할 수 없다 —
-    // 렌더 시점에 행별로 매겨둔 기존 레코드 id(data-existing-id)로 PATCH/POST를 구분한다.
-    const existingId=inp.dataset.existingId || '';
-    const props={
-      '터널명':buildPropValue('select', tunnel),
-      '날짜':buildPropValue('date', dateVal),
-      '제목':buildPropValue('title', titleWithMonth(dateVal,'전기시설점검표')),
-      '구분':buildPropValue('select', gubun),
-      '점검내용':buildPropValue('text', content),
-      '점검방법':buildPropValue('select', teamMethodFor(gubun, content)),
-      '점검결과':buildPropValue('select', sel.value),
-      '비고':buildPropValue('text', bEl.value)
-    };
-    try{
-      const page=existingId
-        ? await notionFetch('/v1/pages/'+existingId, 'PATCH', {properties:props})
-        : await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
-      done++; bar.style.width=Math.round(done/dateInputs.length*100)+'%';
-      return page;
-    }catch(e){ failed++; throw e; }
-  });
+  const total=dateInputs.length+deleteTargets.length;
+  const tasks=[
+    ...dateInputs.map(inp=>async ()=>{
+      const suffix=inp.id.slice(5); // 'eigd_'.length===5
+      const sel=document.getElementById('eig_'+suffix);
+      const bEl=document.getElementById('eigb_'+suffix);
+      const gubun=sel.dataset.gubun, content=sel.dataset.content;
+      const dateVal=inp.value;
+      // 항목당 여러 행이 있을 수 있어 (터널·구분·점검내용·연월)만으로는 레코드를 특정할 수 없다 —
+      // 렌더 시점에 행별로 매겨둔 기존 레코드 id(data-existing-id)로 PATCH/POST를 구분한다.
+      const existingId=inp.dataset.existingId || '';
+      const props={
+        '터널명':buildPropValue('select', tunnel),
+        '날짜':buildPropValue('date', dateVal),
+        '제목':buildPropValue('title', titleWithMonth(dateVal,'전기시설점검표')),
+        '구분':buildPropValue('select', gubun),
+        '점검내용':buildPropValue('text', content),
+        '점검방법':buildPropValue('select', teamMethodFor(gubun, content)),
+        '점검결과':buildPropValue('select', sel.value),
+        '비고':buildPropValue('text', bEl.value)
+      };
+      try{
+        const page=existingId
+          ? await notionFetch('/v1/pages/'+existingId, 'PATCH', {properties:props})
+          : await notionFetch('/v1/pages', 'POST', {parent:{database_id:dbId}, properties:props});
+        done++; bar.style.width=Math.round(done/total*100)+'%';
+        return page;
+      }catch(e){ failed++; throw e; }
+    }),
+    ...deleteTargets.map(inp=>async ()=>{
+      const id=inp.dataset.existingId;
+      try{
+        await notionFetch('/v1/pages/'+id, 'PATCH', {in_trash:true});
+        const arr=TAB_STATE.elecinsp.records;
+        const idx=arr.findIndex(r=>r.id===id); if(idx>=0) arr.splice(idx,1);
+        done++; bar.style.width=Math.round(done/total*100)+'%';
+      }catch(e){ failed++; throw e; }
+    })
+  ];
   try{
     await runWithConcurrency(tasks, 6);
     await loadTabData('elecinsp');
     btn.disabled=false; btn.textContent='등록';
-    toast(dateInputs.length+'건 등록되었습니다.');
+    const parts=[];
+    if(dateInputs.length) parts.push(`${dateInputs.length}건 등록`);
+    if(deleteTargets.length) parts.push(`${deleteTargets.length}건 삭제`);
+    toast(parts.join(', ')+' 완료');
     if(_reportCurPage==='elecinsp') renderElecinspGrid();
   }catch(e){
     btn.disabled=false; btn.textContent='등록';
