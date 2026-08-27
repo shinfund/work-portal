@@ -332,7 +332,7 @@ if (window.self !== window.top) {
 
 <!-- ADD/EDIT MODAL -->
 <div id="addModal">
-  <div class="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal-backdrop">
     <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="addModalTitleText">신규 공지 등록</span></h3>
@@ -660,6 +660,7 @@ function setAppTheme(theme){
   syncThemeOptUI();
 }
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCfgModal(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAddModal(); });
 window.addEventListener('storage', function(e){
   if(e.key==='theme' && e.newValue){
     document.documentElement.setAttribute('data-theme', e.newValue);

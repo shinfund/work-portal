@@ -325,7 +325,7 @@ if (window.self !== window.top) {
 
 <!-- ADD/EDIT MODAL -->
 <div id="addModal">
-  <div class="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal-backdrop">
     <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3><span id="addModalTitleText">신규 비품 등록</span></h3>
@@ -744,6 +744,7 @@ function setAppTheme(theme){
   syncThemeOptUI();
 }
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCfgModal(); });
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeAddModal(); });
 /* storage 이벤트 통합(테마 동기화 + 인증 토큰 동기화, 2026-07-25) */
 window.addEventListener('storage', function(e){
   if(e.key==='theme' && e.newValue){
