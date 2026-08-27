@@ -284,7 +284,7 @@ if (window.self !== window.top) {
 
 <!-- 설정(로그인 상태 안내 + 화면모드) 모달 — 공용 인증 체계로 전환(2026-08-04), Worker URL/DB ID 수동입력 제거 -->
 <div id="cfgModal">
-  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+  <div class="modal-backdrop" onmousedown="onModalBackdropMouseDown(event)" onclick="closeCfgModal(event)">
     <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-title">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -314,7 +314,7 @@ if (window.self !== window.top) {
 
 <!-- 신규등록 드로어 -->
 <div id="addModal">
-  <div class="modal-backdrop" onclick="closeAddModal(event)">
+  <div class="modal-backdrop" onmousedown="onModalBackdropMouseDown(event)" onclick="closeAddModal(event)">
     <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3 id="addModalTitleText">신규 사용내역 등록</h3>
@@ -394,7 +394,7 @@ if (window.self !== window.top) {
 
 <!-- 상세 모달 (레코드 클릭 시 조회 + 수정/삭제 — 태양광발전량 앱 detailModal 패턴, 2026-08-19 추가) -->
 <div id="detailModal">
-  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+  <div class="modal-backdrop" onmousedown="onModalBackdropMouseDown(event)" onclick="closeDetailModal(event)">
     <div class="modal-box detail-modal-box" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" onclick="event.stopPropagation()">
       <div class="detail-modal-hd">
         <h3 id="detailModalTitle">사용내역 상세</h3>
@@ -1026,8 +1026,17 @@ function openCfgModal(){
   syncThemeOptUI();
   openModal();
 }
+let _modalBackdropMouseDownTarget=null;
+// 숫자/텍스트 입력창에서 드래그로 전체선택 시 mouseup이 배경(backdrop) 위에서 끝나면
+// click의 target이 backdrop이 되어 e.target===e.currentTarget만으로는 오탐 발생.
+// mousedown 시작점도 backdrop 자신이었는지 함께 확인해야 실제 배경 클릭만 걸러진다.
+function onModalBackdropMouseDown(e){ _modalBackdropMouseDownTarget=e.target; }
+function isRealBackdropClick(e){
+  if(!e) return true;
+  return e.target===e.currentTarget && _modalBackdropMouseDownTarget===e.currentTarget;
+}
 function closeCfgModal(e){
-  if(e&&e.target!==e.currentTarget)return;
+  if(e&&!isRealBackdropClick(e))return;
   closeModal();
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeCfgModal();closeAddModal();closeDetailModal();}});
@@ -1265,7 +1274,7 @@ function openAddModal(){
   initDraggableModals();
 }
 function closeAddModal(e){
-  if(e&&e.target!==e.currentTarget)return;
+  if(e&&!isRealBackdropClick(e))return;
   const am=document.getElementById('addModal');
   if(!am.classList.contains('modal-open')) return;
   am.classList.remove('drawer-in');
@@ -1386,7 +1395,7 @@ function openDetailModal(id){
   initDraggableModals();
 }
 function closeDetailModal(e){
-  if(e&&e.target!==e.currentTarget)return;
+  if(e&&!isRealBackdropClick(e))return;
   const dm=document.getElementById('detailModal');
   if(!dm.classList.contains('modal-open')) return;
   dm.classList.remove('drawer-in');
