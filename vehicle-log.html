@@ -959,6 +959,8 @@ window.addEventListener('storage',e=>{
 
 // ── 신규추가/수정/삭제 ────────────────────────────────
 var EDIT_PAGE_ID = null;
+var EDIT_ORIGINAL_CUM = 0; // 수정 진입 시점의 원래 운행누계(km) — 저장 후 delta 계산해 이후 날짜 운행누계 캐스케이드 반영에 사용
+var EDIT_ORIGINAL_CARNO = ''; // 수정 진입 시점의 차량번호 — 캐스케이드 대상(같은 차량 이후 날짜) 판별에 사용
 var _addModalCloseTimer = null; // 드로어 닫힘 슬라이드아웃 애니메이션(.28s) 끝난 뒤 modal-open을 떼는 타이머
 function getUniqueField(key){ return [...new Set(ALL_RECORDS.map(r=>r[key]).filter(Boolean))].sort(); }
 function getUniqueCarNos(){ return getUniqueField('carNo'); }
@@ -1125,6 +1127,8 @@ function openEditModal(pageId){
   if(!r) return;
   if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
   EDIT_PAGE_ID = pageId;
+  EDIT_ORIGINAL_CUM = r.cumDist||0;
+  EDIT_ORIGINAL_CARNO = r.carNo||'';
   document.getElementById('addModalTitleText').textContent='운행 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addDate').value = r.date||'';
@@ -1147,6 +1151,28 @@ function openEditModal(pageId){
   void am.offsetWidth; // 강제 리플로우로 트랜지션 시작점을 확정(rAF는 백그라운드 탭에서 지연될 수 있음)
   am.classList.add('drawer-in');
   document.body.style.overflow='hidden';
+}
+// 기존 기록의 운행누계(km)를 수정했을 때, 같은 차량의 이후 날짜 기록들에 저장돼 있던 운행누계 값은
+// 각자 저장 당시의 (이제는 낡은) 전일누계를 기준으로 계산된 값이라 자동으로 따라 바뀌지 않는다.
+// delta(=새 운행누계-원래 운행누계)만큼 이후 날짜 기록의 운행누계를 순차적으로 밀어서 맞춘다.
+function cascadeUpdateCumDist(carNo, fromDate, delta){
+  if(!delta || !carNo) return Promise.resolve(0);
+  const later = ALL_RECORDS.filter(r=>r.carNo===carNo && r.date>fromDate && isRealPageId(r.id))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  if(!later.length) return Promise.resolve(0);
+  const cumKey = NOTION_PROP_MAP['운행누계'];
+  if(!cumKey) return Promise.resolve(0);
+  let chain = Promise.resolve();
+  later.forEach(r=>{
+    const newCum = Math.round(((r.cumDist||0)+delta)*100)/100;
+    chain = chain.then(()=>
+      fetch(CFG.workerUrl+'/v1/pages/'+r.id, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ properties: { [cumKey]: buildPropValue('운행누계', newCum) } })
+      }).then(res=>{ if(!res.ok) return res.text().then(t=>{ throw new Error('HTTP '+res.status+': '+t); }); return res.json(); })
+    );
+  });
+  return chain.then(()=>later.length);
 }
 function submitAddForm(){
   const date = document.getElementById('addDate').value.trim();
@@ -1198,13 +1224,22 @@ function submitAddForm(){
   const reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
   const reqBody = isEdit ? JSON.stringify({properties}) : JSON.stringify({parent:{database_id:CFG.dbId},properties});
 
+  const cascadeDelta = isEdit ? (Math.round((parseFloat(cumDist)-EDIT_ORIGINAL_CUM)*100)/100) : 0;
+
   fetch(reqUrl, { method: isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
     .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
     .then(()=>{
+      if(cascadeDelta && carNo===EDIT_ORIGINAL_CARNO){
+        lbl.textContent = '이후 날짜 운행누계 반영 중...';
+        return cascadeUpdateCumDist(EDIT_ORIGINAL_CARNO, date, cascadeDelta);
+      }
+      return 0;
+    })
+    .then((cascadeCount)=>{
       btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
       closeAddModal();
       loadData();
-      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+      toast(isEdit ? (cascadeCount ? `수정되었습니다. (이후 날짜 운행누계 ${cascadeCount}건 자동 반영)` : '수정되었습니다.') : '등록되었습니다.');
     })
     .catch(e=>{
       btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
