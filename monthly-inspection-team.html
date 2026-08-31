@@ -658,6 +658,19 @@ function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
 function toast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function fmtDate(d){ if(!d) return ''; return String(d).slice(0,10); }
 function fmtDateMD(d){ const s=fmtDate(d); if(!s) return ''; return `${parseInt(s.slice(5,7),10)}/${parseInt(s.slice(8,10),10)}`; }
+// 같은 항목이 그 달에 여러 날짜에 걸쳐 점검됐을 때 "8/12,19" 형식으로 묶어서 표시(월이 섞이면
+// "7/30, 8/1"처럼 월별로 나눠 이어붙임). 단일 날짜면 fmtDateMD와 동일한 결과.
+function fmtDatesJoined(dates){
+  const uniq=[...new Set((dates||[]).filter(Boolean))].sort();
+  if(!uniq.length) return '';
+  const groups={};
+  uniq.forEach(d=>{
+    const s=fmtDate(d); if(!s) return;
+    const ym=s.slice(0,7);
+    (groups[ym]=groups[ym]||[]).push(parseInt(s.slice(8,10),10));
+  });
+  return Object.keys(groups).sort().map(ym=>`${parseInt(ym.slice(5,7),10)}/${groups[ym].join(',')}`).join(', ');
+}
 function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
 function esc(s){ return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 // 제목 = "YYYY년 M월 {접미어}" — 터널명 대신 해당 레코드의 날짜(YYYY-MM-DD)로 월 구분(월간 보고 체계라 터널명보다 유용)
@@ -3449,17 +3462,19 @@ function elecInspTunnelRecs(tunnel, year, month){
   return (TAB_STATE.elecinsp.records||[]).filter(r=>r['터널명']===tunnel && (r['날짜']||'').startsWith(ymStr));
 }
 // 같은 (구분,점검내용) 항목이 그 달에 여러 번(재방문 등) 기록됐어도 원본 템플릿은 항목당 1행만
-// 보여준다(2026-07-24 실측 확인 — 방문일자는 부제 "일자 : ..."에 전부 나열되므로 행 자체는
-// 최신 날짜 1건으로 대표). 정렬은 구분 순서 다음 체크리스트 카탈로그 순서(TEAM_CHECKLIST_BY_GUBUN)
-// 그대로 — 방문일자 순서가 아니라 표준 점검표 순서로 보여야 하기 때문.
+// 보여준다(2026-07-24 실측 확인). 대표 레코드(점검방법·점검결과·비고)는 최신 날짜 1건이지만,
+// 점검일자 컬럼은 그 항목이 실제 점검된 모든 날짜를 "8/12,19" 형식으로 모아서 보여준다(2026-08-31
+// 사용자 요청 — 이전엔 최신 날짜 1건만 표시돼 2일 이상 점검한 이력이 보고서에서 누락됐었음).
 function elecInspTunnelRows(recs){
   const byKey={};
   recs.forEach(r=>{
     const key=r['구분']+'|'+r['점검내용'];
-    const prev=byKey[key];
-    if(!prev || (r['날짜']||'')>(prev['날짜']||'')) byKey[key]=r;
+    const g=byKey[key];
+    if(!g){ byKey[key]={rec:r, dates:[r['날짜']]}; return; }
+    if((r['날짜']||'')>(g.rec['날짜']||'')) g.rec=r;
+    g.dates.push(r['날짜']);
   });
-  const rows=Object.values(byKey);
+  const rows=Object.values(byKey).map(g=>Object.assign({}, g.rec, {_dateDisplay: fmtDatesJoined(g.dates)}));
   rows.sort((a,b)=>{
     const ga=ELECINSP_GUBUN_ORDER.indexOf(a['구분']), gb=ELECINSP_GUBUN_ORDER.indexOf(b['구분']);
     if(ga!==gb) return ga-gb;
@@ -3537,7 +3552,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
   });
   // 템플릿은 모든 데이터 컬럼이 wrapText:true(구분·점검내용·비고처럼 길어질 수 있는 칸이 잘리지
   // 않도록) — 글자 수가 많아 줄바꿈되는 행은 excelWrapAwareRowHeight로 행높이를 자동 계산한다.
-  const ELECINSP_COLS_META=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'점검일자',wrap:false},{key:'비고',wrap:true}];
+  const ELECINSP_COLS_META=[{key:'구분',wrap:true},{key:'점검내용',wrap:true},{key:'점검방법',wrap:true},{key:'점검결과',wrap:true},{key:'_dateDisplay',wrap:true},{key:'비고',wrap:true}];
   rows.forEach((r,i)=>{
     const rn=headerRow+1+i;
     const row=ws.getRow(rn);
@@ -3553,7 +3568,7 @@ function drawElecInspTunnelBlock(ws, startRow, tunnel, rows, recs, year, month){
     row.getCell(2).value=r['점검내용'];
     row.getCell(3).value=r['점검방법'];
     row.getCell(4).value=r['점검결과'];
-    row.getCell(5).value=fmtDateMD(r['날짜']);
+    row.getCell(5).value=r['_dateDisplay'];
     row.getCell(6).value=r['비고'];
     row.height=excelWrapAwareRowHeight(r, ELECINSP_COLS_META, ELECINSP_COL_WIDTHS, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
     row.commit();
