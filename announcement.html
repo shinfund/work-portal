@@ -113,6 +113,17 @@ tr:hover td{background:var(--sky50)}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+
+/* ── PAGINATION ── */
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -453,7 +464,7 @@ if (window.self !== window.top) {
         </button>
         <div class="dd-menu" id="categoryDdMenu"></div>
       </div>
-      <input class="search-box" id="searchBox" placeholder="🔍 제목, 내용, 작성자 검색..." aria-label="공지 검색" oninput="renderRows()"/>
+      <input class="search-box" id="searchBox" placeholder="🔍 제목, 내용, 작성자 검색..." aria-label="공지 검색" oninput="CURRENT_PAGE=1;renderRows()"/>
       <button class="tb-action-btn tb-add" onclick="openAddModal()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
@@ -471,7 +482,15 @@ if (window.self !== window.top) {
         </button>
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
       </div>
-      <div class="detail-count" id="detailCount"></div>
+      <div class="count-right">
+        <div class="detail-count" id="detailCount"></div>
+        <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
+          <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+            <span id="pageSizeDdLabel">15개씩</span>
+          </button>
+          <div class="dd-menu" id="pageSizeDdMenu"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -486,6 +505,7 @@ if (window.self !== window.top) {
         <tbody id="detailTableBody"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow"></div>
   </div>
 </div><!-- /main -->
 
@@ -1325,8 +1345,8 @@ function closeDd(menuId, btnId){
   var b=document.getElementById(btnId); if(b) b.classList.remove('active');
 }
 function closeAllDd(){
-  ['categoryDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
-  ['categoryDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+  ['categoryDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['categoryDdBtn','pageSizeDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
 // 외부 클릭 시 닫기 — 이미 닫힌(=.open 없는) 메뉴는 건드리지 않는다. select 핸들러가
 // menu.innerHTML을 재생성하면 클릭된 .dd-opt(e.target)가 DOM에서 분리돼 wrap.contains(e.target)가
@@ -1361,7 +1381,61 @@ function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, 
     });
   }
 }
-function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,unionValues(CANONICAL_CATEGORIES,'카테고리'),'구분 전체', function(v){ FILTER_CATEGORY=v; }); }
+function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,unionValues(CANONICAL_CATEGORIES,'카테고리'),'구분 전체', function(v){ FILTER_CATEGORY=v; CURRENT_PAGE=1; }); }
+
+/* ── 페이지네이션(표시 개수 드롭다운 + 페이지 번호) ── */
+var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE = (function(){
+  try{ var v=parseInt(localStorage.getItem('announcement_pageSize'),10); if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v; if(localStorage.getItem('announcement_pageSize')==='all') return 'all'; }catch(e){}
+  return 15;
+})();
+var CURRENT_PAGE=1;
+function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
+function buildPageSizeDd(){
+  var menu=document.getElementById('pageSizeDdMenu');
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      var v=opt.dataset.val;
+      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+      CURRENT_PAGE=1;
+      try{ localStorage.setItem('announcement_pageSize', v); }catch(e2){}
+      closeDd('pageSizeDdMenu','pageSizeDdBtn');
+      renderList();
+    });
+  }
+}
+function goToPage(n){
+  CURRENT_PAGE=n;
+  renderRows();
+  var wrap=document.querySelector('.detail-sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderPaginationRow(totalCount, totalPages){
+  var el=document.getElementById('paginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=CURRENT_PAGE;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage('+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
 
 /* ── Notion fetch 헬퍼 ── */
 function fetchNotion(body){
@@ -1553,6 +1627,7 @@ function renderAll(){
 
 function renderList(){
   buildCategoryDd();
+  buildPageSizeDd();
   renderRows();
 }
 /* 검색어 입력 등 목록만 다시 그리면 되는 경우 — 구분 드롭다운(buildCategoryDd)은 옵션 목록이
@@ -1560,11 +1635,16 @@ function renderList(){
 function renderRows(){
   var rows = sortedRows(filtered());
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
+  var totalPages = PAGE_SIZE==='all' ? 1 : Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
+  if(CURRENT_PAGE<1) CURRENT_PAGE=1;
+  var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
   var colCount = 6 + (DELETE_MODE?1:0);
-  document.getElementById('detailTableBody').innerHTML = rows.length
-    ? rows.map(buildDetailRow).join('')
+  document.getElementById('detailTableBody').innerHTML = pageRows.length
+    ? pageRows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 공지가 없습니다.','🔍')+'</td></tr>';
   if(DELETE_MODE) syncSelectAllCheckbox(rows);
+  renderPaginationRow(rows.length, totalPages);
 }
 function buildDetailRow(r){
   var checkCell = DELETE_MODE
