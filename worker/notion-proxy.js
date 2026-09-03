@@ -49,11 +49,13 @@ const SIGNATURE_ROLE_RE = /^[\w가-힣-]{1,50}$/;
 
 // 이 Worker를 호출하는 정적 클라이언트 앱들의 배포 origin만 허용.
 // 실제 서비스 도메인은 work-portal-4z9.pages.dev (Cloudflare Pages) — 프리뷰 배포용 서브도메인도 함께 허용.
+// stock-portal-dxa.pages.dev(주식포털, stock-portfolio.html)도 2026-09-03부터 동일 Worker 공유.
 // 로컬 개발 서버(localhost/127.0.0.1, 임의 포트)는 항상 허용.
 function isAllowedOrigin(origin) {
   if (!origin) return false;
   if (origin === "https://shinfund.github.io") return true;
   if (/^https:\/\/([a-z0-9-]+\.)?work-portal-4z9\.pages\.dev$/.test(origin)) return true;
+  if (/^https:\/\/([a-z0-9-]+\.)?stock-portal-dxa\.pages\.dev$/.test(origin)) return true;
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) return true;
   return false;
 }
