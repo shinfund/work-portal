@@ -1144,12 +1144,14 @@ async function buildAddCardNameOpts(){
   applyCatCardDefault();
 }
 // 계정항목별 카드명 기본값(2026-08-10 확정, 기존 실사용 데이터와 일치 — BUILT_LIM 한도표 매핑과 동일).
-const CAT_CARD_DEFAULT={'차량비':'주유카드','차량비(법인카드)':'법인카드'};
+// "차량비"만 주유카드, 그 외 전 계정항목(2026-09-04 확장)은 법인카드가 기본값.
+const CAT_CARD_DEFAULT={'차량비':'주유카드'};
+const CAT_CARD_DEFAULT_FALLBACK='법인카드';
 // 카드명 목록이 비동기 로드라 계정항목 변경 시점과 카드명 목록 로드 완료 시점 양쪽에서 호출해 순서를 안전하게 처리.
 function applyCatCardDefault(){
   const cat=(document.getElementById('addCat')||{}).value||'';
-  const cardName=CAT_CARD_DEFAULT[cat];
-  if(!cardName) return;
+  if(!cat) return; // 계정항목 미선택 시 기본값 적용 안 함
+  const cardName=CAT_CARD_DEFAULT[cat]||CAT_CARD_DEFAULT_FALLBACK;
   const sel=document.getElementById('addCardName');
   if(!sel||sel.options.length<2) return; // 아직 목록 로딩 전(선택/직접입력 옵션만 있음)
   const targetId=Object.keys(_addCardMap).find(id=>_addCardMap[id].name===cardName);
