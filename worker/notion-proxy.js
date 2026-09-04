@@ -13,6 +13,8 @@
 //                            Cloudflare 대시보드/wrangler secret으로만 설정. /app-meta 엔드포인트가 서빙.
 //                            형식: {"corporate-card":{"preparerTitle":"...","preparerName":"..."},
 //                                   "monthly-inspection":{"generatorInspector":{...},"damdangOptions":[...],"hwakinOptions":[...]}}
+//   env.KIS_APP_KEY, env.KIS_APP_SECRET  (선택, /kis/quote 사용 시 필수) 한국투자증권 Open API 앱키/시크릿.
+//                            stock-portal 포트폴리오 앱의 보유종목 탭 장중 실시간 현재가 조회용(2026-09-03).
 
 const NOTION_API = "https://api.notion.com";
 
@@ -193,6 +195,91 @@ async function clearLoginFailures(env, ip) {
   await env.LOGIN_ATTEMPTS_KV.delete(`fail:${ip}`);
 }
 
+// ── KIS(한국투자증권) 시세 프록시 — stock-portal 포트폴리오 앱 보유종목 탭 장중 실시간 현재가 ──
+const KIS_HOST = "https://openapi.koreainvestment.com:9443";
+const KIS_TOKEN_CACHE_KEY = "https://internal.cache/kis-token"; // Cache API용 가상 키(실제 요청 아님)
+const KIS_TOKEN_CACHE_TTL = 23 * 3600; // KIS 토큰 유효기간 24시간, 여유 1시간 두고 캐시
+const KIS_QUOTE_BATCH = 5;
+const KIS_QUOTE_DELAY_MS = 200;
+const KIS_MAX_CODES = 30;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function getKisToken(env) {
+  const cache = caches.default;
+  const cacheReq = new Request(KIS_TOKEN_CACHE_KEY);
+  const cached = await cache.match(cacheReq);
+  if (cached) {
+    const { access_token } = await cached.json();
+    if (access_token) return access_token;
+  }
+  const res = await fetch(`${KIS_HOST}/oauth2/tokenP`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ grant_type: "client_credentials", appkey: env.KIS_APP_KEY, appsecret: env.KIS_APP_SECRET }),
+  });
+  const data = await res.json();
+  if (!data.access_token) throw new Error(`KIS 토큰 발급 실패: ${JSON.stringify(data)}`);
+  const cacheRes = new Response(JSON.stringify({ access_token: data.access_token }), {
+    headers: { "Content-Type": "application/json", "Cache-Control": `max-age=${KIS_TOKEN_CACHE_TTL}` },
+  });
+  await cache.put(cacheReq, cacheRes);
+  return data.access_token;
+}
+
+async function fetchKisQuote(token, env, code) {
+  const qs = new URLSearchParams({ FID_COND_MRKT_DIV_CODE: "J", FID_INPUT_ISCD: code });
+  try {
+    const res = await fetch(`${KIS_HOST}/uapi/domestic-stock/v1/quotations/inquire-price?${qs}`, {
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token}`,
+        appkey: env.KIS_APP_KEY,
+        appsecret: env.KIS_APP_SECRET,
+        tr_id: "FHKST01010100",
+        custtype: "P",
+      },
+    });
+    const j = await res.json();
+    if (j.rt_cd !== "0") return null;
+    const o = j.output;
+    return {
+      현재가: Number(o.stck_prpr || 0),
+      등락률: Number(o.prdy_ctrt || 0),
+      시가: Number(o.stck_oprc || 0),
+      고가: Number(o.stck_hgpr || 0),
+      저가: Number(o.stck_lwpr || 0),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// 국내업종(코스피/코스닥) 현재지수 — 국내증시 앱 지수탭 실시간 조회용(2026-09-04). FID_INPUT_ISCD: 0001=코스피, 1001=코스닥
+async function fetchKisIndex(token, env, code) {
+  const qs = new URLSearchParams({ FID_COND_MRKT_DIV_CODE: "U", FID_INPUT_ISCD: code });
+  try {
+    const res = await fetch(`${KIS_HOST}/uapi/domestic-stock/v1/quotations/inquire-index-price?${qs}`, {
+      headers: {
+        "Content-Type": "application/json",
+        authorization: `Bearer ${token}`,
+        appkey: env.KIS_APP_KEY,
+        appsecret: env.KIS_APP_SECRET,
+        tr_id: "FHPUP02100000",
+        custtype: "P",
+      },
+    });
+    const j = await res.json();
+    if (j.rt_cd !== "0") return null;
+    const o = j.output;
+    return {
+      현재가: Number(o.bstp_nmix_prpr || 0),
+      등락률: Number(o.bstp_nmix_prdy_ctrt || 0),
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin");
@@ -267,6 +354,46 @@ export default {
     const valid = await verifyToken(token, env.AUTH_TOKEN_SECRET, tokenVersion);
     if (!valid) {
       return corsJson({ error: "unauthorized" }, 401, CORS);
+    }
+
+    // ✅ /kis/quote — 보유종목 탭 장중 실시간 현재가 (KIS API, stock-portal 전용)
+    if (url.pathname === "/kis/quote" && request.method === "GET") {
+      const codesParam = url.searchParams.get("codes") || "";
+      const codes = [...new Set(codesParam.split(",").map((c) => c.trim()).filter((c) => /^\d{6}$/.test(c)))].slice(0, KIS_MAX_CODES);
+      if (!codes.length) return corsJson({ error: "codes 파라미터 누락(6자리 종목코드, 콤마구분)" }, 400, CORS);
+      if (!env.KIS_APP_KEY || !env.KIS_APP_SECRET) return corsJson({ error: "not configured" }, 404, CORS);
+
+      try {
+        const kisToken = await getKisToken(env);
+        const result = {};
+        for (let i = 0; i < codes.length; i += KIS_QUOTE_BATCH) {
+          const batch = codes.slice(i, i + KIS_QUOTE_BATCH);
+          const quotes = await Promise.all(batch.map((c) => fetchKisQuote(kisToken, env, c)));
+          batch.forEach((c, j) => { if (quotes[j]) result[c] = quotes[j]; });
+          if (i + KIS_QUOTE_BATCH < codes.length) await sleep(KIS_QUOTE_DELAY_MS);
+        }
+        return corsJson(result, 200, CORS);
+      } catch (e) {
+        return corsJson({ error: `KIS 조회 실패: ${e.message}` }, 502, CORS);
+      }
+    }
+
+    // ✅ /kis/index — 국내증시 앱 지수탭 코스피·코스닥 실시간 현재지수(KIS API)
+    if (url.pathname === "/kis/index" && request.method === "GET") {
+      const codesParam = url.searchParams.get("codes") || "";
+      const codes = [...new Set(codesParam.split(",").map((c) => c.trim()).filter((c) => /^\d{4}$/.test(c)))].slice(0, 10);
+      if (!codes.length) return corsJson({ error: "codes 파라미터 누락(4자리 지수코드, 콤마구분)" }, 400, CORS);
+      if (!env.KIS_APP_KEY || !env.KIS_APP_SECRET) return corsJson({ error: "not configured" }, 404, CORS);
+
+      try {
+        const kisToken = await getKisToken(env);
+        const result = {};
+        const quotes = await Promise.all(codes.map((c) => fetchKisIndex(kisToken, env, c)));
+        codes.forEach((c, j) => { if (quotes[j]) result[c] = quotes[j]; });
+        return corsJson(result, 200, CORS);
+      } catch (e) {
+        return corsJson({ error: `KIS 지수 조회 실패: ${e.message}` }, 502, CORS);
+      }
     }
 
     // ✅ /query-by-date
