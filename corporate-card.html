@@ -234,6 +234,9 @@ tfoot td:first-child{font-weight:400}
 .modal-input:focus{border-color:var(--sky);background:var(--card)}
 .modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
 .modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+/* 총인원 등 number input 스핀 버튼 제거(마우스휠 스크롤 시 값이 실수로 바뀌는 것 방지) */
+input[type="number"]::-webkit-inner-spin-button,input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type="number"]{-moz-appearance:textfield}
 /* 다크모드 네이티브 date input 달력 아이콘이 검은색 고정이라 배경과 거의 안 보이던 문제 보정 */
 /* 날짜칸 달력 아이콘을 우측→좌측으로(월간점검 안전관리·점검팀 앱과 동일 패턴, 2026-08-05 전체 앱 확대
    적용) — 크로미움 계열(webkit-based)에서만 동작하는 표준 아이콘 위치 이동 방식. 아이콘과 숫자가
@@ -367,7 +370,7 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">총인원</label>
-        <input id="addHeadcount" class="modal-input" type="number" step="1" min="1" value="1"/>
+        <input id="addHeadcount" class="modal-input" type="number" step="1" min="1" value="1" onwheel="this.blur()"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">카드명</label>
