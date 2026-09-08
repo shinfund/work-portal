@@ -7448,9 +7448,11 @@ function generatorOpstatusRunwayNotes(filteredRecs){
     notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(실측평균): `
       +`무부하 ${fmt(empiricalHours('무부하'))} / 부하 ${fmt(empiricalHours('부하'))} / 전체부하 ${fmt(empiricalHours('전체부하'))}`);
     if(generatorRatedKw(tunnel)){
-      const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
+      const theoreticalRates=computeTheoreticalBurnRates(tunnel);
+      const theoreticalHours=hoursFor(theoreticalRates);
+      const fmtRate=r=>(r && r>0) ? (Math.round(r*10)/10)+'L/h' : '데이터없음';
       const baseFont=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
-      const colored=(cat,pct)=>({font:Object.assign({},EXCEL_BODY_FONT,{bold:true,color:{argb:GENERATOR_LOAD_COLORS[cat]}}), text:`${cat}(${pct}%) ${fmt(theoreticalHours(cat))}`});
+      const colored=(cat,pct)=>({font:Object.assign({},EXCEL_BODY_FONT,{bold:true,color:{argb:GENERATOR_LOAD_COLORS[cat]}}), text:`${cat}(${pct}%) ${fmtRate(theoreticalRates[cat])}·${fmt(theoreticalHours(cat))}`});
       notes.push({richText:[
         {font:baseFont, text:`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `},
         colored('무부하',0),
