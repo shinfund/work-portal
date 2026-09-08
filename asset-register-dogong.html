@@ -329,10 +329,6 @@ if (window.self !== window.top) {
       <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목</div>
 
       <div class="modal-field">
-        <label class="modal-label">품명 <span class="modal-required">*</span></label>
-        <input id="addName" class="modal-input" type="text" placeholder="예) 절연장갑"/>
-      </div>
-      <div class="modal-field">
         <label class="modal-label">터널명 <span class="modal-required">*</span></label>
         <select id="addTunnel" class="modal-select" onchange="onSelectChange(this,'addTunnelCustom')">
           <option value="">선택</option>
@@ -351,6 +347,10 @@ if (window.self !== window.top) {
           <option value="실적보고서">실적보고서</option>
         </select>
         <input id="addCategoryCustom" class="modal-input" type="text" placeholder="품목분류 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">품명 <span class="modal-required">*</span></label>
+        <input id="addName" class="modal-input" type="text" placeholder="예) 절연장갑"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">규격</label>
