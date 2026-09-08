@@ -1006,7 +1006,7 @@ function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, 
   }
 }
 function buildTunnelDd(){ buildGenericFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,getUniqueValues('터널명'),'터널명 전체', function(v){ FILTER_TUNNEL=v; }); }
-function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,getUniqueValues('품목분류'),'품목분류 전체', function(v){ FILTER_CATEGORY=v; }); }
+function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn','categoryDdLabel',FILTER_CATEGORY,sortByCategoryOrder(getUniqueValues('품목분류')),'품목분류 전체', function(v){ FILTER_CATEGORY=v; }); }
 
 /* ── 색상 뱃지(터널/품목분류) ── */
 var BADGE_CLASSES=['badge-c0','badge-c1','badge-c2','badge-c3','badge-c4','badge-c5'];
@@ -1188,10 +1188,17 @@ function renderAll(){
   renderCategoryPanel();
 }
 
-/* 터널명↑ · 품명↑ 정렬 비교자(구매일 필드가 없어 터널명 오름차순 기준으로 통일) */
+/* 품목분류 표시 순서(사용자 지정 고정 순서 — 알파벳/등장순 아님, 목록·드롭다운·품목분류별탭·엑셀 전체 공유) */
+var CATEGORY_ORDER = ['안전장구','예비품','매뉴얼','실적보고서'];
+function categoryRank(c){ var i=CATEGORY_ORDER.indexOf(c); return i<0 ? CATEGORY_ORDER.length : i; }
+function sortByCategoryOrder(values){ return values.slice().sort(function(a,b){ return categoryRank(a)-categoryRank(b); }); }
+
+/* 터널명↑ · 품목분류(지정순서) · 품명↑ 정렬 비교자(구매일 필드가 없어 터널명 오름차순 기준으로 통일) */
 function compareTunnelNameAsc(a, b){
   var at=a['터널명']||'', bt=b['터널명']||'';
   if(at!==bt) return at<bt?-1:1;
+  var ac=categoryRank(a['품목분류']), bc=categoryRank(b['품목분류']);
+  if(ac!==bc) return ac-bc;
   var an=a['품명']||'', bn=b['품명']||'';
   return an<bn?-1:an>bn?1:0;
 }
@@ -1323,7 +1330,8 @@ function calcGroupMap(rows, key){
 }
 function renderGroupPanel(opts){
   var map=calcGroupMap(ALL_DATA, opts.key);
-  var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return b[1].qty-a[1].qty; });
+  var arr=Object.keys(map).map(function(k){ return [k,map[k]]; });
+  arr = opts.sortFn ? arr.sort(opts.sortFn) : arr.sort(function(a,b){ return b[1].qty-a[1].qty; });
   document.getElementById(opts.badgeId).textContent=arr.length+opts.badgeSuffix;
   document.getElementById(opts.bodyId).innerHTML = arr.length
     ? arr.map(function(pair,i){
@@ -1347,7 +1355,8 @@ function renderCategoryPanel(){
   renderGroupPanel({
     key:'품목분류', badgeId:'categoryBadge', bodyId:'categoryTableBody', badgeSuffix:'종',
     emptyDesc:'품목분류별 데이터가 없습니다.',
-    nameCell:function(name){ return esc(name); }
+    nameCell:function(name){ return esc(name); },
+    sortFn:function(a,b){ return categoryRank(a[0])-categoryRank(b[0]); }
   });
 }
 
@@ -1395,11 +1404,11 @@ var EXCEL_PAGE_PRESETS={
 var EXCEL_COLUMNS_EQUIP=[
   { key:'터널명', header:'터널명' },
   { key:'품목분류', header:'품목분류' },
-  { key:'품명', header:'품명', width:26, wrap:true },
+  { key:'품명', header:'품명' },
   { key:'규격', header:'규격', width:22, wrap:true },
   { key:'수량', header:'수량', numFmt:'#,##0.##' },
   { key:'사진', header:'사진', photo:true, width:18 },
-  { key:'비고', header:'비고', width:16, wrap:true }
+  { key:'비고', header:'비고' }
 ];
 function excelCharWeight(ch){
   var code=ch.codePointAt(0);
@@ -1569,9 +1578,12 @@ function buildExcelReport(opts){
 // 엑셀 생성은 세로모드(portrait) + 화면 목록과 동일한 필터 함수를 재사용
 function exportEquipExcel(){
   var rows=filtered().slice().sort(compareTunnelNameAsc);
+  // 터널명 필터가 선택돼 있으면 파일명·제목 앞에 해당 터널명을 붙이고, "전체"면 생략(사용자 요청)
+  var tunnelPart = FILTER_TUNNEL ? (FILTER_TUNNEL+' ') : '';
+  var year = new Date().getFullYear();
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'비품내역', title:'비품대장(도공)', fnamePrefix:'비품대장(도공)',
+    sheetName:'비품내역', title: tunnelPart+'도공비품대장', fnamePrefix: year+'년 '+tunnelPart+'도공비품대장',
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }
