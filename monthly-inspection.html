@@ -7369,18 +7369,22 @@ function computeLoadBurnRatesForTunnel(tunnel){
   ['무부하','부하','전체부하'].forEach(cat=>{ rates[cat]= ownRates[cat]!=null ? ownRates[cat] : allRates[cat]; });
   return rates;
 }
-// 발전기 정격출력(PRIME, kW, 명판 확인분만 등록·2026-09-08) — 이론치 소모량 계산의 기준 용량.
-// 명판에 없는 터널은 이론치 행 자체를 생략한다(추측 금지).
-const GENERATOR_PRIME_KW={ '청하터널(주)':818, '청하터널(부)':682 };
+// 발전기 정격출력(kW) — 명판 대신 전기설비기록 탭 TUNNEL_ELEC_SPEC의 "발전"(예:"380 V / 900 kW")을
+// 그대로 재사용(2026-09-08 사용자 확인 — 이미 4개 터널 전부 등록돼 있어 명판 없이도 계산 가능).
+function generatorRatedKw(tunnel){
+  const spec=(TUNNEL_ELEC_SPEC[tunnel]||{}).발전;
+  const m=String(spec||'').match(/([\d,]+)\s*kW/i);
+  return m ? parseInt(m[1].replace(/,/g,''),10) : null;
+}
 // 이론적(업계 통용 근사치, 제조사 공식 수치 아님) 부하구분별 연료소모율(L/h) — 발전기 사양서를
-// 못 구해 명판 정격(kW)만으로 추정(2026-09-08 사용자 확정). 일반적으로 통용되는 디젤발전기 경험칙인
+// 못 구해 정격(kW)만으로 추정(2026-09-08 사용자 확정). 일반적으로 통용되는 디젤발전기 경험칙인
 // "정격 100% 부하 연비 ≈0.25L/kWh, 무부하 소모량은 그 25% 수준, 그 사이는 선형" 가정을 적용.
 // "부하운전(동력 일부 부하만 적용)"은 실제 시험 부하율이 기록에 없어 50%로 가정 — 나중에 실제
 // 사양서·시운전 부하율을 확인하면 이 가정(0.25L/kWh·25%·50%)부터 교체할 것.
 function computeTheoreticalBurnRates(tunnel){
-  const primeKw=GENERATOR_PRIME_KW[tunnel];
-  if(!primeKw) return {무부하:null, 부하:null, 전체부하:null};
-  const full=primeKw*0.25;
+  const ratedKw=generatorRatedKw(tunnel);
+  if(!ratedKw) return {무부하:null, 부하:null, 전체부하:null};
+  const full=ratedKw*0.25;
   const noLoad=full*0.25;
   const half=noLoad+(full-noLoad)*0.5;
   return {무부하:noLoad, 부하:half, 전체부하:full};
@@ -7407,7 +7411,7 @@ function generatorOpstatusRunwayRows(filteredRecs){
       무부하가동가능:empiricalHours('무부하'), 부하가동가능:empiricalHours('부하'), 전체부하가동가능:empiricalHours('전체부하'),
       __runway:true
     });
-    if(GENERATOR_PRIME_KW[tunnel]){
+    if(generatorRatedKw(tunnel)){
       const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
       rows.push({
         터널명:tunnel, 가동일자:'', 가동시간:'', 전류:'', 전력:'',
