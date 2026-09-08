@@ -4271,6 +4271,7 @@ const EXCEL_COMPANY_NAME='수자원기술(주)';
 const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_TOTAL_ROW_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30,dataWithPhoto:85};
 // 점검사진 대지 시트 A~J 컬럼폭 — 점검팀 템플릿(사진1 시트) 실측값(2026-07-24). 번호(A/F)=좁게,
 // 라벨(B/G)=중간, 값(C~E/H~J, 3칸 병합)=넓게. 이전엔 10칸 균등폭(7.86)이었으나 점검팀 앱을
@@ -4456,7 +4457,7 @@ function buildExcelReport(opts){
           cell.font=isTotal?Object.assign({},EXCEL_BODY_FONT,{bold:true}):EXCEL_BODY_FONT;
           cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
           cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
-          if(isTotal) cell.fill=EXCEL_HEADER_FILL;
+          if(isTotal) cell.fill=EXCEL_TOTAL_ROW_FILL;
           if(col.photo) return;
           if(col.dateCol && r[col.key]){
             const d=excelParseDate(r[col.key]);
