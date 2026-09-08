@@ -4487,7 +4487,7 @@ function buildExcelReport(opts){
           ws.mergeCells(rn,1,rn,columns.length);
           const cell=row.getCell(1);
           cell.value=text;
-          cell.font=Object.assign({},EXCEL_BODY_FONT,{italic:true,color:{argb:'FF666666'}});
+          cell.font=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
           cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
         }
         row.commit();
@@ -7441,9 +7441,13 @@ function generatorOpstatusRunwayNotes(filteredRecs){
     if(generatorRatedKw(tunnel)){
       const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
       notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `
-        +`무부하 ${fmt(theoreticalHours('무부하'))} / 부하 ${fmt(theoreticalHours('부하'))} / 전체부하 ${fmt(theoreticalHours('전체부하'))}`);
+        +`무부하(0%) ${fmt(theoreticalHours('무부하'))} / 부하(50%) ${fmt(theoreticalHours('부하'))} / 전체부하(100%) ${fmt(theoreticalHours('전체부하'))}`);
     }
   });
+  // 실측평균 소모율에 대한 데이터 정확도 한계 안내(2026-09-08 사용자 요청) — 감축시험 이전 구간의
+  // 재고량 기록은 유류탱크 오실측 누적오차가 남아있을 수 있어, 그 구간이 포함된 실측평균 소모율도
+  // 다소 부정확할 수 있음을 간략히 밝혀둠(감축시험 직후 이후 구간만 보정 반영, 그 이전은 원본 그대로).
+  if(notes.length) notes.push('※ 실측평균은 감축시험 전후 재고량 오실측 오차가 남아있는 과거 기록을 포함해 계산된 값으로, 다소 부정확할 수 있습니다.');
   return notes;
 }
 // 맨 아래 "합계" 행 추가(2026-09-08 사용자 요청) — 터널명 칸에 "합계" 라벨만 표시하고, 누적성
