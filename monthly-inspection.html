@@ -4487,8 +4487,12 @@ function buildExcelReport(opts){
         if(text){
           ws.mergeCells(rn,1,rn,columns.length);
           const cell=row.getCell(1);
-          cell.value=text;
-          cell.font=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
+          if(typeof text==='object' && text.richText){
+            cell.value=text;
+          }else{
+            cell.value=text;
+            cell.font=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
+          }
           cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
         }
         row.commit();
@@ -7428,6 +7432,10 @@ function generatorTunnelRemainingStock(tunnel){
 // 사용자 요청 — 표 컬럼이 아니라 합계 행 아래에 비고·서브텍스트 성격의 문장으로 표시). 각 터널의
 // 잔여재고는 generatorTunnelRemainingStock()의 보정된 값을 쓰고, ①과거 실측 평균 소모율,
 // ②정격 기반 이론치 소모율 두 기준으로 각각 문장 1줄씩(터널당 최대 2줄)을 만든다.
+// 이론치 안내 문장에서 무부하/부하/전체부하 구분을 색상으로 구별하기 위한 팔레트(2026-09-08
+// 사용자 요청 — "구분별 색상을 달리"). 실측평균 문장은 실제 관측된 가동사유 구간이라 색상 구분
+// 없이 유지하고, 부하율 가정치인 이론치 문장에만 적용.
+const GENERATOR_LOAD_COLORS={무부하:'FF2E7D32', 부하:'FF1565C0', 전체부하:'FFC62828'};
 function generatorOpstatusRunwayNotes(filteredRecs){
   const tunnels=[...new Set(filteredRecs.map(r=>r['터널명']).filter(Boolean))];
   const notes=[];
@@ -7441,8 +7449,16 @@ function generatorOpstatusRunwayNotes(filteredRecs){
       +`무부하 ${fmt(empiricalHours('무부하'))} / 부하 ${fmt(empiricalHours('부하'))} / 전체부하 ${fmt(empiricalHours('전체부하'))}`);
     if(generatorRatedKw(tunnel)){
       const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
-      notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `
-        +`무부하(0%) ${fmt(theoreticalHours('무부하'))} / 부하(50%) ${fmt(theoreticalHours('부하'))} / 전체부하(100%) ${fmt(theoreticalHours('전체부하'))}`);
+      const baseFont=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
+      const colored=(cat,pct)=>({font:Object.assign({},EXCEL_BODY_FONT,{bold:true,color:{argb:GENERATOR_LOAD_COLORS[cat]}}), text:`${cat}(${pct}%) ${fmt(theoreticalHours(cat))}`});
+      notes.push({richText:[
+        {font:baseFont, text:`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `},
+        colored('무부하',0),
+        {font:baseFont, text:' / '},
+        colored('부하',50),
+        {font:baseFont, text:' / '},
+        colored('전체부하',100)
+      ]});
     }
   });
   // 실측평균 소모율에 대한 데이터 정확도 한계 안내(2026-09-08 사용자 요청) — 감축시험 이전 구간의
