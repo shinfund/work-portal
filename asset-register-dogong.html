@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>비품대장(도공)</title>
+<title>비품대장-도공</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M7.1 18.5V12.9C7.1 9 9.6 6.6 12 6.6C14.4 6.6 16.9 9 16.9 12.9V18.5Z' fill='%23fff'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  /* work-portal 공통 색상 팔레트 기준(비품대장(수자원) 앱과 수치 동일) */
+  /* work-portal 공통 색상 팔레트 기준(비품대장-수자원 앱과 수치 동일) */
   --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
   --teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
   --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
@@ -131,6 +131,17 @@ html[data-theme="dark"] .rn{color:#fff}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+
+/* ── PAGINATION ── */
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -138,6 +149,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-list{background:#5B4FBD}
+.tb-action-btn.tb-list:hover{background:#4a3fa0}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -334,6 +347,7 @@ if (window.self !== window.top) {
           <option value="안전장구">안전장구</option>
           <option value="예비품">예비품</option>
           <option value="매뉴얼">매뉴얼</option>
+          <option value="도면">도면</option>
           <option value="실적보고서">실적보고서</option>
         </select>
         <input id="addCategoryCustom" class="modal-input" type="text" placeholder="품목분류 직접 입력" style="display:none;margin-top:6px"/>
@@ -394,7 +408,7 @@ if (window.self !== window.top) {
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">비품대장(도공)</div>
+    <div class="logo-title">비품대장-도공</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -438,7 +452,7 @@ if (window.self !== window.top) {
           </button>
           <div class="dd-menu" id="categoryDdMenu"></div>
         </div>
-        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." aria-label="비품 검색" oninput="renderList()"/>
+        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." aria-label="비품 검색" oninput="CURRENT_PAGE=1;renderRows()"/>
         <button class="tb-action-btn tb-add" onclick="openAddModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
@@ -446,6 +460,10 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportEquipExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+        <button class="tb-action-btn tb-list" id="equipListExportBtn" onclick="exportEquipListExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="equipListExportLabel">비품리스트</span>
         </button>
       </div>
       <div class="detail-count-row">
@@ -456,7 +474,15 @@ if (window.self !== window.top) {
           </button>
           <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
         </div>
-        <div class="detail-count" id="detailCount"></div>
+        <div class="count-right">
+          <div class="detail-count" id="detailCount"></div>
+          <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
+            <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+              <span id="pageSizeDdLabel">15개씩</span>
+            </button>
+            <div class="dd-menu" id="pageSizeDdMenu"></div>
+          </div>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -472,6 +498,7 @@ if (window.self !== window.top) {
           <tbody id="detailTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination-row" id="paginationRow"></div>
     </div>
   </div>
 
@@ -712,7 +739,7 @@ function setFixedSelectValue(selectId, customInputId, value){
   else { sel.value='__custom__'; if(ci){ ci.value=value; ci.style.display=''; } }
 }
 
-/* ── 사진 업로드 (비품대장(수자원) 앱 uploadPhoto 패턴 재사용, R2 폴더도 동일하게 asset-register 공유) ── */
+/* ── 사진 업로드 (비품대장-수자원 앱 uploadPhoto 패턴 재사용, R2 폴더도 동일하게 asset-register 공유) ── */
 var UPLOAD_MAX_BYTES = 500*1024;
 var UPLOAD_MAX_LABEL = '500KB';
 function compressImageToLimit(file, maxBytes){
@@ -774,7 +801,7 @@ function uploadPhoto(input){
     if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
     var formData = new FormData();
     formData.append('file', outFile);
-    // 비품대장(수자원) 앱과 동일한 R2 폴더(asset-register)를 그대로 공유(사용자 요청)
+    // 비품대장-수자원 앱과 동일한 R2 폴더(asset-register)를 그대로 공유(사용자 요청)
     formData.append('app', 'asset-register');
 
     return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
@@ -972,8 +999,8 @@ function closeDd(menuId, btnId){
   var b=document.getElementById(btnId); if(b) b.classList.remove('active');
 }
 function closeAllDd(){
-  ['tunnelDdMenu','categoryDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
-  ['tunnelDdBtn','categoryDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+  ['tunnelDdMenu','categoryDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['tunnelDdBtn','categoryDdBtn','pageSizeDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
 document.addEventListener('click', function(e){
   document.querySelectorAll('.dd-menu.open').forEach(function(menu){
@@ -1189,7 +1216,7 @@ function renderAll(){
 }
 
 /* 품목분류 표시 순서(사용자 지정 고정 순서 — 알파벳/등장순 아님, 목록·드롭다운·품목분류별탭·엑셀 전체 공유) */
-var CATEGORY_ORDER = ['안전장구','예비품','매뉴얼','실적보고서'];
+var CATEGORY_ORDER = ['안전장구','예비품','매뉴얼','도면','실적보고서'];
 function categoryRank(c){ var i=CATEGORY_ORDER.indexOf(c); return i<0 ? CATEGORY_ORDER.length : i; }
 function sortByCategoryOrder(values){ return values.slice().sort(function(a,b){ return categoryRank(a)-categoryRank(b); }); }
 
@@ -1202,16 +1229,85 @@ function compareTunnelNameAsc(a, b){
   var an=a['품명']||'', bn=b['품명']||'';
   return an<bn?-1:an>bn?1:0;
 }
+/* ── 페이지네이션(표시 개수 드롭다운 + 페이지 번호, 공지사항 앱과 동일 패턴) ── */
+var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE = (function(){
+  try{
+    var raw=localStorage.getItem('assetRegisterDogong_pageSize');
+    var v=parseInt(raw,10);
+    if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
+    if(raw==='all') return 'all';
+  }catch(e){}
+  return 15;
+})();
+var CURRENT_PAGE=1;
+function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
+function buildPageSizeDd(){
+  var menu=document.getElementById('pageSizeDdMenu');
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      var v=opt.dataset.val;
+      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+      CURRENT_PAGE=1;
+      try{ localStorage.setItem('assetRegisterDogong_pageSize', v); }catch(e2){}
+      closeDd('pageSizeDdMenu','pageSizeDdBtn');
+      renderRows();
+    });
+  }
+}
+function goToPage(n){
+  CURRENT_PAGE=n;
+  renderRows();
+  var wrap=document.querySelector('.detail-sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderPaginationRow(totalCount, totalPages){
+  var el=document.getElementById('paginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=CURRENT_PAGE;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage('+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
+
 /* ── 비품내역 목록 ── */
 function renderList(){
-  buildTunnelDd(); buildCategoryDd();
+  buildTunnelDd(); buildCategoryDd(); buildPageSizeDd();
+  renderRows();
+}
+/* 검색어 입력 등 목록만 다시 그리면 되는 경우 — 드롭다운(buildTunnelDd 등)은 옵션 목록이
+   실제로 바뀔 때만(데이터 로드·필터 변경·삭제모드 토글 시) renderList()에서 재빌드한다 */
+function renderRows(){
   var rows = filtered().slice().sort(compareTunnelNameAsc);
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
+  var totalPages = PAGE_SIZE==='all' ? 1 : Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
+  if(CURRENT_PAGE<1) CURRENT_PAGE=1;
+  var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
   var colCount = 7 + (DELETE_MODE?1:0);
-  document.getElementById('detailTableBody').innerHTML = rows.length
-    ? rows.map(buildDetailRow).join('')
+  document.getElementById('detailTableBody').innerHTML = pageRows.length
+    ? pageRows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 비품이 없습니다.','🔍')+'</td></tr>';
   if(DELETE_MODE) syncSelectAllCheckbox(rows);
+  renderPaginationRow(rows.length, totalPages);
 }
 function buildDetailRow(r){
   var checkCell = DELETE_MODE
@@ -1360,7 +1456,7 @@ function renderCategoryPanel(){
   });
 }
 
-/* ── 엑셀 생성 (비품대장(수자원) 앱의 buildExcelReport 패턴 재사용 — 사진 컬럼 포함 세로모드) ──
+/* ── 엑셀 생성 (비품대장-수자원 앱의 buildExcelReport 패턴 재사용 — 사진 컬럼 포함 세로모드) ──
    ~/.claude/skills/xlsx-report-export/SKILL.md "새 탭/앱에 엑셀 버튼 추가하기" 참고 */
 var EXCEL_LIB_LOADING = null;
 function loadExcelLib(){
@@ -1404,11 +1500,11 @@ var EXCEL_PAGE_PRESETS={
 var EXCEL_COLUMNS_EQUIP=[
   { key:'터널명', header:'터널명' },
   { key:'품목분류', header:'품목분류' },
-  { key:'품명', header:'품명' },
+  { key:'품명', header:'품명', wrap:true },
   { key:'규격', header:'규격', width:22, wrap:true },
   { key:'수량', header:'수량', numFmt:'#,##0.##' },
   { key:'사진', header:'사진', photo:true, width:18 },
-  { key:'비고', header:'비고' }
+  { key:'비고', header:'비고', wrap:true }
 ];
 function excelCharWeight(ch){
   var code=ch.codePointAt(0);
@@ -1578,12 +1674,25 @@ function buildExcelReport(opts){
 // 엑셀 생성은 세로모드(portrait) + 화면 목록과 동일한 필터 함수를 재사용
 function exportEquipExcel(){
   var rows=filtered().slice().sort(compareTunnelNameAsc);
-  // 터널명 필터가 선택돼 있으면 파일명·제목 앞에 해당 터널명을 붙이고, "전체"면 생략(사용자 요청)
-  var tunnelPart = FILTER_TUNNEL ? (FILTER_TUNNEL+' ') : '';
+  // 터널명 필터가 선택돼 있으면 파일명·제목에 해당 터널명을, "전체"면 전체 구간명(포항영덕간터널)을 사용(사용자 요청)
+  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
   var year = new Date().getFullYear();
+  var baseName = tunnelPart+' 도공비품종합대장';
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'비품내역', title: tunnelPart+'도공비품대장', fnamePrefix: year+'년 '+tunnelPart+'도공비품대장',
+    sheetName:'비품내역', title: baseName, fnamePrefix: year+'년 '+baseName,
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
+  });
+}
+// "비품리스트" — "엑셀 생성"과 동일하되 품목분류가 "실적보고서"(실물 비품이 아닌 문서류)인 행만 제외(사용자 요청)
+function exportEquipListExcel(){
+  var rows=filtered().filter(function(r){ return r['품목분류']!=='실적보고서'; }).slice().sort(compareTunnelNameAsc);
+  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
+  var year = new Date().getFullYear();
+  var baseName = tunnelPart+' 도공비품대장';
+  buildExcelReport({
+    btnId:'equipListExportBtn', lblId:'equipListExportLabel', lblDefault:'비품리스트',
+    sheetName:'비품리스트', title: baseName, fnamePrefix: year+'년 '+baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }

@@ -550,11 +550,11 @@ body{
     </div>
     <div class="sb-item sb-auth-gated" id="sbn-equip" role="button" tabindex="0" onclick="go('equip')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-      <span>비품대장(수자원)</span>
+      <span>비품대장-수자원</span>
     </div>
     <div class="sb-item sb-auth-gated" id="sbn-equipDogong" role="button" tabindex="0" onclick="go('equipDogong')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-      <span>비품대장(도공)</span>
+      <span>비품대장-도공</span>
     </div>
     <div class="sb-item sb-auth-gated" id="sbn-overtime" role="button" tabindex="0" onclick="go('overtime')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -712,7 +712,7 @@ body{
           </div>
           <div class="app-card" role="button" tabindex="0" onclick="go('equip')" onkeydown="handleActivateKey(event)">
             <div>
-              <div class="ac-name">비품대장(수자원)</div>
+              <div class="ac-name">비품대장-수자원</div>
               <div class="ac-kpi" id="kpi-equip">—</div>
               <div class="ac-viz" id="viz-equip"></div>
               <div class="ac-desc">현장 비품 입출고 및 재고 현황 관리.</div>
@@ -721,7 +721,7 @@ body{
           </div>
           <div class="app-card" role="button" tabindex="0" onclick="go('equipDogong')" onkeydown="handleActivateKey(event)">
             <div>
-              <div class="ac-name">비품대장(도공)</div>
+              <div class="ac-name">비품대장-도공</div>
               <div class="ac-kpi" id="kpi-equipDogong">—</div>
               <div class="ac-viz" id="viz-equipDogong"></div>
               <div class="ac-desc">한국도로공사 현장 비품·자재·매뉴얼 현황 관리.</div>
@@ -772,7 +772,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 공지사항·하자보수·차량운행·연장근무·태양광·비품대장(수자원)·비품대장(도공)·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 공지사항·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -835,25 +835,25 @@ body{
       </div>
     </div>
 
-    <!-- ▸ 비품대장(수자원) iframe -->
+    <!-- ▸ 비품대장-수자원 iframe -->
     <div class="panel" id="panel-equip">
       <div class="iframe-wrap">
         <div class="iframe-overlay" id="ov-equip">
           <div class="spin-ring"></div>
-          <div class="overlay-txt">비품대장(수자원) 앱 로딩 중...</div>
+          <div class="overlay-txt">비품대장-수자원 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-equip" class="app-iframe" title="비품대장(수자원)"></iframe>
+        <iframe id="ifr-equip" class="app-iframe" title="비품대장-수자원"></iframe>
       </div>
     </div>
 
-    <!-- ▸ 비품대장(도공) iframe -->
+    <!-- ▸ 비품대장-도공 iframe -->
     <div class="panel" id="panel-equipDogong">
       <div class="iframe-wrap">
         <div class="iframe-overlay" id="ov-equipDogong">
           <div class="spin-ring"></div>
-          <div class="overlay-txt">비품대장(도공) 앱 로딩 중...</div>
+          <div class="overlay-txt">비품대장-도공 앱 로딩 중...</div>
         </div>
-        <iframe id="ifr-equipDogong" class="app-iframe" title="비품대장(도공)"></iframe>
+        <iframe id="ifr-equipDogong" class="app-iframe" title="비품대장-도공"></iframe>
       </div>
     </div>
 
@@ -916,7 +916,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 공지사항·하자보수·차량운행·연장근무·태양광·비품대장(수자원)·비품대장(도공)·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 공지사항·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -976,8 +976,8 @@ const APPS = {
   vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무', file:'overtime-work.html' },
   solar:    { name:'태양광발전량', file:'solar-power.html' },
-  equip:    { name:'비품대장(수자원)', file:'asset-register.html' },
-  equipDogong: { name:'비품대장(도공)', file:'asset-register-dogong.html' },
+  equip:    { name:'비품대장-수자원', file:'asset-register.html' },
+  equipDogong: { name:'비품대장-도공', file:'asset-register-dogong.html' },
   monthly:  { name:'월간점검결과-안전관리', file:'monthly-inspection.html' },
   monthlyTeam: { name:'월간점검결과-점검팀', file:'monthly-inspection-team.html' },
   card:     { name:'법인카드', file:'corporate-card.html' }
@@ -1177,7 +1177,7 @@ renderTabs();
 updateNavButtons();
 initDraggableModals();
 
-// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장(수자원)·비품대장(도공)·월간점검결과-안전관리·월간점검결과-점검팀 8개 앱 공용 토큰) ──────
+// ── 로그인 (하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 8개 앱 공용 토큰) ──────
 const WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
 let AUTH_TOKEN = '';
 let AUTH_EXPIRES = 0;

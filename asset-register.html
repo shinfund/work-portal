@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
-<title>비품대장(수자원)</title>
+<title>비품대장-수자원</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M7.1 18.5V12.9C7.1 9 9.6 6.6 12 6.6C14.4 6.6 16.9 9 16.9 12.9V18.5Z' fill='%23fff'/%3E%3C/svg%3E"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
@@ -131,6 +131,17 @@ html[data-theme="dark"] .rn{color:#fff}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+
+/* ── PAGINATION ── */
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 /* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
@@ -440,7 +451,7 @@ if (window.self !== window.top) {
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
-    <div class="logo-title">비품대장(수자원)</div>
+    <div class="logo-title">비품대장-수자원</div>
   </div>
   <div class="header-right">
     <div class="last-update" id="lastUpdate"></div>
@@ -502,7 +513,7 @@ if (window.self !== window.top) {
           </button>
           <div class="dd-menu" id="statusDdMenu"></div>
         </div>
-        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." aria-label="비품 검색" oninput="renderList()"/>
+        <input class="search-box" id="searchBox" placeholder="🔍 품명, 규격, 비고 검색..." aria-label="비품 검색" oninput="CURRENT_PAGE=1;renderRows()"/>
         <button class="tb-action-btn tb-add" onclick="openAddModal()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
@@ -520,7 +531,15 @@ if (window.self !== window.top) {
           </button>
           <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
         </div>
-        <div class="detail-count" id="detailCount"></div>
+        <div class="count-right">
+          <div class="detail-count" id="detailCount"></div>
+          <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
+            <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+              <span id="pageSizeDdLabel">15개씩</span>
+            </button>
+            <div class="dd-menu" id="pageSizeDdMenu"></div>
+          </div>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -540,6 +559,7 @@ if (window.self !== window.top) {
           <tbody id="detailTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination-row" id="paginationRow"></div>
     </div>
   </div>
 
@@ -1097,8 +1117,8 @@ function closeDd(menuId, btnId){
   var b=document.getElementById(btnId); if(b) b.classList.remove('active');
 }
 function closeAllDd(){
-  ['yearDdMenu','monthDdMenu','tunnelDdMenu','categoryDdMenu','statusDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
-  ['yearDdBtn','monthDdBtn','tunnelDdBtn','categoryDdBtn','statusDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+  ['yearDdMenu','monthDdMenu','tunnelDdMenu','categoryDdMenu','statusDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['yearDdBtn','monthDdBtn','tunnelDdBtn','categoryDdBtn','statusDdBtn','pageSizeDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
 // 외부 클릭 시 닫기 — 이미 닫힌(=.open 없는) 메뉴는 건드리지 않는다. select 핸들러가
 // menu.innerHTML을 재생성하면 클릭된 .dd-opt(e.target)가 DOM에서 분리돼 wrap.contains(e.target)가
@@ -1378,16 +1398,85 @@ function compareTunnelDateDesc(a, b){
   var ad=(a['구매일']||'').replace(/[.\/]/g,'-'), bd=(b['구매일']||'').replace(/[.\/]/g,'-');
   return ad<bd?1:ad>bd?-1:0;
 }
+/* ── 페이지네이션(표시 개수 드롭다운 + 페이지 번호, 공지사항 앱과 동일 패턴) ── */
+var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE = (function(){
+  try{
+    var raw=localStorage.getItem('assetRegister_pageSize');
+    var v=parseInt(raw,10);
+    if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
+    if(raw==='all') return 'all';
+  }catch(e){}
+  return 15;
+})();
+var CURRENT_PAGE=1;
+function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
+function buildPageSizeDd(){
+  var menu=document.getElementById('pageSizeDdMenu');
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      var v=opt.dataset.val;
+      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+      CURRENT_PAGE=1;
+      try{ localStorage.setItem('assetRegister_pageSize', v); }catch(e2){}
+      closeDd('pageSizeDdMenu','pageSizeDdBtn');
+      renderRows();
+    });
+  }
+}
+function goToPage(n){
+  CURRENT_PAGE=n;
+  renderRows();
+  var wrap=document.querySelector('.detail-sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderPaginationRow(totalCount, totalPages){
+  var el=document.getElementById('paginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=CURRENT_PAGE;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage('+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
+
 /* ── 비품내역 목록 (요청 정렬 표준: 터널명 내림차순 → 구매일 내림차순) ── */
 function renderList(){
-  buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd();
+  buildYearDd(); buildMonthDd(); buildTunnelDd(); buildCategoryDd(); buildStatusDd(); buildPageSizeDd();
+  renderRows();
+}
+/* 검색어 입력 등 목록만 다시 그리면 되는 경우 — 드롭다운(buildTunnelDd 등)은 옵션 목록이
+   실제로 바뀔 때만(데이터 로드·필터 변경·삭제모드 토글 시) renderList()에서 재빌드한다 */
+function renderRows(){
   var rows = filtered().slice().sort(compareTunnelDateDesc);
   document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
+  var totalPages = PAGE_SIZE==='all' ? 1 : Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
+  if(CURRENT_PAGE<1) CURRENT_PAGE=1;
+  var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
   var colCount = 11 + (DELETE_MODE?1:0);
-  document.getElementById('detailTableBody').innerHTML = rows.length
-    ? rows.map(buildDetailRow).join('')
+  document.getElementById('detailTableBody').innerHTML = pageRows.length
+    ? pageRows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 비품이 없습니다.','🔍')+'</td></tr>';
   if(DELETE_MODE) syncSelectAllCheckbox(rows);
+  renderPaginationRow(rows.length, totalPages);
 }
 function buildDetailRow(r){
   var checkCell = DELETE_MODE
@@ -1786,7 +1875,7 @@ function exportEquipExcel(){
   var rows=filtered().slice().sort(compareTunnelDateDesc);
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'비품내역', title:'비품대장(수자원)', fnamePrefix:'비품대장(수자원)',
+    sheetName:'비품내역', title:'비품대장-수자원', fnamePrefix:'비품대장-수자원',
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }
