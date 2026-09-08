@@ -764,6 +764,7 @@ if (window.self !== window.top) {
         <button class="view-toggle-btn active" data-view="base" onclick="setGeneratorView('base')">기본정보</button>
         <button class="view-toggle-btn" data-view="fuel" onclick="setGeneratorView('fuel')">유류현황(1건)</button>
         <button class="view-toggle-btn" data-view="chk" onclick="setGeneratorView('chk')">점검체크리스트(20개)</button>
+        <button class="view-toggle-btn" data-view="opstatus" onclick="setGeneratorView('opstatus')">가동현황</button>
       </div>
       <div class="count-actions">
         <button class="tb-action-btn tb-delete" id="delToggleBtn_generator" onclick="toggleDeleteMode('generator')">
@@ -1829,6 +1830,16 @@ function generatorFuelFlatRows(recs){
   });
   return out;
 }
+// 가동현황 — 발전기점검1DB(부모) 운전값(가동시간/전류/전력) + 발전기점검2DB(유류현황)을 한 행으로 합친 뷰.
+// 유류현황 미입력 레코드도 운전값은 보여줘야 하므로(generatorFuelFlatRows와 달리) _fuel 유무로 걸러내지 않는다.
+function generatorOpstatusFlatRows(recs){
+  return recs.map(r=>({
+    parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'],
+    가동시간:r['가동시간'], 전류:r['전류(A)'], 전력:r['전력(kW)'],
+    용량:r._fuel?r._fuel.용량:null, 전일재고량:r._fuel?r._fuel.전일재고량:null,
+    입고량:r._fuel?r._fuel.입고량:null, 사용량:r._fuel?r._fuel.사용량:null, 금일재고량:r._fuel?r._fuel.금일재고량:null
+  }));
+}
 function generatorChkFlatRows(recs){
   const out=[];
   recs.forEach(r=>{ (r._chk||[]).forEach(c=>{ out.push({parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'], 점검구분:c.점검구분, 점검내용:c.점검내용, 결과:c.결과, 특이사항:c.특이사항}); }); });
@@ -2094,7 +2105,8 @@ let GENERATOR_BASE_THEAD=null;
 const GENERATOR_SEARCH_PLACEHOLDERS={
   base:'🔍 제목·점검자 검색...',
   fuel:'🔍 종류 검색...',
-  chk:'🔍 점검내용·결과·특이사항 검색...'
+  chk:'🔍 점검내용·결과·특이사항 검색...',
+  opstatus:'🔍 가동시간 검색...'
 };
 function setGeneratorView(v){
   if(_generatorView===v) return;
@@ -2140,6 +2152,21 @@ function renderGeneratorFlatTable(){
       <td style="white-space:nowrap">${esc(fmtDate(x.가동일자))}</td>
       <td>${esc(x.점검구분)}</td><td>${esc(x.점검내용)}</td>
       <td>${esc(x.결과||'-')}</td><td>${esc(x.특이사항||'-')}</td>
+    </tr>`).join('');
+  } else if(_generatorView==='opstatus'){
+    colCount=10;
+    headHtml='<th>터널명</th><th>가동일자</th><th>가동시간</th><th class="r">전류(A)</th><th class="r">전력(kW)</th><th class="r">용량(L)</th><th class="r">전일재고량(L)</th><th class="r">입고량(L)</th><th class="r">사용량(L)</th><th class="r">금일재고량(L)</th>';
+    flat=generatorOpstatusFlatRows(recs);
+    if(q) flat=flat.filter(x=>(x.가동시간||'').toLowerCase().includes(q));
+    rowsHtml=flat.map(x=>`<tr onclick="openDetailModal('generator','${x.parentId}')" style="cursor:pointer">
+      <td><span class="type-badge ${tunnelSlug(x.터널명)}">${esc(x.터널명||'-')}</span></td>
+      <td style="white-space:nowrap">${esc(fmtDate(x.가동일자))}</td>
+      <td>${esc(x.가동시간||'-')}</td>
+      <td class="r">${x.전류!=null&&x.전류!==''?fmtWon(x.전류):'-'}</td>
+      <td class="r">${x.전력!=null&&x.전력!==''?fmtWon(x.전력):'-'}</td>
+      <td class="r">${x.용량!=null?fmtWon(x.용량):'-'}</td><td class="r">${x.전일재고량!=null?fmtWon(x.전일재고량):'-'}</td>
+      <td class="r">${x.입고량!=null?fmtWon(x.입고량):'-'}</td><td class="r">${x.사용량!=null?fmtWon(x.사용량):'-'}</td>
+      <td class="r">${x.금일재고량!=null?fmtWon(x.금일재고량):'-'}</td>
     </tr>`).join('');
   } else { return; }
   thead.innerHTML=headHtml;
@@ -7268,6 +7295,20 @@ function exportGeneratorExcel(){
     {key:'결과', header:'결과'}, {key:'특이사항', header:'특이사항', wrap:true}
   ];
 
+  const opstatusRows=generatorOpstatusFlatRows(filteredRecs).map(x=>({
+    터널명:x.터널명||'', 가동일자:x.가동일자||'', 가동시간:x.가동시간||'',
+    전류:Number(x.전류)||0, 전력:Number(x.전력)||0,
+    용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
+    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
+  }));
+  const opstatusColumns=[
+    {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'가동시간', header:'가동시간'},
+    {key:'전류', header:'전류(A)', numFmt:'#,##0.##'}, {key:'전력', header:'전력(kW)', numFmt:'#,##0.##'},
+    {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
+    {key:'입고량', header:'입고량(L)', numFmt:'#,##0'}, {key:'사용량', header:'사용량(L)', numFmt:'#,##0'},
+    {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
+  ];
+
   const ym=resolveTabYearMonth('generator', tabDef.dateKey);
   const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
@@ -7276,7 +7317,8 @@ function exportGeneratorExcel(){
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
-      {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows}
+      {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows},
+      {sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)', columns:opstatusColumns, rows:opstatusRows}
     ]
   });
 }
