@@ -4410,7 +4410,7 @@ function resolveTabYearMonth(tabId, dateKey){
 function buildExcelReport(opts){
   const btn=document.getElementById(opts.btnId);
   const lbl=document.getElementById(opts.lblId);
-  const sheets = opts.sheets || [{sheetName:opts.sheetName, title:opts.title, columns:opts.columns, rows:opts.rows, orientation:opts.orientation}];
+  const sheets = opts.sheets || [{sheetName:opts.sheetName, title:opts.title, columns:opts.columns, rows:opts.rows, orientation:opts.orientation, noteRows:opts.noteRows}];
   if(!sheets.some(s=>(s.rows||[]).length)){ alert('내보낼 데이터가 없습니다.'); return; }
   const anyPhoto = sheets.some(s=>(s.columns||[]).some(c=>c.photo));
   let failedPhotoCount=0;
@@ -4474,6 +4474,23 @@ function buildExcelReport(opts){
           const url=r[pc.col.key+'_URL'];
           if(url) photoTasks.push({url, colIdx:pc.i, rn0, ws});
         });
+      });
+      // 표(그리드) 형태가 아니라 비고·서브텍스트 성격의 문장을 표 바로 아래에 붙일 때 사용
+      // (2026-09-08 사용자 요청 — 가동현황의 "잔여재고 가동가능시간" 안내를 컬럼에 끼워넣지 않고
+      // 합계 행 아래에 병합된 한 줄 문장으로 표시). 테두리 없이 전체 컬럼폭만큼 병합해 좌측정렬.
+      const noteRows=sheetOpts.noteRows||[];
+      noteRows.forEach((text,ni)=>{
+        const rn=3+rows.length+ni;
+        const row=ws.getRow(rn);
+        row.height=EXCEL_ROW_HEIGHTS.data;
+        if(text){
+          ws.mergeCells(rn,1,rn,columns.length);
+          const cell=row.getCell(1);
+          cell.value=text;
+          cell.font=Object.assign({},EXCEL_BODY_FONT,{italic:true,color:{argb:'FF666666'}});
+          cell.alignment={vertical:'middle',horizontal:'left',wrapText:true};
+        }
+        row.commit();
       });
     });
     if(photoTasks.length) lbl.textContent='사진 불러오는 중...';
@@ -7297,32 +7314,27 @@ function exportGeneratorExcel(){
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
       {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows},
-      {sheetName:'가동현황', title:generatorOpstatusReportLabel(filteredRecs, tunnel), columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)}
+      {sheetName:'가동현황', title:generatorOpstatusReportLabel(filteredRecs, tunnel), columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs), noteRows:generatorOpstatusNoteRows(filteredRecs)}
     ]
   });
 }
 // 가동현황 컬럼정의/행변환 — exportGeneratorExcel(전체 시트묶음)과 아래 exportGeneratorOpstatusExcel(단독
 // 출력버튼) 양쪽이 공유한다(2026-09-08, 사용자 요청으로 "가동현황"이 화면 뷰토글이 아니라 발전기점검
-// 탭 카운트행 맨 우측의 전용 엑셀 출력버튼으로 확정됨). 마지막 3개 컬럼(무부하/부하/전체부하 가동가능
-// 시간)은 일반 데이터·합계 행에서는 항상 빈칸이고, 맨 아래 잔여재고 가동가능시간 행에서만 값이 채워진다.
+// 탭 카운트행 맨 우측의 전용 엑셀 출력버튼으로 확정됨).
 const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
   {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'가동시간', header:'가동시간'},
   {key:'전류', header:'전류(A)', numFmt:'#,##0.##'}, {key:'전력', header:'전력(kW)', numFmt:'#,##0.##'},
   {key:'가동사유', header:'가동사유'},
   {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
   {key:'입고량', header:'입고량(L)', numFmt:'#,##0'}, {key:'사용량', header:'사용량(L)', numFmt:'#,##0'},
-  {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'},
-  {key:'무부하가동가능', header:'무부하 가동가능(h)', numFmt:'#,##0.0'},
-  {key:'부하가동가능', header:'부하 가동가능(h)', numFmt:'#,##0.0'},
-  {key:'전체부하가동가능', header:'전체부하 가동가능(h)', numFmt:'#,##0.0'}
+  {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
 ];
 function generatorOpstatusExcelRows(recs){
   return generatorOpstatusFlatRows(recs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 가동시간:x.가동시간||'',
     전류:Number(x.전류)||0, 전력:Number(x.전력)||0, 가동사유:x.가동사유||'',
     용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
-    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0,
-    무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:''
+    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
   }));
 }
 // "16:49~17:51" 형식의 가동시간 문자열을 시간(소수) 단위로 변환. 형식이 아니거나('-' 등) 파싱 실패시 null.
@@ -7411,42 +7423,32 @@ function generatorTunnelRemainingStock(tunnel){
   }
   return stock;
 }
-// 필터링된 데이터에 나타난 터널별로 "잔여재고 기준 가동가능시간" 행을 만든다(2026-09-08 사용자 요청
-// — 유류 탱크는 터널/발전기별로 별도라 터널마다 각각 계산). 각 터널의 잔여재고는
-// generatorTunnelRemainingStock()의 보정된 값을 쓰고, ①과거 실측 평균 소모율, ②정격 기반 이론치
-// 소모율 두 기준으로 각각 가동가능시간(h)을 구해 터널당 최대 2행(실측/이론)을 만든다.
-function generatorOpstatusRunwayRows(filteredRecs){
+// 필터링된 데이터에 나타난 터널별로 "잔여재고 기준 가동가능시간" 안내 문장을 만든다(2026-09-08
+// 사용자 요청 — 표 컬럼이 아니라 합계 행 아래에 비고·서브텍스트 성격의 문장으로 표시). 각 터널의
+// 잔여재고는 generatorTunnelRemainingStock()의 보정된 값을 쓰고, ①과거 실측 평균 소모율,
+// ②정격 기반 이론치 소모율 두 기준으로 각각 문장 1줄씩(터널당 최대 2줄)을 만든다.
+function generatorOpstatusRunwayNotes(filteredRecs){
   const tunnels=[...new Set(filteredRecs.map(r=>r['터널명']).filter(Boolean))];
-  const rows=[];
+  const notes=[];
   tunnels.forEach(tunnel=>{
     const remainingStock=generatorTunnelRemainingStock(tunnel);
     if(remainingStock==null || !(remainingStock>=0)) return;
-    const hoursFor=rates=>cat=>{ const r=rates[cat]; return (r && r>0) ? Math.round((remainingStock/r)*10)/10 : ''; };
+    const hoursFor=rates=>cat=>{ const r=rates[cat]; return (r && r>0) ? Math.round((remainingStock/r)*10)/10 : null; };
+    const fmt=h=>h==null?'데이터없음':h+'h';
     const empiricalHours=hoursFor(computeLoadBurnRatesForTunnel(tunnel));
-    rows.push({
-      터널명:tunnel, 가동일자:'', 가동시간:'', 전류:'', 전력:'',
-      가동사유:`잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(실측평균)`,
-      용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
-      무부하가동가능:empiricalHours('무부하'), 부하가동가능:empiricalHours('부하'), 전체부하가동가능:empiricalHours('전체부하'),
-      __runway:true
-    });
+    notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(실측평균): `
+      +`무부하 ${fmt(empiricalHours('무부하'))} / 부하 ${fmt(empiricalHours('부하'))} / 전체부하 ${fmt(empiricalHours('전체부하'))}`);
     if(generatorRatedKw(tunnel)){
       const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
-      rows.push({
-        터널명:tunnel, 가동일자:'', 가동시간:'', 전류:'', 전력:'',
-        가동사유:`잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사)`,
-        용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
-        무부하가동가능:theoreticalHours('무부하'), 부하가동가능:theoreticalHours('부하'), 전체부하가동가능:theoreticalHours('전체부하'),
-        __runway:true
-      });
+      notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `
+        +`무부하 ${fmt(theoreticalHours('무부하'))} / 부하 ${fmt(theoreticalHours('부하'))} / 전체부하 ${fmt(theoreticalHours('전체부하'))}`);
     }
   });
-  return rows;
+  return notes;
 }
 // 맨 아래 "합계" 행 추가(2026-09-08 사용자 요청) — 터널명 칸에 "합계" 라벨만 표시하고, 누적성
 // 흐름값(입고량·사용량)만 합산한다. 전류·전력(순간 계측값)과 용량·전일/금일재고량(특정 시점의
 // 재고 수준)은 여러 레코드를 단순 합산해도 의미가 없는 값이라 "특성이 없는 컬럼"으로 보고 빈칸 유지.
-// 그 아래로 빈 행 1개를 두고, "합계"에서 2행 아래(=빈 행 다음 행)부터 터널별 잔여재고 가동가능시간을 이어붙인다.
 function generatorOpstatusExcelRowsWithTotal(recs){
   const rows=generatorOpstatusExcelRows(recs);
   if(!rows.length) return rows;
@@ -7454,19 +7456,15 @@ function generatorOpstatusExcelRowsWithTotal(recs){
   rows.push({
     터널명:'합계', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
     용량:'', 전일재고량:'', 입고량:sum('입고량'), 사용량:sum('사용량'), 금일재고량:'',
-    무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:'',
     __total:true
   });
-  const runwayRows=generatorOpstatusRunwayRows(recs);
-  if(runwayRows.length){
-    rows.push({
-      터널명:'', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
-      용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
-      무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:''
-    });
-    rows.push(...runwayRows);
-  }
   return rows;
+}
+// "합계" 행 2행 아래(=빈 줄 1개 다음)부터 이어붙일 잔여재고 가동가능시간 안내 문장 배열 —
+// buildExcelReport()의 sheetOpts.noteRows로 전달되어 표 바로 아래에 병합된 한 줄 문장으로 렌더링됨.
+function generatorOpstatusNoteRows(recs){
+  const notes=generatorOpstatusRunwayNotes(recs);
+  return notes.length ? [''].concat(notes) : [];
 }
 // "2025, 2026년"처럼 연도가 여러 개 걸치면 "2025~6년"으로 축약(공통 앞자리는 생략하고 끝 연도의
 // 달라지는 뒷자리만 남김, 2026-09-08 사용자 요청). 연도가 하나면 그대로 "{연도}년".
@@ -7499,7 +7497,8 @@ function exportGeneratorOpstatusExcel(){
     btnId:'excelBtn_generatorOpstatus', lblId:'excelLbl_generatorOpstatus', lblDefault:'가동현황',
     fnamePrefix:`${reportLabel}_${todayStr}`,
     sheetName:'가동현황', title:reportLabel,
-    columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)
+    columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs),
+    noteRows:generatorOpstatusNoteRows(filteredRecs)
   });
 }
 
