@@ -7456,12 +7456,14 @@ function generatorOpstatusRunwayNotes(filteredRecs){
       +`무부하 ${fmt(empiricalHours('무부하'))} / 부하 ${fmt(empiricalHours('부하'))} / 전체부하 ${fmt(empiricalHours('전체부하'))}`);
     if(generatorRatedKw(tunnel)){
       const theoreticalRates=computeTheoreticalBurnRates(tunnel);
-      const theoreticalHours=hoursFor(theoreticalRates);
-      const fmtRate=r=>(r && r>0) ? (Math.round(r*10)/10)+'L/h' : '데이터없음';
+      // 2026-09-08 사용자 요청 — 이론치 문장은 가동가능시간(재고량÷소모율) 대신 소모율 자체만
+      // 표시(가동가능시간은 실측평균 문장에서만 안내). 단위 표기가 "L/h"만으로는 헷갈릴 수 있어
+      // 숫자 뒤에 "h"를 붙이고 괄호로 "리터/시간당(1시간단위임)"을 풀어 설명.
+      const fmtRate=r=>(r && r>0) ? (Math.round(r*10)/10)+'h(리터/시간당(1시간단위임))' : '데이터없음';
       const baseFont=Object.assign({},EXCEL_BODY_FONT,{color:{argb:'FF000000'}});
-      const colored=(cat,pct)=>({font:Object.assign({},EXCEL_BODY_FONT,{bold:true,color:{argb:GENERATOR_LOAD_COLORS[cat]}}), text:`${cat}(${pct}%) ${fmtRate(theoreticalRates[cat])}·${fmt(theoreticalHours(cat))}`});
+      const colored=(cat,pct)=>({font:Object.assign({},EXCEL_BODY_FONT,{bold:true,color:{argb:GENERATOR_LOAD_COLORS[cat]}}), text:`${cat}(${pct}%) ${fmtRate(theoreticalRates[cat])}`});
       notes.push({richText:[
-        {font:baseFont, text:`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `},
+        {font:baseFont, text:`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 이론치 연료소모량(정격 기반 추정): `},
         colored('무부하',0),
         {font:baseFont, text:' / '},
         colored('부하',50),
