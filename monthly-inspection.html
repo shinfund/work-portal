@@ -1841,7 +1841,7 @@ function generatorFuelFlatRows(recs){
 function generatorOpstatusFlatRows(recs){
   return recs.map(r=>({
     parentId:r.id, 터널명:r['터널명'], 가동일자:r['가동일자'],
-    가동시간:r['가동시간'], 전류:r['전류(A)'], 전력:r['전력(kW)'],
+    가동시간:r['가동시간'], 전류:r['전류(A)'], 전력:r['전력(kW)'], 가동사유:r['비고'],
     용량:r._fuel?r._fuel.용량:null, 전일재고량:r._fuel?r._fuel.전일재고량:null,
     입고량:r._fuel?r._fuel.입고량:null, 사용량:r._fuel?r._fuel.사용량:null, 금일재고량:r._fuel?r._fuel.금일재고량:null
   }));
@@ -7304,6 +7304,7 @@ function exportGeneratorExcel(){
 const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
   {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'가동시간', header:'가동시간'},
   {key:'전류', header:'전류(A)', numFmt:'#,##0.##'}, {key:'전력', header:'전력(kW)', numFmt:'#,##0.##'},
+  {key:'가동사유', header:'가동사유'},
   {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
   {key:'입고량', header:'입고량(L)', numFmt:'#,##0'}, {key:'사용량', header:'사용량(L)', numFmt:'#,##0'},
   {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
@@ -7311,7 +7312,7 @@ const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
 function generatorOpstatusExcelRows(recs){
   return generatorOpstatusFlatRows(recs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 가동시간:x.가동시간||'',
-    전류:Number(x.전류)||0, 전력:Number(x.전력)||0,
+    전류:Number(x.전류)||0, 전력:Number(x.전력)||0, 가동사유:x.가동사유||'',
     용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
     사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
   }));
