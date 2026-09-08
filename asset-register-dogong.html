@@ -465,7 +465,7 @@ if (window.self !== window.top) {
         </button>
         <button class="tb-action-btn tb-list" id="equipListExportBtn" onclick="exportEquipListExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="equipListExportLabel">비품리스트</span>
+          <span id="equipListExportLabel">비품대장</span>
         </button>
       </div>
       <div class="detail-count-row">
@@ -1686,15 +1686,15 @@ function exportEquipExcel(){
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }
-// "비품리스트" — "엑셀 생성"과 동일하되 품목분류가 "실적보고서"(실물 비품이 아닌 문서류)인 행만 제외(사용자 요청)
+// "비품대장" — "엑셀 생성"과 동일하되 품목분류가 "실적보고서"(추후 별도 인수인계서로 편입될 문서류)인 행만 제외(사용자 요청)
 function exportEquipListExcel(){
   var rows=filtered().filter(function(r){ return r['품목분류']!=='실적보고서'; }).slice().sort(compareTunnelNameAsc);
   var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
   var year = new Date().getFullYear();
   var baseName = tunnelPart+' 도공비품대장';
   buildExcelReport({
-    btnId:'equipListExportBtn', lblId:'equipListExportLabel', lblDefault:'비품리스트',
-    sheetName:'비품리스트', title: baseName, fnamePrefix: year+'년 '+baseName,
+    btnId:'equipListExportBtn', lblId:'equipListExportLabel', lblDefault:'비품대장',
+    sheetName:'비품대장', title: baseName, fnamePrefix: year+'년 '+baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }
