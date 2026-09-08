@@ -7494,7 +7494,7 @@ function exportGeneratorOpstatusExcel(){
   const tunnel=_tabFilters['generator'].tunnel;
   const reportLabel=generatorOpstatusReportLabel(filteredRecs, tunnel);
   const now=new Date();
-  const todayStr=String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  const todayStr=String(now.getFullYear())+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
   buildExcelReport({
     btnId:'excelBtn_generatorOpstatus', lblId:'excelLbl_generatorOpstatus', lblDefault:'가동현황',
     fnamePrefix:`${reportLabel}_${todayStr}`,
