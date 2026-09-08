@@ -7297,32 +7297,133 @@ function exportGeneratorExcel(){
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
       {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows},
-      {sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)', columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)}
+      {sheetName:'가동현황', title:generatorOpstatusReportLabel(filteredRecs, tunnel), columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)}
     ]
   });
 }
 // 가동현황 컬럼정의/행변환 — exportGeneratorExcel(전체 시트묶음)과 아래 exportGeneratorOpstatusExcel(단독
 // 출력버튼) 양쪽이 공유한다(2026-09-08, 사용자 요청으로 "가동현황"이 화면 뷰토글이 아니라 발전기점검
-// 탭 카운트행 맨 우측의 전용 엑셀 출력버튼으로 확정됨).
+// 탭 카운트행 맨 우측의 전용 엑셀 출력버튼으로 확정됨). 마지막 3개 컬럼(무부하/부하/전체부하 가동가능
+// 시간)은 일반 데이터·합계 행에서는 항상 빈칸이고, 맨 아래 잔여재고 가동가능시간 행에서만 값이 채워진다.
 const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
   {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'가동시간', header:'가동시간'},
   {key:'전류', header:'전류(A)', numFmt:'#,##0.##'}, {key:'전력', header:'전력(kW)', numFmt:'#,##0.##'},
   {key:'가동사유', header:'가동사유'},
   {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
   {key:'입고량', header:'입고량(L)', numFmt:'#,##0'}, {key:'사용량', header:'사용량(L)', numFmt:'#,##0'},
-  {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'}
+  {key:'금일재고량', header:'금일재고량(L)', numFmt:'#,##0'},
+  {key:'무부하가동가능', header:'무부하 가동가능(h)', numFmt:'#,##0.0'},
+  {key:'부하가동가능', header:'부하 가동가능(h)', numFmt:'#,##0.0'},
+  {key:'전체부하가동가능', header:'전체부하 가동가능(h)', numFmt:'#,##0.0'}
 ];
 function generatorOpstatusExcelRows(recs){
   return generatorOpstatusFlatRows(recs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 가동시간:x.가동시간||'',
     전류:Number(x.전류)||0, 전력:Number(x.전력)||0, 가동사유:x.가동사유||'',
     용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
-    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
+    사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0,
+    무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:''
   }));
+}
+// "16:49~17:51" 형식의 가동시간 문자열을 시간(소수) 단위로 변환. 형식이 아니거나('-' 등) 파싱 실패시 null.
+function parseOperatingHours(str){
+  const m=String(str||'').match(/^(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})$/);
+  if(!m) return null;
+  const start=parseInt(m[1],10)+parseInt(m[2],10)/60;
+  let end=parseInt(m[3],10)+parseInt(m[4],10)/60;
+  if(end<start) end+=24;
+  const hrs=end-start;
+  return hrs>0 ? hrs : null;
+}
+// 가동사유(비고) 값→부하 구분 매핑(2026-09-08 사용자 확정): 무부하 시운전=무부하,
+// 부하 시운전·부하운전(동력 일부 부하만 적용)=부하, 감축시험(전체 부하)=전체부하.
+function opstatusLoadCategory(reason){
+  if(reason==='무부하 시운전') return '무부하';
+  if(reason==='부하 시운전' || reason==='부하운전') return '부하';
+  if(reason==='감축시험') return '전체부하';
+  return null;
+}
+// 부하 구분별 평균 연료소모율(L/시간) — 사용량(L) 합계 ÷ 운전시간 합계(가중평균)로 계산.
+// 운전시간·사용량 둘 다 유효한 레코드만 포함, 데이터가 없는 구분은 null.
+function computeLoadBurnRates(recs){
+  const acc={무부하:{l:0,h:0}, 부하:{l:0,h:0}, 전체부하:{l:0,h:0}};
+  recs.forEach(r=>{
+    const cat=opstatusLoadCategory(r['비고']);
+    if(!cat) return;
+    const hrs=parseOperatingHours(r['가동시간']);
+    const used=r._fuel && r._fuel.사용량!=null ? Number(r._fuel.사용량) : null;
+    if(!hrs || used==null || !(used>0)) return;
+    acc[cat].l+=used; acc[cat].h+=hrs;
+  });
+  const rates={};
+  Object.keys(acc).forEach(cat=>{ rates[cat]= acc[cat].h>0 ? acc[cat].l/acc[cat].h : null; });
+  return rates;
+}
+// 해당 터널 자체 기록으로 우선 계산하고, 그 구분에 데이터가 없으면 전체 터널 평균으로 대체
+// (2026-09-08 사용자 확정 — "과거 기록에서 평균 계산", 표본이 적은 터널의 결측 구분을 보완).
+function computeLoadBurnRatesForTunnel(tunnel){
+  const all=TAB_STATE['generator'].records||[];
+  const ownRates=computeLoadBurnRates(all.filter(r=>r['터널명']===tunnel));
+  const allRates=computeLoadBurnRates(all);
+  const rates={};
+  ['무부하','부하','전체부하'].forEach(cat=>{ rates[cat]= ownRates[cat]!=null ? ownRates[cat] : allRates[cat]; });
+  return rates;
+}
+// 발전기 정격출력(PRIME, kW, 명판 확인분만 등록·2026-09-08) — 이론치 소모량 계산의 기준 용량.
+// 명판에 없는 터널은 이론치 행 자체를 생략한다(추측 금지).
+const GENERATOR_PRIME_KW={ '청하터널(주)':818, '청하터널(부)':682 };
+// 이론적(업계 통용 근사치, 제조사 공식 수치 아님) 부하구분별 연료소모율(L/h) — 발전기 사양서를
+// 못 구해 명판 정격(kW)만으로 추정(2026-09-08 사용자 확정). 일반적으로 통용되는 디젤발전기 경험칙인
+// "정격 100% 부하 연비 ≈0.25L/kWh, 무부하 소모량은 그 25% 수준, 그 사이는 선형" 가정을 적용.
+// "부하운전(동력 일부 부하만 적용)"은 실제 시험 부하율이 기록에 없어 50%로 가정 — 나중에 실제
+// 사양서·시운전 부하율을 확인하면 이 가정(0.25L/kWh·25%·50%)부터 교체할 것.
+function computeTheoreticalBurnRates(tunnel){
+  const primeKw=GENERATOR_PRIME_KW[tunnel];
+  if(!primeKw) return {무부하:null, 부하:null, 전체부하:null};
+  const full=primeKw*0.25;
+  const noLoad=full*0.25;
+  const half=noLoad+(full-noLoad)*0.5;
+  return {무부하:noLoad, 부하:half, 전체부하:full};
+}
+// 필터링된 데이터에 나타난 터널별로 "잔여재고 기준 가동가능시간" 행을 만든다(2026-09-08 사용자 요청
+// — 유류 탱크는 터널/발전기별로 별도라 터널마다 각각 계산). 각 터널의 가장 최근 금일재고량을 잔여
+// 재고로 보고, ①과거 실측 평균 소모율, ②명판 기반 이론치 소모율(등록된 터널만) 두 기준으로 각각
+// 가동가능시간(h)을 구해 터널당 최대 2행(실측/이론)을 만든다.
+function generatorOpstatusRunwayRows(filteredRecs){
+  const tunnels=[...new Set(filteredRecs.map(r=>r['터널명']).filter(Boolean))];
+  const rows=[];
+  tunnels.forEach(tunnel=>{
+    const stockRecs=filteredRecs.filter(r=>r['터널명']===tunnel && r._fuel && r._fuel.금일재고량!=null && r['가동일자']);
+    if(!stockRecs.length) return;
+    stockRecs.sort((a,b)=>String(a['가동일자']).localeCompare(String(b['가동일자'])));
+    const remainingStock=Number(stockRecs[stockRecs.length-1]._fuel.금일재고량);
+    if(!(remainingStock>=0)) return;
+    const hoursFor=rates=>cat=>{ const r=rates[cat]; return (r && r>0) ? Math.round((remainingStock/r)*10)/10 : ''; };
+    const empiricalHours=hoursFor(computeLoadBurnRatesForTunnel(tunnel));
+    rows.push({
+      터널명:tunnel, 가동일자:'', 가동시간:'', 전류:'', 전력:'',
+      가동사유:`잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(실측평균)`,
+      용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
+      무부하가동가능:empiricalHours('무부하'), 부하가동가능:empiricalHours('부하'), 전체부하가동가능:empiricalHours('전체부하'),
+      __runway:true
+    });
+    if(GENERATOR_PRIME_KW[tunnel]){
+      const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
+      rows.push({
+        터널명:tunnel, 가동일자:'', 가동시간:'', 전류:'', 전력:'',
+        가동사유:`잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사)`,
+        용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
+        무부하가동가능:theoreticalHours('무부하'), 부하가동가능:theoreticalHours('부하'), 전체부하가동가능:theoreticalHours('전체부하'),
+        __runway:true
+      });
+    }
+  });
+  return rows;
 }
 // 맨 아래 "합계" 행 추가(2026-09-08 사용자 요청) — 터널명 칸에 "합계" 라벨만 표시하고, 누적성
 // 흐름값(입고량·사용량)만 합산한다. 전류·전력(순간 계측값)과 용량·전일/금일재고량(특정 시점의
 // 재고 수준)은 여러 레코드를 단순 합산해도 의미가 없는 값이라 "특성이 없는 컬럼"으로 보고 빈칸 유지.
+// 그 아래로 빈 행 1개를 두고, "합계"에서 2행 아래(=빈 행 다음 행)부터 터널별 잔여재고 가동가능시간을 이어붙인다.
 function generatorOpstatusExcelRowsWithTotal(recs){
   const rows=generatorOpstatusExcelRows(recs);
   if(!rows.length) return rows;
@@ -7330,8 +7431,18 @@ function generatorOpstatusExcelRowsWithTotal(recs){
   rows.push({
     터널명:'합계', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
     용량:'', 전일재고량:'', 입고량:sum('입고량'), 사용량:sum('사용량'), 금일재고량:'',
+    무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:'',
     __total:true
   });
+  const runwayRows=generatorOpstatusRunwayRows(recs);
+  if(runwayRows.length){
+    rows.push({
+      터널명:'', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
+      용량:'', 전일재고량:'', 입고량:'', 사용량:'', 금일재고량:'',
+      무부하가동가능:'', 부하가동가능:'', 전체부하가동가능:''
+    });
+    rows.push(...runwayRows);
+  }
   return rows;
 }
 // "2025, 2026년"처럼 연도가 여러 개 걸치면 "2025~6년"으로 축약(공통 앞자리는 생략하고 끝 연도의
@@ -7344,22 +7455,27 @@ function yearRangeLabel(years){
   let i=0; while(i<first.length && i<last.length && first[i]===last[i]) i++;
   return `${first}~${last.slice(i)||last}년`;
 }
-// 가동현황 전용 출력버튼 — 발전기점검 탭 카운트행 맨 우측(삭제·총건수 뒤) 단독 엑셀 출력, 화면 표시는 바꾸지 않는다.
-// 파일명 규칙(2026-09-08 사용자 요청, 다른 탭 엑셀의 "{연}년 {월}월 …" 규칙과 다름 — 이 출력물은
-// 특정 월이 아니라 필터링된 기간 전체를 담으므로 연도(또는 연도 범위)+터널명+오늘 날짜로 구성):
-// "{연도[~범위]}년 {터널명 또는 전체선택 시 '포항영덕간터널'} 발전기가동현황_{생성일 MMDD}"
-function exportGeneratorOpstatusExcel(){
-  const filteredRecs=filteredTabRecords('generator');
-  const tunnel=_tabFilters['generator'].tunnel;
+// 가동현황 출력물 제목/파일명 공통 라벨(2026-09-08 사용자 요청): "{연도[~범위]}년 {터널명|포항영덕간터널} 발전기가동현황"
+function generatorOpstatusReportLabel(filteredRecs, tunnel){
   const years=filteredRecs.map(r=>r['가동일자']).filter(Boolean).map(d=>parseInt(String(d).slice(0,4),10));
   const yearLabel=yearRangeLabel(years);
   const tunnelLabel=tunnel||'포항영덕간터널';
+  return `${yearLabel} ${tunnelLabel} 발전기가동현황`;
+}
+// 가동현황 전용 출력버튼 — 발전기점검 탭 카운트행 맨 우측(삭제·총건수 뒤) 단독 엑셀 출력, 화면 표시는 바꾸지 않는다.
+// 파일명 규칙(2026-09-08 사용자 요청, 다른 탭 엑셀의 "{연}년 {월}월 …" 규칙과 다름 — 이 출력물은
+// 특정 월이 아니라 필터링된 기간 전체를 담으므로 연도(또는 연도 범위)+터널명+오늘 날짜로 구성):
+// "{연도[~범위]}년 {터널명 또는 전체선택 시 '포항영덕간터널'} 발전기가동현황_{생성일 MMDD}" (시트 1행 제목은 날짜 없이 동일한 라벨).
+function exportGeneratorOpstatusExcel(){
+  const filteredRecs=filteredTabRecords('generator');
+  const tunnel=_tabFilters['generator'].tunnel;
+  const reportLabel=generatorOpstatusReportLabel(filteredRecs, tunnel);
   const now=new Date();
   const todayStr=String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
   buildExcelReport({
     btnId:'excelBtn_generatorOpstatus', lblId:'excelLbl_generatorOpstatus', lblDefault:'가동현황',
-    fnamePrefix:`${yearLabel} ${tunnelLabel} 발전기가동현황_${todayStr}`,
-    sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)',
+    fnamePrefix:`${reportLabel}_${todayStr}`,
+    sheetName:'가동현황', title:reportLabel,
     columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)
   });
 }
