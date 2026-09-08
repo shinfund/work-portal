@@ -4268,6 +4268,11 @@ function loadExcelLib(needsZip){
   ]);
 }
 const EXCEL_COMPANY_NAME='수자원기술(주)';
+// 인쇄 머리글 공통 상수(2026-09-08 사용자 요청) — "수자원기술(주)"만 남기고 페이지번호·출력일시·
+// 터널명 등은 전부 제거. 신규 엑셀 생성 함수를 추가할 때마다 예전 버전(터널명·날짜 붙은 형태)을
+// 복사해오는 문제가 반복돼, 모든 buildXxxSheet류 함수가 이 상수 하나만 참조하도록 통일함 —
+// 머리글을 다시 바꿀 일이 생기면 이 상수만 고치면 전체 엑셀에 일괄 반영됨.
+const EXCEL_PRINT_HEADER={oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME, oddFooter:''};
 const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
@@ -4427,7 +4432,7 @@ function buildExcelReport(opts){
       const ws=wb.addWorksheet(sheetOpts.sheetName,{
         views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
         pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
-        headerFooter:{oddHeader:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:''}
+        headerFooter:EXCEL_PRINT_HEADER
       });
       ws.columns=colWidths.map(w=>({width:w}));
       const titleRow=ws.getRow(1);
@@ -4611,7 +4616,7 @@ function buildMonthlyReportSheet(wb, sheetName, rows, tunnel, showTitle){
     // 1.5cm로 바뀌어서(사용자 지정 신규 기본 여백) 더 이상 별도 덮어쓸 필요 없음.
     // 시트 1개=인쇄 1페이지(3개 시트로 분리했으니 세로도 1페이지에 강제로 맞춘다, 2026-07-21 사용자 요청)
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   const colWidths=[10,14,46,10,13,10];
   ws.columns=colWidths.map(w=>({width:w}));
@@ -4896,7 +4901,7 @@ function buildElecReportSheet(wb, r, tunnel){
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait}, // 좌측 1.5cm는 2026-07-22부터 portrait 기본값 자체에 포함됨
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   // 2026-07-21 사용자 피드백으로 원본 템플릿 실측 너비보다 A/B/D/E/F/H/N(+대칭인 J/K/L) 열을 넓힘
   // (짧은 라벨은 문제없지만 "수전전압/용량"·"설비현황"·"부적합\n수량"·"유효전력량(kW)"처럼 긴
@@ -5185,7 +5190,7 @@ function buildTransformerReportSheet(wb, data, tunnel, refImageBuffers){
   const ws=wb.addWorksheet('변압기온도측정표',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   ws.columns=Array(10).fill(0).map(()=>({width:8.6}));
 
@@ -5370,7 +5375,7 @@ function buildGeneratorReportSheet(wb, r, tunnel, sheetName){
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true,
       margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   // 원본 템플릿 실측 너비(A~R 18열, 전부 5.57)를 그대로 재현 — 병합 폭이 넉넉해 13pt 텍스트가
   // wrapText 없이도 대부분 한 줄에 들어간다(예: "배터리 단자의 고정, 청결상태"가 7열 병합에 들어감).
@@ -5625,7 +5630,7 @@ function buildPhotoReportSheet(wb, photosByNo, tunnel){
   const ws=wb.addWorksheet('점검사진대지',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:bandCount>3?0:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   ws.columns=PHOTO_REPORT_COL_WIDTHS.map(w=>({width:w}));
 
@@ -5874,7 +5879,7 @@ function buildPowerReportSheet(wb, data, tunnel, chartBuf){
   const ws=wb.addWorksheet('전력사용량표',{
     views:[{showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   ws.columns=Array(4).fill(0).map(()=>({width:32.79})); // 원본 템플릿 실측 너비 그대로
 
@@ -6032,7 +6037,7 @@ function buildTaskReportSheet(wb, rows, tunnel){
   const ws=wb.addWorksheet('업무처리사항',{
     views:[{state:'frozen', ySplit:4, showGridLines:false, zoomScale:90}],
     pageSetup:{paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:1, horizontalCentered:true, margins:EXCEL_PAGE_PRESETS.portrait, printTitlesRow:'4:4'},
-    headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+' '+tunnel, oddFooter:''}
+    headerFooter:EXCEL_PRINT_HEADER
   });
   ws.columns=[15.64,44.64,44.64,17.64,14.64].map(w=>({width:w}));
 
@@ -7328,6 +7333,7 @@ function exportGeneratorExcel(){
 // 탭 카운트행 맨 우측의 전용 엑셀 출력버튼으로 확정됨).
 const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
   {key:'터널명', header:'터널명'}, {key:'가동일자', header:'가동일자', dateCol:true}, {key:'가동시간', header:'가동시간'},
+  {key:'발전용량', header:'용량(kWh)', numFmt:'#,##0'},
   {key:'전류', header:'전류(A)', numFmt:'#,##0.##'}, {key:'전력', header:'전력(kW)', numFmt:'#,##0.##'},
   {key:'가동사유', header:'가동사유'},
   {key:'용량', header:'용량(L)', numFmt:'#,##0'}, {key:'전일재고량', header:'전일재고량(L)', numFmt:'#,##0'},
@@ -7337,6 +7343,7 @@ const GENERATOR_OPSTATUS_EXCEL_COLUMNS=[
 function generatorOpstatusExcelRows(recs){
   return generatorOpstatusFlatRows(recs).map(x=>({
     터널명:x.터널명||'', 가동일자:x.가동일자||'', 가동시간:x.가동시간||'',
+    발전용량:generatorRatedKw(x.터널명)||'',
     전류:Number(x.전류)||0, 전력:Number(x.전력)||0, 가동사유:x.가동사유||'',
     용량:Number(x.용량)||0, 전일재고량:Number(x.전일재고량)||0, 입고량:Number(x.입고량)||0,
     사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
@@ -7477,7 +7484,7 @@ function generatorOpstatusExcelRowsWithTotal(recs){
   if(!rows.length) return rows;
   const sum=key=>rows.reduce((s,r)=>s+(Number(r[key])||0),0);
   rows.push({
-    터널명:'합계', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
+    터널명:'합계', 가동일자:'', 가동시간:'', 발전용량:'', 전류:'', 전력:'', 가동사유:'',
     용량:'', 전일재고량:'', 입고량:sum('입고량'), 사용량:sum('사용량'), 금일재고량:'',
     __total:true
   });
