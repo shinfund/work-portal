@@ -7363,14 +7363,33 @@ function opstatusLoadCategory(reason){
   if(reason==='감축시험') return '전체부하';
   return null;
 }
+// 특이사항 텍스트에서 "(17:00~18:00)" 형태의 실제 시험시각을 추출한다(2026-09-08 사용자 확정).
+// 감축시험은 가동시간(예: 16:38~17:58)에 부하 절체 전후 여유(무부하) 시간이 포함돼 있어, 특이사항에
+// 별도로 적힌 실제 부하 시험 구간이 있으면 그 구간만 전체부하 시간으로 인정한다. 패턴이 없으면
+// null(흥해터널처럼 가동시간=시험시간이 일치해 특이사항에 시각을 안 적는 경우 포함) — 이 경우
+// 호출부에서 가동시간 전체를 그대로 쓴다.
+function parseIncidentTestWindow(text){
+  const m=String(text||'').match(/(\d{1,2}):(\d{2})\s*[~\-]\s*(\d{1,2}):(\d{2})/);
+  if(!m) return null;
+  const start=parseInt(m[1],10)+parseInt(m[2],10)/60;
+  let end=parseInt(m[3],10)+parseInt(m[4],10)/60;
+  if(end<start) end+=24;
+  return end>start ? {start,end} : null;
+}
 // 부하 구분별 평균 연료소모율(L/시간) — 사용량(L) 합계 ÷ 운전시간 합계(가중평균)로 계산.
 // 운전시간·사용량 둘 다 유효한 레코드만 포함, 데이터가 없는 구분은 null.
+// 전체부하(감축시험) 레코드는 가동시간 전체가 아니라 특이사항에 기록된 실제 시험시각(있는 경우)만
+// 전체부하 시간으로 집계 — 부하 절체 전후 여유(무부하) 시간을 전체부하로 잘못 셈하지 않기 위함.
 function computeLoadBurnRates(recs){
   const acc={무부하:{l:0,h:0}, 부하:{l:0,h:0}, 전체부하:{l:0,h:0}};
   recs.forEach(r=>{
     const cat=opstatusLoadCategory(r['비고']);
     if(!cat) return;
-    const hrs=parseOperatingHours(r['가동시간']);
+    let hrs=parseOperatingHours(r['가동시간']);
+    if(cat==='전체부하'){
+      const testWindow=parseIncidentTestWindow(r['특이사항']);
+      if(testWindow) hrs=testWindow.end-testWindow.start;
+    }
     const used=r._fuel && r._fuel.사용량!=null ? Number(r._fuel.사용량) : null;
     if(!hrs || used==null || !(used>0)) return;
     acc[cat].l+=used; acc[cat].h+=hrs;
@@ -7401,13 +7420,32 @@ function generatorRatedKw(tunnel){
 // "정격 100% 부하 연비 ≈0.25L/kWh, 무부하 소모량은 그 25% 수준, 그 사이는 선형" 가정을 적용.
 // "부하운전(동력 일부 부하만 적용)"은 실제 시험 부하율이 기록에 없어 50%로 가정 — 나중에 실제
 // 사양서·시운전 부하율을 확인하면 이 가정(0.25L/kWh·25%·50%)부터 교체할 것.
+// 평상시(실측)는 위 가정과 달리 감축시험 실측 전력(kW)/정격(kW) 비율을 그대로 쓰고, 같은 선형
+// 모델(rate=무부하+((전체부하-무부하)×비율))로 그 부하율에서의 소모율만 보간한다(2026-09-08 사용자
+// 확정 — "8월 감축시험 가동 때가 평상시 부하"). generatorNormalLoadPct() 참고.
 function computeTheoreticalBurnRates(tunnel){
   const ratedKw=generatorRatedKw(tunnel);
-  if(!ratedKw) return {무부하:null, 부하:null, 전체부하:null};
+  if(!ratedKw) return {무부하:null, 부하:null, 전체부하:null, 평상시:null};
   const full=ratedKw*0.25;
   const noLoad=full*0.25;
   const half=noLoad+(full-noLoad)*0.5;
-  return {무부하:noLoad, 부하:half, 전체부하:full};
+  const normalPct=generatorNormalLoadPct(tunnel);
+  const normal=normalPct!=null ? noLoad+(full-noLoad)*(normalPct/100) : null;
+  return {무부하:noLoad, 부하:half, 전체부하:full, 평상시:normal};
+}
+// 평상시 부하율(%) — 감축시험(정전 대비 실부하 시험) 시 계측된 전력(kW)을 정격출력(kW) 대비
+// 비율로 환산(2026-09-08 사용자 확정: "8월 감축시험 가동 때가 평상시 부하로 보면 됨"). 해당 터널의
+// 가장 최근 감축시험 기록 기준(조회 중인 연/월 필터가 아니라 TAB_STATE 전체 이력에서 찾음 —
+// generatorTunnelRemainingStock()와 동일한 이유). 감축시험 기록이 없는 터널(예: 남정5터널)은 null.
+function generatorNormalLoadPct(tunnel){
+  const ratedKw=generatorRatedKw(tunnel);
+  if(!ratedKw) return null;
+  const recs=(TAB_STATE['generator'].records||[])
+    .filter(r=>r['터널명']===tunnel && r['비고']==='감축시험' && r['전력(kW)']!=null && r['가동일자']);
+  if(!recs.length) return null;
+  recs.sort((a,b)=>String(a['가동일자']).localeCompare(String(b['가동일자'])));
+  const pct=Number(recs[recs.length-1]['전력(kW)'])/ratedKw*100;
+  return Math.round(pct*10)/10;
 }
 // 유류탱크 오실측 누적오차 보정(2026-09-08 사용자 확인) — 예전 재고량 기록은 탱크 오실측 오차가
 // 누적돼 있을 수 있는 반면, "감축시험"(전체부하) 가동 시 사용량은 정확하고 그 직후 금일재고량이
@@ -7448,8 +7486,10 @@ function generatorOpstatusRunwayNotes(filteredRecs){
       +`무부하 ${fmt(empiricalHours('무부하'))} / 부하 ${fmt(empiricalHours('부하'))} / 전체부하 ${fmt(empiricalHours('전체부하'))}`);
     if(generatorRatedKw(tunnel)){
       const theoreticalHours=hoursFor(computeTheoreticalBurnRates(tunnel));
+      const normalPct=generatorNormalLoadPct(tunnel);
+      const normalLabel=normalPct!=null ? `평상시(${normalPct}%) ${fmt(theoreticalHours('평상시'))}` : '평상시(감축시험 데이터없음)';
       notes.push(`※ ${tunnel} — 잔여재고 ${remainingStock.toLocaleString()}L 기준 가동가능시간(이론치 추정·업계 근사): `
-        +`무부하(0%) ${fmt(theoreticalHours('무부하'))} / 부하(50%) ${fmt(theoreticalHours('부하'))} / 전체부하(100%) ${fmt(theoreticalHours('전체부하'))}`);
+        +`무부하(0%) ${fmt(theoreticalHours('무부하'))} / 부하(50%) ${fmt(theoreticalHours('부하'))} / 전체부하(100%) ${fmt(theoreticalHours('전체부하'))} / ${normalLabel}`);
     }
   });
   // 실측평균 소모율에 대한 데이터 정확도 한계 안내(2026-09-08 사용자 요청) — 감축시험 이전 구간의
