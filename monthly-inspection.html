@@ -7363,33 +7363,22 @@ function opstatusLoadCategory(reason){
   if(reason==='감축시험') return '전체부하';
   return null;
 }
-// 특이사항 텍스트에서 "(17:00~18:00)" 형태의 실제 시험시각을 추출한다(2026-09-08 사용자 확정).
-// 감축시험은 가동시간(예: 16:38~17:58)에 부하 절체 전후 여유(무부하) 시간이 포함돼 있어, 특이사항에
-// 별도로 적힌 실제 부하 시험 구간이 있으면 그 구간만 전체부하 시간으로 인정한다. 패턴이 없으면
-// null(흥해터널처럼 가동시간=시험시간이 일치해 특이사항에 시각을 안 적는 경우 포함) — 이 경우
-// 호출부에서 가동시간 전체를 그대로 쓴다.
-function parseIncidentTestWindow(text){
-  const m=String(text||'').match(/(\d{1,2}):(\d{2})\s*[~\-]\s*(\d{1,2}):(\d{2})/);
-  if(!m) return null;
-  const start=parseInt(m[1],10)+parseInt(m[2],10)/60;
-  let end=parseInt(m[3],10)+parseInt(m[4],10)/60;
-  if(end<start) end+=24;
-  return end>start ? {start,end} : null;
-}
+// 감축시험 시 부하 절체(전환) 전후로 생기는 무부하 여유시간(분/편도) — 실제 절체 소요는 30~60초
+// 수준이라 1분으로 고정(2026-09-08 사용자 확정: "전 1분, 후 1분은 무부하"). 가동시간 전체를
+// 전체부하로 셈하면 이 여유시간까지 전체부하로 잘못 포함되므로, 전체부하(감축시험) 레코드에
+// 한해 앞뒤 각 1분씩(총 2분)을 뺀다.
+const GENERATOR_LOAD_TRANSITION_MIN=1;
 // 부하 구분별 평균 연료소모율(L/시간) — 사용량(L) 합계 ÷ 운전시간 합계(가중평균)로 계산.
 // 운전시간·사용량 둘 다 유효한 레코드만 포함, 데이터가 없는 구분은 null.
-// 전체부하(감축시험) 레코드는 가동시간 전체가 아니라 특이사항에 기록된 실제 시험시각(있는 경우)만
-// 전체부하 시간으로 집계 — 부하 절체 전후 여유(무부하) 시간을 전체부하로 잘못 셈하지 않기 위함.
+// 전체부하(감축시험) 레코드는 가동시간에서 GENERATOR_LOAD_TRANSITION_MIN×2(앞뒤 절체 여유)를 뺀
+// 시간을 전체부하 시간으로 집계한다.
 function computeLoadBurnRates(recs){
   const acc={무부하:{l:0,h:0}, 부하:{l:0,h:0}, 전체부하:{l:0,h:0}};
   recs.forEach(r=>{
     const cat=opstatusLoadCategory(r['비고']);
     if(!cat) return;
     let hrs=parseOperatingHours(r['가동시간']);
-    if(cat==='전체부하'){
-      const testWindow=parseIncidentTestWindow(r['특이사항']);
-      if(testWindow) hrs=testWindow.end-testWindow.start;
-    }
+    if(cat==='전체부하' && hrs) hrs=Math.max(0, hrs-(GENERATOR_LOAD_TRANSITION_MIN*2)/60);
     const used=r._fuel && r._fuel.사용량!=null ? Number(r._fuel.사용량) : null;
     if(!hrs || used==null || !(used>0)) return;
     acc[cat].l+=used; acc[cat].h+=hrs;
@@ -7423,6 +7412,9 @@ function generatorRatedKw(tunnel){
 // 평상시(실측)는 위 가정과 달리 감축시험 실측 전력(kW)/정격(kW) 비율을 그대로 쓰고, 같은 선형
 // 모델(rate=무부하+((전체부하-무부하)×비율))로 그 부하율에서의 소모율만 보간한다(2026-09-08 사용자
 // 확정 — "8월 감축시험 가동 때가 평상시 부하"). generatorNormalLoadPct() 참고.
+// 평상시를 실측평균(computeLoadBurnRates) 쪽이 아니라 이 이론치 쪽에 넣는 이유(2026-09-08 사용자
+// 확정) — 실측평균은 탱크 오실측 누적오차가 남아있는 과거 재고 기록에 기반해 현재 부정확하므로,
+// 정확한 값인 부하율(%)만 가져와 이론적 소모율 모델에 대입한다.
 function computeTheoreticalBurnRates(tunnel){
   const ratedKw=generatorRatedKw(tunnel);
   if(!ratedKw) return {무부하:null, 부하:null, 전체부하:null, 평상시:null};
