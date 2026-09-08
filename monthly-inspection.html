@@ -4450,10 +4450,13 @@ function buildExcelReport(opts){
         const rn=3+i;
         const row=ws.getRow(rn);
         row.height=rowHeightForData;
+        const isTotal=!!r.__total;
         columns.forEach((col,ci)=>{
           const cell=row.getCell(ci+1);
-          cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
+          cell.font=isTotal?Object.assign({},EXCEL_BODY_FONT,{bold:true}):EXCEL_BODY_FONT;
+          cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
           cell.alignment={vertical:'middle',horizontal:col.align==='left'?'left':'center',wrapText:!!col.wrap};
+          if(isTotal) cell.fill=EXCEL_HEADER_FILL;
           if(col.photo) return;
           if(col.dateCol && r[col.key]){
             const d=excelParseDate(r[col.key]);
@@ -7294,7 +7297,7 @@ function exportGeneratorExcel(){
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},
       {sheetName:'유류현황', title:'월간점검결과 - 발전기점검(유류현황)', columns:fuelColumns, rows:fuelRows},
       {sheetName:'점검체크리스트', title:'월간점검결과 - 발전기점검(점검체크리스트)', columns:chkColumns, rows:chkRows},
-      {sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)', columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRows(filteredRecs)}
+      {sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)', columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)}
     ]
   });
 }
@@ -7317,18 +7320,47 @@ function generatorOpstatusExcelRows(recs){
     사용량:Number(x.사용량)||0, 금일재고량:Number(x.금일재고량)||0
   }));
 }
+// 맨 아래 "합계" 행 추가(2026-09-08 사용자 요청) — 터널명 칸에 "합계" 라벨만 표시하고, 누적성
+// 흐름값(입고량·사용량)만 합산한다. 전류·전력(순간 계측값)과 용량·전일/금일재고량(특정 시점의
+// 재고 수준)은 여러 레코드를 단순 합산해도 의미가 없는 값이라 "특성이 없는 컬럼"으로 보고 빈칸 유지.
+function generatorOpstatusExcelRowsWithTotal(recs){
+  const rows=generatorOpstatusExcelRows(recs);
+  if(!rows.length) return rows;
+  const sum=key=>rows.reduce((s,r)=>s+(Number(r[key])||0),0);
+  rows.push({
+    터널명:'합계', 가동일자:'', 가동시간:'', 전류:'', 전력:'', 가동사유:'',
+    용량:'', 전일재고량:'', 입고량:sum('입고량'), 사용량:sum('사용량'), 금일재고량:'',
+    __total:true
+  });
+  return rows;
+}
+// "2025, 2026년"처럼 연도가 여러 개 걸치면 "2025~6년"으로 축약(공통 앞자리는 생략하고 끝 연도의
+// 달라지는 뒷자리만 남김, 2026-09-08 사용자 요청). 연도가 하나면 그대로 "{연도}년".
+function yearRangeLabel(years){
+  const uniq=[...new Set(years)].filter(Boolean).sort((a,b)=>a-b);
+  if(!uniq.length) return new Date().getFullYear()+'년';
+  if(uniq.length===1) return uniq[0]+'년';
+  const first=String(uniq[0]), last=String(uniq[uniq.length-1]);
+  let i=0; while(i<first.length && i<last.length && first[i]===last[i]) i++;
+  return `${first}~${last.slice(i)||last}년`;
+}
 // 가동현황 전용 출력버튼 — 발전기점검 탭 카운트행 맨 우측(삭제·총건수 뒤) 단독 엑셀 출력, 화면 표시는 바꾸지 않는다.
+// 파일명 규칙(2026-09-08 사용자 요청, 다른 탭 엑셀의 "{연}년 {월}월 …" 규칙과 다름 — 이 출력물은
+// 특정 월이 아니라 필터링된 기간 전체를 담으므로 연도(또는 연도 범위)+터널명+오늘 날짜로 구성):
+// "{연도[~범위]}년 {터널명 또는 전체선택 시 '포항영덕간터널'} 발전기가동현황_{생성일 MMDD}"
 function exportGeneratorOpstatusExcel(){
-  const tabDef=getTabDef('generator');
   const filteredRecs=filteredTabRecords('generator');
   const tunnel=_tabFilters['generator'].tunnel;
-  const ym=resolveTabYearMonth('generator', tabDef.dateKey);
-  const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
+  const years=filteredRecs.map(r=>r['가동일자']).filter(Boolean).map(d=>parseInt(String(d).slice(0,4),10));
+  const yearLabel=yearRangeLabel(years);
+  const tunnelLabel=tunnel||'포항영덕간터널';
+  const now=new Date();
+  const todayStr=String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
   buildExcelReport({
     btnId:'excelBtn_generatorOpstatus', lblId:'excelLbl_generatorOpstatus', lblDefault:'가동현황',
-    fnamePrefix:ymPrefix+'발전기점검_가동현황'+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
+    fnamePrefix:`${yearLabel} ${tunnelLabel} 발전기가동현황_${todayStr}`,
     sheetName:'가동현황', title:'월간점검결과 - 발전기점검(가동현황)',
-    columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRows(filteredRecs)
+    columns:GENERATOR_OPSTATUS_EXCEL_COLUMNS, rows:generatorOpstatusExcelRowsWithTotal(filteredRecs)
   });
 }
 
