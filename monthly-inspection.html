@@ -7389,19 +7389,38 @@ function computeTheoreticalBurnRates(tunnel){
   const half=noLoad+(full-noLoad)*0.5;
   return {무부하:noLoad, 부하:half, 전체부하:full};
 }
+// 유류탱크 오실측 누적오차 보정(2026-09-08 사용자 확인) — 예전 재고량 기록은 탱크 오실측 오차가
+// 누적돼 있을 수 있는 반면, "감축시험"(전체부하) 가동 시 사용량은 정확하고 그 직후 금일재고량이
+// 현재 기준 정상 재고량이라고 확정됨. 따라서 해당 터널의 가장 최근 "감축시험" 기록을 보정 기준점
+// (anchor)으로 삼고, 그 이후 기록들은 각 건의 금일재고량 필드(예전 오차가 남아있을 수 있음)를
+// 그대로 믿지 않고 입고량·사용량만 반영해 anchor로부터 다시 굴려 계산한다. 감축시험 기록이 아예
+// 없는 터널은 보정 기준점이 없으므로 마지막 금일재고량을 그대로 쓴다(기존 방식으로 폴백).
+// 필터가 아니라 TAB_STATE 전체 이력에서 찾는다 — 조회 중인 연/월 밖에 최근 감축시험이 있을 수 있음.
+function generatorTunnelRemainingStock(tunnel){
+  const withFuel=(TAB_STATE['generator'].records||[])
+    .filter(r=>r['터널명']===tunnel && r._fuel && r._fuel.금일재고량!=null && r['가동일자']);
+  if(!withFuel.length) return null;
+  withFuel.sort((a,b)=>String(a['가동일자']).localeCompare(String(b['가동일자'])));
+  let anchorIdx=-1;
+  for(let i=withFuel.length-1;i>=0;i--){ if(withFuel[i]['비고']==='감축시험'){ anchorIdx=i; break; } }
+  if(anchorIdx<0) return Number(withFuel[withFuel.length-1]._fuel.금일재고량);
+  let stock=Number(withFuel[anchorIdx]._fuel.금일재고량);
+  for(let i=anchorIdx+1;i<withFuel.length;i++){
+    const f=withFuel[i]._fuel;
+    stock = stock - (Number(f.사용량)||0) + (Number(f.입고량)||0);
+  }
+  return stock;
+}
 // 필터링된 데이터에 나타난 터널별로 "잔여재고 기준 가동가능시간" 행을 만든다(2026-09-08 사용자 요청
-// — 유류 탱크는 터널/발전기별로 별도라 터널마다 각각 계산). 각 터널의 가장 최근 금일재고량을 잔여
-// 재고로 보고, ①과거 실측 평균 소모율, ②명판 기반 이론치 소모율(등록된 터널만) 두 기준으로 각각
-// 가동가능시간(h)을 구해 터널당 최대 2행(실측/이론)을 만든다.
+// — 유류 탱크는 터널/발전기별로 별도라 터널마다 각각 계산). 각 터널의 잔여재고는
+// generatorTunnelRemainingStock()의 보정된 값을 쓰고, ①과거 실측 평균 소모율, ②정격 기반 이론치
+// 소모율 두 기준으로 각각 가동가능시간(h)을 구해 터널당 최대 2행(실측/이론)을 만든다.
 function generatorOpstatusRunwayRows(filteredRecs){
   const tunnels=[...new Set(filteredRecs.map(r=>r['터널명']).filter(Boolean))];
   const rows=[];
   tunnels.forEach(tunnel=>{
-    const stockRecs=filteredRecs.filter(r=>r['터널명']===tunnel && r._fuel && r._fuel.금일재고량!=null && r['가동일자']);
-    if(!stockRecs.length) return;
-    stockRecs.sort((a,b)=>String(a['가동일자']).localeCompare(String(b['가동일자'])));
-    const remainingStock=Number(stockRecs[stockRecs.length-1]._fuel.금일재고량);
-    if(!(remainingStock>=0)) return;
+    const remainingStock=generatorTunnelRemainingStock(tunnel);
+    if(remainingStock==null || !(remainingStock>=0)) return;
     const hoursFor=rates=>cat=>{ const r=rates[cat]; return (r && r>0) ? Math.round((remainingStock/r)*10)/10 : ''; };
     const empiricalHours=hoursFor(computeLoadBurnRatesForTunnel(tunnel));
     rows.push({
