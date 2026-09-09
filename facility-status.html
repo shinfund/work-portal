@@ -498,7 +498,7 @@ if (window.self !== window.top) {
 
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
-  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">시설물내역</span></button>
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">시설물</span></button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널제원</span></button>
   <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')"><span class="tt-label">구분별현황</span></button>
 </div>
@@ -513,19 +513,19 @@ if (window.self !== window.top) {
       <div class="filter-row">
         <div class="dd-wrap" id="tunnelDdWrap">
           <button class="dd-btn" id="tunnelDdBtn" onclick="toggleDd('tunnelDdMenu','tunnelDdBtn')" aria-haspopup="listbox" aria-label="터널명 선택">
-            <span id="tunnelDdLabel">터널명 전체</span>
+            <span id="tunnelDdLabel">전체</span>
           </button>
           <div class="dd-menu" id="tunnelDdMenu"></div>
         </div>
         <div class="dd-wrap" id="gubunDdWrap">
           <button class="dd-btn" id="gubunDdBtn" onclick="toggleDd('gubunDdMenu','gubunDdBtn')" aria-haspopup="listbox" aria-label="구분 선택">
-            <span id="gubunDdLabel">구분 전체</span>
+            <span id="gubunDdLabel">전체</span>
           </button>
           <div class="dd-menu" id="gubunDdMenu"></div>
         </div>
         <div class="dd-wrap" id="specNameDdWrap">
           <button class="dd-btn" id="specNameDdBtn" onclick="toggleDd('specNameDdMenu','specNameDdBtn')" aria-haspopup="listbox" aria-label="설비명 선택">
-            <span id="specNameDdLabel">설비명 전체</span>
+            <span id="specNameDdLabel">전체</span>
           </button>
           <div class="dd-menu" id="specNameDdMenu"></div>
         </div>
@@ -843,7 +843,7 @@ function compressImageToLimit(file, maxBytes){
 </script>
 <script>
 /* ── 고정 표시 순서(사용자 지정) — 물리적 노선 순서(포항→영덕)를 그대로 반영 ── */
-var TUNNEL_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널','흥해졸음쉼터(포항)','흥해졸음쉼터(영덕)','남정졸음쉼터(포항)','남정졸음쉼터(영덕)','청하터널'];
+var TUNNEL_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','청하터널','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널','흥해졸음쉼터(포항)','흥해졸음쉼터(영덕)','남정졸음쉼터(포항)','남정졸음쉼터(영덕)'];
 var TUNNEL_MASTER_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 var GUBUN_ORDER = ['전기','소방','통신','설비','기타'];
 var UNIT_OPTIONS = ['대','SET','조','EA','식'];
@@ -1066,24 +1066,22 @@ document.addEventListener('click', function(e){
 
 /* ── 필터(고정 순서 목록 기준 — 현재 데이터에 없는 항목도 항상 선택 가능) ── */
 var FILTER_TUNNEL='', FILTER_GUBUN='', FILTER_SPEC='';
-function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter){
+function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, onChange){
   var menu=document.getElementById(menuId);
   if(!menu) return;
   var opts=[{val:'',label:defLabel}].concat(values.map(function(v){ return {val:v,label:v}; }));
   menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
   document.getElementById(labelId).textContent = curVal || defLabel;
   document.getElementById(btnId).classList.toggle('active', !!curVal);
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click', function(e){
-      var opt=e.target.closest('.dd-opt'); if(!opt) return;
-      setter(opt.dataset.val); closeDd(menuId, btnId); CURRENT_PAGE=1; renderRows();
-    });
-  }
+  menu.onclick = function(e){
+    var opt=e.target.closest('.dd-opt'); if(!opt) return;
+    setter(opt.dataset.val); closeDd(menuId, btnId); CURRENT_PAGE=1;
+    onChange();
+  };
 }
-function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER,'터널명 전체', function(v){ FILTER_TUNNEL=v; }); }
-function buildGubunDd(){ buildFixedFilterDd('gubunDdMenu','gubunDdBtn','gubunDdLabel',FILTER_GUBUN,GUBUN_ORDER,'구분 전체', function(v){ FILTER_GUBUN=v; }); }
-function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn','specNameDdLabel',FILTER_SPEC,EQUIP_NAME_ORDER,'설비명 전체', function(v){ FILTER_SPEC=v; }); }
+function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER,'전체', function(v){ FILTER_TUNNEL=v; }, function(){ buildTunnelDd(); renderRows(); }); }
+function buildGubunDd(){ buildFixedFilterDd('gubunDdMenu','gubunDdBtn','gubunDdLabel',FILTER_GUBUN,GUBUN_ORDER,'전체', function(v){ FILTER_GUBUN=v; }, function(){ buildGubunDd(); renderRows(); }); }
+function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn','specNameDdLabel',FILTER_SPEC,EQUIP_NAME_ORDER,'전체', function(v){ FILTER_SPEC=v; }, function(){ buildSpecNameDd(); renderRows(); }); }
 
 /* ── 페이지네이션 ── */
 var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
@@ -1105,18 +1103,16 @@ function buildPageSizeDd(){
   var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
   menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
   document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
-  if(!menu._bound){
-    menu._bound=true;
-    menu.addEventListener('click', function(e){
-      var opt=e.target.closest('.dd-opt'); if(!opt) return;
-      var v=opt.dataset.val;
-      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
-      CURRENT_PAGE=1;
-      try{ localStorage.setItem('facilityStatus_pageSize', v); }catch(e2){}
-      closeDd('pageSizeDdMenu','pageSizeDdBtn');
-      renderRows();
-    });
-  }
+  menu.onclick = function(e){
+    var opt=e.target.closest('.dd-opt'); if(!opt) return;
+    var v=opt.dataset.val;
+    PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+    CURRENT_PAGE=1;
+    try{ localStorage.setItem('facilityStatus_pageSize', v); }catch(e2){}
+    closeDd('pageSizeDdMenu','pageSizeDdBtn');
+    buildPageSizeDd();
+    renderRows();
+  };
 }
 function goToPage(n){
   CURRENT_PAGE=n;
