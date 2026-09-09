@@ -437,10 +437,6 @@ if (window.self !== window.top) {
         <input id="tnName" class="modal-input" type="text" readonly/>
         <div class="modal-hint">터널명은 이 화면에서 변경할 수 없습니다.</div>
       </div>
-      <div class="modal-field">
-        <label class="modal-label">주소</label>
-        <input id="tnAddress" class="modal-input" type="text" placeholder="예) 경북 포항시 흥해읍 포항영덕고속도로 6"/>
-      </div>
       <div class="field-row2">
         <div class="modal-field">
           <label class="modal-label">연장-포항(M)</label>
@@ -460,6 +456,10 @@ if (window.self !== window.top) {
           <label class="modal-label">이정(포항기점k)</label>
           <input id="tnMile" class="modal-input" type="number" step="0.1" placeholder="예) 3.9"/>
         </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">주소</label>
+        <input id="tnAddress" class="modal-input" type="text" placeholder="예) 경북 포항시 흥해읍 포항영덕고속도로 6"/>
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -500,7 +500,8 @@ if (window.self !== window.top) {
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">시설물</span></button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널제원</span></button>
-  <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')"><span class="tt-label">구분별현황</span></button>
+  <button class="top-tab" id="nav-bytunnel" role="tab" aria-selected="false" aria-controls="panel-bytunnel" onclick="switchPanel('bytunnel')"><span class="tt-label">터널별</span></button>
+  <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')"><span class="tt-label">구분별</span></button>
 </div>
 </div>
 
@@ -566,8 +567,10 @@ if (window.self !== window.top) {
             <th style="white-space:nowrap">규격</th>
             <th style="white-space:nowrap">단위</th>
             <th class="r" style="white-space:nowrap">수량</th>
-            <th class="r" style="white-space:nowrap">포항/영덕</th>
-            <th style="white-space:nowrap">사진/명판</th>
+            <th class="r" style="white-space:nowrap">포항</th>
+            <th class="r" style="white-space:nowrap">영덕</th>
+            <th style="white-space:nowrap">사진</th>
+            <th style="white-space:nowrap">명판</th>
             <th style="white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
@@ -591,14 +594,31 @@ if (window.self !== window.top) {
         <table>
           <thead><tr>
             <th style="white-space:nowrap">터널명</th>
-            <th style="white-space:nowrap">주소</th>
             <th class="r" style="white-space:nowrap">연장-포항(M)</th>
             <th class="r" style="white-space:nowrap">연장-영덕(M)</th>
             <th class="r" style="white-space:nowrap">수전용량(kW)</th>
             <th class="r" style="white-space:nowrap">이정(포항기점k)</th>
+            <th style="white-space:nowrap">주소</th>
             <th style="white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="tunnelTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 터널별 -->
+  <div id="panel-bytunnel" class="panel" role="tabpanel" aria-labelledby="nav-bytunnel">
+    <div class="sc">
+      <div class="sc-hd">터널별 현황 <span class="badge" id="bytunnelBadge">0개소</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>터널명</th>
+            <th class="r">품목수</th>
+            <th class="r">총수량</th>
+          </tr></thead>
+          <tbody id="bytunnelTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -1065,7 +1085,7 @@ document.addEventListener('click', function(e){
 });
 
 /* ── 필터(고정 순서 목록 기준 — 현재 데이터에 없는 항목도 항상 선택 가능) ── */
-var FILTER_TUNNEL='', FILTER_GUBUN='', FILTER_SPEC='';
+var FILTER_TUNNEL='청하터널(주)', FILTER_GUBUN='전기', FILTER_SPEC='';
 function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, onChange){
   var menu=document.getElementById(menuId);
   if(!menu) return;
@@ -1164,26 +1184,19 @@ function filteredEquip(){
 function renderAll(){
   renderEquipList();
   renderTunnelTab();
+  renderTunnelStatPanel();
   renderCategoryPanel();
 }
 function renderEquipList(){
   buildTunnelDd(); buildGubunDd(); buildSpecNameDd(); buildPageSizeDd();
   renderRows();
 }
-function fmtDirSplit(r){
-  var p=r['포항'], y=r['영덕'];
-  if((p==null||p==='') && (y==null||y==='')) return '<span style="color:var(--txt3)">-</span>';
-  var pStr=(p==null||p==='')?'-':fmtWon(p);
-  var yStr=(y==null||y==='')?'-':fmtWon(y);
-  return pStr+' / '+yStr;
+function fmtDirCell(v){
+  return (v==null||v==='') ? '<span style="color:var(--txt3)">-</span>' : fmtWon(v);
 }
-function fmtPhotoCount(r){
-  var pc=(r['사진']||[]).length, mc=(r['명판']||[]).length;
-  if(!pc && !mc) return '<span style="color:var(--txt3)">-</span>';
-  var parts=[];
-  if(pc) parts.push('📷'+pc);
-  if(mc) parts.push('🏷'+mc);
-  return parts.join(' · ');
+function fmtPhotoCell(arr,icon){
+  var n=(arr||[]).length;
+  return n ? (icon+n) : '<span style="color:var(--txt3)">-</span>';
 }
 function renderRows(){
   var rows = filteredEquip().slice().sort(compareEquipRow);
@@ -1192,7 +1205,7 @@ function renderRows(){
   if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
   if(CURRENT_PAGE<1) CURRENT_PAGE=1;
   var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
-  var colCount = 9 + (DELETE_MODE?1:0);
+  var colCount = 11 + (DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML = pageRows.length
     ? pageRows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 시설물이 없습니다.','🔍')+'</td></tr>';
@@ -1210,8 +1223,10 @@ function buildDetailRow(r){
     + '<td>'+esc(r['규격']||'-')+'</td>'
     + '<td>'+esc(r['단위']||'-')+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['수량'])+'</td>'
-    + '<td class="r" style="white-space:nowrap">'+fmtDirSplit(r)+'</td>'
-    + '<td style="white-space:nowrap">'+fmtPhotoCount(r)+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['포항'])+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['영덕'])+'</td>'
+    + '<td style="white-space:nowrap">'+fmtPhotoCell(r['사진'],'📷')+'</td>'
+    + '<td style="white-space:nowrap">'+fmtPhotoCell(r['명판'],'🏷')+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
     + '</tr>';
 }
@@ -1336,8 +1351,30 @@ function renderCategoryPanel(){
     : '<tr><td colspan="4">'+emptyState('구분별 데이터가 없습니다.')+'</td></tr>';
 }
 
+function renderTunnelStatPanel(){
+  var map={};
+  EQUIP_DATA.forEach(function(r){
+    var t=r['터널명']||'(미지정)';
+    if(!map[t]) map[t]={count:0,qty:0};
+    map[t].count++;
+    map[t].qty += parseFloat(r['수량'])||0;
+  });
+  var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return tunnelRank(a[0])-tunnelRank(b[0]); });
+  document.getElementById('bytunnelBadge').textContent=arr.length+'개소';
+  document.getElementById('bytunnelTableBody').innerHTML = arr.length
+    ? arr.map(function(pair,i){
+        var name=pair[0], d=pair[1];
+        var rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+        return '<tr><td><div class="rank '+rankCls+'">'+(i+1)+'</div></td>'
+          + '<td><span class="type-badge '+tunnelBadgeClass(name)+'">'+esc(name)+'</span></td>'
+          + '<td class="r">'+d.count+'</td>'
+          + '<td class="r">'+fmtWon(d.qty)+'</td></tr>';
+      }).join('')
+    : '<tr><td colspan="4">'+emptyState('터널별 데이터가 없습니다.')+'</td></tr>';
+}
+
 /* ── 탭 전환 ── */
-var PANELS=['detail','tunnel','category'];
+var PANELS=['detail','tunnel','bytunnel','category'];
 var _activePanel='detail';
 function switchPanel(name){
   if(name===_activePanel) return;
@@ -1554,11 +1591,11 @@ function renderTunnelTab(){
     ? rows.map(function(r){
         return '<tr onclick="openTunnelModal(\''+r.id+'\')" style="cursor:pointer">'
           + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
-          + '<td>'+esc(r['주소']||'-')+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['연장포항'])+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['연장영덕'])+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['수전용량'])+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['이정'])+'</td>'
+          + '<td>'+esc(r['주소']||'-')+'</td>'
           + '<td>'+esc(r['비고']||'-')+'</td>'
           + '</tr>';
       }).join('')
@@ -1770,11 +1807,11 @@ function exportEquipExcel(){
 }
 var EXCEL_COLUMNS_TUNNEL=[
   { key:'터널명', header:'터널명' },
-  { key:'주소', header:'주소', width:34, wrap:true },
   { key:'연장포항', header:'연장-포항(M)', numFmt:'#,##0.##' },
   { key:'연장영덕', header:'연장-영덕(M)', numFmt:'#,##0.##' },
   { key:'수전용량', header:'수전용량(kW)', numFmt:'#,##0.##' },
   { key:'이정', header:'이정(포항기점k)', numFmt:'#,##0.0' },
+  { key:'주소', header:'주소', width:34, wrap:true },
   { key:'비고', header:'비고', wrap:true }
 ];
 function exportTunnelExcel(){
