@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>시설물현황</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0.3' y2='1'%3E%3Cstop offset='0' stop-color='%234A9BE8'/%3E%3Cstop offset='1' stop-color='%230C447C'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath d='M7.1 18.5V12.9C7.1 9 9.6 6.6 12 6.6C14.4 6.6 16.9 9 16.9 12.9V18.5Z' fill='%23fff'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sky:#0366D6;--sky50:#E9F1FE;--sky100:#C7DCF6;--sky600:#005CC5;--sky800:#032F62;
+  --teal50:#E1F5EE;--teal100:#9FE1CB;--teal600:#0F6E56;
+  --coral:#D85A30;--coral50:#FAECE7;--coral100:#F5C4B3;--coral800:#712B13;
+  --gray50:#F1EFE8;--gray100:#D3D1C7;--gray600:#5F5E5A;
+  --bg:#FFFFFF;--card:#FFFFFF;--border:#E1E4E8;--border2:#F6F8FA;
+  --txt:#24292E;--txt2:#3A4453;--txt3:#6A737D;
+  --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r16:16px;--r20:20px;
+  --shadow:none;
+  --hdr-bg:#0C447C;
+  --hdr-text:#fff;
+  --hdr-text-dim:rgba(255,255,255,.85);
+  --hdr-btn-bg:rgba(255,255,255,.15);
+  --hdr-btn-border:rgba(255,255,255,.35);
+  --hdr-btn-hover-bg:rgba(255,255,255,.25);
+  --hdr-btn-text:#fff;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.3);
+  --hdr-error-text:rgba(255,150,130,.9);
+}
+html[data-theme="light"]{
+  --hdr-bg:#FFFFFF;
+  --hdr-text:#032F62;
+  --hdr-text-dim:#355E82;
+  --hdr-btn-bg:#E6F1FB;
+  --hdr-btn-border:#B7CEE8;
+  --hdr-btn-hover-bg:#D3E7FA;
+  --hdr-btn-text:#005CC5;
+  --hdr-shadow:0 2px 8px rgba(12,68,124,.12);
+  --hdr-error-text:#B3261E;
+}
+html[data-theme="dark"]{
+  --bg:#24292E;--card:#1C2024;
+  --border:rgba(255,255,255,.13);--border2:rgba(255,255,255,.09);
+  --txt:rgba(255,255,255,.92);--txt2:rgba(255,255,255,.75);--txt3:rgba(255,255,255,.5);
+  --shadow:none;
+  --hdr-bg:#24292E;
+  --hdr-shadow:0 2px 10px rgba(0,0,0,.4);
+  --hdr-error-text:rgba(255,150,130,.9);
+  --sky:#2E8FFF;
+  --sky50:rgba(46,143,255,.16);--sky100:rgba(46,143,255,.32);
+  --sky600:#79B8FF;--sky800:#C8E1FF;
+  --teal50:rgba(29,158,117,.16);--teal100:rgba(29,158,117,.32);
+  --teal600:#4FD8AC;
+  --coral:#F2896A;--coral50:rgba(216,90,48,.16);--coral100:rgba(216,90,48,.32);--coral800:#F0916A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-width:none}
+html::-webkit-scrollbar{display:none}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--txt);font-size:14.5px;line-height:1.6;word-break:keep-all;-webkit-font-smoothing:antialiased;min-height:100dvh}
+
+.header{background:var(--hdr-bg);height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--hdr-shadow);transition:background .18s ease}
+.header-left{display:flex;align-items:center;gap:10px}
+.logo-title{font-size:14.5px;font-weight:500;color:var(--hdr-text);letter-spacing:-.02em}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px}
+.header-btns{display:flex;gap:6px}
+.hdr-btn{background:var(--hdr-btn-bg);border:1px solid var(--hdr-btn-border);color:var(--hdr-btn-text);border-radius:16px;padding:4px 11px;font-size:12px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:4px;min-height:27px;-webkit-tap-highlight-color:transparent}
+.hdr-btn:hover{background:var(--hdr-btn-hover-bg)}
+.hdr-btn:disabled{opacity:.4;cursor:not-allowed}
+.last-update{font-size:11px;color:var(--hdr-text-dim);white-space:nowrap}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{animation:spin .8s linear infinite;display:inline-block}
+
+.top-tabs{background:var(--card);border-bottom:1.5px solid var(--border);display:flex;padding:0 6px;box-shadow:0 2px 8px rgba(3,102,214,.07);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-tab{flex:0 0 auto;min-width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;color:var(--txt2);font-size:14px;font-weight:400;font-family:inherit;cursor:pointer;padding:8px 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;position:relative;white-space:nowrap}
+.top-tab.active{color:var(--sky600)}
+html[data-theme="dark"] .top-tab.active{color:#fff}
+.top-tab .tt-label{display:inline-block;padding:0 10px 6px;border-bottom:2.5px solid transparent;border-radius:2px 2px 0 0}
+.top-tab.active .tt-label{border-bottom-color:var(--sky)}
+
+.main{padding:10px 12px;max-width:1400px;margin:0 auto}
+
+.sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r16);padding:12px 14px;box-shadow:var(--shadow);margin-bottom:10px}
+.detail-sc{background:transparent;border:none;box-shadow:none}
+.detail-sc .tbl-wrap{background:var(--card);box-shadow:var(--shadow)}
+.sc-hd{font-size:14px;font-weight:500;color:var(--txt);margin-bottom:9px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sc-note{font-size:12px;color:var(--txt3);margin:-4px 0 10px}
+.badge{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .badge{color:#fff}
+
+.panel{display:none}.panel.active{display:block}
+
+.dd-wrap{position:relative;display:inline-block}
+.dd-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:5px 28px 5px 10px;font-size:13px;font-weight:400;font-family:inherit;cursor:pointer;min-height:30px;white-space:nowrap;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;user-select:none;position:relative;transition:border-color .15s}
+.dd-btn::after{content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--sky600)}
+.dd-btn.active{background:#1565C0;color:#fff;border-color:#1565C0}
+.dd-btn.active::after{color:#fff}
+html[data-theme="dark"] .dd-btn{color:#fff}
+.dd-menu{position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:var(--r12);box-shadow:0 8px 24px rgba(3,102,214,.15);z-index:500;min-width:150px;display:none;overflow-y:auto;max-height:280px;scrollbar-width:none}
+.dd-menu::-webkit-scrollbar{display:none}
+.dd-menu.open{display:block}
+.dd-opt{padding:9px 14px;font-size:13px;font-weight:500;color:var(--txt);white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid var(--border2)}
+.dd-opt:hover{background:var(--sky50)}
+.dd-opt.sel{background:#1565C0;color:#fff;font-weight:500}
+
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--r8);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;min-width:300px}
+thead tr{background:var(--sky50)}
+th{padding:7px 10px;text-align:left;font-size:13px;font-weight:400;color:var(--sky800);white-space:nowrap;border-bottom:1.5px solid var(--sky100)}
+html[data-theme="dark"] th{color:#fff}
+th.r,td.r{text-align:right}
+td{padding:7px 10px;font-size:13px;color:var(--txt);border-bottom:1px solid var(--border2);vertical-align:middle;line-height:1.5}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--sky50)}
+
+.rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.r1{background:#FFD700;color:#6b4c00}.r2{background:#C0C0C0;color:#333}.r3{background:#CD7F32;color:#2b1400}.rn{background:var(--sky50);color:var(--sky800)}
+html[data-theme="dark"] .rn{color:#fff}
+
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
+.detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
+html[data-theme="dark"] .detail-count{color:#fff}
+.count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
+.search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
+.search-box:focus{border-color:var(--sky)}
+.tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.tb-action-btn.tb-add{background:#185FA5}
+.tb-action-btn.tb-add:hover{background:#144d87}
+.tb-action-btn.tb-excel{background:#0F6E56}
+.tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-delete{background:#495057}
+.tb-action-btn.tb-delete:hover{background:#3a3f45}
+.tb-action-btn.tb-delete.on{background:#B23A2E}
+.tb-action-btn.tb-delete.on:hover{background:#962f25}
+.tb-action-btn.tb-delete:disabled{opacity:.45;cursor:not-allowed}
+
+.type-badge{display:inline-block;font-size:12px;font-weight:400;padding:3px 9px;border-radius:var(--r8);white-space:nowrap;margin:2px 0;color:#fff;border:1px solid rgba(0,0,0,.18)}
+.badge-c0{background:#1565C0}
+.badge-c1{background:#147A44}
+.badge-c2{background:#B23A12}
+.badge-c3{background:#A15C00}
+.badge-c4{background:#5B4FBD}
+.badge-c5{background:#0D6D63}
+
+.col-photo{width:56px;min-width:52px;text-align:center}
+.photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
+.photo-upload-box:hover{border-color:var(--sky100)}
+.photo-upload-row{display:flex;align-items:center;gap:10px}
+.photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
+.photo-upload-file-btn:hover{background:var(--sky100)}
+.photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.photo-upload-status.ok{color:var(--teal600);font-weight:500}
+.photo-upload-status.err{color:var(--coral);font-weight:500}
+.photo-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.photo-gallery:empty{margin-top:0}
+.pg-item{position:relative;width:64px;height:64px;flex-shrink:0}
+.pg-item img{width:100%;height:100%;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);cursor:zoom-in}
+.pg-item .pg-remove{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:1.5px solid var(--card);font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.photo-view-grid{display:flex;flex-wrap:wrap;gap:8px}
+.photo-view-grid .pv-item{width:88px;height:88px;border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-view-grid .pv-item img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+.photo-section{padding:10px 0;border-bottom:1px solid var(--border2)}
+.photo-section:last-child{border-bottom:none}
+.photo-label{font-size:12px;font-weight:500;color:var(--txt3);margin-bottom:6px}
+.photo-wrap{position:relative;background:var(--bg);border-radius:var(--r8);overflow:hidden;border:1px solid var(--border)}
+.photo-wrap a{display:block}
+.photo-img{width:100%;max-height:280px;object-fit:contain;display:block;cursor:zoom-in;transition:opacity .25s}
+.photo-img.loading{opacity:0}
+.photo-img.loaded{opacity:1}
+.photo-err{display:none;padding:20px;text-align:center;font-size:12px;color:var(--txt3);line-height:1.8}
+.photo-err a{color:var(--sky600);font-weight:500;text-decoration:none}
+.photo-spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+.photo-spinner::after{content:'';width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--sky600);border-radius:50%;animation:spin .7s linear infinite}
+
+.empty{text-align:center;padding:40px 16px;color:var(--txt3)}
+.empty-icon{font-size:34px;margin-bottom:10px}
+.empty-title{font-size:14px;font-weight:500;color:var(--txt2);margin-bottom:4px}
+.empty-desc{font-size:13px}
+
+#cfgModal{display:none}
+#cfgModal.modal-open{display:block}
+#addModal{display:none}
+#addModal.modal-open{display:block}
+#detailModal{display:none}
+#detailModal.modal-open{display:block}
+#tunnelModal{display:none}
+#tunnelModal.modal-open{display:block}
+.detail-modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.detail-modal-hd h3{font-size:15px;font-weight:500;color:var(--txt)}
+.detail-info-wrap{border:1.5px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:14px}
+.detail-info-row{display:flex;gap:0;border-bottom:1px solid var(--border2)}
+.detail-info-row:last-child{border-bottom:none}
+.detail-info-row:nth-child(odd){background:var(--card)}
+.detail-info-row:nth-child(even){background:var(--sky50)}
+.detail-info-key{font-size:12px;font-weight:400;color:var(--txt);min-width:96px;width:96px;flex-shrink:0;padding:10px 12px;background:rgba(3,102,214,.07);border-right:1.5px solid var(--border);display:flex;align-items:flex-start;line-height:1.5}
+.detail-info-val{font-size:13px;color:var(--txt);line-height:1.6;flex:1;padding:10px 14px}
+.detail-modal-close{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:6px 14px;font-size:12.5px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background .12s,color .12s,border-color .12s}
+.detail-modal-close:hover{background:var(--border2);color:var(--txt);border-color:var(--sky100)}
+.detail-act-divider{width:1px;align-self:stretch;background:var(--border);margin:0 2px;flex-shrink:0}
+.modal-select{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E99' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;transition:border .18s;cursor:pointer}
+.modal-select:focus{border-color:var(--sky);background-color:var(--card)}
+.modal-required{color:var(--coral);margin-left:2px}
+.add-submit-btn{background:var(--sky);border:none;color:#fff;border-radius:var(--r8);padding:10px 24px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px;display:flex;align-items:center;gap:6px}
+.add-submit-btn:disabled{opacity:.5;cursor:not-allowed}
+.detail-act-btn{display:inline-flex;align-items:center;gap:4px;border-radius:var(--r6);padding:4px 10px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;border:1.5px solid transparent;white-space:nowrap;transition:opacity .12s}
+.detail-edit-btn{background:var(--sky50);border-color:var(--sky100);color:var(--sky800)}
+.detail-edit-btn:hover{background:var(--sky100)}
+.detail-del-btn{background:var(--coral50);border-color:var(--coral100);color:var(--coral800)}
+.detail-del-btn:hover{background:var(--coral100)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9000;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-box{background:var(--card);border-radius:var(--r20);padding:24px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.add-modal-box{max-width:560px;max-height:90vh;overflow-y:auto}
+#addModal .modal-backdrop,#detailModal .modal-backdrop,#tunnelModal .modal-backdrop{justify-content:flex-end;padding:0}
+#addModal .add-modal-box,#detailModal .detail-modal-box,#tunnelModal .add-modal-box{
+  height:100vh;height:100dvh;max-height:none;width:460px;max-width:92vw;margin:0;
+  border-radius:20px 0 0 20px;
+  transform:translateX(100%);
+  transition:transform .28s cubic-bezier(.22,.8,.25,1);
+}
+#addModal.drawer-in .add-modal-box,#detailModal.drawer-in .detail-modal-box,#tunnelModal.drawer-in .add-modal-box{transform:translateX(0)}
+@media(max-width:480px){
+  #addModal .add-modal-box,#detailModal .detail-modal-box,#tunnelModal .add-modal-box{width:100vw;max-width:100vw;border-radius:0}
+}
+.detail-modal-box{max-width:480px;max-height:85vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.modal-field{margin-bottom:14px}
+.modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
+.modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+.modal-input[type=number]{-moz-appearance:textfield}
+.modal-input[type=number]::-webkit-outer-spin-button,.modal-input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.modal-input::placeholder,.search-box::placeholder{color:var(--txt3)}
+.modal-input:focus{border-color:var(--sky);background:var(--card)}
+.modal-input[readonly]{opacity:.7;cursor:not-allowed}
+.modal-hint{font-size:12px;color:var(--txt3);margin-top:4px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-cancel{background:var(--bg);border:1.5px solid var(--border);color:var(--txt2);border-radius:var(--r8);padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;min-height:40px}
+.field-row2{display:flex;gap:10px}
+.field-row2 > .modal-field{flex:1;min-width:0}
+
+.theme-opts{display:flex;gap:12px}
+.theme-opt{flex:1;border:2px solid var(--border);border-radius:var(--r12);padding:10px;cursor:pointer;text-align:center;position:relative;transition:border-color .12s;-webkit-tap-highlight-color:transparent}
+.theme-opt.on{border-color:var(--sky)}
+.theme-opt.on::after{content:'✓';position:absolute;top:7px;right:9px;width:17px;height:17px;background:var(--sky);color:#fff;border-radius:50%;font-size:10px;font-weight:500;display:flex;align-items:center;justify-content:center}
+.theme-swatch{height:54px;border-radius:8px;border:1px solid var(--border2);position:relative;overflow:hidden;margin-bottom:9px}
+.theme-swatch-light{background:#F8FAFC}
+.theme-swatch-dark{background:#24292E}
+.ts-side{position:absolute;left:0;top:0;bottom:0;width:34%}
+.theme-swatch-light .ts-side{background:#F7FAFE;border-right:1px solid #DCE9F7}
+.theme-swatch-dark .ts-side{background:#24292E;border-right:1px solid rgba(255,255,255,.08)}
+.theme-opt-label{font-size:12.5px;font-weight:500;color:var(--txt2)}
+
+@media(max-width:480px){
+  .main{padding:10px 10px}
+  .header{padding:11px 12px}
+  .header-right{flex-direction:column;align-items:flex-end;gap:3px}
+  td{padding:10px 10px}
+  th{padding:9px 10px}
+  .search-box{font-size:16px}
+  .field-row2{flex-direction:column;gap:0}
+}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:#0D1520;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;z-index:9999;transition:.3s;opacity:0;pointer-events:none;max-width:calc(100vw - 32px);white-space:normal;text-align:center;box-sizing:border-box}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('theme')||'dark');}catch(e){}})();</script>
+<script>
+if (window.self !== window.top) {
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelector('button[onclick="openCfgModal()"]')?.style.setProperty('display','none');
+    document.getElementById('syncBtn')?.style.setProperty('display','none');
+  });
+}
+</script>
+
+<!-- 설정 모달 -->
+<div id="cfgModal">
+  <div class="modal-backdrop" onclick="closeCfgModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-title">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 13h4"/></svg>
+        설정
+      </div>
+      <div class="modal-field">
+        <div class="modal-hint" id="loginStatusHint"></div>
+        <div class="modal-hint">로그인은 포털 좌측 사이드바 하단의 <strong>설정</strong>에서 한 번만 하면 이 앱을 포함한 전체 업무 앱에 함께 적용됩니다.</div>
+      </div>
+      <div class="theme-opts" role="radiogroup" aria-label="화면 모드">
+        <div class="theme-opt" id="theme-opt-dark" tabindex="0" role="radio" aria-checked="false" onclick="setAppTheme('dark')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('dark');}">
+          <div class="theme-swatch theme-swatch-dark"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">다크</div>
+        </div>
+        <div class="theme-opt" id="theme-opt-light" tabindex="0" role="radio" aria-checked="false" onclick="setAppTheme('light')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();setAppTheme('light');}">
+          <div class="theme-swatch theme-swatch-light"><span class="ts-side"></span></div>
+          <div class="theme-opt-label">라이트</div>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-top:12px">선택 즉시 적용되며, 이 브라우저의 다른 포털 앱에도 함께 반영됩니다.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeCfgModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 시설물 등록/수정 모달 -->
+<div id="addModal">
+  <div class="modal-backdrop">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="addModalTitleText">신규 시설물 등록</span></h3>
+        <button class="detail-modal-close" onclick="closeAddModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div style="font-size:11px;color:var(--txt3);margin-bottom:14px"><span class="modal-required">*</span> 필수 항목 · 규격은 확인 전이면 비워두세요</div>
+
+      <div class="modal-field">
+        <label class="modal-label">터널명 <span class="modal-required">*</span></label>
+        <select id="addTunnel" class="modal-select" onchange="onSelectChange(this,'addTunnelCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addTunnelCustom" class="modal-input" type="text" placeholder="터널명 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="field-row2">
+        <div class="modal-field">
+          <label class="modal-label">구분 <span class="modal-required">*</span></label>
+          <select id="addGubun" class="modal-select" onchange="onSelectChange(this,'addGubunCustom')">
+            <option value="">선택</option>
+          </select>
+          <input id="addGubunCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">단위</label>
+          <select id="addUnit" class="modal-select" onchange="onSelectChange(this,'addUnitCustom')">
+            <option value="">선택</option>
+          </select>
+          <input id="addUnitCustom" class="modal-input" type="text" placeholder="직접 입력" style="display:none;margin-top:6px"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">설비명 <span class="modal-required">*</span></label>
+        <select id="addSpecName" class="modal-select" onchange="onSelectChange(this,'addSpecNameCustom')">
+          <option value="">선택</option>
+        </select>
+        <input id="addSpecNameCustom" class="modal-input" type="text" placeholder="설비명 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">규격</label>
+        <input id="addSpec" class="modal-input" type="text" placeholder="예) 227KW 3∅4W 380V/220V"/>
+      </div>
+      <div class="field-row2">
+        <div class="modal-field">
+          <label class="modal-label">수량</label>
+          <input id="addQty" class="modal-input" type="number" step="1" placeholder="예) 1"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">포항</label>
+          <input id="addPohang" class="modal-input" type="number" step="1" placeholder="포항방향 수량"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">영덕</label>
+          <input id="addYeongdeok" class="modal-input" type="number" step="1" placeholder="영덕방향 수량"/>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-top:-8px;margin-bottom:14px">포항/영덕은 갱구 방향별로 수량이 나뉘는 설비(유도등·경보기 등)에만 입력합니다.</div>
+      <div class="modal-field">
+        <label class="modal-label">사진 <span class="modal-hint" style="display:inline">(여러 장 가능)</span></label>
+        <div class="photo-upload-box">
+          <div class="photo-upload-row">
+            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPhotoFile').click()">사진 추가</button>
+            <span class="photo-upload-status" id="photoStatus">파일을 선택하세요</span>
+          </div>
+          <div class="photo-gallery" id="photoGallery"></div>
+        </div>
+        <input type="file" id="addPhotoFile" accept="image/*" multiple style="display:none" onchange="uploadMultiPhoto(this,'photo')">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">명판 <span class="modal-hint" style="display:inline">(여러 장 가능)</span></label>
+        <div class="photo-upload-box">
+          <div class="photo-upload-row">
+            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPlateFile').click()">명판 추가</button>
+            <span class="photo-upload-status" id="plateStatus">파일을 선택하세요</span>
+          </div>
+          <div class="photo-gallery" id="plateGallery"></div>
+        </div>
+        <input type="file" id="addPlateFile" accept="image/*" multiple style="display:none" onchange="uploadMultiPhoto(this,'plate')">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="addNote" class="modal-input" type="text" placeholder="추가 사항"/>
+      </div>
+
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeAddModal()">취소</button>
+        <button class="add-submit-btn" id="addSubmitBtn" onclick="submitAddForm()"><span id="addSubmitLabel">등록</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 시설물 상세 모달 -->
+<div id="detailModal">
+  <div class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-box detail-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3 id="detailModalTitle">시설물 상세</h3>
+        <div style="display:flex;gap:14px;align-items:center">
+          <div id="detailModalActions" style="display:flex;gap:8px;align-items:center"></div>
+          <div class="detail-act-divider"></div>
+          <button class="detail-modal-close" onclick="closeDetailModal()" aria-label="닫기">닫기</button>
+        </div>
+      </div>
+      <div id="detailModalBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 터널제원 수정 모달 -->
+<div id="tunnelModal">
+  <div class="modal-backdrop">
+    <div class="modal-box add-modal-box" onclick="event.stopPropagation()">
+      <div class="detail-modal-hd">
+        <h3><span id="tnTitle">터널제원 수정</span></h3>
+        <button class="detail-modal-close" onclick="closeTunnelModal()" aria-label="닫기">닫기</button>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">터널명</label>
+        <input id="tnName" class="modal-input" type="text" readonly/>
+        <div class="modal-hint">터널명은 이 화면에서 변경할 수 없습니다.</div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">주소</label>
+        <input id="tnAddress" class="modal-input" type="text" placeholder="예) 경북 포항시 흥해읍 포항영덕고속도로 6"/>
+      </div>
+      <div class="field-row2">
+        <div class="modal-field">
+          <label class="modal-label">연장-포항(M)</label>
+          <input id="tnExtPohang" class="modal-input" type="number" step="0.1" placeholder="예) 1344"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">연장-영덕(M)</label>
+          <input id="tnExtYeongdeok" class="modal-input" type="number" step="0.1" placeholder="예) 1269"/>
+        </div>
+      </div>
+      <div class="field-row2">
+        <div class="modal-field">
+          <label class="modal-label">수전용량(kW)</label>
+          <input id="tnPower" class="modal-input" type="number" step="1" placeholder="예) 1000"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">이정(포항기점k)</label>
+          <input id="tnMile" class="modal-input" type="number" step="0.1" placeholder="예) 3.9"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">비고</label>
+        <input id="tnNote" class="modal-input" type="text" placeholder="예) 재검증 필요"/>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeTunnelModal()">취소</button>
+        <button class="add-submit-btn" id="tnSubmitBtn" onclick="submitTunnelForm()"><span id="tnSubmitLabel">저장</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div>
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-title">시설물현황</div>
+  </div>
+  <div class="header-right">
+    <div class="last-update" id="lastUpdate"></div>
+    <div class="header-btns">
+      <button class="hdr-btn" onclick="openCfgModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        설정
+      </button>
+      <button class="hdr-btn" id="syncBtn" aria-label="Notion 데이터 새로고침" aria-busy="false" onclick="loadAll()">
+        <svg id="syncIcon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        <span id="syncLabel">새로고침</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP TAB NAV -->
+<div class="top-tabs" role="tablist">
+  <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">시설물내역</span></button>
+  <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널제원</span></button>
+  <button class="top-tab" id="nav-category" role="tab" aria-selected="false" aria-controls="panel-category" onclick="switchPanel('category')"><span class="tt-label">구분별현황</span></button>
+</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ▸ 시설물내역 -->
+  <div id="panel-detail" class="panel active" role="tabpanel" aria-labelledby="nav-detail">
+    <div class="sc detail-sc">
+      <div class="filter-row">
+        <div class="dd-wrap" id="tunnelDdWrap">
+          <button class="dd-btn" id="tunnelDdBtn" onclick="toggleDd('tunnelDdMenu','tunnelDdBtn')" aria-haspopup="listbox" aria-label="터널명 선택">
+            <span id="tunnelDdLabel">터널명 전체</span>
+          </button>
+          <div class="dd-menu" id="tunnelDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="gubunDdWrap">
+          <button class="dd-btn" id="gubunDdBtn" onclick="toggleDd('gubunDdMenu','gubunDdBtn')" aria-haspopup="listbox" aria-label="구분 선택">
+            <span id="gubunDdLabel">구분 전체</span>
+          </button>
+          <div class="dd-menu" id="gubunDdMenu"></div>
+        </div>
+        <div class="dd-wrap" id="specNameDdWrap">
+          <button class="dd-btn" id="specNameDdBtn" onclick="toggleDd('specNameDdMenu','specNameDdBtn')" aria-haspopup="listbox" aria-label="설비명 선택">
+            <span id="specNameDdLabel">설비명 전체</span>
+          </button>
+          <div class="dd-menu" id="specNameDdMenu"></div>
+        </div>
+        <input class="search-box" id="searchBox" placeholder="🔍 설비명, 규격, 비고 검색..." aria-label="시설물 검색" oninput="CURRENT_PAGE=1;renderRows()"/>
+        <button class="tb-action-btn tb-add" onclick="openAddModal()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          신규등록
+        </button>
+        <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportEquipExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelExportLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="detail-count-row">
+        <div class="count-actions">
+          <button class="tb-action-btn tb-delete" id="delToggleBtn" onclick="toggleDeleteMode()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+            <span id="delToggleLbl">삭제</span>
+          </button>
+          <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
+        </div>
+        <div class="count-right">
+          <div class="detail-count" id="detailCount"></div>
+          <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
+            <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+              <span id="pageSizeDdLabel">30개씩</span>
+            </button>
+            <div class="dd-menu" id="pageSizeDdMenu"></div>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr id="theadDetail">
+            <th style="white-space:nowrap">터널명</th>
+            <th style="white-space:nowrap">구분</th>
+            <th style="white-space:nowrap">설비명</th>
+            <th style="white-space:nowrap">규격</th>
+            <th style="white-space:nowrap">단위</th>
+            <th class="r" style="white-space:nowrap">수량</th>
+            <th class="r" style="white-space:nowrap">포항/영덕</th>
+            <th style="white-space:nowrap">사진/명판</th>
+            <th style="white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-row" id="paginationRow"></div>
+    </div>
+  </div>
+
+  <!-- ▸ 터널제원 -->
+  <div id="panel-tunnel" class="panel" role="tabpanel" aria-labelledby="nav-tunnel">
+    <div class="sc">
+      <div class="sc-hd">터널제원 <span class="badge" id="tunnelBadge">0개소</span>
+        <button class="tb-action-btn tb-excel" id="tunnelExcelBtn" onclick="exportTunnelExcel()" style="margin-left:auto">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="tunnelExcelLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="sc-note">행을 클릭하면 주소·연장·수전용량 등을 수정할 수 있습니다. (터널 신규 추가·삭제는 지원하지 않는 고정 마스터 데이터입니다)</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="white-space:nowrap">터널명</th>
+            <th style="white-space:nowrap">주소</th>
+            <th class="r" style="white-space:nowrap">연장-포항(M)</th>
+            <th class="r" style="white-space:nowrap">연장-영덕(M)</th>
+            <th class="r" style="white-space:nowrap">수전용량(kW)</th>
+            <th class="r" style="white-space:nowrap">이정(포항기점k)</th>
+            <th style="white-space:nowrap">비고</th>
+          </tr></thead>
+          <tbody id="tunnelTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 구분별현황 -->
+  <div id="panel-category" class="panel" role="tabpanel" aria-labelledby="nav-category">
+    <div class="sc">
+      <div class="sc-hd">구분별 현황 <span class="badge" id="categoryBadge">0종</span></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>순위</th><th>구분</th>
+            <th class="r">품목수</th>
+            <th class="r">총수량</th>
+          </tr></thead>
+          <tbody id="categoryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+/* ── Worker/DB 연동 정보 ── */
+var WORKER_URL = 'https://notion-proxy.shinfund.workers.dev';
+var EQUIP_DB_ID = '3d659c8c-9c0a-80b5-9de9-df4af2fe98a2';   // 시설물DB
+var TUNNEL_DB_ID = '3d659c8c-9c0a-802f-92b5-cad18cdf0e2d';  // 터널제원DB
+var CFG = { workerUrl: WORKER_URL, authToken:'', authExpires:0 };
+(function(){
+  try{
+    CFG.authToken = localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires = parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+  }catch(e){}
+})();
+function isAuthed(){ return !!CFG.authToken && Date.now()<CFG.authExpires; }
+
+(function(){
+  var _fetch = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    init = init||{};
+    var urlStr = typeof input==='string' ? input : (input&&input.url)||'';
+    if(urlStr.indexOf(WORKER_URL)===0){
+      var headers = new Headers(init.headers||{});
+      if(CFG.authToken) headers.set('Authorization','Bearer '+CFG.authToken);
+      init = Object.assign({}, init, { headers:headers });
+    }
+    return _fetch(input, init).then(function(res){
+      if(res.status===401 && urlStr.indexOf(WORKER_URL)===0){
+        CFG.authToken=''; CFG.authExpires=0;
+        try{ localStorage.removeItem('wp_authToken'); localStorage.removeItem('wp_authExpires'); }catch(e){}
+        openLoginModal();
+      }
+      return res;
+    });
+  };
+})();
+
+function toast(msg){ var t=document.getElementById('toast'); if(!t)return; t.textContent=msg; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); },2600); }
+function esc(s){ return (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function fmtWon(n){ return (Number(n)||0).toLocaleString('ko-KR',{maximumFractionDigits:2}); }
+function fmtWonOrDash(v){ return (v==null||v==='') ? '-' : fmtWon(v); }
+function fmt(n){ return n<10 ? '0'+n : String(n); }
+
+/* ── 모달 드래그 이동 ── */
+function makeModalDraggable(box, handle){
+  if(!box||!handle) return;
+  handle.style.cursor='move';
+  handle.style.userSelect='none';
+  var dragging=false, startX=0, startY=0, startLeft=0, startTop=0;
+  function onDown(e){
+    var p = e.touches?e.touches[0]:e;
+    var rect = box.getBoundingClientRect();
+    dragging=true;
+    startX=p.clientX; startY=p.clientY;
+    startLeft=rect.left; startTop=rect.top;
+    box.style.position='fixed';
+    box.style.left=startLeft+'px';
+    box.style.top=startTop+'px';
+    box.style.margin='0';
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.addEventListener('touchmove', onMove, {passive:false});
+    document.addEventListener('touchend', onUp);
+  }
+  function onMove(e){
+    if(!dragging) return;
+    var p = e.touches?e.touches[0]:e;
+    if(e.touches) e.preventDefault();
+    box.style.left=(startLeft+(p.clientX-startX))+'px';
+    box.style.top=(startTop+(p.clientY-startY))+'px';
+  }
+  function onUp(){
+    dragging=false;
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onUp);
+  }
+  handle.addEventListener('mousedown', onDown);
+  handle.addEventListener('touchstart', onDown, {passive:true});
+}
+function resetModalDragPos(modalId){
+  var box = document.querySelector('#'+modalId+' .modal-box');
+  if(!box) return;
+  box.style.position=''; box.style.left=''; box.style.top=''; box.style.margin='';
+}
+function initDraggableModals(){
+  document.querySelectorAll('.modal-box').forEach(function(box){
+    if(box.closest('#addModal') || box.closest('#detailModal') || box.closest('#tunnelModal')) return;
+    var handle = box.querySelector('.modal-title, .detail-modal-hd');
+    if(handle) makeModalDraggable(box, handle);
+  });
+}
+
+/* ── 모달 공통 헬퍼 ── */
+var _drawerCloseTimers = {};
+function openModal(id){
+  var m=document.getElementById(id); if(!m) return;
+  m.classList.add('modal-open');
+  document.body.style.overflow='hidden';
+  if(id==='addModal'||id==='detailModal'||id==='tunnelModal'){
+    m.classList.remove('drawer-in');
+    if(_drawerCloseTimers[id]){ clearTimeout(_drawerCloseTimers[id]); _drawerCloseTimers[id]=null; }
+    void m.offsetWidth;
+    m.classList.add('drawer-in');
+  }
+}
+function closeModal(id, e){
+  if(e && e.target!==e.currentTarget) return;
+  var m=document.getElementById(id); if(!m) return;
+  document.body.style.overflow='';
+  resetModalDragPos(id);
+  if(id==='addModal'||id==='detailModal'||id==='tunnelModal'){
+    m.classList.remove('drawer-in');
+    _drawerCloseTimers[id]=setTimeout(function(){ m.classList.remove('modal-open'); _drawerCloseTimers[id]=null; }, 280);
+    return;
+  }
+  m.classList.remove('modal-open');
+}
+function updateLoginStatusHint(){
+  var h = document.getElementById('loginStatusHint');
+  if(!h) return;
+  h.textContent = isAuthed() ? '로그인 상태 (만료: '+new Date(CFG.authExpires).toLocaleString('ko-KR')+')' : '로그인이 필요합니다';
+}
+function openCfgModal(){
+  updateLoginStatusHint();
+  syncThemeOptUI();
+  openModal('cfgModal');
+}
+function openLoginModal(){
+  var lu=document.getElementById('lastUpdate');
+  if(lu) lu.textContent='⚠ 로그인 필요 — 포털 설정에서 로그인';
+  toast('로그인이 필요합니다 — 포털 좌측 사이드바 하단 설정에서 로그인해주세요.');
+}
+function closeCfgModal(e){ closeModal('cfgModal', e); }
+
+function syncThemeOptUI(){
+  var cur = document.documentElement.getAttribute('data-theme')||'dark';
+  var d=document.getElementById('theme-opt-dark'), l=document.getElementById('theme-opt-light');
+  if(d){ d.classList.toggle('on', cur==='dark'); d.setAttribute('aria-checked', cur==='dark'?'true':'false'); }
+  if(l){ l.classList.toggle('on', cur==='light'); l.setAttribute('aria-checked', cur==='light'?'true':'false'); }
+}
+function setAppTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  try{ localStorage.setItem('theme', theme); }catch(e){}
+  syncThemeOptUI();
+}
+document.addEventListener('keydown', function(e){
+  if(e.key!=='Escape') return;
+  closeCfgModal(); closeAddModal(); closeDetailModal(); closeTunnelModal();
+});
+window.addEventListener('storage', function(e){
+  if(e.key==='theme' && e.newValue){
+    document.documentElement.setAttribute('data-theme', e.newValue);
+    syncThemeOptUI();
+  } else if(e.key==='wp_authToken' || e.key==='wp_authExpires'){
+    CFG.authToken=localStorage.getItem('wp_authToken')||'';
+    CFG.authExpires=parseInt(localStorage.getItem('wp_authExpires')||'0',10)||0;
+    updateLoginStatusHint();
+    if(isAuthed()){ EQUIP_DATA=[]; TUNNEL_DATA=[]; loadAll(); }
+    else { EQUIP_DATA=EQUIP_DEMO_DATA.slice(); TUNNEL_DATA=TUNNEL_DEMO_DATA.slice(); renderAll(); }
+  }
+});
+
+function onSelectChange(selectEl, customInputId){
+  var ci = document.getElementById(customInputId);
+  if(!ci) return;
+  if(selectEl.value==='__custom__'){ ci.style.display=''; ci.focus(); }
+  else { ci.style.display='none'; ci.value=''; }
+}
+function getSelectValue(selectId, customInputId){
+  var sel = document.getElementById(selectId);
+  if(!sel) return '';
+  if(sel.value==='__custom__') return ((document.getElementById(customInputId)||{}).value||'').trim();
+  return sel.value;
+}
+function buildFixedSelectOpts(selectEl, customInputEl, values, currentValue){
+  selectEl.innerHTML = '<option value="">선택</option><option value="__custom__">직접입력</option>'
+    + values.map(function(v){ return '<option value="'+esc(v)+'">'+esc(v)+'</option>'; }).join('');
+  if(customInputEl) customInputEl.style.display='none';
+  if(!currentValue) return;
+  if(values.indexOf(currentValue)>=0){ selectEl.value=currentValue; }
+  else { selectEl.value='__custom__'; if(customInputEl){ customInputEl.value=currentValue; customInputEl.style.display=''; } }
+}
+
+/* ── 사진 업로드 (비품대장 앱들과 동일한 R2 폴더(asset-register)를 그대로 공유 — 별도 Worker 배포 불필요) ── */
+var UPLOAD_MAX_BYTES = 500*1024;
+var UPLOAD_MAX_LABEL = '500KB';
+function compressImageToLimit(file, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0 || file.size<=maxBytes){ resolve(file); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight, quality=0.85, attempts=0;
+      var canvas=document.createElement('canvas');
+      var ctx=canvas.getContext('2d');
+      function step(){
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('이미지 압축 실패')); return; }
+          if(blob.size<=maxBytes){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          if(attempts>=8){ reject(new Error('이미지를 '+UPLOAD_MAX_LABEL+' 이하로 압축하지 못했습니다. 더 작은 사진을 선택해주세요.')); return; }
+          if(quality>0.4) quality-=0.15; else { w=Math.round(w*0.75); h=Math.round(h*0.75); }
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
+</script>
+<script>
+/* ── 고정 표시 순서(사용자 지정) — 물리적 노선 순서(포항→영덕)를 그대로 반영 ── */
+var TUNNEL_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널','흥해졸음쉼터(포항)','흥해졸음쉼터(영덕)','남정졸음쉼터(포항)','남정졸음쉼터(영덕)','청하터널'];
+var TUNNEL_MASTER_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
+var GUBUN_ORDER = ['전기','소방','통신','설비','기타'];
+var UNIT_OPTIONS = ['대','SET','조','EA','식'];
+var EQUIP_NAME_ORDER = ['LBS','MOF','VCB','변압기','ACB','ATS','CTTS','UPS','발전기','LA','SA','JET FAN','VICOTEC','FLOWSIC','소화전함','소화기','발신기','경종','시각경보기','화재감지기','거리유도표시등','피난구유도등','소화기표시등','RTU','DLP','MMI','조명제어기','터널진입차단','자동화재탐지','비상경보','비상콘센트','화재수신기','태양광발전'];
+function tunnelRank(v){ var i=TUNNEL_ORDER.indexOf(v); return i<0?999:i; }
+function gubunRank(v){ var i=GUBUN_ORDER.indexOf(v); return i<0?999:i; }
+function equipNameRank(v){ var i=EQUIP_NAME_ORDER.indexOf(v); return i<0?999:i; }
+
+/* ── Notion 속성 자동 매핑(스키마 변경·리네임에도 견고하게 — 프로젝트 전 앱 공통 패턴) ──
+   "사진 "(끝에 공백, 실수로 중복 생성된 것으로 보임)처럼 유사 이름이 섞여도 정확한 이름을
+   exactPreferred로 우선 매칭해 엉뚱한 컬럼을 집지 않도록 한다. */
+function buildPropMap(mapObj, props, classifyFn, titleFallbackKey, exactPreferred){
+  Object.keys(mapObj).forEach(function(k){ delete mapObj[k]; });
+  if(exactPreferred){
+    Object.keys(exactPreferred).forEach(function(cls){
+      var exactName = exactPreferred[cls];
+      if(props[exactName]) mapObj[cls]=exactName;
+    });
+  }
+  Object.keys(props).forEach(function(k){
+    var cls = classifyFn(k);
+    if(cls && !mapObj[cls]) mapObj[cls]=k;
+  });
+  if(titleFallbackKey && !mapObj[titleFallbackKey]){
+    Object.keys(props).forEach(function(k){ if(!mapObj[titleFallbackKey] && props[k].type==='title'){ mapObj[titleFallbackKey]=k; } });
+  }
+}
+function classifyEquipKey(k){
+  var lk=k.toLowerCase().replace(/\s/g,'');
+  if(lk.indexOf('터널')>=0) return '터널명';
+  if(lk==='구분') return '구분';
+  if(lk.indexOf('설비명')>=0) return '설비명';
+  if(lk.indexOf('규격')>=0) return '규격';
+  if(lk.indexOf('단위')>=0) return '단위';
+  if(lk.indexOf('수량')>=0) return '수량';
+  if(lk==='포항') return '포항';
+  if(lk==='영덕') return '영덕';
+  if(lk.indexOf('명판')>=0) return '명판';
+  if(lk.indexOf('사진')>=0) return '사진';
+  if(lk.indexOf('비고')>=0) return '비고';
+  return null;
+}
+var EQUIP_EXACT_PREFERRED = { '터널명':'터널명','구분':'구분','설비명':'설비명','규격':'규격','단위':'단위','수량':'수량','포항':'포항','영덕':'영덕','명판':'명판','사진':'사진','비고':'비고' };
+function classifyTunnelKey(k){
+  var lk=k.toLowerCase().replace(/\s/g,'');
+  if(lk.indexOf('터널')>=0) return '터널명';
+  if(lk.indexOf('주소')>=0) return '주소';
+  if(lk.indexOf('연장')>=0 && lk.indexOf('포항')>=0) return '연장포항';
+  if(lk.indexOf('연장')>=0 && lk.indexOf('영덕')>=0) return '연장영덕';
+  if(lk.indexOf('수전')>=0) return '수전용량';
+  if(lk.indexOf('이정')>=0) return '이정';
+  if(lk.indexOf('비고')>=0) return '비고';
+  return null;
+}
+var TUNNEL_EXACT_PREFERRED = { '터널명':'터널명','주소':'주소','연장포항':'연장-포항(M)','연장영덕':'연장-영덕(M)','수전용량':'수전용량(kW)','이정':'이정(포항기점k)','비고':'비고' };
+
+function getPropText(p){
+  if(!p) return '';
+  if(p.type==='title') return (p.title||[]).map(function(t){ return t.plain_text||''; }).join('');
+  if(p.type==='rich_text') return (p.rich_text||[]).map(function(t){ return t.plain_text||''; }).join('');
+  if(p.type==='select') return (p.select&&p.select.name)||'';
+  if(p.type==='number') return (p.number!=null) ? p.number : '';
+  return '';
+}
+function getFileUrls(p){
+  if(!p || p.type!=='files' || !p.files) return [];
+  return p.files.map(function(f){ return (f.type==='external' ? (f.external&&f.external.url) : (f.file&&f.file.url)) || ''; }).filter(Boolean);
+}
+
+/* ── 시설물DB 파싱 (규격/주소가 title이지만 비어있는 레코드가 많으므로 이름 유무로 필터링하지 않는다) ── */
+function parseEquipPage(page){
+  var props = page.properties||{};
+  function get(key){ var nk=PROP_MAP_EQUIP[key]; return nk ? props[nk] : null; }
+  return {
+    id: page.id,
+    '터널명': getPropText(get('터널명')),
+    '구분': getPropText(get('구분')),
+    '설비명': getPropText(get('설비명')),
+    '규격': getPropText(get('규격')),
+    '단위': getPropText(get('단위')),
+    '수량': getPropText(get('수량')),
+    '포항': getPropText(get('포항')),
+    '영덕': getPropText(get('영덕')),
+    '비고': getPropText(get('비고')),
+    '사진': getFileUrls(get('사진')),
+    '명판': getFileUrls(get('명판'))
+  };
+}
+function parseTunnelPage(page){
+  var props = page.properties||{};
+  function get(key){ var nk=PROP_MAP_TUNNEL[key]; return nk ? props[nk] : null; }
+  return {
+    id: page.id,
+    '터널명': getPropText(get('터널명')),
+    '주소': getPropText(get('주소')),
+    '연장포항': getPropText(get('연장포항')),
+    '연장영덕': getPropText(get('연장영덕')),
+    '수전용량': getPropText(get('수전용량')),
+    '이정': getPropText(get('이정')),
+    '비고': getPropText(get('비고'))
+  };
+}
+
+/* ── Notion fetch 공통 헬퍼 ── */
+function fetchNotion2(dbId, body){
+  return fetch(CFG.workerUrl+'/v1/databases/'+dbId+'/query', {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  }).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var ct=r.headers.get('content-type')||'';
+    if(ct.indexOf('application/json')<0) throw new Error('응답이 JSON이 아닙니다 (content-type: '+ct+') — Worker URL을 확인하세요');
+    return r.json();
+  }).then(function(json){
+    if(json && json.error) throw new Error('Worker 오류: '+(json.error.message||json.error||'알 수 없는 오류'));
+    return json;
+  });
+}
+var MAX_PAGES = 20; // 100건×20페이지=2,000건 상한(안전장치)
+function fetchAllPages(dbId, mapObj, classifyFn, titleFallbackKey, exactPreferred){
+  return fetchNotion2(dbId, { page_size:1 }).then(function(probe){
+    var probePages = probe.results||[];
+    if(probePages.length) buildPropMap(mapObj, probePages[0].properties||{}, classifyFn, titleFallbackKey, exactPreferred);
+    var sortProp = mapObj['터널명'];
+    var body = { page_size:100 };
+    if(sortProp) body.sorts=[{property:sortProp, direction:'ascending'}];
+    var allPages=[];
+    function loop(b, count){
+      return fetchNotion2(dbId, b).then(function(d){
+        allPages = allPages.concat(d.results||[]);
+        if(d.next_cursor && d.has_more && count<MAX_PAGES){
+          return loop(Object.assign({},body,{start_cursor:d.next_cursor}), count+1);
+        }
+        return allPages;
+      });
+    }
+    return loop(body, 0);
+  });
+}
+
+/* ── 데이터 로드 ── */
+var PROP_MAP_EQUIP = {}, PROP_MAP_TUNNEL = {};
+var EQUIP_DATA = [], TUNNEL_DATA = [];
+function loadAll(){
+  if(!isAuthed()){ openLoginModal(); return; }
+  var btn=document.getElementById('syncBtn'), lu=document.getElementById('lastUpdate');
+  var syncIcon=document.getElementById('syncIcon'), syncLabel=document.getElementById('syncLabel');
+  if(btn){ btn.disabled=true; btn.setAttribute('aria-busy','true'); }
+  if(syncIcon) syncIcon.classList.add('spinning');
+  if(syncLabel) syncLabel.textContent='불러오는 중...';
+  if(lu) lu.textContent='';
+
+  Promise.all([
+    fetchAllPages(EQUIP_DB_ID, PROP_MAP_EQUIP, classifyEquipKey, '규격', EQUIP_EXACT_PREFERRED).then(function(pages){ return pages.map(parseEquipPage); }),
+    fetchAllPages(TUNNEL_DB_ID, PROP_MAP_TUNNEL, classifyTunnelKey, '주소', TUNNEL_EXACT_PREFERRED).then(function(pages){ return pages.map(parseTunnelPage); })
+  ]).then(function(results){
+    DELETE_SELECTED = new Set();
+    updateDeleteConfirmLabel();
+    EQUIP_DATA = results[0];
+    TUNNEL_DATA = results[1];
+    ensureFixedColorMaps();
+    try{
+      localStorage.setItem('portal_summary_facility', JSON.stringify({ totalCount:EQUIP_DATA.length, updatedAt:Date.now() }));
+    }catch(e){}
+    renderAll();
+    var now=new Date();
+    var upTxt='Update '+fmt(now.getMonth()+1)+'.'+fmt(now.getDate())+' '+fmt(now.getHours())+':'+fmt(now.getMinutes());
+    if(lu){ lu.textContent=upTxt; lu.style.color=''; }
+  }).catch(function(e){
+    var msg=e.message||'';
+    var isAuthErr = msg.indexOf('401')>=0;
+    if(!EQUIP_DATA.length || isAuthErr){ EQUIP_DATA=EQUIP_DEMO_DATA.slice(); TUNNEL_DATA=TUNNEL_DEMO_DATA.slice(); ensureFixedColorMaps(); renderAll(); }
+    var errMsg='⚠ '+msg;
+    if(isAuthErr) errMsg='⚠ 로그인 필요 — 포털 설정에서 로그인';
+    else if(msg.indexOf('403')>=0) errMsg='⚠ Worker API 키 확인 (관리자 문의)';
+    else if(msg.indexOf('404')>=0) errMsg='⚠ DB를 찾을 수 없음 (관리자 문의)';
+    else if(msg.indexOf('Failed to fetch')>=0) errMsg='⚠ 네트워크 오류 — 연결 상태를 확인하세요';
+    if(lu){ lu.textContent=errMsg; lu.style.color='var(--hdr-error-text)'; }
+    console.error(e);
+  }).finally(function(){
+    if(btn){ btn.disabled=false; btn.setAttribute('aria-busy','false'); }
+    if(syncIcon) syncIcon.classList.remove('spinning');
+    if(syncLabel) syncLabel.textContent='새로고침';
+  });
+}
+
+/* ── 뱃지 색상(데이터가 아니라 고정 순서 목록 기준 — 특정 터널·구분에 항상 같은 색이 배정됨) ── */
+var BADGE_CLASSES=['badge-c0','badge-c1','badge-c2','badge-c3','badge-c4','badge-c5'];
+var _tunnelColorMap={}, _gubunColorMap={};
+function ensureFixedColorMaps(){
+  TUNNEL_ORDER.forEach(function(v,i){ _tunnelColorMap[v]=BADGE_CLASSES[i%BADGE_CLASSES.length]; });
+  GUBUN_ORDER.forEach(function(v,i){ _gubunColorMap[v]=BADGE_CLASSES[i%BADGE_CLASSES.length]; });
+}
+function tunnelBadgeClass(t){ return _tunnelColorMap[t]||'badge-c0'; }
+function gubunBadgeClass(g){ return _gubunColorMap[g]||'badge-c0'; }
+
+/* ── 드롭다운 공통 헬퍼 ── */
+function toggleDd(menuId, btnId){
+  var menu=document.getElementById(menuId), btn=document.getElementById(btnId);
+  if(!menu||!btn) return;
+  if(menu.classList.contains('open')){ closeDd(menuId, btnId); }
+  else { closeAllDd(); menu.classList.add('open'); btn.classList.add('active'); }
+}
+function closeDd(menuId, btnId){
+  var m=document.getElementById(menuId); if(m) m.classList.remove('open');
+  var b=document.getElementById(btnId); if(b) b.classList.remove('active');
+}
+function closeAllDd(){
+  ['tunnelDdMenu','gubunDdMenu','specNameDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['tunnelDdBtn','gubunDdBtn','specNameDdBtn','pageSizeDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
+}
+document.addEventListener('click', function(e){
+  document.querySelectorAll('.dd-menu.open').forEach(function(menu){
+    var wrap=menu.closest('.dd-wrap');
+    if(wrap && !wrap.contains(e.target)){
+      menu.classList.remove('open');
+      var btn=wrap.querySelector('.dd-btn'); if(btn) btn.classList.remove('active');
+    }
+  });
+});
+
+/* ── 필터(고정 순서 목록 기준 — 현재 데이터에 없는 항목도 항상 선택 가능) ── */
+var FILTER_TUNNEL='', FILTER_GUBUN='', FILTER_SPEC='';
+function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter){
+  var menu=document.getElementById(menuId);
+  if(!menu) return;
+  var opts=[{val:'',label:defLabel}].concat(values.map(function(v){ return {val:v,label:v}; }));
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById(labelId).textContent = curVal || defLabel;
+  document.getElementById(btnId).classList.toggle('active', !!curVal);
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      setter(opt.dataset.val); closeDd(menuId, btnId); CURRENT_PAGE=1; renderRows();
+    });
+  }
+}
+function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER,'터널명 전체', function(v){ FILTER_TUNNEL=v; }); }
+function buildGubunDd(){ buildFixedFilterDd('gubunDdMenu','gubunDdBtn','gubunDdLabel',FILTER_GUBUN,GUBUN_ORDER,'구분 전체', function(v){ FILTER_GUBUN=v; }); }
+function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn','specNameDdLabel',FILTER_SPEC,EQUIP_NAME_ORDER,'설비명 전체', function(v){ FILTER_SPEC=v; }); }
+
+/* ── 페이지네이션 ── */
+var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE = (function(){
+  try{
+    var raw=localStorage.getItem('facilityStatus_pageSize');
+    var v=parseInt(raw,10);
+    if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
+    if(raw==='all') return 'all';
+  }catch(e){}
+  return 30;
+})();
+var CURRENT_PAGE=1;
+function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
+function buildPageSizeDd(){
+  var menu=document.getElementById('pageSizeDdMenu');
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      var v=opt.dataset.val;
+      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+      CURRENT_PAGE=1;
+      try{ localStorage.setItem('facilityStatus_pageSize', v); }catch(e2){}
+      closeDd('pageSizeDdMenu','pageSizeDdBtn');
+      renderRows();
+    });
+  }
+}
+function goToPage(n){
+  CURRENT_PAGE=n;
+  renderRows();
+  var wrap=document.querySelector('.detail-sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderPaginationRow(totalCount, totalPages){
+  var el=document.getElementById('paginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=CURRENT_PAGE;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage('+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
+
+/* ── 시설물내역 목록 ── */
+function compareEquipRow(a,b){
+  var t=tunnelRank(a['터널명'])-tunnelRank(b['터널명']); if(t) return t;
+  var g=gubunRank(a['구분'])-gubunRank(b['구분']); if(g) return g;
+  var e=equipNameRank(a['설비명'])-equipNameRank(b['설비명']); if(e) return e;
+  var as=a['규격']||'', bs=b['규격']||''; return as<bs?-1:as>bs?1:0;
+}
+function filteredEquip(){
+  return EQUIP_DATA.filter(function(r){
+    if(FILTER_TUNNEL && r['터널명']!==FILTER_TUNNEL) return false;
+    if(FILTER_GUBUN && r['구분']!==FILTER_GUBUN) return false;
+    if(FILTER_SPEC && r['설비명']!==FILTER_SPEC) return false;
+    var q=(document.getElementById('searchBox')||{}).value||'';
+    q=q.trim().toLowerCase();
+    if(q){
+      var hay=((r['설비명']||'')+' '+(r['규격']||'')+' '+(r['비고']||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+}
+function renderAll(){
+  renderEquipList();
+  renderTunnelTab();
+  renderCategoryPanel();
+}
+function renderEquipList(){
+  buildTunnelDd(); buildGubunDd(); buildSpecNameDd(); buildPageSizeDd();
+  renderRows();
+}
+function fmtDirSplit(r){
+  var p=r['포항'], y=r['영덕'];
+  if((p==null||p==='') && (y==null||y==='')) return '<span style="color:var(--txt3)">-</span>';
+  var pStr=(p==null||p==='')?'-':fmtWon(p);
+  var yStr=(y==null||y==='')?'-':fmtWon(y);
+  return pStr+' / '+yStr;
+}
+function fmtPhotoCount(r){
+  var pc=(r['사진']||[]).length, mc=(r['명판']||[]).length;
+  if(!pc && !mc) return '<span style="color:var(--txt3)">-</span>';
+  var parts=[];
+  if(pc) parts.push('📷'+pc);
+  if(mc) parts.push('🏷'+mc);
+  return parts.join(' · ');
+}
+function renderRows(){
+  var rows = filteredEquip().slice().sort(compareEquipRow);
+  document.getElementById('detailCount').textContent = '총 '+rows.length+'건';
+  var totalPages = PAGE_SIZE==='all' ? 1 : Math.max(1, Math.ceil(rows.length/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
+  if(CURRENT_PAGE<1) CURRENT_PAGE=1;
+  var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
+  var colCount = 9 + (DELETE_MODE?1:0);
+  document.getElementById('detailTableBody').innerHTML = pageRows.length
+    ? pageRows.map(buildDetailRow).join('')
+    : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 시설물이 없습니다.','🔍')+'</td></tr>';
+  if(DELETE_MODE) syncSelectAllCheckbox(rows);
+  renderPaginationRow(rows.length, totalPages);
+}
+function buildDetailRow(r){
+  var checkCell = DELETE_MODE
+    ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" aria-label="행 선택" '+(DELETE_SELECTED.has(r.id)?'checked':'')+' onchange="toggleRowSelect(\''+r.id+'\',this.checked)"/></td>'
+    : '';
+  return '<tr onclick="openDetailModal(\''+r.id+'\')" style="cursor:pointer">' + checkCell
+    + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
+    + '<td style="white-space:nowrap">'+(r['구분']?('<span class="type-badge '+gubunBadgeClass(r['구분'])+'">'+esc(r['구분'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'
+    + '<td>'+esc(r['설비명']||'-')+'</td>'
+    + '<td>'+esc(r['규격']||'-')+'</td>'
+    + '<td>'+esc(r['단위']||'-')+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['수량'])+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtDirSplit(r)+'</td>'
+    + '<td style="white-space:nowrap">'+fmtPhotoCount(r)+'</td>'
+    + '<td>'+esc(r['비고']||'-')+'</td>'
+    + '</tr>';
+}
+var DELETE_MODE = false;
+var DELETE_SELECTED = new Set();
+function getVisibleDetailRows(){ return filteredEquip().slice().sort(compareEquipRow); }
+function toggleDeleteMode(){
+  DELETE_MODE = !DELETE_MODE;
+  DELETE_SELECTED = new Set();
+  updateDeleteToolbarUI();
+  updateDeleteHeaderCheckbox();
+  renderEquipList();
+}
+function updateDeleteToolbarUI(){
+  var toggleBtn=document.getElementById('delToggleBtn');
+  var toggleLbl=document.getElementById('delToggleLbl');
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(toggleBtn) toggleBtn.classList.toggle('on', DELETE_MODE);
+  if(toggleLbl) toggleLbl.textContent = DELETE_MODE ? '삭제 취소' : '삭제';
+  if(confirmBtn) confirmBtn.style.display = DELETE_MODE ? '' : 'none';
+  updateDeleteConfirmLabel();
+}
+function updateDeleteConfirmLabel(){
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(!confirmBtn) return;
+  var n=DELETE_SELECTED.size;
+  confirmBtn.textContent = n>0 ? '선택 삭제 ('+n+')' : '선택 삭제';
+  confirmBtn.disabled = n===0;
+}
+function updateDeleteHeaderCheckbox(){
+  var thead=document.getElementById('theadDetail');
+  if(!thead) return;
+  var th=thead.querySelector('.del-col-th');
+  if(DELETE_MODE){
+    if(!th){
+      th=document.createElement('th');
+      th.className='del-col-th';
+      th.style.width='36px';
+      th.innerHTML='<input type="checkbox" id="delAll" aria-label="전체 선택" onchange="toggleSelectAllRows(this.checked)"/>';
+      thead.insertBefore(th, thead.firstChild);
+    }
+  } else if(th){
+    th.remove();
+  }
+}
+function syncSelectAllCheckbox(rows){
+  var all=document.getElementById('delAll');
+  if(!all) return;
+  all.checked = rows.length>0 && rows.every(function(r){ return DELETE_SELECTED.has(r.id); });
+  all.indeterminate = !all.checked && rows.some(function(r){ return DELETE_SELECTED.has(r.id); });
+}
+function toggleSelectAllRows(checked){
+  var rows=getVisibleDetailRows();
+  rows.forEach(function(r){ if(checked) DELETE_SELECTED.add(r.id); else DELETE_SELECTED.delete(r.id); });
+  renderEquipList();
+  updateDeleteConfirmLabel();
+}
+function toggleRowSelect(id, checked){
+  if(checked) DELETE_SELECTED.add(id); else DELETE_SELECTED.delete(id);
+  updateDeleteConfirmLabel();
+  syncSelectAllCheckbox(getVisibleDetailRows());
+}
+function excelBatchPromises(items, worker, batchSize){
+  batchSize=batchSize||6;
+  var idx=0;
+  function next(){
+    if(idx>=items.length) return Promise.resolve();
+    var batch=items.slice(idx, idx+batchSize);
+    idx+=batchSize;
+    return Promise.all(batch.map(worker)).then(next);
+  }
+  return next();
+}
+function deleteSelectedRows(){
+  if(!DELETE_SELECTED.size) return;
+  if(!confirm(DELETE_SELECTED.size+'건을 삭제(휴지통 이동)할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+  var ids=Array.from(DELETE_SELECTED);
+  var confirmBtn=document.getElementById('delConfirmBtn');
+  if(confirmBtn) confirmBtn.disabled=true;
+  var done=0;
+  excelBatchPromises(ids, function(id){
+    return fetch(CFG.workerUrl+'/v1/pages/'+id, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+      .then(function(){ done++; if(confirmBtn) confirmBtn.textContent='삭제 중... ('+done+'/'+ids.length+')'; });
+  }, 6).then(function(){
+    toast(ids.length+'건 삭제되었습니다.');
+    DELETE_MODE=false; DELETE_SELECTED=new Set();
+    updateDeleteToolbarUI(); updateDeleteHeaderCheckbox();
+    loadAll();
+  }).catch(function(e){
+    alert('삭제 실패: '+e.message+' — 일부는 이미 삭제되었을 수 있어 새로고침 후 확인해주세요.');
+    if(confirmBtn) confirmBtn.disabled=false;
+    updateDeleteConfirmLabel();
+    console.error(e);
+  });
+}
+function emptyState(desc, icon){
+  icon = icon||'📋';
+  return '<div class="empty"><div class="empty-icon">'+icon+'</div><div class="empty-title">데이터 없음</div><div class="empty-desc">'+desc+'</div></div>';
+}
+
+/* ── 구분별현황 ── */
+function renderCategoryPanel(){
+  var map={};
+  EQUIP_DATA.forEach(function(r){
+    var g=r['구분']||'(미지정)';
+    if(!map[g]) map[g]={count:0,qty:0};
+    map[g].count++;
+    map[g].qty += parseFloat(r['수량'])||0;
+  });
+  var arr=Object.keys(map).map(function(k){ return [k,map[k]]; }).sort(function(a,b){ return gubunRank(a[0])-gubunRank(b[0]); });
+  document.getElementById('categoryBadge').textContent=arr.length+'종';
+  document.getElementById('categoryTableBody').innerHTML = arr.length
+    ? arr.map(function(pair,i){
+        var name=pair[0], d=pair[1];
+        var rankCls = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+        return '<tr><td><div class="rank '+rankCls+'">'+(i+1)+'</div></td>'
+          + '<td><span class="type-badge '+gubunBadgeClass(name)+'">'+esc(name)+'</span></td>'
+          + '<td class="r">'+d.count+'</td>'
+          + '<td class="r">'+fmtWon(d.qty)+'</td></tr>';
+      }).join('')
+    : '<tr><td colspan="4">'+emptyState('구분별 데이터가 없습니다.')+'</td></tr>';
+}
+
+/* ── 탭 전환 ── */
+var PANELS=['detail','tunnel','category'];
+var _activePanel='detail';
+function switchPanel(name){
+  if(name===_activePanel) return;
+  _activePanel=name;
+  PANELS.forEach(function(p){
+    document.getElementById('panel-'+p).classList.toggle('active', p===name);
+    var btn=document.getElementById('nav-'+p);
+    btn.classList.toggle('active', p===name);
+    btn.setAttribute('aria-selected', p===name?'true':'false');
+  });
+  requestAnimationFrame(function(){ window.scrollTo({top:0,behavior:'smooth'}); });
+}
+
+/* ── 시설물 등록/수정 모달 ── */
+var EDIT_PAGE_ID = null;
+var ADD_PHOTOS = [], ADD_PLATES = [];
+function renderPhotoGallery(arr, galleryId, removeFn){
+  var el=document.getElementById(galleryId);
+  if(!el) return;
+  el.innerHTML = arr.map(function(url, i){
+    return '<div class="pg-item"><img src="'+esc(url)+'" alt="첨부사진" onclick="window.open(\''+esc(url)+'\',\'_blank\')">'
+      + '<button type="button" class="pg-remove" aria-label="삭제" onclick="event.stopPropagation();'+removeFn+'('+i+')">×</button></div>';
+  }).join('');
+}
+function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); renderPhotoGallery(ADD_PHOTOS,'photoGallery','removeAddPhoto'); }
+function removeAddPlate(i){ ADD_PLATES.splice(i,1); renderPhotoGallery(ADD_PLATES,'plateGallery','removeAddPlate'); }
+function uploadMultiPhoto(input, kind){
+  var files = Array.prototype.slice.call(input.files||[]);
+  if(!files.length) return;
+  var targetArr = kind==='photo' ? ADD_PHOTOS : ADD_PLATES;
+  var galleryId = kind==='photo' ? 'photoGallery' : 'plateGallery';
+  var removeFn = kind==='photo' ? 'removeAddPhoto' : 'removeAddPlate';
+  var statusEl = document.getElementById(kind==='photo'?'photoStatus':'plateStatus');
+  if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='photo-upload-status err'; return; }
+  input.disabled = true;
+  var done=0, failed=0;
+  statusEl.textContent='업로드 중... (0/'+files.length+')';
+  statusEl.className='photo-upload-status';
+  excelBatchPromises(files, function(file){
+    return compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과');
+      var formData = new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'facility-status');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(function(data){ targetArr.push(data.url); });
+    }).catch(function(e){ failed++; console.error(e); }).then(function(){
+      done++; statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
+      renderPhotoGallery(targetArr, galleryId, removeFn);
+    });
+  }, 3).then(function(){
+    statusEl.textContent = failed ? ('완료('+failed+'건 실패)') : '✓ 업로드 완료';
+    statusEl.className = failed ? 'photo-upload-status err' : 'photo-upload-status ok';
+    input.value='';
+    input.disabled=false;
+  });
+}
+function openAddModal(){
+  EDIT_PAGE_ID = null;
+  ADD_PHOTOS = []; ADD_PLATES = [];
+  document.getElementById('addModalTitleText').textContent='신규 시설물 등록';
+  document.getElementById('addSubmitLabel').textContent='등록';
+  ['addSpec','addQty','addPohang','addYeongdeok','addNote','addTunnelCustom','addGubunCustom','addSpecNameCustom','addUnitCustom'].forEach(function(id){ document.getElementById(id).value=''; });
+  buildFixedSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), TUNNEL_ORDER, '');
+  buildFixedSelectOpts(document.getElementById('addGubun'), document.getElementById('addGubunCustom'), GUBUN_ORDER, '');
+  buildFixedSelectOpts(document.getElementById('addSpecName'), document.getElementById('addSpecNameCustom'), EQUIP_NAME_ORDER, '');
+  buildFixedSelectOpts(document.getElementById('addUnit'), document.getElementById('addUnitCustom'), UNIT_OPTIONS, '');
+  document.getElementById('photoStatus').textContent='파일을 선택하세요';
+  document.getElementById('photoStatus').className='photo-upload-status';
+  document.getElementById('plateStatus').textContent='파일을 선택하세요';
+  document.getElementById('plateStatus').className='photo-upload-status';
+  renderPhotoGallery(ADD_PHOTOS,'photoGallery','removeAddPhoto');
+  renderPhotoGallery(ADD_PLATES,'plateGallery','removeAddPlate');
+  openModal('addModal');
+}
+function closeAddModal(e){ closeModal('addModal', e); }
+function openEditModal(pageId){
+  var r = EQUIP_DATA.find(function(x){ return x.id===pageId; });
+  if(!r) return;
+  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  EDIT_PAGE_ID = pageId;
+  ADD_PHOTOS = (r['사진']||[]).slice();
+  ADD_PLATES = (r['명판']||[]).slice();
+  document.getElementById('addModalTitleText').textContent='시설물 수정';
+  document.getElementById('addSubmitLabel').textContent='수정';
+  document.getElementById('addSpec').value = r['규격']||'';
+  document.getElementById('addQty').value = (r['수량']!=null && r['수량']!=='') ? r['수량'] : '';
+  document.getElementById('addPohang').value = (r['포항']!=null && r['포항']!=='') ? r['포항'] : '';
+  document.getElementById('addYeongdeok').value = (r['영덕']!=null && r['영덕']!=='') ? r['영덕'] : '';
+  document.getElementById('addNote').value = r['비고']||'';
+  buildFixedSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), TUNNEL_ORDER, r['터널명']||'');
+  buildFixedSelectOpts(document.getElementById('addGubun'), document.getElementById('addGubunCustom'), GUBUN_ORDER, r['구분']||'');
+  buildFixedSelectOpts(document.getElementById('addSpecName'), document.getElementById('addSpecNameCustom'), EQUIP_NAME_ORDER, r['설비명']||'');
+  buildFixedSelectOpts(document.getElementById('addUnit'), document.getElementById('addUnitCustom'), UNIT_OPTIONS, r['단위']||'');
+  document.getElementById('photoStatus').textContent='파일을 선택하세요';
+  document.getElementById('photoStatus').className='photo-upload-status';
+  document.getElementById('plateStatus').textContent='파일을 선택하세요';
+  document.getElementById('plateStatus').className='photo-upload-status';
+  renderPhotoGallery(ADD_PHOTOS,'photoGallery','removeAddPhoto');
+  renderPhotoGallery(ADD_PLATES,'plateGallery','removeAddPlate');
+  openModal('addModal');
+}
+function submitAddForm(){
+  var tunnel = getSelectValue('addTunnel','addTunnelCustom');
+  var gubun = getSelectValue('addGubun','addGubunCustom');
+  var specName = getSelectValue('addSpecName','addSpecNameCustom');
+  if(!tunnel){ alert('터널명을 선택해주세요.'); return; }
+  if(!gubun){ alert('구분을 선택해주세요.'); return; }
+  if(!specName){ alert('설비명을 선택해주세요.'); return; }
+  if(!isAuthed()){ alert('로그인이 필요합니다.'); closeAddModal(); openCfgModal(); return; }
+
+  var statusTexts = [(document.getElementById('photoStatus')||{}).textContent||'', (document.getElementById('plateStatus')||{}).textContent||''];
+  if(statusTexts.some(function(t){ return t.indexOf('업로드 중')>=0; })){ alert('사진 업로드가 완료될 때까지 기다려주세요.'); return; }
+
+  var unit = getSelectValue('addUnit','addUnitCustom');
+  var spec = document.getElementById('addSpec').value.trim();
+  var qty = document.getElementById('addQty').value.trim();
+  var pohang = document.getElementById('addPohang').value.trim();
+  var yeongdeok = document.getElementById('addYeongdeok').value.trim();
+  var note = document.getElementById('addNote').value.trim();
+
+  var btn=document.getElementById('addSubmitBtn'), lbl=document.getElementById('addSubmitLabel');
+  btn.disabled=true;
+  lbl.textContent = EDIT_PAGE_ID ? '수정 중...' : '등록 중...';
+
+  function nk(key){ return PROP_MAP_EQUIP[key]||key; }
+  var properties = {};
+  function setProp(key, val){ properties[nk(key)]=val; }
+
+  setProp('터널명', { select:{ name:tunnel } });
+  setProp('구분', { select:{ name:gubun } });
+  setProp('설비명', { select:{ name:specName } });
+  setProp('규격', spec ? { title:[{ text:{ content:spec } }] } : { title:[] });
+  setProp('단위', unit ? { select:{ name:unit } } : { select:null });
+  setProp('수량', qty!=='' ? { number:parseFloat(qty)||0 } : { number:null });
+  setProp('포항', pohang!=='' ? { number:parseFloat(pohang)||0 } : { number:null });
+  setProp('영덕', yeongdeok!=='' ? { number:parseFloat(yeongdeok)||0 } : { number:null });
+  setProp('비고', note ? { select:{ name:note } } : { select:null });
+  setProp('사진', { files: ADD_PHOTOS.map(function(u){ return { name:'사진', type:'external', external:{ url:u } }; }) } );
+  setProp('명판', { files: ADD_PLATES.map(function(u){ return { name:'명판', type:'external', external:{ url:u } }; }) } );
+
+  var isEdit = !!EDIT_PAGE_ID;
+  var reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
+  var reqBody = isEdit ? JSON.stringify({ properties:properties }) : JSON.stringify({ parent:{ database_id:EQUIP_DB_ID }, properties:properties });
+
+  fetch(reqUrl, { method: isEdit?'PATCH':'POST', headers:{'Content-Type':'application/json'}, body:reqBody })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(){
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      closeAddModal();
+      loadAll();
+      toast(isEdit?'수정되었습니다.':'등록되었습니다.');
+    })
+    .catch(function(e){
+      btn.disabled=false; lbl.textContent = isEdit?'수정':'등록';
+      alert((isEdit?'수정':'등록')+' 실패: '+e.message);
+      console.error(e);
+    });
+}
+function deleteRecord(pageId){
+  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  if(!confirm('이 시설물 기록을 삭제(휴지통 이동)할까요?')) return;
+  fetch(CFG.workerUrl+'/v1/pages/'+pageId, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ in_trash:true }) })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(){ closeDetailModal(); loadAll(); toast('삭제되었습니다.'); })
+    .catch(function(e){
+      if((e.message||'').indexOf('archived')>-1){ closeDetailModal(); loadAll(); toast('이미 삭제된 기록입니다.'); return; }
+      alert('삭제 실패: '+e.message); console.error(e);
+    });
+}
+
+/* ── 시설물 상세 모달 ── */
+function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
+function photoViewGrid(urls){
+  if(!urls || !urls.length) return '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
+  return '<div class="photo-view-grid">'+urls.map(function(u){
+    return '<div class="pv-item"><a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="첨부사진"></a></div>';
+  }).join('')+'</div>';
+}
+function openDetailModal(id){
+  var r = EQUIP_DATA.find(function(x){ return x.id===id; });
+  if(!r) return;
+  document.getElementById('detailModalTitle').textContent = (r['터널명']||'—')+' · '+(r['설비명']||'');
+  var rows = [
+    ['터널명', esc(r['터널명']||'-')],
+    ['구분', esc(r['구분']||'-')],
+    ['설비명', esc(r['설비명']||'-')],
+    ['규격', esc(r['규격']||'-')],
+    ['단위', esc(r['단위']||'-')],
+    ['수량', fmtWonOrDash(r['수량'])],
+    ['포항', fmtWonOrDash(r['포항'])],
+    ['영덕', fmtWonOrDash(r['영덕'])],
+    ['비고', esc(r['비고']||'-')]
+  ];
+  var infoHtml = '<div class="detail-info-wrap">'
+    + rows.map(function(rv){ return '<div class="detail-info-row"><div class="detail-info-key">'+rv[0]+'</div><div class="detail-info-val">'+rv[1]+'</div></div>'; }).join('')
+    + '</div>';
+  var photoHtml = '<div class="photo-section"><div class="photo-label">사진 ('+(r['사진']||[]).length+')</div>'+photoViewGrid(r['사진'])+'</div>'
+    + '<div class="photo-section"><div class="photo-label">명판 ('+(r['명판']||[]).length+')</div>'+photoViewGrid(r['명판'])+'</div>';
+  document.getElementById('detailModalBody').innerHTML = infoHtml + photoHtml;
+  document.getElementById('detailModalActions').innerHTML =
+    '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
+    +'<button class="detail-act-btn detail-del-btn" onclick="deleteRecord(\''+id+'\')">삭제</button>';
+  openModal('detailModal');
+}
+function closeDetailModal(e){ closeModal('detailModal', e); }
+
+/* ── 터널제원 탭 ── */
+function renderTunnelTab(){
+  var rows = TUNNEL_DATA.slice().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
+  document.getElementById('tunnelBadge').textContent = rows.length+'개소';
+  document.getElementById('tunnelTableBody').innerHTML = rows.length
+    ? rows.map(function(r){
+        return '<tr onclick="openTunnelModal(\''+r.id+'\')" style="cursor:pointer">'
+          + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
+          + '<td>'+esc(r['주소']||'-')+'</td>'
+          + '<td class="r">'+fmtWonOrDash(r['연장포항'])+'</td>'
+          + '<td class="r">'+fmtWonOrDash(r['연장영덕'])+'</td>'
+          + '<td class="r">'+fmtWonOrDash(r['수전용량'])+'</td>'
+          + '<td class="r">'+fmtWonOrDash(r['이정'])+'</td>'
+          + '<td>'+esc(r['비고']||'-')+'</td>'
+          + '</tr>';
+      }).join('')
+    : '<tr><td colspan="7">'+emptyState('터널제원 데이터가 없습니다.')+'</td></tr>';
+}
+var TUNNEL_EDIT_ID = null;
+function openTunnelModal(pageId){
+  var r = TUNNEL_DATA.find(function(x){ return x.id===pageId; });
+  if(!r) return;
+  if(!isAuthed() || !isRealPageId(pageId)){ alert('로그인 후 사용 가능합니다.\n설정 버튼에서 로그인해주세요.'); return; }
+  TUNNEL_EDIT_ID = pageId;
+  document.getElementById('tnName').value = r['터널명']||'';
+  document.getElementById('tnAddress').value = r['주소']||'';
+  document.getElementById('tnExtPohang').value = (r['연장포항']!=null && r['연장포항']!=='') ? r['연장포항'] : '';
+  document.getElementById('tnExtYeongdeok').value = (r['연장영덕']!=null && r['연장영덕']!=='') ? r['연장영덕'] : '';
+  document.getElementById('tnPower').value = (r['수전용량']!=null && r['수전용량']!=='') ? r['수전용량'] : '';
+  document.getElementById('tnMile').value = (r['이정']!=null && r['이정']!=='') ? r['이정'] : '';
+  document.getElementById('tnNote').value = r['비고']||'';
+  openModal('tunnelModal');
+}
+function closeTunnelModal(e){ closeModal('tunnelModal', e); }
+function submitTunnelForm(){
+  if(!TUNNEL_EDIT_ID) return;
+  var addr = document.getElementById('tnAddress').value.trim();
+  var extP = document.getElementById('tnExtPohang').value.trim();
+  var extY = document.getElementById('tnExtYeongdeok').value.trim();
+  var power = document.getElementById('tnPower').value.trim();
+  var mile = document.getElementById('tnMile').value.trim();
+  var note = document.getElementById('tnNote').value.trim();
+
+  var btn=document.getElementById('tnSubmitBtn'), lbl=document.getElementById('tnSubmitLabel');
+  btn.disabled=true; lbl.textContent='저장 중...';
+
+  function nk(key){ return PROP_MAP_TUNNEL[key]||key; }
+  var properties = {};
+  properties[nk('주소')] = addr ? { title:[{ text:{ content:addr } }] } : { title:[] };
+  properties[nk('연장포항')] = extP!=='' ? { number:parseFloat(extP)||0 } : { number:null };
+  properties[nk('연장영덕')] = extY!=='' ? { number:parseFloat(extY)||0 } : { number:null };
+  properties[nk('수전용량')] = power!=='' ? { number:parseFloat(power)||0 } : { number:null };
+  properties[nk('이정')] = mile!=='' ? { number:parseFloat(mile)||0 } : { number:null };
+  properties[nk('비고')] = note ? { rich_text:[{ text:{ content:note } }] } : { rich_text:[] };
+
+  fetch(CFG.workerUrl+'/v1/pages/'+TUNNEL_EDIT_ID, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ properties:properties }) })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(){
+      btn.disabled=false; lbl.textContent='저장';
+      closeTunnelModal();
+      loadAll();
+      toast('저장되었습니다.');
+    })
+    .catch(function(e){
+      btn.disabled=false; lbl.textContent='저장';
+      alert('저장 실패: '+e.message);
+      console.error(e);
+    });
+}
+
+/* ── 엑셀 생성 (asset-register-dogong 앱의 buildExcelReport 패턴 재사용) ──
+   ~/.claude/skills/xlsx-report-export/SKILL.md "새 탭/앱에 엑셀 버튼 추가하기" 참고 */
+var EXCEL_LIB_LOADING = null;
+function loadExcelLib(){
+  if(window.ExcelJS && window.JSZip) return Promise.resolve();
+  if(EXCEL_LIB_LOADING) return EXCEL_LIB_LOADING;
+  function loadScript(src, integrity){
+    return new Promise(function(resolve, reject){
+      var s=document.createElement('script');
+      s.src=src; s.integrity=integrity; s.crossOrigin='anonymous';
+      s.onload=function(){ resolve(); };
+      s.onerror=function(){ s.remove(); reject(new Error('라이브러리 로드 실패: '+src)); };
+      document.head.appendChild(s);
+    });
+  }
+  EXCEL_LIB_LOADING = Promise.all([
+    window.ExcelJS ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js','sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz'),
+    window.JSZip ? Promise.resolve() : loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js','sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG')
+  ]).catch(function(e){ EXCEL_LIB_LOADING=null; throw e; });
+  return EXCEL_LIB_LOADING;
+}
+var EXCEL_COMPANY_NAME='수자원기술(주)';
+var EXCEL_TITLE_FONT={ name:'HY헤드라인M', size:28 };
+var EXCEL_BODY_FONT={ name:'맑은 고딕', size:13 };
+var EXCEL_HEADER_FILL={ type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE9F8'} };
+var EXCEL_ROW_HEIGHTS={ title:60, header:30, data:30 };
+function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
+  return {
+    top:{style: isHeader ? 'thin':'hair'},
+    bottom:{style: (!isHeader && isLastRow) ? 'thin':'hair'},
+    left:{style: colIndex===0 ? 'thin':'hair'},
+    right:{style: isLastCol ? 'thin':'hair'}
+  };
+}
+function excelCm2in(cm){ return cm/2.54; }
+var EXCEL_PAGE_PRESETS={
+  landscape:{ top:excelCm2in(1), bottom:excelCm2in(1), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) },
+  portrait:{ top:excelCm2in(1.5), bottom:excelCm2in(1), left:excelCm2in(1.5), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) }
+};
+function excelCharWeight(ch){
+  var code=ch.codePointAt(0);
+  var cjk=(code>=0xac00&&code<=0xd7a3)||(code>=0x1100&&code<=0x11ff)||(code>=0x3130&&code<=0x318f)||(code>=0x4e00&&code<=0x9fff)||(code>=0xff00&&code<=0xffef);
+  return cjk?2:1;
+}
+function excelStrWidth(s){ var w=0; Array.from(String(s||'')).forEach(function(ch){ w+=excelCharWeight(ch); }); return w; }
+function excelAutoWidth(strings, min, max, padding){
+  min=min||8; max=max||40; padding=padding===undefined?5:padding;
+  var w=min;
+  strings.forEach(function(s){ w=Math.max(w, excelStrWidth(s)+padding); });
+  return Math.min(w, max);
+}
+function excelEstimateWrappedLines(text, colWidthChars){
+  var w=excelStrWidth(text);
+  if(w===0) return 1;
+  return Math.max(1, Math.ceil(w/Math.max(1, colWidthChars-2)));
+}
+function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
+  var maxLines=1;
+  columns.forEach(function(col,i){ if(!col.wrap) return; var lines=excelEstimateWrappedLines(row[col.key], colWidths[i]); if(lines>maxLines) maxLines=lines; });
+  var lineHeightPt=fontSize*1.4;
+  return Math.max(baseHeight, maxLines*lineHeightPt+6);
+}
+function buildExcelReport(opts){
+  var btn=document.getElementById(opts.btnId);
+  var lbl=document.getElementById(opts.lblId);
+  var rows=opts.rows;
+  if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
+  var columns=opts.columns;
+  var orientation=opts.orientation||'landscape';
+  btn.disabled=true; lbl.textContent='준비 중...';
+
+  loadExcelLib().then(function(){
+    var wb=new ExcelJS.Workbook();
+    var ws=wb.addWorksheet(opts.sheetName, {
+      views:[{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
+      pageSetup:{ paperSize:9, orientation:orientation, fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, verticalCentered:false, margins:EXCEL_PAGE_PRESETS[orientation], printTitlesRow:'2:2' },
+      headerFooter:{ oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME, oddFooter:'' }
+    });
+    var colWidths=columns.map(function(col){
+      if(col.width) return col.width;
+      var strings=[col.header].concat(rows.map(function(r){ return r[col.key]; }));
+      return excelAutoWidth(strings);
+    });
+    ws.columns=colWidths.map(function(w){ return {width:w}; });
+
+    var titleRow=ws.getRow(1);
+    titleRow.height=EXCEL_ROW_HEIGHTS.title;
+    var titleCell=titleRow.getCell(1);
+    titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={ vertical:'middle' };
+
+    var headerRow=ws.getRow(2);
+    headerRow.height=EXCEL_ROW_HEIGHTS.header;
+    columns.forEach(function(col,i){
+      var cell=headerRow.getCell(i+1);
+      cell.value=col.header; cell.font=EXCEL_BODY_FONT;
+      cell.alignment={ vertical:'middle', horizontal:'center' };
+      cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
+    });
+
+    rows.forEach(function(r,i){
+      var rn=3+i;
+      var row=ws.getRow(rn);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      columns.forEach(function(col,ci){
+        var cell=row.getCell(ci+1);
+        cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
+        cell.alignment = col.align==='left' ? { vertical:'middle', horizontal:'left', wrapText: !!col.wrap } : { vertical:'middle', horizontal:'center', wrapText: !!col.wrap };
+        cell.value = (r[col.key]===''||r[col.key]==null) ? '' : r[col.key];
+        if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
+      });
+      row.commit();
+    });
+
+    return wb.xlsx.writeBuffer();
+  }).then(function(buf){
+    var blob=new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    var url=URL.createObjectURL(blob);
+    var now=new Date();
+    var fname=opts.fnamePrefix+'_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+'.xlsx';
+    var a=document.createElement('a'); a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    lbl.textContent='완료!';
+    setTimeout(function(){ lbl.textContent=opts.lblDefault; }, 1500);
+  }).catch(function(e){
+    alert('엑셀 생성 실패: '+e.message);
+    console.error(e);
+    lbl.textContent=opts.lblDefault;
+  }).finally(function(){ btn.disabled=false; });
+}
+var EXCEL_COLUMNS_EQUIP=[
+  { key:'터널명', header:'터널명' },
+  { key:'구분', header:'구분' },
+  { key:'설비명', header:'설비명' },
+  { key:'규격', header:'규격', width:26, wrap:true },
+  { key:'단위', header:'단위' },
+  { key:'수량', header:'수량', numFmt:'#,##0.##' },
+  { key:'포항', header:'포항', numFmt:'#,##0.##' },
+  { key:'영덕', header:'영덕', numFmt:'#,##0.##' },
+  { key:'비고', header:'비고', wrap:true }
+];
+function exportEquipExcel(){
+  var rows=filteredEquip().slice().sort(compareEquipRow);
+  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
+  var year = new Date().getFullYear();
+  var baseName = tunnelPart+' 시설물종합대장';
+  buildExcelReport({
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    sheetName:'시설물내역', title: baseName, fnamePrefix: year+'년 '+baseName,
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape'
+  });
+}
+var EXCEL_COLUMNS_TUNNEL=[
+  { key:'터널명', header:'터널명' },
+  { key:'주소', header:'주소', width:34, wrap:true },
+  { key:'연장포항', header:'연장-포항(M)', numFmt:'#,##0.##' },
+  { key:'연장영덕', header:'연장-영덕(M)', numFmt:'#,##0.##' },
+  { key:'수전용량', header:'수전용량(kW)', numFmt:'#,##0.##' },
+  { key:'이정', header:'이정(포항기점k)', numFmt:'#,##0.0' },
+  { key:'비고', header:'비고', wrap:true }
+];
+function exportTunnelExcel(){
+  var rows=TUNNEL_DATA.slice().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
+  var year = new Date().getFullYear();
+  var baseName = '포항영덕간터널 터널제원표';
+  buildExcelReport({
+    btnId:'tunnelExcelBtn', lblId:'tunnelExcelLabel', lblDefault:'엑셀 생성',
+    sheetName:'터널제원', title: baseName, fnamePrefix: year+'년 '+baseName,
+    columns:EXCEL_COLUMNS_TUNNEL, rows:rows, orientation:'portrait'
+  });
+}
+
+/* ── 내장 데모 데이터 (실제 연동 전/로그인 전 시연용, 실제 터널명 미노출) ── */
+var EQUIP_DEMO_DATA = [
+  { id:'d01', '터널명':'터널A', '구분':'전기', '설비명':'발전기', '규격':'200KW 3∅4W 380V/220V', '단위':'SET', '수량':1, '포항':'', '영덕':'', '비고':'', '사진':[], '명판':[] },
+  { id:'d02', '터널명':'터널A', '구분':'소방', '설비명':'소화기표시등', '규격':'', '단위':'EA', '수량':20, '포항':10, '영덕':10, '비고':'', '사진':[], '명판':[] },
+  { id:'d03', '터널명':'터널B', '구분':'전기', '설비명':'태양광발전', '규격':'60KW', '단위':'SET', '수량':1, '포항':'', '영덕':'', '비고':'', '사진':[], '명판':[] },
+  { id:'d04', '터널명':'터널C', '구분':'통신', '설비명':'RTU', '규격':'', '단위':'대', '수량':1, '포항':'', '영덕':'', '비고':'', '사진':[], '명판':[] }
+];
+var TUNNEL_DEMO_DATA = [
+  { id:'t01', '터널명':'터널A', '주소':'경북 ○○시 ○○면 ○○로 1', '연장포항':1300, '연장영덕':1250, '수전용량':1000, '이정':3.9, '비고':'' },
+  { id:'t02', '터널명':'터널B', '주소':'', '연장포항':2700, '연장영덕':2690, '수전용량':800, '이정':6.9, '비고':'' },
+  { id:'t03', '터널명':'터널C', '주소':'', '연장포항':550, '연장영덕':550, '수전용량':250, '이정':18.6, '비고':'재검증 필요' }
+];
+
+/* ── 초기화 ── */
+EQUIP_DATA = EQUIP_DEMO_DATA.slice();
+TUNNEL_DATA = TUNNEL_DEMO_DATA.slice();
+ensureFixedColorMaps();
+renderAll();
+initDraggableModals();
+
+if(isAuthed()){ loadAll(); }
+else { openLoginModal(); }
+</script>
+</body>
+</html>

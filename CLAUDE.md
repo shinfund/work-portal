@@ -4,6 +4,7 @@
 
 - `index.html` — 포털 셸 (사이드바, 모바일 상단 메뉴, 탭 관리)
 - `announcement.html` — 공지사항
+- `facility-status.html` — 시설물현황 (시설물DB·터널제원DB, Notion 데이터소스 2개 연동)
 - `asset-register.html` — 비품대장
 - `defect-management.html` — 하자보수현황
 - `monthly-inspection.html` — 월간점검결과-안전관리

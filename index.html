@@ -536,6 +536,10 @@ body{
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
       <span>공지사항</span>
     </div>
+    <div class="sb-item sb-auth-gated" id="sbn-facility" role="button" tabindex="0" onclick="go('facility')" onkeydown="handleActivateKey(event)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>시설물현황</span>
+    </div>
     <div class="sb-item sb-auth-gated" id="sbn-solar" role="button" tabindex="0" onclick="go('solar')" onkeydown="handleActivateKey(event)">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <span>태양광발전량</span>
@@ -579,10 +583,6 @@ body{
     <div class="sb-item sb-disabled">
       <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       <span>한전정보</span>
-    </div>
-    <div class="sb-item sb-disabled">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      <span>시설물현황</span>
     </div>
     <div class="sb-item sb-disabled">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -692,6 +692,15 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
+          <div class="app-card" role="button" tabindex="0" onclick="go('facility')" onkeydown="handleActivateKey(event)">
+            <div>
+              <div class="ac-name">시설물현황</div>
+              <div class="ac-kpi" id="kpi-facility">—</div>
+              <div class="ac-viz" id="viz-facility"></div>
+              <div class="ac-desc">터널별 전기·소방·통신 설비 및 터널제원 현황 조회 및 등록.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
           <div class="app-card" role="button" tabindex="0" onclick="go('defect')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">하자보수현황</div>
@@ -772,7 +781,7 @@ body{
             로그인 안내
           </div>
           <div class="guide-card-body">
-            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 공지사항·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
+            좌측 메뉴 하단 <strong>설정</strong> 버튼에서 공용 비밀번호로 한 번만 로그인하면, 공지사항·시설물현황·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 10개 앱 모두 실시간 현장 데이터를 조회할 수 있습니다.
           </div>
           <button class="guide-btn" onclick="openCfg()">지금 로그인하기</button>
         </div>
@@ -788,6 +797,17 @@ body{
           <div class="overlay-txt">공지사항 앱 로딩 중...</div>
         </div>
         <iframe id="ifr-notice" class="app-iframe" title="공지사항"></iframe>
+      </div>
+    </div>
+
+    <!-- ▸ 시설물현황 iframe -->
+    <div class="panel" id="panel-facility">
+      <div class="iframe-wrap">
+        <div class="iframe-overlay" id="ov-facility">
+          <div class="spin-ring"></div>
+          <div class="overlay-txt">시설물현황 앱 로딩 중...</div>
+        </div>
+        <iframe id="ifr-facility" class="app-iframe" title="시설물현황"></iframe>
       </div>
     </div>
 
@@ -916,7 +936,7 @@ body{
           <input id="c-pw" class="mi" type="password" placeholder="비밀번호 입력" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
           <div class="mh" id="loginStatusHint"></div>
         </div>
-        <div class="mh">여기서 한 번 로그인하면 공지사항·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 9개 앱이 모두 함께 로그인됩니다.</div>
+        <div class="mh">여기서 한 번 로그인하면 공지사항·시설물현황·하자보수·차량운행·연장근무·태양광·비품대장-수자원·비품대장-도공·월간점검결과-안전관리·월간점검결과-점검팀 10개 앱이 모두 함께 로그인됩니다.</div>
 
         <div class="modal-btns">
           <button class="btn-cancel" onclick="doLogout()">로그아웃</button>
@@ -972,6 +992,7 @@ const PORTAL_BOOT_TS = Date.now();
 // ── 앱 정의 ──────────────────────────────────────────────
 const APPS = {
   notice:   { name:'공지사항', file:'announcement.html' },
+  facility: { name:'시설물현황', file:'facility-status.html' },
   defect:   { name:'하자보수현황', file:'defect-management.html' },
   vehicle:  { name:'차량운행일지', file:'vehicle-log.html' },
   overtime: { name:'연장근무', file:'overtime-work.html' },
@@ -1490,6 +1511,13 @@ function renderHomeKpi() {
     if (s) { nEl.textContent = `이번달 ${s.thisMonthCount}건`; nEl.className = 'ac-kpi'; }
     else { nEl.textContent = emptyKpiLabel(); nEl.className = 'ac-kpi empty'; }
     renderCardViz('notice', s);
+  }
+  const fEl = document.getElementById('kpi-facility');
+  if (fEl) {
+    const s = readPortalSummary('facility');
+    if (s) { fEl.textContent = `총 ${fmtWonHome(s.totalCount)}건`; fEl.className = 'ac-kpi'; }
+    else { fEl.textContent = emptyKpiLabel(); fEl.className = 'ac-kpi empty'; }
+    renderCardViz('facility', s);
   }
   const dEl = document.getElementById('kpi-defect');
   if (dEl) {
