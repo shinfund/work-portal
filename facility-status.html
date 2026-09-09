@@ -543,6 +543,10 @@ if (window.self !== window.top) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelExportLabel">엑셀 생성</span>
         </button>
+        <button class="tb-action-btn tb-excel" id="excelPhotoExportBtn" onclick="exportEquipExcelWithPhoto()" title="사진·명판 컬럼을 포함한 엑셀을 생성합니다">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="excelPhotoExportLabel">엑셀(사진)</span>
+        </button>
       </div>
       <div class="detail-count-row">
         <div class="count-actions">
@@ -1693,7 +1697,7 @@ var EXCEL_COMPANY_NAME='수자원기술(주)';
 var EXCEL_TITLE_FONT={ name:'HY헤드라인M', size:28 };
 var EXCEL_BODY_FONT={ name:'맑은 고딕', size:13 };
 var EXCEL_HEADER_FILL={ type:'pattern', pattern:'solid', fgColor:{argb:'FFDAE9F8'} };
-var EXCEL_ROW_HEIGHTS={ title:60, header:30, data:30 };
+var EXCEL_ROW_HEIGHTS={ title:60, header:30, data:30, dataWithPhoto:85 };
 function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
   return {
     top:{style: isHeader ? 'thin':'hair'},
@@ -1702,6 +1706,8 @@ function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
     right:{style: isLastCol ? 'thin':'hair'}
   };
 }
+var EXCEL_EMU_PER_PX=9525;
+var EXCEL_PHOTO_INSET_EMU=3*EXCEL_EMU_PER_PX;
 function excelCm2in(cm){ return cm/2.54; }
 var EXCEL_PAGE_PRESETS={
   landscape:{ top:excelCm2in(1), bottom:excelCm2in(1), left:excelCm2in(2), right:excelCm2in(1), header:excelCm2in(1), footer:excelCm2in(1) },
@@ -1730,6 +1736,53 @@ function excelWrapAwareRowHeight(row, columns, colWidths, fontSize, baseHeight){
   var lineHeightPt=fontSize*1.4;
   return Math.max(baseHeight, maxLines*lineHeightPt+6);
 }
+function excelGuessImageExt(contentType, url){
+  var t=contentType||'';
+  if(t.indexOf('png')>=0) return 'png';
+  if(t.indexOf('gif')>=0) return 'gif';
+  if(t.indexOf('jpeg')>=0) return 'jpeg';
+  var m=(url||'').toLowerCase().match(/\.(png|gif|jpe?g)(\?|$)/);
+  if(m) return m[1]==='jpg'?'jpeg':m[1];
+  return null;
+}
+function excelFetchImage(url){
+  if(!url || !/^https?:\/\//i.test(url)) return Promise.resolve(null);
+  return fetch(url, { cache:'no-store' }).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    var contentType=r.headers.get('content-type');
+    return r.arrayBuffer().then(function(buf){
+      var ext=excelGuessImageExt(contentType, url);
+      if(!ext){ console.warn('지원하지 않는 이미지 형식:', url, contentType); return null; }
+      return { buffer:buf, extension:ext };
+    });
+  }).catch(function(e){ console.warn('사진 로드 실패:', url, e.message); return null; });
+}
+function excelPhotoAnchor(col, rn0){
+  return {
+    tl:{ nativeCol:col, nativeColOff:EXCEL_PHOTO_INSET_EMU, nativeRow:rn0, nativeRowOff:EXCEL_PHOTO_INSET_EMU },
+    br:{ nativeCol:col+1, nativeColOff:-EXCEL_PHOTO_INSET_EMU, nativeRow:rn0+1, nativeRowOff:-EXCEL_PHOTO_INSET_EMU },
+    editAs:'twoCell'
+  };
+}
+function excelUnlockAspectRatio(buffer){
+  return JSZip.loadAsync(buffer).then(function(zip){
+    var files=Object.keys(zip.files).filter(function(f){ return /^xl\/drawings\/drawing\d+\.xml$/.test(f); });
+    return Promise.all(files.map(function(f){
+      return zip.file(f).async('string').then(function(xml){ zip.file(f, xml.replace(/noChangeAspect="1"/g,'noChangeAspect="0"')); });
+    })).then(function(){ return zip.generateAsync({ type:'blob' }); });
+  });
+}
+function excelBatchPromises(items, worker, batchSize){
+  batchSize=batchSize||6;
+  var idx=0;
+  function next(){
+    if(idx>=items.length) return Promise.resolve();
+    var batch=items.slice(idx, idx+batchSize);
+    idx+=batchSize;
+    return Promise.all(batch.map(worker)).then(next);
+  }
+  return next();
+}
 function buildExcelReport(opts){
   var btn=document.getElementById(opts.btnId);
   var lbl=document.getElementById(opts.lblId);
@@ -1737,6 +1790,7 @@ function buildExcelReport(opts){
   if(!rows.length){ alert('내보낼 데이터가 없습니다.'); return; }
   var columns=opts.columns;
   var orientation=opts.orientation||'landscape';
+  var failedPhotoCount=0;
   btn.disabled=true; lbl.textContent='준비 중...';
 
   loadExcelLib().then(function(){
@@ -1748,7 +1802,7 @@ function buildExcelReport(opts){
     });
     var colWidths=columns.map(function(col){
       if(col.width) return col.width;
-      var strings=[col.header].concat(rows.map(function(r){ return r[col.key]; }));
+      var strings = col.photo ? [col.header] : [col.header].concat(rows.map(function(r){ return r[col.key]; }));
       return excelAutoWidth(strings);
     });
     ws.columns=colWidths.map(function(w){ return {width:w}; });
@@ -1767,31 +1821,58 @@ function buildExcelReport(opts){
       cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
     });
 
+    var photoColumns=[];
+    columns.forEach(function(c,i){ if(c.photo) photoColumns.push({ col:c, i:i }); });
+    var hasPhotoColumns=photoColumns.length>0;
+    var rowHeightForData = hasPhotoColumns ? EXCEL_ROW_HEIGHTS.dataWithPhoto : EXCEL_ROW_HEIGHTS.data;
+
     rows.forEach(function(r,i){
       var rn=3+i;
       var row=ws.getRow(rn);
-      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
+      row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, rowHeightForData);
       columns.forEach(function(col,ci){
         var cell=row.getCell(ci+1);
         cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
         cell.alignment = col.align==='left' ? { vertical:'middle', horizontal:'left', wrapText: !!col.wrap } : { vertical:'middle', horizontal:'center', wrapText: !!col.wrap };
+        if(col.photo) return;
         cell.value = (r[col.key]===''||r[col.key]==null) ? '' : r[col.key];
         if(col.numFmt && typeof cell.value==='number') cell.numFmt = Number.isInteger(cell.value) ? col.numFmt.replace(/\.#+/,'') : col.numFmt;
       });
       row.commit();
     });
 
-    return wb.xlsx.writeBuffer();
-  }).then(function(buf){
-    var blob=new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    var photoTasks=[];
+    rows.forEach(function(r,i){
+      var rn0=2+i;
+      photoColumns.forEach(function(pc){
+        var url=r[pc.col.key];
+        if(Array.isArray(url)) url=url[0]||'';
+        if(url) photoTasks.push({ url:url, colIdx:pc.i, rn0:rn0 });
+      });
+    });
+
+    if(photoTasks.length) lbl.textContent='사진 불러오는 중...';
+    return excelBatchPromises(photoTasks, function(task){
+      return excelFetchImage(task.url).then(function(img){
+        if(!img){ failedPhotoCount++; return; }
+        var imgId=wb.addImage(img);
+        ws.addImage(imgId, excelPhotoAnchor(task.colIdx, task.rn0));
+      });
+    }).then(function(){
+      lbl.textContent='파일 저장 중...';
+      return wb.xlsx.writeBuffer();
+    }).then(function(buf){
+      return hasPhotoColumns ? excelUnlockAspectRatio(buf) : new Blob([buf], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    });
+  }).then(function(blob){
     var url=URL.createObjectURL(blob);
     var now=new Date();
     var fname=opts.fnamePrefix+'_'+now.getFullYear()+fmt(now.getMonth()+1)+fmt(now.getDate())+'.xlsx';
     var a=document.createElement('a'); a.href=url; a.download=fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
-    lbl.textContent='완료!';
-    setTimeout(function(){ lbl.textContent=opts.lblDefault; }, 1500);
+    lbl.textContent = failedPhotoCount>0 ? ('완료(사진 '+failedPhotoCount+'건 누락)') : '완료!';
+    setTimeout(function(){ lbl.textContent=opts.lblDefault; }, failedPhotoCount>0?3000:1500);
   }).catch(function(e){
     alert('엑셀 생성 실패: '+e.message);
     console.error(e);
@@ -1818,6 +1899,30 @@ function exportEquipExcel(){
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape'
+  });
+}
+var EXCEL_COLUMNS_EQUIP_PHOTO=[
+  { key:'터널명', header:'터널명' },
+  { key:'구분', header:'구분' },
+  { key:'설비명', header:'설비명' },
+  { key:'규격', header:'규격', width:36, wrap:true },
+  { key:'단위', header:'단위' },
+  { key:'수량', header:'수량', numFmt:'#,##0.##' },
+  { key:'포항', header:'포항', numFmt:'#,##0.##' },
+  { key:'영덕', header:'영덕', numFmt:'#,##0.##' },
+  { key:'사진', header:'사진', photo:true, width:18 },
+  { key:'명판', header:'명판', photo:true, width:18 },
+  { key:'비고', header:'비고', wrap:true }
+];
+function exportEquipExcelWithPhoto(){
+  var rows=filteredEquip().slice().sort(compareEquipRow);
+  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
+  var year = new Date().getFullYear();
+  var baseName = year+'년 '+tunnelPart+' 시설물현황(사진)';
+  buildExcelReport({
+    btnId:'excelPhotoExportBtn', lblId:'excelPhotoExportLabel', lblDefault:'엑셀(사진)',
+    sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
+    columns:EXCEL_COLUMNS_EQUIP_PHOTO, rows:rows, orientation:'landscape'
   });
 }
 var EXCEL_COLUMNS_TUNNEL=[
