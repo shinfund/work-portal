@@ -569,6 +569,7 @@ if (window.self !== window.top) {
             <th class="r" style="white-space:nowrap">수량</th>
             <th class="r" style="white-space:nowrap">포항</th>
             <th class="r" style="white-space:nowrap">영덕</th>
+            <th class="r" style="white-space:nowrap">소계</th>
             <th style="white-space:nowrap">사진</th>
             <th style="white-space:nowrap">명판</th>
             <th style="white-space:nowrap">비고</th>
@@ -1194,6 +1195,11 @@ function renderEquipList(){
 function fmtDirCell(v){
   return (v==null||v==='') ? '<span style="color:var(--txt3)">-</span>' : fmtWon(v);
 }
+function fmtDirSubtotal(r){
+  var p=r['포항'], y=r['영덕'];
+  if((p==null||p==='') && (y==null||y==='')) return '<span style="color:var(--txt3)">-</span>';
+  return fmtWon((parseFloat(p)||0) + (parseFloat(y)||0));
+}
 function fmtPhotoCell(arr,icon){
   var n=(arr||[]).length;
   return n ? (icon+n) : '<span style="color:var(--txt3)">-</span>';
@@ -1205,7 +1211,7 @@ function renderRows(){
   if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
   if(CURRENT_PAGE<1) CURRENT_PAGE=1;
   var pageRows = PAGE_SIZE==='all' ? rows : rows.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
-  var colCount = 11 + (DELETE_MODE?1:0);
+  var colCount = 12 + (DELETE_MODE?1:0);
   document.getElementById('detailTableBody').innerHTML = pageRows.length
     ? pageRows.map(buildDetailRow).join('')
     : '<tr><td colspan="'+colCount+'">'+emptyState('조건에 맞는 시설물이 없습니다.','🔍')+'</td></tr>';
@@ -1225,6 +1231,7 @@ function buildDetailRow(r){
     + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['수량'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['포항'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['영덕'])+'</td>'
+    + '<td class="r" style="white-space:nowrap">'+fmtDirSubtotal(r)+'</td>'
     + '<td style="white-space:nowrap">'+fmtPhotoCell(r['사진'],'📷')+'</td>'
     + '<td style="white-space:nowrap">'+fmtPhotoCell(r['명판'],'🏷')+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
@@ -1787,7 +1794,7 @@ var EXCEL_COLUMNS_EQUIP=[
   { key:'터널명', header:'터널명' },
   { key:'구분', header:'구분' },
   { key:'설비명', header:'설비명' },
-  { key:'규격', header:'규격', width:26, wrap:true },
+  { key:'규격', header:'규격', width:48, wrap:true },
   { key:'단위', header:'단위' },
   { key:'수량', header:'수량', numFmt:'#,##0.##' },
   { key:'포항', header:'포항', numFmt:'#,##0.##' },
@@ -1798,10 +1805,10 @@ function exportEquipExcel(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
   var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
   var year = new Date().getFullYear();
-  var baseName = tunnelPart+' 시설물종합대장';
+  var baseName = year+'년 '+tunnelPart+' 시설물현황';
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
-    sheetName:'시설물내역', title: baseName, fnamePrefix: year+'년 '+baseName,
+    sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape'
   });
 }
