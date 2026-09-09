@@ -236,6 +236,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .modal-field{margin-bottom:14px}
 .modal-label{font-size:13px;font-weight:400;color:var(--txt);margin-bottom:6px;display:block}
 .modal-input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:var(--r8);padding:10px 12px;font-size:16px;font-family:inherit;color:var(--txt);outline:none;transition:border .18s}
+@media(min-width:768px){.modal-input,.modal-select{font-size:14px}}
 .modal-input[type=number]{-moz-appearance:textfield}
 .modal-input[type=number]::-webkit-outer-spin-button,.modal-input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .modal-input::placeholder,.search-box::placeholder{color:var(--txt3)}
@@ -570,8 +571,8 @@ if (window.self !== window.top) {
             <th class="r" style="white-space:nowrap">포항</th>
             <th class="r" style="white-space:nowrap">영덕</th>
             <th class="r" style="white-space:nowrap">소계</th>
-            <th style="white-space:nowrap">사진</th>
-            <th style="white-space:nowrap">명판</th>
+            <th class="col-photo">사진</th>
+            <th class="col-photo">명판</th>
             <th style="white-space:nowrap">비고</th>
           </tr></thead>
           <tbody id="detailTableBody"></tbody>
@@ -1065,22 +1066,19 @@ function toggleDd(menuId, btnId){
   var menu=document.getElementById(menuId), btn=document.getElementById(btnId);
   if(!menu||!btn) return;
   if(menu.classList.contains('open')){ closeDd(menuId, btnId); }
-  else { closeAllDd(); menu.classList.add('open'); btn.classList.add('active'); }
+  else { closeAllDd(); menu.classList.add('open'); }
 }
 function closeDd(menuId, btnId){
   var m=document.getElementById(menuId); if(m) m.classList.remove('open');
-  var b=document.getElementById(btnId); if(b) b.classList.remove('active');
 }
 function closeAllDd(){
   ['tunnelDdMenu','gubunDdMenu','specNameDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
-  ['tunnelDdBtn','gubunDdBtn','specNameDdBtn','pageSizeDdBtn'].forEach(function(id){ var b=document.getElementById(id); if(b) b.classList.remove('active'); });
 }
 document.addEventListener('click', function(e){
   document.querySelectorAll('.dd-menu.open').forEach(function(menu){
     var wrap=menu.closest('.dd-wrap');
     if(wrap && !wrap.contains(e.target)){
       menu.classList.remove('open');
-      var btn=wrap.querySelector('.dd-btn'); if(btn) btn.classList.remove('active');
     }
   });
 });
@@ -1200,9 +1198,15 @@ function fmtDirSubtotal(r){
   if((p==null||p==='') && (y==null||y==='')) return '<span style="color:var(--txt3)">-</span>';
   return fmtWon((parseFloat(p)||0) + (parseFloat(y)||0));
 }
-function fmtPhotoCell(arr,icon){
-  var n=(arr||[]).length;
-  return n ? (icon+n) : '<span style="color:var(--txt3)">-</span>';
+function fmtPhotoCell(arr,label){
+  arr = arr||[];
+  if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
+  var extra = arr.length>1 ? '<span style="font-size:10px;color:var(--txt3);display:block;margin-top:2px">+'+(arr.length-1)+'</span>' : '';
+  return '<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
+    +'<img src="'+esc(arr[0])+'" alt="'+esc(label)+'"'
+    +' style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block;margin:0 auto"'
+    +' onerror="this.style.display=\'none\'">'
+    +'</a>'+extra;
 }
 function renderRows(){
   var rows = filteredEquip().slice().sort(compareEquipRow);
@@ -1232,8 +1236,8 @@ function buildDetailRow(r){
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['포항'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['영덕'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirSubtotal(r)+'</td>'
-    + '<td style="white-space:nowrap">'+fmtPhotoCell(r['사진'],'📷')+'</td>'
-    + '<td style="white-space:nowrap">'+fmtPhotoCell(r['명판'],'🏷')+'</td>'
+    + '<td class="col-photo">'+fmtPhotoCell(r['사진'],'사진')+'</td>'
+    + '<td class="col-photo">'+fmtPhotoCell(r['명판'],'명판')+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
     + '</tr>';
 }

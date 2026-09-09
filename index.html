@@ -683,21 +683,21 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
-          <div class="app-card" role="button" tabindex="0" onclick="go('solar')" onkeydown="handleActivateKey(event)">
-            <div>
-              <div class="ac-name">태양광발전량</div>
-              <div class="ac-kpi" id="kpi-solar">—</div>
-              <div class="ac-viz" id="viz-solar"></div>
-              <div class="ac-desc">터널별 일별 태양광 발전량·전기요금 기록 및 현황 조회.</div>
-            </div>
-            <div class="ac-arrow">앱 열기 →</div>
-          </div>
           <div class="app-card" role="button" tabindex="0" onclick="go('facility')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">시설물현황</div>
               <div class="ac-kpi" id="kpi-facility">—</div>
               <div class="ac-viz" id="viz-facility"></div>
               <div class="ac-desc">터널별 전기·소방·통신 설비 및 터널제원 현황 조회 및 등록.</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
+          <div class="app-card" role="button" tabindex="0" onclick="go('solar')" onkeydown="handleActivateKey(event)">
+            <div>
+              <div class="ac-name">태양광발전량</div>
+              <div class="ac-kpi" id="kpi-solar">—</div>
+              <div class="ac-viz" id="viz-solar"></div>
+              <div class="ac-desc">터널별 일별 태양광 발전량·전기요금 기록 및 현황 조회.</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
@@ -746,6 +746,15 @@ body{
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
+          <div class="app-card ac-admin-gated" id="acard-card" role="button" tabindex="0" onclick="go('card')" onkeydown="handleActivateKey(event)" style="display:none">
+            <div>
+              <div class="ac-name">법인카드</div>
+              <div class="ac-kpi" id="kpi-card">—</div>
+              <div class="ac-viz" id="viz-card"></div>
+              <div class="ac-desc">법인카드 사용내역·한도 현황 (관리자 전용).</div>
+            </div>
+            <div class="ac-arrow">앱 열기 →</div>
+          </div>
           <div class="app-card" role="button" tabindex="0" onclick="go('monthly')" onkeydown="handleActivateKey(event)">
             <div>
               <div class="ac-name">월간점검결과-안전관리</div>
@@ -761,15 +770,6 @@ body{
               <div class="ac-kpi" id="kpi-monthlyTeam">—</div>
               <div class="ac-viz" id="viz-monthlyTeam"></div>
               <div class="ac-desc">터널별 전기시설점검·고장수리·점검사진 현황 조회 및 등록.</div>
-            </div>
-            <div class="ac-arrow">앱 열기 →</div>
-          </div>
-          <div class="app-card ac-admin-gated" id="acard-card" role="button" tabindex="0" onclick="go('card')" onkeydown="handleActivateKey(event)" style="display:none">
-            <div>
-              <div class="ac-name">법인카드</div>
-              <div class="ac-kpi" id="kpi-card">—</div>
-              <div class="ac-viz" id="viz-card"></div>
-              <div class="ac-desc">법인카드 사용내역·한도 현황 (관리자 전용).</div>
             </div>
             <div class="ac-arrow">앱 열기 →</div>
           </div>
