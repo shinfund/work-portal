@@ -176,11 +176,19 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .photo-upload-row{display:flex;align-items:center;gap:10px}
 .photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .photo-upload-file-btn:hover{background:var(--sky100)}
+html[data-theme="dark"] .photo-upload-file-btn{color:#fff}
 .photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-upload-status.ok{color:var(--teal600);font-weight:500}
 .photo-upload-status.err{color:var(--coral);font-weight:500}
 .photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);display:none;margin-top:10px;cursor:zoom-in}
 .photo-thumb.show{display:block}
+.photo-gallery{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.photo-gallery:empty{margin-top:0}
+.pg-item{position:relative;width:64px;height:64px;flex-shrink:0}
+.pg-item img{width:100%;height:100%;object-fit:cover;border-radius:var(--r6);border:1px solid var(--border);cursor:zoom-in}
+.pg-item .pg-remove{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:1.5px solid var(--card);font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.photo-count-badge{font-size:10px;font-weight:600;color:var(--sky600);background:var(--sky50);border:1px solid var(--sky100);border-radius:8px;padding:1px 5px;line-height:1.4;white-space:nowrap}
+html[data-theme="dark"] .photo-count-badge{color:#fff}
 .photo-section{padding:10px 0;border-bottom:1px solid var(--border2)}
 .photo-section:last-child{border-bottom:none}
 .photo-label{font-size:12px;font-weight:500;color:var(--txt3);margin-bottom:6px}
@@ -408,13 +416,12 @@ if (window.self !== window.top) {
         <label class="modal-label">사진</label>
         <div class="photo-upload-box">
           <div class="photo-upload-row">
-            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPhotoFile').click()">사진 선택</button>
+            <button type="button" class="photo-upload-file-btn" onclick="document.getElementById('addPhotoFile').click()">사진 추가</button>
             <span class="photo-upload-status" id="photoStatus">파일을 선택하세요</span>
           </div>
-          <img class="photo-thumb" id="photoThumb" alt="비품사진 미리보기">
+          <div class="photo-gallery" id="photoGallery"></div>
         </div>
-        <input type="file" id="addPhotoFile" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
-        <input type="hidden" id="addPhoto">
+        <input type="file" id="addPhotoFile" accept="image/*" multiple style="display:none" onchange="uploadMultiPhoto(this)">
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -866,64 +873,59 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
-// 업로드 요청별 시퀀스 번호(B2) — 나중 응답이 먼저 선택한 파일의 URL을 덮어쓰지 않도록 최신 요청만 반영
-var _photoUploadSeq = 0;
-function uploadPhoto(input){
-  var file = input.files[0];
-  if(!file) return;
+// 사진 다중 첨부(2026-09-09) — 업로드한 사진을 폼 안에서 배열로 들고 있다가 제출 시 한 번에
+// 노션 files 속성에 반영한다(facility-status.html의 ADD_PHOTOS 패턴 재사용).
+var ADD_PHOTOS = [];
+function renderPhotoGallery(){
+  var el=document.getElementById('photoGallery');
+  if(!el) return;
+  el.innerHTML = ADD_PHOTOS.map(function(url,i){
+    return '<div class="pg-item"><img src="'+esc(url)+'" alt="비품사진" onclick="window.open(\''+esc(url)+'\',\'_blank\')">'
+      +'<button type="button" class="pg-remove" aria-label="삭제" onclick="event.stopPropagation();removeAddPhoto('+i+')">×</button></div>';
+  }).join('');
+}
+function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); renderPhotoGallery(); }
+function uploadMultiPhoto(input){
+  var files = Array.prototype.slice.call(input.files||[]);
+  if(!files.length) return;
   var statusEl = document.getElementById('photoStatus');
-  var thumbEl = document.getElementById('photoThumb');
-  var urlEl = document.getElementById('addPhoto');
-
-  // B1: 인증 체크를 FileReader 실행보다 먼저 수행 — 미인증 상태에서 썸네일이 먼저 표시되는 것을 방지
-  if(!isAuthed()){
-    statusEl.textContent='⚠ 로그인 필요';
-    statusEl.className='photo-upload-status err';
-    return;
-  }
-
-  // B2: 업로드 중 파일 재선택을 막기 위해 input을 잠그고, 요청별 seq 토큰으로 최신 요청만 결과 반영
-  var seq = ++_photoUploadSeq;
+  if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='photo-upload-status err'; return; }
   input.disabled = true;
-
-  var reader = new FileReader();
-  reader.onload = function(e){ if(seq!==_photoUploadSeq) return; thumbEl.src=e.target.result; thumbEl.classList.add('show'); };
-  reader.readAsDataURL(file);
-
-  statusEl.textContent='업로드 중...';
+  var done=0, failed=0;
+  statusEl.textContent='업로드 중... (0/'+files.length+')';
   statusEl.className='photo-upload-status';
-
-  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
-    if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-    var formData = new FormData();
-    formData.append('file', outFile);
-    formData.append('app', 'asset-register');
-
-    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-      .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(function(data){
-        if(seq!==_photoUploadSeq) return;
-        urlEl.value=data.url;
-        thumbEl.src=data.url;
-        statusEl.textContent='✓ 업로드 완료';
-        statusEl.className='photo-upload-status ok';
-      });
-  }).catch(function(e){
-    if(seq!==_photoUploadSeq) return;
-    statusEl.textContent='✗ '+e.message;
-    statusEl.className='photo-upload-status err';
-  }).then(function(){
-    if(seq===_photoUploadSeq) input.disabled=false;
+  var uploadOne=function(file){
+    return compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+      var formData = new FormData();
+      formData.append('file', outFile);
+      formData.append('app', 'asset-register');
+      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+        .then(function(data){ ADD_PHOTOS.push(data.url); });
+    }).catch(function(e){ failed++; console.error(e); }).then(function(){
+      done++; statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
+      renderPhotoGallery();
+    });
+  };
+  files.reduce(function(p,file){ return p.then(function(){ return uploadOne(file); }); }, Promise.resolve()).then(function(){
+    statusEl.textContent = failed ? ('완료('+failed+'건 실패)') : '✓ 업로드 완료';
+    statusEl.className = failed ? 'photo-upload-status err' : 'photo-upload-status ok';
+    input.value='';
+    input.disabled=false;
   });
 }
-function makePhotoThumb(url){
-  if(!url || !url.trim()) return '<span style="color:var(--txt3)">-</span>';
-  if(!/^https?:\/\//i.test(url.trim())) return '<span style="color:var(--txt3)">-</span>';
-  return '<a href="'+esc(url)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
-    +'<img src="'+esc(url)+'" alt="사진"'
-    +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block;margin:0 auto"'
-    +' onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'afterend\',\'<span style=\\\'font-size:10px;color:var(--coral)\\\'>⚠</span>\')">'
-    +'</a>';
+function makePhotoThumb(arr){
+  arr = Array.isArray(arr) ? arr : (arr ? [arr] : []);
+  arr = arr.filter(function(u){ return u && /^https?:\/\//i.test(u.trim()); });
+  if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
+  var extra = arr.length>1 ? '<span class="photo-count-badge">+'+(arr.length-1)+'</span>' : '';
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px">'
+    +'<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
+    +'<img src="'+esc(arr[0])+'" alt="사진"'
+    +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block"'
+    +' onerror="this.style.display=\'none\'">'
+    +'</a>'+extra+'</span>';
 }
 
 /* ── 등록/수정 모달 ── */
@@ -931,15 +933,16 @@ function openAddModal(){
   EDIT_PAGE_ID = null;
   document.getElementById('addModalTitleText').textContent='신규 비품 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
-  ['addName','addSpec','addQty','addPrice','addAmount','addNote','addTunnelCustom','addCategoryCustom','addStatusCustom','addPhoto'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['addName','addSpec','addQty','addPrice','addAmount','addNote','addTunnelCustom','addCategoryCustom','addStatusCustom'].forEach(function(id){ document.getElementById(id).value=''; });
   var today=new Date();
   document.getElementById('addDate').value = today.getFullYear()+'-'+fmt(today.getMonth()+1)+'-'+fmt(today.getDate());
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueValues('터널명'), '');
   setFixedSelectValue('addCategory','addCategoryCustom','');
   setFixedSelectValue('addStatus','addStatusCustom','');
+  ADD_PHOTOS = [];
+  renderPhotoGallery();
   document.getElementById('photoStatus').textContent='파일을 선택하세요';
   document.getElementById('photoStatus').className='photo-upload-status';
-  document.getElementById('photoThumb').classList.remove('show');
   var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display='';
   openModal('addModal');
 }
@@ -960,13 +963,14 @@ function openEditModal(pageId){
   document.getElementById('addAmount').value = (r['금액']!=null && r['금액']!=='') ? formatThousands(r['금액']) : '';
   document.getElementById('addDate').value = r['구매일']||'';
   document.getElementById('addNote').value = r['비고']||'';
-  document.getElementById('addPhoto').value = r['사진']||'';
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueValues('터널명'), r['터널명']||'');
   setFixedSelectValue('addCategory','addCategoryCustom', r['구분']||'');
   setFixedSelectValue('addStatus','addStatusCustom', r['구매상태']||'');
-  var s=document.getElementById('photoStatus'), t=document.getElementById('photoThumb');
-  if(r['사진']){ s.textContent='기존 사진 있음'; s.className='photo-upload-status ok'; t.src=r['사진']; t.classList.add('show'); }
-  else { s.textContent='파일을 선택하세요'; s.className='photo-upload-status'; t.classList.remove('show'); }
+  ADD_PHOTOS = (r['사진']||[]).slice();
+  renderPhotoGallery();
+  var s=document.getElementById('photoStatus');
+  s.textContent = ADD_PHOTOS.length ? ('기존 사진 '+ADD_PHOTOS.length+'개 있음') : '파일을 선택하세요';
+  s.className = ADD_PHOTOS.length ? 'photo-upload-status ok' : 'photo-upload-status';
   var dr=document.getElementById('addDateRequired'); if(dr) dr.style.display='none';
   openModal('addModal');
 }
@@ -989,7 +993,6 @@ function submitAddForm(){
   var price = stripThousands(document.getElementById('addPrice').value.trim());
   var amount = stripThousands(document.getElementById('addAmount').value.trim());
   var status = getSelectValue('addStatus','addStatusCustom');
-  var photo = document.getElementById('addPhoto').value.trim();
   var note = document.getElementById('addNote').value.trim();
 
   var btn=document.getElementById('addSubmitBtn'), lbl=document.getElementById('addSubmitLabel');
@@ -1015,7 +1018,7 @@ function submitAddForm(){
   setProp('금액', amount!=='' ? { number:parseFloat(amount)||0 } : { number:null });
   setProp('구매상태', status ? { select:{ name:status } } : { select:null });
   setProp('비고', note ? { rich_text:[{ text:{ content:note } }] } : { rich_text:[] });
-  setProp('사진', photo ? { files:[{ name:'비품사진', type:'external', external:{ url:photo } }] } : { files:[] });
+  setProp('사진', { files: ADD_PHOTOS.map(function(url,i){ return { name:'비품사진'+(i+1), type:'external', external:{ url:url } }; }) });
 
   var isEdit = !!EDIT_PAGE_ID;
   var reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
@@ -1068,18 +1071,20 @@ function openDetailModal(id){
   var infoHtml = '<div class="detail-info-wrap">'
     + rows.map(function(rv){ return '<div class="detail-info-row"><div class="detail-info-key">'+rv[0]+'</div><div class="detail-info-val">'+rv[1]+'</div></div>'; }).join('')
     + '</div>';
-  var photoUrl = r['사진']||'';
-  var photoInner = photoUrl && /^https?:\/\//i.test(photoUrl.trim())
-    ? '<div class="photo-wrap"><a href="'+esc(photoUrl)+'" target="_blank" rel="noopener">'
-      +'<img class="photo-img loading" src="'+esc(photoUrl)+'" alt="비품사진"'
-      +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
-      +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
-      +'></a>'
-      +'<div class="photo-spinner"></div>'
-      +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(photoUrl)+'" target="_blank">링크로 직접 열기 →</a></div>'
-      +'</div>'
+  var photoUrls = (Array.isArray(r['사진']) ? r['사진'] : (r['사진'] ? [r['사진']] : [])).filter(function(u){ return u && /^https?:\/\//i.test(u.trim()); });
+  var photoInner = photoUrls.length
+    ? photoUrls.map(function(photoUrl){
+        return '<div class="photo-wrap"><a href="'+esc(photoUrl)+'" target="_blank" rel="noopener">'
+          +'<img class="photo-img loading" src="'+esc(photoUrl)+'" alt="비품사진"'
+          +' onload="this.classList.remove(\'loading\');this.classList.add(\'loaded\');var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +' onerror="this.style.display=\'none\';var e=this.parentNode.parentNode.querySelector(\'.photo-err\');if(e)e.style.display=\'block\';var s=this.parentNode.parentNode.querySelector(\'.photo-spinner\');if(s)s.remove()"'
+          +'></a>'
+          +'<div class="photo-spinner"></div>'
+          +'<div class="photo-err">이미지를 불러올 수 없습니다<br><a href="'+esc(photoUrl)+'" target="_blank">링크로 직접 열기 →</a></div>'
+          +'</div>';
+      }).join('<div style="height:8px"></div>')
     : '<div style="padding:18px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
-  var photoHtml = '<div class="photo-section"><div class="photo-label">사진</div>'+photoInner+'</div>';
+  var photoHtml = '<div class="photo-section"><div class="photo-label">사진'+(photoUrls.length>1?' ('+photoUrls.length+'장)':'')+'</div>'+photoInner+'</div>';
   document.getElementById('detailModalBody').innerHTML = infoHtml + photoHtml;
   document.getElementById('detailModalActions').innerHTML =
     '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
@@ -1261,14 +1266,13 @@ function getPropText(p){
   if(p.type==='date') return (p.date&&p.date.start) ? p.date.start.slice(0,10) : '';
   return '';
 }
-function getFileUrl(p){
-  if(!p) return '';
+function getFileUrls(p){
+  if(!p) return [];
   if(p.type==='files' && p.files && p.files.length){
-    var f=p.files[0];
-    return (f.type==='external' ? (f.external&&f.external.url) : (f.file&&f.file.url)) || '';
+    return p.files.map(function(f){ return (f.type==='external' ? (f.external&&f.external.url) : (f.file&&f.file.url)) || ''; }).filter(Boolean);
   }
-  if(p.type==='url') return p.url||'';
-  return '';
+  if(p.type==='url' && p.url) return [p.url];
+  return [];
 }
 function parseNotionPage(page){
   var props = page.properties||{};
@@ -1287,7 +1291,7 @@ function parseNotionPage(page){
     '단가': getPropText(get('단가')),
     '금액': getPropText(get('금액')),
     '구매일': date,
-    '사진': getFileUrl(get('사진')),
+    '사진': getFileUrls(get('사진')),
     '구매상태': getPropText(get('구매상태')),
     '비고': getPropText(get('비고'))
   };
@@ -1835,6 +1839,7 @@ function buildExcelReport(opts){
       var rn0=2+i;
       photoColumns.forEach(function(pc){
         var url=r[pc.col.key];
+        if(Array.isArray(url)) url=url[0]||'';
         if(url) photoTasks.push({ url:url, colIdx:pc.i, rn0:rn0 });
       });
     });

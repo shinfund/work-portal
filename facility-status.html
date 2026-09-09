@@ -153,11 +153,14 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .badge-c5{background:#0D6D63}
 
 .col-photo{width:56px;min-width:52px;text-align:center}
+.photo-count-badge{font-size:10px;font-weight:600;color:var(--sky600);background:var(--sky50);border:1px solid var(--sky100);border-radius:8px;padding:1px 5px;line-height:1.4;white-space:nowrap}
+html[data-theme="dark"] .photo-count-badge{color:#fff}
 .photo-upload-box{border:1.5px dashed var(--border);border-radius:var(--r8);padding:12px;background:var(--bg);transition:border-color .15s}
 .photo-upload-box:hover{border-color:var(--sky100)}
 .photo-upload-row{display:flex;align-items:center;gap:10px}
 .photo-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .photo-upload-file-btn:hover{background:var(--sky100)}
+html[data-theme="dark"] .photo-upload-file-btn{color:#fff}
 .photo-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .photo-upload-status.ok{color:var(--teal600);font-weight:500}
 .photo-upload-status.err{color:var(--coral);font-weight:500}
@@ -1201,12 +1204,13 @@ function fmtDirSubtotal(r){
 function fmtPhotoCell(arr,label){
   arr = arr||[];
   if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
-  var extra = arr.length>1 ? '<span style="font-size:10px;color:var(--txt3);display:block;margin-top:2px">+'+(arr.length-1)+'</span>' : '';
-  return '<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
+  var extra = arr.length>1 ? '<span class="photo-count-badge">+'+(arr.length-1)+'</span>' : '';
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px">'
+    +'<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
     +'<img src="'+esc(arr[0])+'" alt="'+esc(label)+'"'
-    +' style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block;margin:0 auto"'
+    +' style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block"'
     +' onerror="this.style.display=\'none\'">'
-    +'</a>'+extra;
+    +'</a>'+extra+'</span>';
 }
 function renderRows(){
   var rows = filteredEquip().slice().sort(compareEquipRow);

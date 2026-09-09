@@ -210,6 +210,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .file-list-del:hover{background:var(--coral100)}
 .file-upload-file-btn{background:var(--sky50);border:1.5px solid var(--sky100);color:var(--sky800);border-radius:var(--r8);padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .file-upload-file-btn:hover{background:var(--sky100)}
+html[data-theme="dark"] .file-upload-file-btn{color:#fff}
 .file-upload-status{font-size:12px;color:var(--txt3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .file-upload-status.ok{color:var(--teal600);font-weight:500}
 .file-upload-status.err{color:var(--coral);font-weight:500}
@@ -437,7 +438,7 @@ if (window.self !== window.top) {
           </div>
           <div id="fileList"></div>
         </div>
-        <input type="file" id="addFileInput" accept=".hwp,.hwpx,.xls,.xlsx,.doc,.docx,.pdf,image/*" style="display:none" onchange="uploadOvertimeFile(this)">
+        <input type="file" id="addFileInput" accept=".hwp,.hwpx,.xls,.xlsx,.doc,.docx,.pdf,image/*" multiple style="display:none" onchange="uploadOvertimeFile(this)">
       </div>
       <div class="modal-field">
         <label class="modal-label">비고</label>
@@ -2114,13 +2115,15 @@ function compressImageToLimit(file, maxBytes){
   });
 }
 function uploadOvertimeFile(input){
-  const file=input.files[0];
-  if(!file) return;
+  const files=Array.prototype.slice.call(input.files||[]);
+  if(!files.length) return;
   const statusEl=document.getElementById('fileStatus');
   if(!isAuthed()){ statusEl.textContent='⚠ 로그인 필요'; statusEl.className='file-upload-status err'; return; }
-  statusEl.textContent='업로드 중...';
+  input.disabled=true;
+  let failed=0, done=0;
+  statusEl.textContent='업로드 중... (0/'+files.length+')';
   statusEl.className='file-upload-status';
-  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+  const uploadOne=(file)=>compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
     const isImage = outFile.type && outFile.type.startsWith('image/');
     const limit = isImage ? UPLOAD_MAX_BYTES : UPLOAD_DOC_MAX_BYTES;
     if(outFile.size>limit) throw new Error('파일 용량 초과 (최대 '+(isImage?UPLOAD_MAX_LABEL:UPLOAD_DOC_MAX_LABEL)+')'+(isImage?'':' — 문서 파일은 자동 압축이 불가능합니다'));
@@ -2129,13 +2132,17 @@ function uploadOvertimeFile(input){
     formData.append('app', 'overtime-work');
     return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
       .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(data=>{
-        _formFiles.push({ url:data.url, name:file.name });
-        renderFileList();
-        updateFileStatusText();
-        input.value=''; // 같은 파일을 다시 선택해도 change 이벤트가 또 뜨도록 초기화
-      });
-  }).catch(e=>{ statusEl.textContent='✗ '+e.message; statusEl.className='file-upload-status err'; });
+      .then(data=>{ _formFiles.push({ url:data.url, name:file.name }); });
+  }).catch(e=>{ failed++; console.error(e); }).then(()=>{
+    done++; statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
+    renderFileList();
+  });
+  files.reduce((p,file)=>p.then(()=>uploadOne(file)), Promise.resolve()).then(()=>{
+    statusEl.textContent = failed ? ('일부 실패('+failed+'건) · 총 '+_formFiles.length+'개 첨부됨') : ('✓ 총 '+_formFiles.length+'개 첨부됨');
+    statusEl.className = failed ? 'file-upload-status err' : 'file-upload-status ok';
+    input.value=''; // 같은 파일을 다시 선택해도 change 이벤트가 또 뜨도록 초기화
+    input.disabled=false;
+  });
 }
 function removeOvertimeFile(idx){
   _formFiles.splice(idx,1);
