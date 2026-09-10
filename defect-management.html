@@ -916,11 +916,11 @@ if (window.self !== window.top) {
     </button>
     <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportProgLabel">사진대지-진행</span>
+      <span id="photoReportProgLabel">사진-진행</span>
     </button>
     <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportLabel">사진대지-완료</span>
+      <span id="photoReportLabel">사진-완료</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
@@ -4337,12 +4337,12 @@ function runDefectPhotoExport(btn, lbl, rows, mode, lblDefault, fnamePrefix){
 function exportDefectPhotoReportDone(){
   var rows = sortedDefectRowsByDate().filter(function(r){ return (r['하자사진_URL']||[]).length && (r['조치사진_URL']||[]).length; });
   if(!rows.length){ alert('하자사진·조치사진이 모두 첨부된 완료 기록이 없습니다.'); return; }
-  runDefectPhotoExport(document.getElementById('photoReportBtn'), document.getElementById('photoReportLabel'), rows, 'done', '사진대지-완료', '하자보수사진대지_완료_');
+  runDefectPhotoExport(document.getElementById('photoReportBtn'), document.getElementById('photoReportLabel'), rows, 'done', '사진-완료', '하자보수사진대지_완료_');
 }
 function exportDefectPhotoReportProgress(){
   var rows = sortedDefectRowsByDate().filter(function(r){ return (r['하자사진_URL']||[]).length && !(r['조치사진_URL']||[]).length; });
   if(!rows.length){ alert('하자사진만 첨부된 진행중 기록이 없습니다.'); return; }
-  runDefectPhotoExport(document.getElementById('photoReportProgBtn'), document.getElementById('photoReportProgLabel'), rows, 'progress', '사진대지-진행', '하자보수사진대지_진행_');
+  runDefectPhotoExport(document.getElementById('photoReportProgBtn'), document.getElementById('photoReportProgLabel'), rows, 'progress', '사진-진행', '하자보수사진대지_진행_');
 }
 
 function exportContactExcel(){
