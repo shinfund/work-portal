@@ -131,6 +131,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
+.tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -471,9 +473,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportNoticeExcel()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelExportLabel">엑셀 생성</span>
+        <span id="excelExportLabel">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -1916,7 +1919,7 @@ function exportNoticeExcel(){
     return Object.assign({}, r, { '고정': r['고정']?'고정':'', '첨부수': (r['첨부파일']||[]).length ? (r['첨부파일']||[]).length+'건' : '', '회신수': r['회신수'] ? r['회신수']+'건' : '' });
   });
   buildExcelReport({
-    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
     sheetName:'공지사항', title:'공지사항', fnamePrefix:'공지사항',
     columns:EXCEL_COLUMNS_NOTICE, rows:rows, orientation:'portrait'
   });

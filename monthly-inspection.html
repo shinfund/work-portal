@@ -255,6 +255,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
+.tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
 .tb-action-btn.tb-report{background:#534AB7}
 .tb-action-btn.tb-report:hover{background:#443a94}
 /* 점검팀 앱(monthly-inspection-team.html)의 "통합 보고서 생성" 버튼과 색상을 통일(2026-07-28, 사용자 요청).
@@ -618,9 +620,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_monthly" onclick="exportTabExcel('monthly')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_monthly">엑셀 생성</span>
+        <span id="excelLbl_monthly">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -662,9 +665,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_elec" onclick="exportTabExcel('elec')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_elec">엑셀 생성</span>
+        <span id="excelLbl_elec">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -712,9 +716,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_transformer" onclick="exportTabExcel('transformer')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_transformer">엑셀 생성</span>
+        <span id="excelLbl_transformer">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -756,9 +761,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_generator" onclick="exportTabExcel('generator')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_generator">엑셀 생성</span>
+        <span id="excelLbl_generator">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -811,9 +817,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_photo" onclick="exportTabExcel('photo')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_photo">엑셀 생성</span>
+        <span id="excelLbl_photo">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -855,9 +862,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_power" onclick="exportTabExcel('power')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_power">엑셀 생성</span>
+        <span id="excelLbl_power">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -899,9 +907,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         신규등록
       </button>
+      <span class="tb-group-label">출력</span>
       <button class="tb-action-btn tb-excel" id="excelBtn_task" onclick="exportTabExcel('task')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelLbl_task">엑셀 생성</span>
+        <span id="excelLbl_task">엑셀</span>
       </button>
     </div>
     <div class="detail-count-row">
@@ -4557,7 +4566,7 @@ function exportTabExcel(tabId){
   const ym=resolveTabYearMonth(tabId, tabDef.dateKey);
   const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
-    btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀 생성',
+    btnId:'excelBtn_'+tabId, lblId:'excelLbl_'+tabId, lblDefault:'엑셀',
     sheetName:tabDef.label, title:'월간점검결과 - '+tabDef.label,
     fnamePrefix:ymPrefix+(TAB_REPORT_BASENAME[tabId]||tabDef.label)+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
     columns, rows
@@ -4862,7 +4871,7 @@ function exportElecExcel(){
   const ym=resolveTabYearMonth('elec', tabDef.dateKey);
   const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
-    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀 생성',
+    btnId:'excelBtn_elec', lblId:'excelLbl_elec', lblDefault:'엑셀',
     fnamePrefix:ymPrefix+TAB_REPORT_BASENAME.elec+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 전기설비기록(기본정보)', columns:baseColumns, rows:baseRows},
@@ -7314,7 +7323,7 @@ function exportGeneratorExcel(){
   const ym=resolveTabYearMonth('generator', tabDef.dateKey);
   const ymPrefix=ym ? `${ym.year}년 ${String(ym.month).padStart(2,'0')}월 ` : '';
   buildExcelReport({
-    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀 생성',
+    btnId:'excelBtn_generator', lblId:'excelLbl_generator', lblDefault:'엑셀',
     fnamePrefix:ymPrefix+TAB_REPORT_BASENAME.generator+(tunnel?'_'+tunnelFnameAbbr(tunnel):''),
     sheets:[
       {sheetName:'기본정보', title:'월간점검결과 - 발전기점검(기본정보)', columns:baseColumns, rows:baseRows},

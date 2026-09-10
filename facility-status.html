@@ -612,7 +612,7 @@ if (window.self !== window.top) {
       <div class="sc-hd">터널제원 <span class="badge" id="tunnelBadge">0개소</span>
         <button class="tb-action-btn tb-excel" id="tunnelExcelBtn" onclick="exportTunnelExcel()" style="margin-left:auto">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="tunnelExcelLabel">엑셀 생성</span>
+          <span id="tunnelExcelLabel">엑셀</span>
         </button>
       </div>
       <div class="filter-row">
@@ -2076,7 +2076,7 @@ function exportTunnelExcel(){
   var tunnelPart = FILTER_TUNNEL_SPEC || '포항영덕간터널';
   var baseName = tunnelPart+' 터널제원표';
   buildExcelReport({
-    btnId:'tunnelExcelBtn', lblId:'tunnelExcelLabel', lblDefault:'엑셀 생성',
+    btnId:'tunnelExcelBtn', lblId:'tunnelExcelLabel', lblDefault:'엑셀',
     sheetName:'터널제원', title: baseName, fnamePrefix: year+'년 '+baseName,
     columns:EXCEL_COLUMNS_TUNNEL, rows:rows, orientation:'portrait'
   });

@@ -159,6 +159,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
+.tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -553,13 +555,14 @@ if (window.self !== window.top) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
         </button>
+        <span class="tb-group-label">출력</span>
         <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportVehicleExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="excelExportLabel">엑셀 생성</span>
+          <span id="excelExportLabel">엑셀</span>
         </button>
         <button class="tb-action-btn tb-report" id="reportExportBtn" onclick="exportVehicleReports()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-          <span id="reportExportLabel">보고서 생성</span>
+          <span id="reportExportLabel">보고서</span>
         </button>
       </div>
       <div class="detail-count-row">
@@ -2402,7 +2405,7 @@ function exportVehicleExcel(){
     출발지:r.from, 경유지:r.via, 도착지:r.to, 운행:r.dist||0, 운행누계:r.cumDist||0, 비고:r.note||''
   }));
   buildExcelReport({
-    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
     sheetName:'차량운행일지', title:'차량운행일지', fnamePrefix:'차량운행일지',
     columns:EXCEL_COLUMNS_VEHICLE, rows, orientation:'landscape'
   });
@@ -2652,7 +2655,7 @@ function exportVehicleReports(){
   function next(){
     if(idx>=cars.length){
       lbl.textContent='완료!';
-      setTimeout(()=>{ lbl.textContent='보고서 생성'; btn.disabled=false; }, 1500);
+      setTimeout(()=>{ lbl.textContent='보고서'; btn.disabled=false; }, 1500);
       return;
     }
     const carNo=cars[idx++];

@@ -222,6 +222,8 @@ html[data-theme="dark"] .modal-hint{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
+.tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
 .tb-action-btn.tb-report{background:#534AB7}
 .tb-action-btn.tb-report:hover{background:#443a94}
 
@@ -907,9 +909,10 @@ if (window.self !== window.top) {
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
+    <span class="tb-group-label">출력</span>
     <button id="excelExportBtn" class="tb-action-btn tb-excel" onclick="exportToExcel()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="excelExportLabel">엑셀 생성</span>
+      <span id="excelExportLabel">엑셀</span>
     </button>
     <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
@@ -1032,9 +1035,10 @@ if (window.self !== window.top) {
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규추가
     </button>
+    <span class="tb-group-label">출력</span>
     <button id="contactExcelExportBtn" class="tb-action-btn tb-excel" onclick="exportContactExcel()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="contactExcelExportLabel">엑셀 생성</span>
+      <span id="contactExcelExportLabel">엑셀</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
@@ -1101,9 +1105,10 @@ if (window.self !== window.top) {
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
+    <span class="tb-group-label">출력</span>
     <button id="mgmtExcelExportBtn" class="tb-action-btn tb-excel" onclick="exportMgmtExcel()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="mgmtExcelExportLabel">엑셀 생성</span>
+      <span id="mgmtExcelExportLabel">엑셀</span>
     </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
@@ -4150,7 +4155,7 @@ function exportToExcel(){
     return da<db?1:da>db?-1:0;
   });
   buildExcelReport({
-    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
     sheetName:'하자현황', title: buildDefectExcelTitle(rows), fnamePrefix:'하자보수현황',
     columns: EXCEL_COLUMNS, rows: rows, orientation:'landscape',
     statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
@@ -4348,7 +4353,7 @@ function exportContactExcel(){
     return ta<tb?-1:ta>tb?1:0;
   });
   buildExcelReport({
-    btnId:'contactExcelExportBtn', lblId:'contactExcelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'contactExcelExportBtn', lblId:'contactExcelExportLabel', lblDefault:'엑셀',
     sheetName:'업체연락처', title:'업체연락처', fnamePrefix:'업체연락처',
     columns: EXCEL_CONTACT_COLUMNS, rows: rows, orientation:'portrait'
   });
@@ -4993,7 +4998,7 @@ function exportMgmtExcel(){
     });
   });
   buildExcelReport({
-    btnId:'mgmtExcelExportBtn', lblId:'mgmtExcelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'mgmtExcelExportBtn', lblId:'mgmtExcelExportLabel', lblDefault:'엑셀',
     sheetName:'하자관리', title:'하자관리(보증)현황', fnamePrefix:'하자관리',
     columns: EXCEL_MGMT_COLUMNS, rows: rows, orientation:'landscape'
   });
