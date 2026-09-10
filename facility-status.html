@@ -609,12 +609,6 @@ if (window.self !== window.top) {
   <!-- ▸ 터널제원 -->
   <div id="panel-tunnel" class="panel" role="tabpanel" aria-labelledby="nav-tunnel">
     <div class="sc">
-      <div class="sc-hd">터널제원 <span class="badge" id="tunnelBadge">0개소</span>
-        <button class="tb-action-btn tb-excel" id="tunnelExcelBtn" onclick="exportTunnelExcel()" style="margin-left:auto">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="tunnelExcelLabel">엑셀</span>
-        </button>
-      </div>
       <div class="filter-row">
         <div class="dd-wrap" id="tunnelSpecDdWrap">
           <button class="dd-btn" id="tunnelSpecDdBtn" onclick="toggleDd('tunnelSpecDdMenu','tunnelSpecDdBtn')" aria-haspopup="listbox" aria-label="터널명 선택">
@@ -623,6 +617,13 @@ if (window.self !== window.top) {
           <div class="dd-menu" id="tunnelSpecDdMenu"></div>
         </div>
         <input class="search-box" id="tunnelSpecSearchBox" placeholder="🔍 주소, 비고 검색..." aria-label="터널제원 검색" oninput="renderTunnelTab()"/>
+        <button class="tb-action-btn tb-excel" id="tunnelExcelBtn" onclick="exportTunnelExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="tunnelExcelLabel">엑셀</span>
+        </button>
+      </div>
+      <div class="detail-count-row">
+        <span class="badge" id="tunnelBadge">0개소</span>
       </div>
       <div class="tbl-wrap">
         <table>
