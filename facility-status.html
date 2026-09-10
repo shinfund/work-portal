@@ -577,7 +577,7 @@ if (window.self !== window.top) {
           <div class="detail-count" id="detailCount"></div>
           <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
             <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
-              <span id="pageSizeDdLabel">20개씩</span>
+              <span id="pageSizeDdLabel">15개씩</span>
             </button>
             <div class="dd-menu" id="pageSizeDdMenu"></div>
           </div>
@@ -1122,7 +1122,7 @@ document.addEventListener('click', function(e){
 });
 
 /* ── 필터(고정 순서 목록 기준 — 현재 데이터에 없는 항목도 항상 선택 가능) ── */
-var FILTER_TUNNEL='청하터널(주)', FILTER_GUBUN='전기', FILTER_SPEC='', FILTER_TUNNEL_SPEC='';
+var FILTER_TUNNEL='청하터널(주)', FILTER_GUBUN='', FILTER_SPEC='', FILTER_TUNNEL_SPEC='';
 function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, onChange){
   var menu=document.getElementById(menuId);
   if(!menu) return;
@@ -1150,7 +1150,7 @@ var PAGE_SIZE = (function(){
     if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
     if(raw==='all') return 'all';
   }catch(e){}
-  return 20;
+  return 15;
 })();
 var CURRENT_PAGE=1;
 function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
