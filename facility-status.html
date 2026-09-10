@@ -570,7 +570,7 @@ if (window.self !== window.top) {
           <div class="detail-count" id="detailCount"></div>
           <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
             <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
-              <span id="pageSizeDdLabel">30개씩</span>
+              <span id="pageSizeDdLabel">20개씩</span>
             </button>
             <div class="dd-menu" id="pageSizeDdMenu"></div>
           </div>
@@ -1133,7 +1133,7 @@ function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn',
 function buildTunnelSpecDd(){ buildFixedFilterDd('tunnelSpecDdMenu','tunnelSpecDdBtn','tunnelSpecDdLabel',FILTER_TUNNEL_SPEC,TUNNEL_ORDER,'전체', function(v){ FILTER_TUNNEL_SPEC=v; }, function(){ buildTunnelSpecDd(); renderTunnelTab(); }); }
 
 /* ── 페이지네이션 ── */
-var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
 var PAGE_SIZE = (function(){
   try{
     var raw=localStorage.getItem('facilityStatus_pageSize');
@@ -1141,7 +1141,7 @@ var PAGE_SIZE = (function(){
     if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
     if(raw==='all') return 'all';
   }catch(e){}
-  return 30;
+  return 20;
 })();
 var CURRENT_PAGE=1;
 function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
@@ -1855,7 +1855,7 @@ function buildExcelReport(opts){
 
   var infoLines=opts.infoLines||[];
   var hasInfo=infoLines.length>0;
-  var headerRowNum = hasInfo ? (3+infoLines.length) : 2;
+  var headerRowNum = 2;
   var dataStartRow = headerRowNum+1;
 
   loadExcelLib().then(function(){
@@ -1876,19 +1876,6 @@ function buildExcelReport(opts){
     titleRow.height=EXCEL_ROW_HEIGHTS.title;
     var titleCell=titleRow.getCell(1);
     titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={ vertical:'middle' };
-
-    if(hasInfo){
-      infoLines.forEach(function(line,i){
-        var rn=3+i;
-        var row=ws.getRow(rn);
-        row.height=EXCEL_ROW_HEIGHTS.data;
-        ws.mergeCells(rn,1,rn,columns.length);
-        var cell=row.getCell(1);
-        cell.value=line; cell.font=EXCEL_BODY_FONT;
-        cell.alignment={ vertical:'middle', horizontal:'left', wrapText:true };
-        row.commit();
-      });
-    }
 
     var headerRow=ws.getRow(headerRowNum);
     headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -1918,6 +1905,20 @@ function buildExcelReport(opts){
       });
       row.commit();
     });
+
+    if(hasInfo){
+      var lastDataRow=dataStartRow+rows.length-1;
+      infoLines.forEach(function(line,i){
+        var rn=lastDataRow+2+i;
+        var row=ws.getRow(rn);
+        row.height=EXCEL_ROW_HEIGHTS.data;
+        ws.mergeCells(rn,1,rn,columns.length);
+        var cell=row.getCell(1);
+        cell.value=line; cell.font=EXCEL_BODY_FONT;
+        cell.alignment={ vertical:'middle', horizontal:'left', wrapText:true };
+        row.commit();
+      });
+    }
 
     var photoTasks=[];
     rows.forEach(function(r,i){
