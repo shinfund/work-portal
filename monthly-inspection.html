@@ -1962,7 +1962,14 @@ document.addEventListener('scroll', e=>{
 }, true);
 const _tabFilters={};
 const _tabFilterUserPicked={};
-TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:''}; _tabFilterUserPicked[t.id]=false; });
+// 터널 필터 기본값 = 청하터널(주 옵션이 있으면 (주), 없으면 기본형)(2026-09-10 사용자 요청)
+function defaultTunnelForTab(tabDef){
+  const opts=tabTunnelField(tabDef)?.options||[];
+  if(opts.includes('청하터널(주)')) return '청하터널(주)';
+  if(opts.includes('청하터널')) return '청하터널';
+  return '';
+}
+TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:defaultTunnelForTab(t)}; _tabFilterUserPicked[t.id]=false; });
 // 데이터 로드 직후 사용자가 아직 연/월을 직접 고르지 않았으면 최신 연/월로 기본값 이동
 // (목록 탭 표준 — "전체"는 데이터가 쌓이면 느려지고 가독성이 떨어짐, 발전내역 탭과 동일 원칙)
 function applyLatestFilterDefault(tabId){
