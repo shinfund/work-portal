@@ -551,6 +551,10 @@ if (window.self !== window.top) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="danTunnelExportLabel">단터널출력</span>
         </button>
+        <button class="tb-action-btn tb-excel" id="jangTunnelExportBtn" onclick="exportJangTunnelExcel()" title="장터널(흥해터널/청하터널(주,부)/남정5터널) 시설물현황만 모아 엑셀로 출력합니다">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="jangTunnelExportLabel">장터널출력</span>
+        </button>
       </div>
       <div class="detail-count-row">
         <div class="count-actions">
@@ -2024,6 +2028,16 @@ function exportDanTunnelExcel(){
   var baseName = year+'년 단터널 시설물현황';
   buildExcelReport({
     btnId:'danTunnelExportBtn', lblId:'danTunnelExportLabel', lblDefault:'단터널출력',
+    sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
+  });
+}
+function exportJangTunnelExcel(){
+  var rows=filteredEquipForTunnels(JANG_TUNNEL_LIST).slice().sort(compareEquipRow);
+  var year = new Date().getFullYear();
+  var baseName = year+'년 장터널 시설물현황';
+  buildExcelReport({
+    btnId:'jangTunnelExportBtn', lblId:'jangTunnelExportLabel', lblDefault:'장터널출력',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
   });
