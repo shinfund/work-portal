@@ -1024,8 +1024,8 @@ document.addEventListener('click', function(e){
   });
 });
 
-/* ── 터널/품목분류 필터(기본값=전체) — 이 DB는 구매일 필드가 없어 날짜 드롭다운 없음 ── */
-var FILTER_TUNNEL='', FILTER_CATEGORY='';
+/* ── 터널/품목분류 필터(기본값=청하터널) — 이 DB는 구매일 필드가 없어 날짜 드롭다운 없음 ── */
+var FILTER_TUNNEL='청하터널', FILTER_CATEGORY='';
 function toggleTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
 function toggleCategoryDd(){ toggleDd('categoryDdMenu','categoryDdBtn'); }
 function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, labelFmt){
