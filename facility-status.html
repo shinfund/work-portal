@@ -140,7 +140,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-action-btn.tb-tunnel{background:#6741D9}
 .tb-action-btn.tb-tunnel:hover{background:#5433b8}
-.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
+.tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -1991,9 +1992,13 @@ function buildTunnelInfoLines(rows){
   if(pairs.length===1) return [ tunnelInfoLineOneRow(pairs[0].td) ];
   return pairs.map(function(p){ return p.name+' — '+tunnelInfoLineOneRow(p.td); });
 }
+function tunnelExportNamePart(v){
+  /* 출력 파일명 표기용: 청하통합 필터는 파일명에서 청하터널로 표시 */
+  return v==='청하통합' ? '청하터널' : v;
+}
 function exportEquipExcel(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
-  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
+  var tunnelPart = tunnelExportNamePart(FILTER_TUNNEL) || '포항영덕간터널';
   var year = new Date().getFullYear();
   var baseName = year+'년 '+tunnelPart+' 시설물현황';
   buildExcelReport({
@@ -2017,7 +2022,7 @@ var EXCEL_COLUMNS_EQUIP_PHOTO=[
 ];
 function exportEquipExcelWithPhoto(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
-  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
+  var tunnelPart = tunnelExportNamePart(FILTER_TUNNEL) || '포항영덕간터널';
   var year = new Date().getFullYear();
   var baseName = year+'년 '+tunnelPart+' 시설물현황(사진)';
   buildExcelReport({
@@ -2049,7 +2054,7 @@ function exportJangTunnelExcel(){
 function exportCheonghaTunnelExcel(){
   var rows=filteredEquipForTunnels(CHEONGHA_TUNNEL_LIST).slice().sort(compareEquipRow);
   var year = new Date().getFullYear();
-  var baseName = year+'년 청하통합 시설물현황';
+  var baseName = year+'년 청하터널 시설물현황';
   buildExcelReport({
     btnId:'cheonghaTunnelExportBtn', lblId:'cheonghaTunnelExportLabel', lblDefault:'청하',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
