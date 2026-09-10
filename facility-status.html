@@ -2021,7 +2021,7 @@ function exportDanTunnelExcel(){
   buildExcelReport({
     btnId:'danTunnelExportBtn', lblId:'danTunnelExportLabel', lblDefault:'단터널출력',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
-    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
   });
 }
 function exportJangTunnelExcel(){
@@ -2031,7 +2031,7 @@ function exportJangTunnelExcel(){
   buildExcelReport({
     btnId:'jangTunnelExportBtn', lblId:'jangTunnelExportLabel', lblDefault:'장터널출력',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
-    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
   });
 }
 var EXCEL_COLUMNS_TUNNEL=[
