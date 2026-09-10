@@ -151,8 +151,6 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px;display:inline-flex;align-items:center;gap:8px}
 .tb-group-label::before{content:'';display:inline-block;width:1px;height:16px;background:var(--txt);opacity:.6}
-.tb-action-btn.tb-list{background:#5B4FBD}
-.tb-action-btn.tb-list:hover{background:#4a3fa0}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -473,10 +471,6 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportEquipExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelExportLabel">엑셀</span>
-        </button>
-        <button class="tb-action-btn tb-list" id="equipListExportBtn" onclick="exportEquipListExcel()">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="equipListExportLabel">비품대장</span>
         </button>
       </div>
       <div class="detail-count-row">
@@ -1024,8 +1018,8 @@ document.addEventListener('click', function(e){
   });
 });
 
-/* ── 터널/품목분류 필터(기본값=청하터널) — 이 DB는 구매일 필드가 없어 날짜 드롭다운 없음 ── */
-var FILTER_TUNNEL='청하터널', FILTER_CATEGORY='';
+/* ── 터널/품목분류 필터(기본값=청하터널·예비품) — 이 DB는 구매일 필드가 없어 날짜 드롭다운 없음 ── */
+var FILTER_TUNNEL='청하터널', FILTER_CATEGORY='예비품';
 function toggleTunnelDd(){ toggleDd('tunnelDdMenu','tunnelDdBtn'); }
 function toggleCategoryDd(){ toggleDd('categoryDdMenu','categoryDdBtn'); }
 function buildGenericFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, labelFmt){
@@ -1249,7 +1243,7 @@ var PAGE_SIZE = (function(){
     if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
     if(raw==='all') return 'all';
   }catch(e){}
-  return 15;
+  return 10;
 })();
 var CURRENT_PAGE=1;
 function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
@@ -1686,25 +1680,13 @@ function buildExcelReport(opts){
 // 엑셀 생성은 세로모드(portrait) + 화면 목록과 동일한 필터 함수를 재사용
 function exportEquipExcel(){
   var rows=filtered().slice().sort(compareTunnelNameAsc);
-  // 터널명 필터가 선택돼 있으면 파일명·제목에 해당 터널명을, "전체"면 전체 구간명(포항영덕간터널)을 사용(사용자 요청)
+  // 파일명엔 터널명 필터가 선택돼 있으면 해당 터널명을, "전체"면 전체 구간명(포항영덕간터널)을 사용(사용자 요청)
+  // 시트 1행 제목은 터널명 없이 "{연도}년 도공비품대장"으로 고정(2026-09-10 요청)
   var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
   var year = new Date().getFullYear();
-  var baseName = tunnelPart+' 도공비품종합대장';
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
-    sheetName:'비품내역', title: baseName, fnamePrefix: year+'년 '+baseName,
-    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
-  });
-}
-// "비품대장" — "엑셀 생성"과 동일하되 품목분류가 "실적보고서"(추후 별도 인수인계서로 편입될 문서류)인 행만 제외(사용자 요청)
-function exportEquipListExcel(){
-  var rows=filtered().filter(function(r){ return r['품목분류']!=='실적보고서'; }).slice().sort(compareTunnelNameAsc);
-  var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
-  var year = new Date().getFullYear();
-  var baseName = tunnelPart+' 도공비품대장';
-  buildExcelReport({
-    btnId:'equipListExportBtn', lblId:'equipListExportLabel', lblDefault:'비품대장',
-    sheetName:'비품대장', title: baseName, fnamePrefix: year+'년 '+baseName,
+    sheetName:'비품내역', title: year+'년 도공비품대장', fnamePrefix: year+'년 '+tunnelPart+' 도공비품대장',
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait'
   });
 }

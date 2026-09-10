@@ -666,7 +666,7 @@ const THIS_YEAR=new Date().getFullYear();
 let curYear=THIS_YEAR,curMonth=0;
 let _activePanel="detail",dtPage=1;
 let trendYear=THIS_YEAR,trendYearBase=THIS_YEAR;
-const PS=25;
+const PS=31;
 const fmt=n=>Math.round(n||0).toLocaleString("ko-KR");
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 function allMonths(){return[...new Set(RD.map(r=>r.month))].sort();}

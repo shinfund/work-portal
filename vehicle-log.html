@@ -151,6 +151,15 @@ html[data-theme="dark"] .rn{color:#fff}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 /* 하자보수현황 앱 신규등록/엑셀생성 버튼과 동일한 고정 색상(다크/라이트 공통, 3-9 표준) */
@@ -573,7 +582,15 @@ if (window.self !== window.top) {
           </button>
           <button class="tb-action-btn tb-delete on" id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none" disabled>선택 삭제</button>
         </div>
-        <div class="detail-count" id="detailCount"></div>
+        <div class="count-right">
+          <div class="detail-count" id="detailCount"></div>
+          <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap">
+            <button class="dd-btn" id="pageSizeDdBtn" onclick="togglePageSizeDd()" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+              <span id="pageSizeDdLabel">31개씩</span>
+            </button>
+            <div class="dd-menu" id="pageSizeDdMenu"></div>
+          </div>
+        </div>
       </div>
       <div class="tbl-wrap">
         <table>
@@ -593,6 +610,7 @@ if (window.self !== window.top) {
           <tbody id="detailTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination-row" id="paginationRow"></div>
     </div>
   </div>
 
@@ -1416,6 +1434,68 @@ let _detailDriverFilter='';
 let _detailYearFilter='ALL';
 let _detailMonthFilter='ALL';
 let _detailUserPicked=false;
+
+/* ── 페이지네이션(운행내역 탭) ── 전체 월 필터 적용 시 레코드가 너무 많아져 기본값을
+   월 단위 개념(31개)으로 제한(2026-09-10) ── */
+var PAGE_SIZE_OPTIONS=[10,20,31,50,100];
+var PAGE_SIZE=(function(){
+  try{
+    var raw=localStorage.getItem('vehicleLog_pageSize');
+    var v=parseInt(raw,10);
+    if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v;
+    if(raw==='all') return 'all';
+  }catch(e){}
+  return 31;
+})();
+var CURRENT_PAGE=1;
+function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }
+function buildPageSizeDd(){
+  var menu=document.getElementById('pageSizeDdMenu');
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = PAGE_SIZE==='all' ? 'all' : String(PAGE_SIZE);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  document.getElementById('pageSizeDdLabel').textContent = (opts.filter(function(o){ return o.val===curVal; })[0]||opts[1]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      var v=opt.dataset.val;
+      PAGE_SIZE = v==='all' ? 'all' : parseInt(v,10);
+      CURRENT_PAGE=1;
+      try{ localStorage.setItem('vehicleLog_pageSize', v); }catch(e2){}
+      closeDd('pageSizeDdMenu','pageSizeDdBtn');
+      buildPageSizeDd();
+      renderDetail();
+    });
+  }
+}
+function goToPage(n){
+  CURRENT_PAGE=n;
+  renderDetail();
+  var wrap=document.querySelector('.detail-sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderPaginationRow(totalCount, totalPages){
+  var el=document.getElementById('paginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=CURRENT_PAGE;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage('+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
+
 function buildDetailCarDd(cars){
   const menu=document.getElementById('carDdMenu');
   if(!menu) return;
@@ -1429,6 +1509,7 @@ function buildDetailCarDd(cars){
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
       _detailCarFilter=opt.dataset.val;
+      CURRENT_PAGE=1;
       closeDetailCarDd();
       renderDetail();
     });
@@ -1447,6 +1528,7 @@ function buildDetailDriverDd(drivers){
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
       _detailDriverFilter=opt.dataset.val;
+      CURRENT_PAGE=1;
       closeDetailDriverDd();
       renderDetail();
     });
@@ -1473,6 +1555,7 @@ function buildDetailYearDd(){
       if(!opt) return;
       _detailYearFilter=opt.dataset.val;
       _detailUserPicked=true;
+      CURRENT_PAGE=1;
       closeDetailYearDd();
       if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       else renderDetail();
@@ -1494,6 +1577,7 @@ function buildDetailMonthDd(){
       if(!opt) return;
       _detailMonthFilter=opt.dataset.val;
       _detailUserPicked=true;
+      CURRENT_PAGE=1;
       closeDetailMonthDd();
       if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
       else renderDetail();
@@ -2193,6 +2277,7 @@ function getDetailFilteredRecords(){
 let _searchDebounceTimer;
 function onDetailSearchInput(){
   clearTimeout(_searchDebounceTimer);
+  CURRENT_PAGE=1;
   _searchDebounceTimer=setTimeout(renderDetail, 200);
 }
 function renderDetail(){
@@ -2216,10 +2301,16 @@ function renderDetail(){
   const filtered=getDetailFilteredRecords();
 
   document.getElementById('detailCount').textContent=`총 ${filtered.length}건`;
+  buildPageSizeDd();
+  const totalPages = PAGE_SIZE==='all' ? 1 : Math.max(1, Math.ceil(filtered.length/PAGE_SIZE));
+  if(CURRENT_PAGE>totalPages) CURRENT_PAGE=totalPages;
+  if(CURRENT_PAGE<1) CURRENT_PAGE=1;
+  const pageRows = PAGE_SIZE==='all' ? filtered : filtered.slice((CURRENT_PAGE-1)*PAGE_SIZE, CURRENT_PAGE*PAGE_SIZE);
   const colCount=11+(DELETE_MODE?1:0);
-  document.getElementById('detailTableBody').innerHTML=filtered.length
-    ?filtered.map(r=>buildDetailRow(r)).join('')
+  document.getElementById('detailTableBody').innerHTML=pageRows.length
+    ?pageRows.map(r=>buildDetailRow(r)).join('')
     :`<tr><td colspan="${colCount}">${emptyState('조건에 맞는 내역이 없습니다.','🔍')}</td></tr>`;
+  renderPaginationRow(filtered.length, totalPages);
   if(DELETE_MODE) syncSelectAllCheckbox(filtered);
 }
 

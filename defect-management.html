@@ -114,6 +114,17 @@ html[data-theme="dark"] .top-tab.active{color:#fff}
 .search-box:focus{border-color:var(--sky100);box-shadow:0 0 0 3px rgba(55,138,221,.1)}
 .filter-count{font-size:12.5px;color:var(--txt);font-weight:500;white-space:nowrap;padding:3px 0}
 
+/* ── 페이지네이션(레코드 표시 개수, 2026-09-10) ── */
+.count-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
+
 /* ── TABLE ── */
 .tbl-wrap{background:var(--card);border-radius:var(--r12);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow)}
 .tbl-scroll{overflow-x:auto}
@@ -932,6 +943,12 @@ if (window.self !== window.top) {
       </button>
       <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_list" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_list" onclick="togglePageSizeDd('list')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_list">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_list"></div>
+    </div>
   </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
@@ -941,6 +958,7 @@ if (window.self !== window.top) {
       </table>
     </div>
   </div>
+  <div class="pagination-row" id="listPaginationRow"></div>
 </div>
 
 <!-- 패널2: 미처리 -->
@@ -958,6 +976,12 @@ if (window.self !== window.top) {
       </div>
     </div>
     <div class="filter-count" id="unprocCount"></div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_unproc" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_unproc" onclick="togglePageSizeDd('unproc')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_unproc">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_unproc"></div>
+    </div>
   </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
@@ -981,6 +1005,7 @@ if (window.self !== window.top) {
       </table>
     </div>
   </div>
+  <div class="pagination-row" id="unprocPaginationRow"></div>
 </div>
 
 <!-- 패널3: 터널별 -->
@@ -994,8 +1019,15 @@ if (window.self !== window.top) {
       <div class="dd-menu" id="tunnelTabDdMenu"></div>
     </div>
     <div class="filter-count" id="tunnelTabCount"></div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_tunnel" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_tunnel" onclick="togglePageSizeDd('tunnel')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_tunnel">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_tunnel"></div>
+    </div>
   </div>
   <div id="tunnelPanels"></div>
+  <div class="pagination-row" id="tunnelPaginationRow"></div>
 </div>
 
 <!-- 패널4: 업체별 -->
@@ -1009,8 +1041,15 @@ if (window.self !== window.top) {
       <div class="dd-menu" id="companyTabDdMenu"></div>
     </div>
     <div class="filter-count" id="companyTabCount"></div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_company" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_company" onclick="togglePageSizeDd('company')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_company">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_company"></div>
+    </div>
   </div>
   <div id="companyPanels"></div>
+  <div class="pagination-row" id="companyPaginationRow"></div>
 </div>
 
 <!-- 패널5: 업체연락처 -->
@@ -1050,6 +1089,12 @@ if (window.self !== window.top) {
       </button>
       <button id="cDelConfirmBtn" onclick="deleteSelectedContactRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_contact" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_contact" onclick="togglePageSizeDd('contact')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_contact">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_contact"></div>
+    </div>
   </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
@@ -1067,6 +1112,7 @@ if (window.self !== window.top) {
       </table>
     </div>
   </div>
+  <div class="pagination-row" id="contactPaginationRow"></div>
 </div>
 
 <!-- 패널6: 하자관리(보증) -->
@@ -1120,6 +1166,12 @@ if (window.self !== window.top) {
       </button>
       <button id="mDelConfirmBtn" onclick="deleteSelectedMgmtRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_mgmt" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_mgmt" onclick="togglePageSizeDd('mgmt')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_mgmt">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_mgmt"></div>
+    </div>
   </div>
   <div class="tbl-wrap">
     <div class="tbl-scroll">
@@ -1142,6 +1194,7 @@ if (window.self !== window.top) {
       </table>
     </div>
   </div>
+  <div class="pagination-row" id="mgmtPaginationRow"></div>
 </div>
 
 </div><!-- /wrap -->
@@ -1150,7 +1203,89 @@ if (window.self !== window.top) {
 var ALL_DATA = [];
 var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', year:'ALL', month:'ALL' };
 var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
+// true가 되면 기본값(터널별=청하터널, 업체별=목록 최상위 업체) 자동 적용을 멈추고 사용자 선택을 유지
+// (2026-09-10, 태양광발전 앱 _detailTunnelUserPicked와 동일 패턴)
+var _tunnelTabUserPicked=false;
+var _companyTabUserPicked=false;
 var CURRENT_TAB = 1;
+
+/* ── 페이지네이션(레코드 표시 개수) ── 사진·레코드 많은 탭의 초기 로딩 지연 방지(2026-09-10).
+   탭별로 독립된 key(list/unproc/tunnel/company/contact/mgmt)를 쓰며, 터널별·업체별처럼 그룹 카드가
+   여러 개인 탭은 그룹별 key(예: tunnel:청하터널)를 추가로 써서 카드별 페이지를 독립 관리한다. ── */
+var PAGE_SIZE_OPTIONS=[10,20,30,50,100];
+var PAGE_STATE = {};
+function getPageState(key){
+  if(!PAGE_STATE[key]){
+    var size=10;
+    try{
+      var raw=localStorage.getItem('defectMgmt_pageSize_'+key);
+      var v=parseInt(raw,10);
+      if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) size=v;
+      else if(raw==='all') size='all';
+    }catch(e){}
+    PAGE_STATE[key]={size:size, page:1};
+  }
+  return PAGE_STATE[key];
+}
+function togglePageSizeDd(key){ toggleDd('pageSizeDdMenu_'+key,'pageSizeDdBtn_'+key); }
+function buildPageSizeDd(key, onChange){
+  var st=getPageState(key);
+  var menu=document.getElementById('pageSizeDdMenu_'+key);
+  if(!menu) return;
+  var opts=PAGE_SIZE_OPTIONS.map(function(n){ return {val:String(n),label:n+'개씩'}; }).concat([{val:'all',label:'전체'}]);
+  var curVal = st.size==='all' ? 'all' : String(st.size);
+  menu.innerHTML=opts.map(function(o){ return '<div class="dd-opt'+(curVal===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>'; }).join('');
+  var lbl=document.getElementById('pageSizeDdLabel_'+key);
+  if(lbl) lbl.textContent=(opts.filter(function(o){ return o.val===curVal; })[0]||opts[0]).label;
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click', function(e){
+      var opt=e.target.closest('.dd-opt'); if(!opt) return;
+      st.size = opt.dataset.val==='all' ? 'all' : parseInt(opt.dataset.val,10);
+      st.page=1;
+      try{ localStorage.setItem('defectMgmt_pageSize_'+key, opt.dataset.val); }catch(e2){}
+      closeDd('pageSizeDdMenu_'+key,'pageSizeDdBtn_'+key);
+      buildPageSizeDd(key, onChange);
+      onChange();
+    });
+  }
+}
+// paginate: rows를 key의 현재 페이지 상태로 자른다. 반환값의 pageRows만 렌더링에 쓰고,
+// totalCount·totalPages는 renderPaginationRow에 그대로 넘긴다.
+function paginate(key, rows){
+  var st=getPageState(key);
+  var totalPages = st.size==='all' ? 1 : Math.max(1, Math.ceil(rows.length/st.size));
+  if(st.page>totalPages) st.page=totalPages;
+  if(st.page<1) st.page=1;
+  var pageRows = st.size==='all' ? rows : rows.slice((st.page-1)*st.size, st.page*st.size);
+  return { pageRows:pageRows, totalPages:totalPages, totalCount:rows.length };
+}
+var PAGE_RERENDER = {}; // key -> 다시 그릴 함수(goToPage에서 사용)
+function goToPage(key, n){
+  getPageState(key).page=n;
+  var fn=PAGE_RERENDER[key];
+  if(fn) fn();
+}
+function renderPaginationRow(elId, key, totalPages, rerenderFn){
+  PAGE_RERENDER[key]=rerenderFn;
+  var el=document.getElementById(elId);
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  var cur=getPageState(key).page;
+  var pages=[];
+  var win=2;
+  for(var i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  var html='<button class="page-btn" onclick="goToPage(\''+key+'\','+(cur-1)+')" '+(cur<=1?'disabled':'')+' aria-label="이전 페이지">‹</button>';
+  html+=pages.map(function(p){
+    if(p==='...') return '<button class="page-btn ellipsis" disabled>…</button>';
+    return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage(\''+key+'\','+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
+  }).join('');
+  html+='<button class="page-btn" onclick="goToPage(\''+key+'\','+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
 var AFTER_DEFECT_RELOAD_CB = null; // 하자내역 목록 새로고침 후 자동 상세 오픈 콜백
 
 // ── 열 정의 (노션 하자보수DB 컬럼명과 동일하게 표기) ──
@@ -2063,12 +2198,16 @@ function renderUnprocPanel(){
 
   var tbody = document.getElementById('unprocBody');
   if(!tbody) return;
+  buildPageSizeDd('unproc', renderUnprocPanel);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:40px;color:var(--teal600);font-weight:500">🎉 미처리 하자가 없습니다!</td></tr>';
+    renderPaginationRow('unprocPaginationRow','unproc',1,renderUnprocPanel);
     return;
   }
   var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
-  tbody.innerHTML = buildPanelRows(rows, cols);
+  var _pg = paginate('unproc', rows);
+  tbody.innerHTML = buildPanelRows(_pg.pageRows, cols);
+  renderPaginationRow('unprocPaginationRow','unproc',_pg.totalPages,renderUnprocPanel);
 }
 
 /* ── 사진 썸네일 헬퍼 (테이블용) ── */
@@ -2131,12 +2270,16 @@ function renderList(){
   var visKeys = getColKeys();
   var tbody = document.getElementById('listBody');
   var colCount = visKeys.length + (DELETE_MODE?1:0);
+  buildPageSizeDd('list', renderList);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    renderPaginationRow('listPaginationRow','list',1,renderList);
     if(CURRENT_TAB===1) updateKpiForList();
     return;
   }
-  tbody.innerHTML = rows.map(function(r){
+  var _pg = paginate('list', rows);
+  renderPaginationRow('listPaginationRow','list',_pg.totalPages,renderList);
+  tbody.innerHTML = _pg.pageRows.map(function(r){
     var s = r['조치여부'];
     var badge = s==='완료'?'badge-done':s==='진행중'?'badge-prog':'badge-poor';
     var cells = visKeys.map(function(key){
@@ -2306,6 +2449,8 @@ function selectTabDd(kind, val, el){
   if(el) el.classList.add('sel');
   document.getElementById(labelId).textContent = val==='ALL' ? defLabel : val;
   TAB_FILTER[kind] = val;
+  if(kind==='tunnel'){ _tunnelTabUserPicked=true; getPageState('tunnel').page=1; }
+  else               { _companyTabUserPicked=true; getPageState('company').page=1; }
   closeTabDd(menuId, btnId);
   var btn = document.getElementById(btnId);
   if(btn) btn.classList.toggle('active', val!=='ALL');
@@ -2395,16 +2540,35 @@ function renderTunnelPanel(){
   var allTunnels = groupBy(ALL_DATA,'터널명');
   var el = document.getElementById('tunnelPanels');
   var keys = Object.keys(allTunnels).sort();
+  // 터널별 탭 필터 기본값 = 청하터널(2026-09-10 요청) — 데이터에 실제 존재할 때만 적용,
+  // 사용자가 드롭다운에서 무엇이든 직접 고르면(selectTabDd) 다시는 자동 개입하지 않는다.
+  if(!_tunnelTabUserPicked && TAB_FILTER.tunnel==='ALL' && keys.indexOf('청하터널')>=0){
+    TAB_FILTER.tunnel='청하터널';
+    var tLbl=document.getElementById('tunnelTabDdLabel'), tBtn=document.getElementById('tunnelTabDdBtn');
+    if(tLbl) tLbl.textContent='청하터널';
+    if(tBtn) tBtn.classList.add('active');
+    buildTabDropdowns();
+  }
   if(TAB_FILTER.tunnel !== 'ALL'){
     keys = keys.filter(function(k){ return k === TAB_FILTER.tunnel; });
   }
-  if(!keys.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
+  buildPageSizeDd('tunnel', renderTunnelPanel);
+  if(!keys.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; renderPaginationRow('tunnelPaginationRow','tunnel',1,renderTunnelPanel); return; }
   var cols = pickCols(['status','date','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
   var thead = '<th class="col-status">상태</th><th>날짜</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th>업체</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
-  el.innerHTML = keys.map(function(t){
+  // 카드가 여러 개(터널 전체 보기)여도 페이지네이션이 카드 경계를 넘나들지 않도록, 그룹 순서를
+  // 유지한 채 한 줄로 펼쳐서 페이지를 자른 뒤 다시 그룹별로 묶는다. 카드 제목·완료율 등 통계는
+  // 항상 그 그룹의 전체 rows 기준(표시되는 행 수와 무관하게 유지).
+  var flat=[];
+  keys.forEach(function(t){ allTunnels[t].forEach(function(r){ flat.push({g:t, r:r}); }); });
+  var pg = paginate('tunnel', flat);
+  var visibleByKey={};
+  pg.pageRows.forEach(function(item){ (visibleByKey[item.g]=visibleByKey[item.g]||[]).push(item.r); });
+  el.innerHTML = keys.filter(function(t){ return visibleByKey[t]; }).map(function(t){
     var rows = allTunnels[t];
-    return buildPanelCard(t, '', rows, thead, buildPanelRows(rows, cols), true);
+    return buildPanelCard(t, '', rows, thead, buildPanelRows(visibleByKey[t], cols), true);
   }).join('');
+  renderPaginationRow('tunnelPaginationRow','tunnel',pg.totalPages,renderTunnelPanel);
 }
 
 /* ── COMPANY PANEL ── */
@@ -2412,13 +2576,30 @@ function renderCompanyPanel(){
   var companies = groupBy(ALL_DATA,'업체명');
   var el = document.getElementById('companyPanels');
   var sorted = Object.keys(companies).sort(function(a,b){ return companies[b].length-companies[a].length; });
+  // 업체별 탭 필터 기본값 = 목록(드롭다운, 가나다순) 최상위 업체(2026-09-10 요청)
+  if(!_companyTabUserPicked && TAB_FILTER.company==='ALL'){
+    var topCompany = getUniqueValues('업체명')[0];
+    if(topCompany){
+      TAB_FILTER.company=topCompany;
+      var cLbl=document.getElementById('companyTabDdLabel'), cBtn=document.getElementById('companyTabDdBtn');
+      if(cLbl) cLbl.textContent=topCompany;
+      if(cBtn) cBtn.classList.add('active');
+      buildTabDropdowns();
+    }
+  }
   if(TAB_FILTER.company !== 'ALL'){
     sorted = sorted.filter(function(k){ return k === TAB_FILTER.company; });
   }
-  if(!sorted.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; return; }
+  buildPageSizeDd('company', renderCompanyPanel);
+  if(!sorted.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; renderPaginationRow('companyPaginationRow','company',1,renderCompanyPanel); return; }
   var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','contact','phone','remark','manager']);
   var thead = '<th class="col-status">상태</th><th>날짜</th><th>터널</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
-  el.innerHTML = sorted.map(function(cp){
+  var flat=[];
+  sorted.forEach(function(cp){ companies[cp].forEach(function(r){ flat.push({g:cp, r:r}); }); });
+  var pg = paginate('company', flat);
+  var visibleByKey={};
+  pg.pageRows.forEach(function(item){ (visibleByKey[item.g]=visibleByKey[item.g]||[]).push(item.r); });
+  el.innerHTML = sorted.filter(function(cp){ return visibleByKey[cp]; }).map(function(cp){
     var rows = companies[cp];
     var contactRow = rows.find(function(r){ return r['업체담당자']||r['전화번호']; })||rows[0];
     var contact = contactRow['업체담당자']||'';
@@ -2426,8 +2607,9 @@ function renderCompanyPanel(){
     var subHtml = (contact||tel)
       ? '<div style="font-size:13px;color:var(--txt2);margin-top:3px">'+esc(contact)+(tel?' &nbsp;&middot;&nbsp; '+esc(tel):'')+'</div>'
       : '';
-    return buildPanelCard(cp, subHtml, rows, thead, buildPanelRows(rows, cols), true);
+    return buildPanelCard(cp, subHtml, rows, thead, buildPanelRows(visibleByKey[cp], cols), true);
   }).join('');
+  renderPaginationRow('companyPaginationRow','company',pg.totalPages,renderCompanyPanel);
 }
 
 /* ── DETAIL MODAL ── */
@@ -3730,11 +3912,15 @@ function renderContactTable(){
   var tbody = document.getElementById('contactBody');
   if(!tbody) return;
   var colCount = 7 + (CONTACT_DELETE_MODE?1:0);
+  buildPageSizeDd('contact', renderContactTable);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    renderPaginationRow('contactPaginationRow','contact',1,renderContactTable);
     return;
   }
-  tbody.innerHTML = rows.map(function(r){
+  var _pg = paginate('contact', rows);
+  renderPaginationRow('contactPaginationRow','contact',_pg.totalPages,renderContactTable);
+  tbody.innerHTML = _pg.pageRows.map(function(r){
     var gBadge = r.관리구분==='안전관리자'
       ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">안전관리자</span>'
       : r.관리구분==='점검팀'
@@ -4634,11 +4820,15 @@ function renderMgmtTable(){
   var tbody = document.getElementById('mgmtBody');
   if(!tbody) return;
   var colCount = 12 + (MGMT_DELETE_MODE?1:0);
+  buildPageSizeDd('mgmt', renderMgmtTable);
   if(!rows.length){
     tbody.innerHTML = '<tr><td colspan="'+colCount+'" style="text-align:center;padding:32px;color:var(--txt3)">검색 결과가 없습니다</td></tr>';
+    renderPaginationRow('mgmtPaginationRow','mgmt',1,renderMgmtTable);
     return;
   }
-  tbody.innerHTML = rows.map(function(r){
+  var _pg = paginate('mgmt', rows);
+  renderPaginationRow('mgmtPaginationRow','mgmt',_pg.totalPages,renderMgmtTable);
+  tbody.innerHTML = _pg.pageRows.map(function(r){
     var cBadge = r['구분']==='전기공사'
       ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
       : r['구분']==='소방(전기)'
