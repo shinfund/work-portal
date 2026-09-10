@@ -453,12 +453,12 @@ if (window.self !== window.top) {
       </div>
       <div class="field-row2">
         <div class="modal-field">
-          <label class="modal-label">수전용량(kW)</label>
-          <input id="tnPower" class="modal-input" type="number" step="1" placeholder="예) 1000"/>
-        </div>
-        <div class="modal-field">
           <label class="modal-label">이정(포항기점k)</label>
           <input id="tnMile" class="modal-input" type="number" step="0.1" placeholder="예) 3.9"/>
+        </div>
+        <div class="modal-field">
+          <label class="modal-label">수전용량(kW)</label>
+          <input id="tnPower" class="modal-input" type="number" step="1" placeholder="예) 1000"/>
         </div>
       </div>
       <div class="modal-field">
@@ -613,8 +613,8 @@ if (window.self !== window.top) {
             <th style="white-space:nowrap">터널명</th>
             <th class="r" style="white-space:nowrap">연장-포항(M)</th>
             <th class="r" style="white-space:nowrap">연장-영덕(M)</th>
-            <th class="r" style="white-space:nowrap">수전용량(kW)</th>
             <th class="r" style="white-space:nowrap">이정(포항기점k)</th>
+            <th class="r" style="white-space:nowrap">수전용량(kW)</th>
             <th style="white-space:nowrap">주소</th>
             <th style="white-space:nowrap">비고</th>
           </tr></thead>
@@ -884,7 +884,7 @@ var TUNNEL_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','청�
 var TUNNEL_MASTER_ORDER = ['흥해터널','청하터널(주)','청하터널(부)','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 var GUBUN_ORDER = ['전기','소방','통신','설비','기타'];
 var UNIT_OPTIONS = ['대','SET','조','EA','식'];
-var EQUIP_NAME_ORDER = ['LBS','MOF','VCB','변압기','ACB','ATS','CTTS','UPS','발전기','LA','SA','JET FAN','VICOTEC','FLOWSIC','소화전함','소화기','발신기','경종','시각경보기','화재감지기','거리유도표시등','피난구유도등','소화기표시등','RTU','DLP','MMI','조명제어기','터널진입차단','자동화재탐지','비상경보','비상콘센트','화재수신기','태양광발전'];
+var EQUIP_NAME_ORDER = ['LBS','LA','MOF','VCB','SA','변압기','ACB','CTTS','ATS','UPS','발전기','JET FAN','VICOTEC','FLOWSIC','소화전함','소화기','발신기','경종','시각경보기','화재감지기','거리유도표시등','피난구유도등','소화기표시등','RTU','DLP','MMI','조명제어기','터널진입차단','자동화재탐지','비상경보','비상콘센트','화재수신기','태양광발전'];
 function tunnelRank(v){ var i=TUNNEL_ORDER.indexOf(v); return i<0?999:i; }
 function gubunRank(v){ var i=GUBUN_ORDER.indexOf(v); return i<0?999:i; }
 function equipNameRank(v){ var i=EQUIP_NAME_ORDER.indexOf(v); return i<0?999:i; }
@@ -1176,10 +1176,26 @@ function renderPaginationRow(totalCount, totalPages){
 }
 
 /* ── 시설물내역 목록 ── */
+function equipGroupRank(r){
+  var name=r['설비명'], spec=r['규격']||'';
+  if(name==='MOF' && spec.indexOf('조명용')>=0) return equipNameRank('변압기')+0.5;
+  return equipNameRank(name);
+}
+var EQUIP_SPEC_SUFFIX_ORDER_NAMES = ['변압기','ACB','CTTS'];
+function equipSpecSuffixRank(spec){
+  spec = spec||'';
+  if(spec.indexOf('조명용')>=0) return 0;
+  if(spec.indexOf('일반용')>=0) return 1;
+  if(spec.indexOf('동력용')>=0) return 2;
+  return 3;
+}
 function compareEquipRow(a,b){
   var t=tunnelRank(a['터널명'])-tunnelRank(b['터널명']); if(t) return t;
   var g=gubunRank(a['구분'])-gubunRank(b['구분']); if(g) return g;
-  var e=equipNameRank(a['설비명'])-equipNameRank(b['설비명']); if(e) return e;
+  var e=equipGroupRank(a)-equipGroupRank(b); if(e) return e;
+  if(a['설비명']===b['설비명'] && EQUIP_SPEC_SUFFIX_ORDER_NAMES.indexOf(a['설비명'])>=0){
+    var sr=equipSpecSuffixRank(a['규격'])-equipSpecSuffixRank(b['규격']); if(sr) return sr;
+  }
   var as=a['규격']||'', bs=b['규격']||''; return as<bs?-1:as>bs?1:0;
 }
 function filteredEquip(){
@@ -1634,8 +1650,8 @@ function renderTunnelTab(){
           + '<td style="white-space:nowrap"><span class="type-badge '+tunnelBadgeClass(r['터널명'])+'">'+esc(r['터널명']||'—')+'</span></td>'
           + '<td class="r">'+fmtWonOrDash(r['연장포항'])+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['연장영덕'])+'</td>'
-          + '<td class="r">'+fmtWonOrDash(r['수전용량'])+'</td>'
           + '<td class="r">'+fmtWonOrDash(r['이정'])+'</td>'
+          + '<td class="r">'+fmtWonOrDash(r['수전용량'])+'</td>'
           + '<td>'+esc(r['주소']||'-')+'</td>'
           + '<td>'+esc(r['비고']||'-')+'</td>'
           + '</tr>';
@@ -1930,18 +1946,9 @@ var EXCEL_COLUMNS_EQUIP=[
   { key:'영덕', header:'영덕', numFmt:'#,##0.##' },
   { key:'비고', header:'비고', wrap:true }
 ];
-/* ── 엑셀 표 위 터널제원 요약 문장(터널제원 탭 TUNNEL_DATA 참조) ──
-   터널 1개면 항목별 한 줄씩(연장/수전용량/이정/주소), 여러 개면 터널당 한 줄로 압축 */
-function tunnelInfoLinesSingle(td){
-  return [
-    '연장: 포항 '+fmtWonOrDash(td['연장포항'])+'M / 영덕 '+fmtWonOrDash(td['연장영덕'])+'M',
-    '수전용량: '+fmtWonOrDash(td['수전용량'])+'kW',
-    '이정(포항기점): '+fmtWonOrDash(td['이정'])+'k',
-    '주소: '+(td['주소']||'-')
-  ];
-}
-function tunnelInfoLineCombined(td){
-  return td['터널명']+' — 연장 포항 '+fmtWonOrDash(td['연장포항'])+'M/영덕 '+fmtWonOrDash(td['연장영덕'])+'M, 수전용량 '+fmtWonOrDash(td['수전용량'])+'kW, 이정(포항기점) '+fmtWonOrDash(td['이정'])+'k, 주소 '+(td['주소']||'-');
+/* ── 엑셀 3행 터널제원 요약 문장(터널제원 탭 TUNNEL_DATA 참조) ── 항상 1개 행으로 압축 */
+function tunnelInfoLineOneRow(td){
+  return '연장: 포항 '+fmtWonOrDash(td['연장포항'])+'M / 영덕 '+fmtWonOrDash(td['연장영덕'])+'M | 이정(포항기점): '+fmtWonOrDash(td['이정'])+'k | 수전용량: '+fmtWonOrDash(td['수전용량'])+'kW | '+(td['주소']||'-');
 }
 function buildTunnelInfoLines(rows){
   var seen=[], names=[];
@@ -1949,7 +1956,8 @@ function buildTunnelInfoLines(rows){
   names.sort(function(a,b){ return tunnelRank(a)-tunnelRank(b); });
   var tds=names.map(function(n){ return TUNNEL_DATA.find(function(x){ return x['터널명']===n; }); }).filter(Boolean);
   if(!tds.length) return [];
-  return tds.length===1 ? tunnelInfoLinesSingle(tds[0]) : tds.map(tunnelInfoLineCombined);
+  var lines = tds.map(tunnelInfoLineOneRow);
+  return [ tds.length===1 ? lines[0] : tds.map(function(l,i){ return names[i]+' — '+l; }).join('\n') ];
 }
 function exportEquipExcel(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
@@ -1990,8 +1998,8 @@ var EXCEL_COLUMNS_TUNNEL=[
   { key:'터널명', header:'터널명' },
   { key:'연장포항', header:'연장-포항(M)', numFmt:'#,##0.##' },
   { key:'연장영덕', header:'연장-영덕(M)', numFmt:'#,##0.##' },
-  { key:'수전용량', header:'수전용량(kW)', numFmt:'#,##0.##' },
   { key:'이정', header:'이정(포항기점k)', numFmt:'#,##0.0' },
+  { key:'수전용량', header:'수전용량(kW)', numFmt:'#,##0.##' },
   { key:'주소', header:'주소', width:34, wrap:true },
   { key:'비고', header:'비고', wrap:true }
 ];
