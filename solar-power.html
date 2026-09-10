@@ -1171,6 +1171,7 @@ let _detailTunnelFilter='';
 let _detailYearFilter='ALL';
 let _detailMonthFilter='ALL';
 let _detailUserPicked=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
+let _detailTunnelUserPicked=false; // true가 되면 터널명 기본값(청하터널(주)) 자동 적용을 멈추고 사용자 선택을 유지
 function buildDetailTunnelDd(tunnels){
   const menu=document.getElementById('tunnelDdMenu');
   if(!menu) return;
@@ -1184,6 +1185,7 @@ function buildDetailTunnelDd(tunnels){
       const opt=e.target.closest('.dd-opt');
       if(!opt) return;
       _detailTunnelFilter=opt.dataset.val;
+      _detailTunnelUserPicked=true;
       closeDetailTunnelDd();
       renderDetail();
     });
@@ -1953,6 +1955,8 @@ function renderDetail(){
     const latest=ALL_RECORDS.map(r=>r.date).filter(Boolean).sort().pop();
     if(latest){ _detailYearFilter=latest.slice(0,4); _detailMonthFilter=latest.slice(5,7); }
   }
+  // 발전내역 탭 터널명 필터 기본값 = 청하터널(주)(2026-09-10 요청, 연/월 기본값과 동일 패턴)
+  if(!_detailTunnelUserPicked && !_detailTunnelFilter && ALL_RECORDS.some(r=>r.tunnel==='청하터널(주)')) _detailTunnelFilter='청하터널(주)';
   buildDetailYearDd();
   buildDetailMonthDd();
   const recs=getYearMonthFilteredRecords();
