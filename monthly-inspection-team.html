@@ -2575,7 +2575,7 @@ function excelGridBorder(isHeader, isLastRow, colIndex, isLastCol){
 function excelCm2in(cm){ return cm/2.54; }
 const EXCEL_PAGE_PRESETS={
   landscape:{top:excelCm2in(1),bottom:excelCm2in(1),left:excelCm2in(2),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)},
-  portrait:{top:excelCm2in(1.5),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
+  portrait:{top:excelCm2in(2),bottom:excelCm2in(1),left:excelCm2in(1.5),right:excelCm2in(1),header:excelCm2in(1),footer:excelCm2in(1)}
 };
 function excelCharWeight(ch){
   const code=ch.codePointAt(0);
