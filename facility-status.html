@@ -138,6 +138,8 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-add:hover{background:#144d87}
 .tb-action-btn.tb-excel{background:#0F6E56}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
+.tb-action-btn.tb-tunnel{background:#6741D9}
+.tb-action-btn.tb-tunnel:hover{background:#5433b8}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -547,11 +549,11 @@ if (window.self !== window.top) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="excelPhotoExportLabel">엑셀(사진)</span>
         </button>
-        <button class="tb-action-btn tb-excel" id="danTunnelExportBtn" onclick="exportDanTunnelExcel()" title="단터널(남정1,2/남정3~9/강구1~3, 남정5 제외) 시설물현황만 모아 엑셀로 출력합니다">
+        <button class="tb-action-btn tb-tunnel" id="danTunnelExportBtn" onclick="exportDanTunnelExcel()" title="단터널(남정1,2/남정3~9/강구1~3, 남정5 제외) 시설물현황만 모아 엑셀로 출력합니다">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="danTunnelExportLabel">단터널출력</span>
         </button>
-        <button class="tb-action-btn tb-excel" id="jangTunnelExportBtn" onclick="exportJangTunnelExcel()" title="장터널(흥해터널/청하터널(주,부)/남정5터널) 시설물현황만 모아 엑셀로 출력합니다">
+        <button class="tb-action-btn tb-tunnel" id="jangTunnelExportBtn" onclick="exportJangTunnelExcel()" title="장터널(흥해터널/청하터널(주,부)/남정5터널) 시설물현황만 모아 엑셀로 출력합니다">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="jangTunnelExportLabel">장터널출력</span>
         </button>
