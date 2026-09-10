@@ -1227,17 +1227,9 @@ function filteredEquip(){
   });
 }
 function filteredEquipForTunnels(tunnelList){
+  /* 단터널·장터널 출력은 구분·설비명 필터와 무관하게 항상 전체(구분전체, 설비전체) 대상 */
   return EQUIP_DATA.filter(function(r){
-    if(tunnelList.indexOf(r['터널명'])<0) return false;
-    if(FILTER_GUBUN && r['구분']!==FILTER_GUBUN) return false;
-    if(FILTER_SPEC && r['설비명']!==FILTER_SPEC) return false;
-    var q=(document.getElementById('searchBox')||{}).value||'';
-    q=q.trim().toLowerCase();
-    if(q){
-      var hay=((r['설비명']||'')+' '+(r['규격']||'')+' '+(r['비고']||'')).toLowerCase();
-      if(hay.indexOf(q)<0) return false;
-    }
-    return true;
+    return tunnelList.indexOf(r['터널명'])>=0;
   });
 }
 function renderAll(){
@@ -1982,10 +1974,10 @@ function buildTunnelInfoLines(rows){
   var seen=[], names=[];
   rows.forEach(function(r){ var t=r['터널명']; if(t && seen.indexOf(t)<0){ seen.push(t); names.push(t); } });
   names.sort(function(a,b){ return tunnelRank(a)-tunnelRank(b); });
-  var tds=names.map(function(n){ return TUNNEL_DATA.find(function(x){ return x['터널명']===n; }); }).filter(Boolean);
-  if(!tds.length) return [];
-  var lines = tds.map(tunnelInfoLineOneRow);
-  return [ tds.length===1 ? lines[0] : lines.map(function(l,i){ return names[i]+' — '+l; }).join('\n') ];
+  var pairs = names.map(function(n){ return { name:n, td: TUNNEL_DATA.find(function(x){ return x['터널명']===n; }) }; }).filter(function(p){ return !!p.td; });
+  if(!pairs.length) return [];
+  if(pairs.length===1) return [ tunnelInfoLineOneRow(pairs[0].td) ];
+  return pairs.map(function(p){ return p.name+' — '+tunnelInfoLineOneRow(p.td); });
 }
 function exportEquipExcel(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
