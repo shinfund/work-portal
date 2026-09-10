@@ -598,7 +598,15 @@ if (window.self !== window.top) {
           <span id="tunnelExcelLabel">엑셀 생성</span>
         </button>
       </div>
-      <div class="sc-note">행을 클릭하면 주소·연장·수전용량 등을 수정할 수 있습니다. (터널 신규 추가·삭제는 지원하지 않는 고정 마스터 데이터입니다)</div>
+      <div class="filter-row">
+        <div class="dd-wrap" id="tunnelSpecDdWrap">
+          <button class="dd-btn" id="tunnelSpecDdBtn" onclick="toggleDd('tunnelSpecDdMenu','tunnelSpecDdBtn')" aria-haspopup="listbox" aria-label="터널명 선택">
+            <span id="tunnelSpecDdLabel">전체</span>
+          </button>
+          <div class="dd-menu" id="tunnelSpecDdMenu"></div>
+        </div>
+        <input class="search-box" id="tunnelSpecSearchBox" placeholder="🔍 주소, 비고 검색..." aria-label="터널제원 검색" oninput="renderTunnelTab()"/>
+      </div>
       <div class="tbl-wrap">
         <table>
           <thead><tr>
@@ -1079,7 +1087,7 @@ function closeDd(menuId, btnId){
   var m=document.getElementById(menuId); if(m) m.classList.remove('open');
 }
 function closeAllDd(){
-  ['tunnelDdMenu','gubunDdMenu','specNameDdMenu','pageSizeDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
+  ['tunnelDdMenu','gubunDdMenu','specNameDdMenu','pageSizeDdMenu','tunnelSpecDdMenu'].forEach(function(id){ var m=document.getElementById(id); if(m) m.classList.remove('open'); });
 }
 document.addEventListener('click', function(e){
   document.querySelectorAll('.dd-menu.open').forEach(function(menu){
@@ -1091,7 +1099,7 @@ document.addEventListener('click', function(e){
 });
 
 /* ── 필터(고정 순서 목록 기준 — 현재 데이터에 없는 항목도 항상 선택 가능) ── */
-var FILTER_TUNNEL='청하터널(주)', FILTER_GUBUN='전기', FILTER_SPEC='';
+var FILTER_TUNNEL='청하터널(주)', FILTER_GUBUN='전기', FILTER_SPEC='', FILTER_TUNNEL_SPEC='';
 function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, setter, onChange){
   var menu=document.getElementById(menuId);
   if(!menu) return;
@@ -1108,6 +1116,7 @@ function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, se
 function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER,'전체', function(v){ FILTER_TUNNEL=v; }, function(){ buildTunnelDd(); renderRows(); }); }
 function buildGubunDd(){ buildFixedFilterDd('gubunDdMenu','gubunDdBtn','gubunDdLabel',FILTER_GUBUN,GUBUN_ORDER,'전체', function(v){ FILTER_GUBUN=v; }, function(){ buildGubunDd(); renderRows(); }); }
 function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn','specNameDdLabel',FILTER_SPEC,EQUIP_NAME_ORDER,'전체', function(v){ FILTER_SPEC=v; }, function(){ buildSpecNameDd(); renderRows(); }); }
+function buildTunnelSpecDd(){ buildFixedFilterDd('tunnelSpecDdMenu','tunnelSpecDdBtn','tunnelSpecDdLabel',FILTER_TUNNEL_SPEC,TUNNEL_ORDER,'전체', function(v){ FILTER_TUNNEL_SPEC=v; }, function(){ buildTunnelSpecDd(); renderTunnelTab(); }); }
 
 /* ── 페이지네이션 ── */
 var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
@@ -1603,8 +1612,21 @@ function openDetailModal(id){
 function closeDetailModal(e){ closeModal('detailModal', e); }
 
 /* ── 터널제원 탭 ── */
+function filteredTunnelSpec(){
+  return TUNNEL_DATA.filter(function(r){
+    if(FILTER_TUNNEL_SPEC && r['터널명']!==FILTER_TUNNEL_SPEC) return false;
+    var q=(document.getElementById('tunnelSpecSearchBox')||{}).value||'';
+    q=q.trim().toLowerCase();
+    if(q){
+      var hay=((r['주소']||'')+' '+(r['비고']||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+}
 function renderTunnelTab(){
-  var rows = TUNNEL_DATA.slice().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
+  buildTunnelSpecDd();
+  var rows = filteredTunnelSpec().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
   document.getElementById('tunnelBadge').textContent = rows.length+'개소';
   document.getElementById('tunnelTableBody').innerHTML = rows.length
     ? rows.map(function(r){
@@ -1793,11 +1815,16 @@ function buildExcelReport(opts){
   var failedPhotoCount=0;
   btn.disabled=true; lbl.textContent='준비 중...';
 
+  var infoLines=opts.infoLines||[];
+  var hasInfo=infoLines.length>0;
+  var headerRowNum = hasInfo ? (3+infoLines.length) : 2;
+  var dataStartRow = headerRowNum+1;
+
   loadExcelLib().then(function(){
     var wb=new ExcelJS.Workbook();
     var ws=wb.addWorksheet(opts.sheetName, {
-      views:[{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
-      pageSetup:{ paperSize:9, orientation:orientation, fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, verticalCentered:false, margins:EXCEL_PAGE_PRESETS[orientation], printTitlesRow:'2:2' },
+      views:[{ state:'frozen', ySplit:headerRowNum, showGridLines:false, zoomScale:90 }],
+      pageSetup:{ paperSize:9, orientation:orientation, fitToPage:true, fitToWidth:1, fitToHeight:0, horizontalCentered:true, verticalCentered:false, margins:EXCEL_PAGE_PRESETS[orientation], printTitlesRow:headerRowNum+':'+headerRowNum },
       headerFooter:{ oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME, oddFooter:'' }
     });
     var colWidths=columns.map(function(col){
@@ -1812,7 +1839,20 @@ function buildExcelReport(opts){
     var titleCell=titleRow.getCell(1);
     titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={ vertical:'middle' };
 
-    var headerRow=ws.getRow(2);
+    if(hasInfo){
+      infoLines.forEach(function(line,i){
+        var rn=3+i;
+        var row=ws.getRow(rn);
+        row.height=EXCEL_ROW_HEIGHTS.data;
+        ws.mergeCells(rn,1,rn,columns.length);
+        var cell=row.getCell(1);
+        cell.value=line; cell.font=EXCEL_BODY_FONT;
+        cell.alignment={ vertical:'middle', horizontal:'left', wrapText:true };
+        row.commit();
+      });
+    }
+
+    var headerRow=ws.getRow(headerRowNum);
     headerRow.height=EXCEL_ROW_HEIGHTS.header;
     columns.forEach(function(col,i){
       var cell=headerRow.getCell(i+1);
@@ -1827,7 +1867,7 @@ function buildExcelReport(opts){
     var rowHeightForData = hasPhotoColumns ? EXCEL_ROW_HEIGHTS.dataWithPhoto : EXCEL_ROW_HEIGHTS.data;
 
     rows.forEach(function(r,i){
-      var rn=3+i;
+      var rn=dataStartRow+i;
       var row=ws.getRow(rn);
       row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, rowHeightForData);
       columns.forEach(function(col,ci){
@@ -1843,7 +1883,7 @@ function buildExcelReport(opts){
 
     var photoTasks=[];
     rows.forEach(function(r,i){
-      var rn0=2+i;
+      var rn0=dataStartRow-1+i;
       photoColumns.forEach(function(pc){
         var url=r[pc.col.key];
         if(Array.isArray(url)) url=url[0]||'';
@@ -1890,6 +1930,27 @@ var EXCEL_COLUMNS_EQUIP=[
   { key:'영덕', header:'영덕', numFmt:'#,##0.##' },
   { key:'비고', header:'비고', wrap:true }
 ];
+/* ── 엑셀 표 위 터널제원 요약 문장(터널제원 탭 TUNNEL_DATA 참조) ──
+   터널 1개면 항목별 한 줄씩(연장/수전용량/이정/주소), 여러 개면 터널당 한 줄로 압축 */
+function tunnelInfoLinesSingle(td){
+  return [
+    '연장: 포항 '+fmtWonOrDash(td['연장포항'])+'M / 영덕 '+fmtWonOrDash(td['연장영덕'])+'M',
+    '수전용량: '+fmtWonOrDash(td['수전용량'])+'kW',
+    '이정(포항기점): '+fmtWonOrDash(td['이정'])+'k',
+    '주소: '+(td['주소']||'-')
+  ];
+}
+function tunnelInfoLineCombined(td){
+  return td['터널명']+' — 연장 포항 '+fmtWonOrDash(td['연장포항'])+'M/영덕 '+fmtWonOrDash(td['연장영덕'])+'M, 수전용량 '+fmtWonOrDash(td['수전용량'])+'kW, 이정(포항기점) '+fmtWonOrDash(td['이정'])+'k, 주소 '+(td['주소']||'-');
+}
+function buildTunnelInfoLines(rows){
+  var seen=[], names=[];
+  rows.forEach(function(r){ var t=r['터널명']; if(t && seen.indexOf(t)<0){ seen.push(t); names.push(t); } });
+  names.sort(function(a,b){ return tunnelRank(a)-tunnelRank(b); });
+  var tds=names.map(function(n){ return TUNNEL_DATA.find(function(x){ return x['터널명']===n; }); }).filter(Boolean);
+  if(!tds.length) return [];
+  return tds.length===1 ? tunnelInfoLinesSingle(tds[0]) : tds.map(tunnelInfoLineCombined);
+}
 function exportEquipExcel(){
   var rows=filteredEquip().slice().sort(compareEquipRow);
   var tunnelPart = FILTER_TUNNEL || '포항영덕간터널';
@@ -1898,7 +1959,7 @@ function exportEquipExcel(){
   buildExcelReport({
     btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
-    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape'
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
   });
 }
 var EXCEL_COLUMNS_EQUIP_PHOTO=[
@@ -1922,7 +1983,7 @@ function exportEquipExcelWithPhoto(){
   buildExcelReport({
     btnId:'excelPhotoExportBtn', lblId:'excelPhotoExportLabel', lblDefault:'엑셀(사진)',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
-    columns:EXCEL_COLUMNS_EQUIP_PHOTO, rows:rows, orientation:'landscape'
+    columns:EXCEL_COLUMNS_EQUIP_PHOTO, rows:rows, orientation:'landscape', infoLines:buildTunnelInfoLines(rows)
   });
 }
 var EXCEL_COLUMNS_TUNNEL=[
@@ -1935,9 +1996,10 @@ var EXCEL_COLUMNS_TUNNEL=[
   { key:'비고', header:'비고', wrap:true }
 ];
 function exportTunnelExcel(){
-  var rows=TUNNEL_DATA.slice().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
+  var rows=filteredTunnelSpec().sort(function(a,b){ return tunnelRank(a['터널명'])-tunnelRank(b['터널명']); });
   var year = new Date().getFullYear();
-  var baseName = '포항영덕간터널 터널제원표';
+  var tunnelPart = FILTER_TUNNEL_SPEC || '포항영덕간터널';
+  var baseName = tunnelPart+' 터널제원표';
   buildExcelReport({
     btnId:'tunnelExcelBtn', lblId:'tunnelExcelLabel', lblDefault:'엑셀 생성',
     sheetName:'터널제원', title: baseName, fnamePrefix: year+'년 '+baseName,
