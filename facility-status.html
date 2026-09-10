@@ -140,6 +140,7 @@ html[data-theme="dark"] .detail-count{color:#fff}
 .tb-action-btn.tb-excel:hover{background:#0c5a46}
 .tb-action-btn.tb-tunnel{background:#6741D9}
 .tb-action-btn.tb-tunnel:hover{background:#5433b8}
+.tb-group-label{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;flex-shrink:0;padding:0 1px}
 .tb-action-btn.tb-delete{background:#495057}
 .tb-action-btn.tb-delete:hover{background:#3a3f45}
 .tb-action-btn.tb-delete.on{background:#B23A2E}
@@ -541,9 +542,10 @@ if (window.self !== window.top) {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           신규등록
         </button>
+        <span class="tb-group-label">출력</span>
         <button class="tb-action-btn tb-excel" id="excelExportBtn" onclick="exportEquipExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="excelExportLabel">엑셀 생성</span>
+          <span id="excelExportLabel">엑셀</span>
         </button>
         <button class="tb-action-btn tb-excel" id="excelPhotoExportBtn" onclick="exportEquipExcelWithPhoto()" title="사진·명판 컬럼을 포함한 엑셀을 생성합니다">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -551,11 +553,15 @@ if (window.self !== window.top) {
         </button>
         <button class="tb-action-btn tb-tunnel" id="danTunnelExportBtn" onclick="exportDanTunnelExcel()" title="단터널(남정1,2/남정3~9/강구1~3, 남정5 제외) 시설물현황만 모아 엑셀로 출력합니다">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="danTunnelExportLabel">단터널출력</span>
+          <span id="danTunnelExportLabel">단터널</span>
         </button>
         <button class="tb-action-btn tb-tunnel" id="jangTunnelExportBtn" onclick="exportJangTunnelExcel()" title="장터널(흥해터널/청하터널(주,부)/남정5터널) 시설물현황만 모아 엑셀로 출력합니다">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="jangTunnelExportLabel">장터널출력</span>
+          <span id="jangTunnelExportLabel">장터널</span>
+        </button>
+        <button class="tb-action-btn tb-tunnel" id="cheonghaTunnelExportBtn" onclick="exportCheonghaTunnelExcel()" title="청하터널(주)/청하터널(부)/청하터널(통합) 시설물현황만 모아 엑셀로 출력합니다">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="cheonghaTunnelExportLabel">청하</span>
         </button>
       </div>
       <div class="detail-count-row">
@@ -896,6 +902,8 @@ var TUNNEL_MASTER_ORDER = ['흥해터널','청하터널(주)','청하터널(부)
 var DAN_TUNNEL_LIST = ['남정1•2터널','남정3터널','남정4터널','남정6터널','남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'];
 /* ── 장터널: 흥해터널, 청하터널(주,부 및 통합명칭), 남정5터널 ── */
 var JANG_TUNNEL_LIST = ['흥해터널','청하터널(주)','청하터널(부)','청하터널','남정5터널'];
+/* ── 청하통합: 청하터널(주)·청하터널(부)·청하터널(통합명칭) 3종을 하나로 묶어 필터·출력 ── */
+var CHEONGHA_TUNNEL_LIST = ['청하터널(주)','청하터널(부)','청하터널'];
 var GUBUN_ORDER = ['전기','소방','통신','설비','기타'];
 var UNIT_OPTIONS = ['대','SET','조','EA','식'];
 var EQUIP_NAME_ORDER = ['LBS','LA','MOF','VCB','SA','변압기','ACB','CTTS','ATS','UPS','발전기','JET FAN','VICOTEC','FLOWSIC','소화전함','소화기','발신기','경종','시각경보기','화재감지기','거리유도표시등','피난구유도등','소화기표시등','RTU','DLP','MMI','조명제어기','터널진입차단','자동화재탐지','비상경보','비상콘센트','화재수신기','태양광발전'];
@@ -1127,7 +1135,7 @@ function buildFixedFilterDd(menuId, btnId, labelId, curVal, values, defLabel, se
     onChange();
   };
 }
-function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER.concat(['단터널','장터널']),'전체', function(v){ FILTER_TUNNEL=v; }, function(){ buildTunnelDd(); renderRows(); }); }
+function buildTunnelDd(){ buildFixedFilterDd('tunnelDdMenu','tunnelDdBtn','tunnelDdLabel',FILTER_TUNNEL,TUNNEL_ORDER.concat(['단터널','장터널','청하통합']),'전체', function(v){ FILTER_TUNNEL=v; }, function(){ buildTunnelDd(); renderRows(); }); }
 function buildGubunDd(){ buildFixedFilterDd('gubunDdMenu','gubunDdBtn','gubunDdLabel',FILTER_GUBUN,GUBUN_ORDER,'전체', function(v){ FILTER_GUBUN=v; }, function(){ buildGubunDd(); renderRows(); }); }
 function buildSpecNameDd(){ buildFixedFilterDd('specNameDdMenu','specNameDdBtn','specNameDdLabel',FILTER_SPEC,EQUIP_NAME_ORDER,'전체', function(v){ FILTER_SPEC=v; }, function(){ buildSpecNameDd(); renderRows(); }); }
 function buildTunnelSpecDd(){ buildFixedFilterDd('tunnelSpecDdMenu','tunnelSpecDdBtn','tunnelSpecDdLabel',FILTER_TUNNEL_SPEC,TUNNEL_ORDER,'전체', function(v){ FILTER_TUNNEL_SPEC=v; }, function(){ buildTunnelSpecDd(); renderTunnelTab(); }); }
@@ -1216,6 +1224,7 @@ function filteredEquip(){
   return EQUIP_DATA.filter(function(r){
     if(FILTER_TUNNEL==='단터널'){ if(DAN_TUNNEL_LIST.indexOf(r['터널명'])<0) return false; }
     else if(FILTER_TUNNEL==='장터널'){ if(JANG_TUNNEL_LIST.indexOf(r['터널명'])<0) return false; }
+    else if(FILTER_TUNNEL==='청하통합'){ if(CHEONGHA_TUNNEL_LIST.indexOf(r['터널명'])<0) return false; }
     else if(FILTER_TUNNEL && r['터널명']!==FILTER_TUNNEL) return false;
     if(FILTER_GUBUN && r['구분']!==FILTER_GUBUN) return false;
     if(FILTER_SPEC && r['설비명']!==FILTER_SPEC) return false;
@@ -1988,7 +1997,7 @@ function exportEquipExcel(){
   var year = new Date().getFullYear();
   var baseName = year+'년 '+tunnelPart+' 시설물현황';
   buildExcelReport({
-    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀 생성',
+    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
   });
@@ -2022,7 +2031,7 @@ function exportDanTunnelExcel(){
   var year = new Date().getFullYear();
   var baseName = year+'년 단터널 시설물현황';
   buildExcelReport({
-    btnId:'danTunnelExportBtn', lblId:'danTunnelExportLabel', lblDefault:'단터널출력',
+    btnId:'danTunnelExportBtn', lblId:'danTunnelExportLabel', lblDefault:'단터널',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
   });
@@ -2032,7 +2041,17 @@ function exportJangTunnelExcel(){
   var year = new Date().getFullYear();
   var baseName = year+'년 장터널 시설물현황';
   buildExcelReport({
-    btnId:'jangTunnelExportBtn', lblId:'jangTunnelExportLabel', lblDefault:'장터널출력',
+    btnId:'jangTunnelExportBtn', lblId:'jangTunnelExportLabel', lblDefault:'장터널',
+    sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
+    columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
+  });
+}
+function exportCheonghaTunnelExcel(){
+  var rows=filteredEquipForTunnels(CHEONGHA_TUNNEL_LIST).slice().sort(compareEquipRow);
+  var year = new Date().getFullYear();
+  var baseName = year+'년 청하통합 시설물현황';
+  buildExcelReport({
+    btnId:'cheonghaTunnelExportBtn', lblId:'cheonghaTunnelExportLabel', lblDefault:'청하',
     sheetName:'시설물내역', title: baseName, fnamePrefix: baseName,
     columns:EXCEL_COLUMNS_EQUIP, rows:rows, orientation:'portrait', infoLines:buildTunnelInfoLines(rows)
   });
