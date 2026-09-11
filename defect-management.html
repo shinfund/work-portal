@@ -3979,11 +3979,7 @@ function renderContactTable(){
   var _pg = paginate('contact', rows);
   renderPaginationRow('contactPaginationRow','contact',_pg.totalPages,renderContactTable);
   tbody.innerHTML = _pg.pageRows.map(function(r){
-    var gBadge = r.관리구분==='안전관리자'
-      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">안전관리자</span>'
-      : r.관리구분==='점검팀'
-      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">점검팀</span>'
-      : esc(r.관리구분);
+    var gBadge = esc(r.관리구분||'-');
     var tel = r.전화번호||'-';
     var telHtml = tel!=='-'
       ? '<a href="tel:'+esc(tel)+'" style="color:var(--txt);text-decoration:none">'+esc(tel)+'</a>'
@@ -4887,13 +4883,7 @@ function renderMgmtTable(){
   var _pg = paginate('mgmt', rows);
   renderPaginationRow('mgmtPaginationRow','mgmt',_pg.totalPages,renderMgmtTable);
   tbody.innerHTML = _pg.pageRows.map(function(r){
-    var cBadge = r['구분']==='전기공사'
-      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--sky50);color:var(--sky800);white-space:nowrap">전기공사</span>'
-      : r['구분']==='소방(전기)'
-      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--coral50);color:var(--coral800);white-space:nowrap">소방(전기)</span>'
-      : r['구분']==='지급자재'
-      ? '<span style="font-size:11px;font-weight:500;padding:3px 8px;border-radius:10px;background:var(--teal50);color:var(--teal600);white-space:nowrap">지급자재</span>'
-      : esc(r['구분']);
+    var cBadge = esc(r['구분']||'-');
     var checkCell = MGMT_DELETE_MODE
       ? '<td onclick="event.stopPropagation()" style="text-align:center"><input type="checkbox" '+(MGMT_DELETE_SELECTED.has(r._idx)?'checked':'')+' onchange="toggleMgmtRowSelect('+r._idx+',this.checked)"/></td>'
       : '';
