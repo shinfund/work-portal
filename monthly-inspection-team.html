@@ -536,6 +536,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elecinsp" onclick="deleteSelectedRows('elecinsp')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-elecinsp"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_elecinsp" onclick="toggleDd('pageSizeMenu_elecinsp','pageSizeBtn_elecinsp')"><span id="pageSizeLabel_elecinsp">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_elecinsp"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -545,6 +551,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-elecinsp"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-elecinsp"></div>
   </div>
 
   <!-- ▸ 고장수리 -->
@@ -1207,7 +1214,7 @@ document.addEventListener('click',e=>{
    (2026-09-11). 탭별 독립 key로 페이지 상태·크기를 저장하며, 이 기능을 쓰는 탭만 PAGE_DEFAULT_SIZE에
    등록한다(등록 안 된 탭은 기존처럼 전체 렌더). ── */
 const PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
-const PAGE_DEFAULT_SIZE={photo:15, repair:15, photoMulti:15};
+const PAGE_DEFAULT_SIZE={elecinsp:15, photo:15, repair:15, photoMulti:15};
 const PAGE_STATE={};
 const _pageFilterSig={};
 function getPageState(tabId){

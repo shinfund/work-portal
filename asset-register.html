@@ -1456,7 +1456,7 @@ function compareTunnelDateDesc(a, b){
   return ad<bd?1:ad>bd?-1:0;
 }
 /* ── 페이지네이션(표시 개수 드롭다운 + 페이지 번호, 공지사항 앱과 동일 패턴) ── */
-var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
 var PAGE_SIZE = (function(){
   try{
     var raw=localStorage.getItem('assetRegister_pageSize');

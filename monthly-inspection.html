@@ -644,6 +644,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_monthly" onclick="deleteSelectedRows('monthly')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-monthly"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_monthly" onclick="toggleDd('pageSizeMenu_monthly','pageSizeBtn_monthly')"><span id="pageSizeLabel_monthly">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_monthly"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -653,6 +659,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-monthly"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-monthly"></div>
   </div>
 
   <!-- ▸ 전기설비기록 -->
@@ -695,6 +702,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_elec" onclick="deleteSelectedRows('elec')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-elec"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_elec" onclick="toggleDd('pageSizeMenu_elec','pageSizeBtn_elec')"><span id="pageSizeLabel_elec">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_elec"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -704,6 +717,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-elec"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-elec"></div>
   </div>
 
   <!-- ▸ 변압기온도 -->
@@ -740,6 +754,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_transformer" onclick="deleteSelectedRows('transformer')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-transformer"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_transformer" onclick="toggleDd('pageSizeMenu_transformer','pageSizeBtn_transformer')"><span id="pageSizeLabel_transformer">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_transformer"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -749,6 +769,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-transformer"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-transformer"></div>
   </div>
 
   <!-- ▸ 발전기점검 -->
@@ -795,6 +816,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span id="excelLbl_generatorOpstatus">가동현황</span>
       </button>
+      <div class="dd-wrap page-size-wrap">
+        <div class="dd-btn" id="pageSizeBtn_generator" onclick="toggleDd('pageSizeMenu_generator','pageSizeBtn_generator')"><span id="pageSizeLabel_generator">15개씩</span></div>
+        <div class="dd-menu" id="pageSizeMenu_generator"></div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -805,6 +830,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-generator"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-generator"></div>
   </div>
 
   <!-- ▸ 점검사진 -->
@@ -893,6 +919,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_power" onclick="deleteSelectedRows('power')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-power"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_power" onclick="toggleDd('pageSizeMenu_power','pageSizeBtn_power')"><span id="pageSizeLabel_power">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_power"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -902,6 +934,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-power"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-power"></div>
   </div>
 
   <!-- ▸ 업무처리 -->
@@ -938,6 +971,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_task" onclick="deleteSelectedRows('task')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-task"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_task" onclick="toggleDd('pageSizeMenu_task','pageSizeBtn_task')"><span id="pageSizeLabel_task">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_task"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -947,6 +986,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-task"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-task"></div>
   </div>
 
 </div><!-- /main -->
@@ -1985,7 +2025,7 @@ document.addEventListener('scroll', e=>{
    (2026-09-11). 탭별 독립 key로 페이지 상태·크기를 저장하며, 이 기능을 쓰는 탭만 PAGE_DEFAULT_SIZE에
    등록한다(등록 안 된 탭은 기존처럼 전체 렌더). 점검팀 앱(monthly-inspection-team.html)과 동일 패턴. ── */
 const PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
-const PAGE_DEFAULT_SIZE={photo:15, photoMulti:15};
+const PAGE_DEFAULT_SIZE={monthly:15, elec:15, transformer:15, generator:15, photo:15, power:15, task:15, photoMulti:15};
 const PAGE_STATE={};
 const _pageFilterSig={};
 function getPageState(tabId){

@@ -1946,7 +1946,7 @@ function renderTrend(){
 
 /* ── 페이지네이션(발전내역 탭) ── 여러 터널의 일자별 발전기록이 누적되어 레코드가 많아져
    기본값을 월 단위 개념(31개)으로 제한(2026-09-11, 차량운행일지 앱과 동일 패턴) ── */
-var PAGE_SIZE_OPTIONS=[10,20,31,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,31,50,100];
 var PAGE_SIZE=(function(){
   try{
     var raw=localStorage.getItem('solarPower_pageSize');

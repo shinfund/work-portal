@@ -1437,7 +1437,7 @@ let _detailUserPicked=false;
 
 /* ── 페이지네이션(운행내역 탭) ── 전체 월 필터 적용 시 레코드가 너무 많아져 기본값을
    월 단위 개념(31개)으로 제한(2026-09-10) ── */
-var PAGE_SIZE_OPTIONS=[10,20,31,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,31,50,100];
 var PAGE_SIZE=(function(){
   try{
     var raw=localStorage.getItem('vehicleLog_pageSize');

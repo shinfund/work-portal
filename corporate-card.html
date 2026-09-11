@@ -163,10 +163,13 @@ tfoot td:first-child{font-weight:400}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .detail-count{font-size:13px;color:var(--txt);padding:2px 0 8px;font-weight:500}
-.pager{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;flex-wrap:wrap}
-.pg{width:30px;height:30px;border-radius:var(--r6);border:1.5px solid var(--border);background:var(--card);color:var(--txt3);cursor:pointer;font-family:inherit;font-size:13px;display:flex;align-items:center;justify-content:center;transition:.2s}
-.pg:hover{border-color:var(--sky);color:var(--sky)}
-.pg.on{background:var(--sky);color:#fff;border-color:var(--sky)}
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .empty{text-align:center;padding:36px 16px;color:var(--txt3)}
 .empty-icon{font-size:34px;margin-bottom:10px}
 
@@ -491,7 +494,7 @@ if (window.self !== window.top) {
         <tbody id="dtTbody"></tbody>
         <tfoot id="dtTfoot"></tfoot>
       </table></div>
-      <div class="pager" id="pager"></div>
+      <div class="pagination-row" id="paginationRow"></div>
     </div>
   </div>
   <div id="panel-overview" class="panel">
@@ -672,8 +675,8 @@ const THIS_YEAR=new Date().getFullYear();
 let curYear=THIS_YEAR,curMonth=0;
 let _activePanel="detail",dtPage=1;
 let trendYear=THIS_YEAR,trendYearBase=THIS_YEAR;
-const PS_OPTIONS=[10,15,31,50,100];
-let PS=(()=>{try{const v=parseInt(localStorage.getItem("corpCard_pageSize")||"31",10);return PS_OPTIONS.includes(v)?v:31;}catch(e){return 31;}})();
+const PAGE_SIZE_OPTIONS=[10,15,20,30,31,50,100];
+let PAGE_SIZE=(()=>{try{const raw=localStorage.getItem("corpCard_pageSize");const v=parseInt(raw,10);if(PAGE_SIZE_OPTIONS.includes(v))return v;if(raw==="all")return "all";}catch(e){}return 31;})();
 const fmt=n=>Math.round(n||0).toLocaleString("ko-KR");
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 function allMonths(){return[...new Set(RD.map(r=>r.month))].sort();}
@@ -716,18 +719,26 @@ function toggleDD(type){
   const yM=document.getElementById("ddYearMenu"),mM=document.getElementById("ddMonthMenu"),cM=document.getElementById("catDdMenu"),pM=document.getElementById("psDdMenu");
   if(type==="year"){const o=yM.classList.contains("open");closeAllDD();if(!o){renderDDYear();yM.classList.add("open");}}
   else if(type==="month"){const o=mM.classList.contains("open");closeAllDD();if(!o){renderDDMonth();mM.classList.add("open");}}
-  else if(type==="ps"){const o=pM.classList.contains("open");closeAllDD();if(!o){renderDDPS();pM.classList.add("open");}}
+  else if(type==="ps"){const o=pM.classList.contains("open");closeAllDD();if(!o){buildPageSizeDd();pM.classList.add("open");}}
   else{const o=cM.classList.contains("open");closeAllDD();if(!o){renderDDCat();cM.classList.add("open");}}
 }
 function closeAllDD(){document.getElementById("ddYearMenu").classList.remove("open");document.getElementById("ddMonthMenu").classList.remove("open");const cM=document.getElementById("catDdMenu");if(cM)cM.classList.remove("open");const pM=document.getElementById("psDdMenu");if(pM)pM.classList.remove("open");const tm=document.getElementById("trendYearMenu");if(tm)tm.classList.remove("open");}
-function renderDDPS(){
-  document.getElementById("psDdOpts").innerHTML=PS_OPTIONS.map(n=>`<div class="dd-opt${n===PS?" sel":""}" onclick="pickPS(${n})">${n}개씩</div>`).join("");
+// 다른 목록형 앱(facility-status 등)과 동일한 표준 페이지네이션 함수명·"전체" 옵션으로 통일
+// (2026-09-11 페이지네이션 감사 결과 반영 — 예전엔 이 앱만 renderDDPS/pickPS라는 별도 이름과
+// 전체보기 옵션 없이 구현돼 있었다).
+function buildPageSizeDd(){
+  const opts=PAGE_SIZE_OPTIONS.map(n=>({val:String(n),label:n+"개씩"})).concat([{val:"all",label:"전체"}]);
+  const curVal = PAGE_SIZE==="all" ? "all" : String(PAGE_SIZE);
+  document.getElementById("psDdOpts").innerHTML=opts.map(o=>`<div class="dd-opt${curVal===o.val?" sel":""}" onclick="pickPageSize('${o.val}')">${o.label}</div>`).join("");
+  const lbl=document.getElementById("psDdLabel");
+  if(lbl) lbl.textContent=(opts.find(o=>o.val===curVal)||opts[0]).label;
 }
-function pickPS(n){
-  PS=n;dtPage=1;
-  try{localStorage.setItem("corpCard_pageSize",String(n));}catch(e){}
-  document.getElementById("psDdLabel").textContent=n+"개씩";
+function pickPageSize(v){
+  PAGE_SIZE = v==="all" ? "all" : parseInt(v,10);
+  dtPage=1;
+  try{localStorage.setItem("corpCard_pageSize",v);}catch(e){}
   closeAllDD();
+  buildPageSizeDd();
   renderDetail();
 }
 let catFilter="";
@@ -771,7 +782,7 @@ function updateMonthLabel(){
   document.getElementById("ddMonthBtn").classList.toggle("active",!!curMonth);
   const n=filteredRD().length;
   document.getElementById("monthSubRow").textContent=n?`총 ${n}건`:"데이터 없음";
-  const psLbl=document.getElementById("psDdLabel");if(psLbl)psLbl.textContent=PS+"개씩";
+  if(document.getElementById("psDdLabel")) buildPageSizeDd();
 }
 document.addEventListener("click",e=>{const sel=document.getElementById("monthSel"),fr=document.getElementById("detailFilterRow"),ps=document.getElementById("psDdWrap");const inside=(sel&&sel.contains(e.target))||(fr&&fr.contains(e.target))||(ps&&ps.contains(e.target));if(!inside)closeAllDD();});
 function renderOverview(recs){
@@ -936,9 +947,9 @@ function renderDetail(){
   const q=(document.getElementById("srch").value||"").toLowerCase();
   const ym=curMonth?`${curYear}-${String(curMonth).padStart(2,"0")}`:"";
   const f=RD.filter(r=>(!ym||r.month===ym)&&(!catFilter||r.cat===catFilter)&&(!q||(r.desc||"").toLowerCase().includes(q)||(r.vendor||"").toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));
-  const total=f.length,pages=Math.ceil(total/PS)||1;
+  const total=f.length,pages=PAGE_SIZE==="all"?1:(Math.ceil(total/PAGE_SIZE)||1);
   if(dtPage>pages)dtPage=1;
-  const paged=f.slice((dtPage-1)*PS,dtPage*PS);
+  const paged=PAGE_SIZE==="all"?f:f.slice((dtPage-1)*PAGE_SIZE,dtPage*PAGE_SIZE);
   document.getElementById("detailCount").textContent=total+"건";
   document.getElementById("dtTbody").innerHTML=paged.length?paged.map(r=>{
     const c=clr(r.cat);
@@ -970,11 +981,25 @@ function renderDetail(){
       `<td colspan="8"></td>`+
     `</tr>`:"";
   }
-  if(pages<=1){document.getElementById("pager").innerHTML="";return;}
-  let b=`<button class="pg" onclick="if(dtPage>1){dtPage--;renderDetail()}">&#8249;</button>`;
-  for(let i=1;i<=pages;i++)b+=`<button class="pg${dtPage===i?" on":""}" onclick="dtPage=${i};renderDetail()">${i}</button>`;
-  b+=`<button class="pg" onclick="if(dtPage<${pages}){dtPage++;renderDetail()}">&#8250;</button>`;
-  document.getElementById("pager").innerHTML=b;
+  renderPaginationRow(total, pages);
+}
+function goToPage(n){ dtPage=n; renderDetail(); }
+function renderPaginationRow(totalCount, totalPages){
+  const el=document.getElementById("paginationRow");
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=""; return; }
+  const cur=dtPage, pages=[], win=2;
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=="...") pages.push("...");
+  }
+  let html=`<button class="page-btn" onclick="goToPage(${cur-1})" ${cur<=1?"disabled":""} aria-label="이전 페이지">&#8249;</button>`;
+  html+=pages.map(p=>p==="..."
+    ? '<button class="page-btn ellipsis" disabled>…</button>'
+    : `<button class="page-btn${p===cur?" active":""}" onclick="goToPage(${p})" aria-current="${p===cur?"page":"false"}">${p}</button>`
+  ).join("");
+  html+=`<button class="page-btn" onclick="goToPage(${cur+1})" ${cur>=totalPages?"disabled":""} aria-label="다음 페이지">&#8250;</button>`;
+  el.innerHTML=html;
 }
 // ── 공통 헬퍼 ─────────────────────────────────────────
 function emptyHTML(msg){return`<div class="empty"><div class="empty-icon">📭</div><p>${msg||"데이터가 없습니다"}</p></div>`;}

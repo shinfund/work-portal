@@ -1119,7 +1119,7 @@ let _detailMonthFilter=0;
 let _userPickedDetailDate=false; // true가 되면 최신 연/월 자동 이동을 멈추고 사용자 선택을 유지
 
 /* ── 페이지네이션(근무내역 탭) ── 한 달 날짜 개념으로 기본값 31개(2026-09-10, 차량운행일지 앱과 동일 패턴) ── */
-var PAGE_SIZE_OPTIONS=[10,20,31,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,31,50,100];
 var PAGE_SIZE=(function(){
   try{
     var raw=localStorage.getItem('overtimeWork_pageSize');
