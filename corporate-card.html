@@ -479,7 +479,13 @@ if (window.self !== window.top) {
           <span id="reportExportLabel">보고서</span>
         </button>
       </div>
-      <div class="detail-count" id="detailCount"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div class="detail-count" id="detailCount"></div>
+        <div class="dd-wrap" id="psDdWrap">
+          <div class="dd-btn" id="psDdBtn" onclick="toggleDD('ps')"><span id="psDdLabel">31개씩</span></div>
+          <div class="dd-menu" id="psDdMenu"><div id="psDdOpts"></div></div>
+        </div>
+      </div>
       <div class="tbl-wrap"><table>
         <thead><tr><th>사용일자</th><th class="r">공급가</th><th class="r">부가세</th><th class="r">합계</th><th>상호</th><th>사업자등록번호</th><th style="width:1%">계정항목</th><th>사용목적 및 지출내역</th><th class="r">총인원</th><th>카드명</th><th>카드번호</th><th>비고</th></tr></thead>
         <tbody id="dtTbody"></tbody>
@@ -666,7 +672,8 @@ const THIS_YEAR=new Date().getFullYear();
 let curYear=THIS_YEAR,curMonth=0;
 let _activePanel="detail",dtPage=1;
 let trendYear=THIS_YEAR,trendYearBase=THIS_YEAR;
-const PS=31;
+const PS_OPTIONS=[10,15,31,50,100];
+let PS=(()=>{try{const v=parseInt(localStorage.getItem("corpCard_pageSize")||"31",10);return PS_OPTIONS.includes(v)?v:31;}catch(e){return 31;}})();
 const fmt=n=>Math.round(n||0).toLocaleString("ko-KR");
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]);
 function allMonths(){return[...new Set(RD.map(r=>r.month))].sort();}
@@ -706,12 +713,23 @@ function renderPanel(name){
 }
 function renderAll(){updateMonthLabel();renderPanel(_activePanel);}
 function toggleDD(type){
-  const yM=document.getElementById("ddYearMenu"),mM=document.getElementById("ddMonthMenu"),cM=document.getElementById("catDdMenu");
+  const yM=document.getElementById("ddYearMenu"),mM=document.getElementById("ddMonthMenu"),cM=document.getElementById("catDdMenu"),pM=document.getElementById("psDdMenu");
   if(type==="year"){const o=yM.classList.contains("open");closeAllDD();if(!o){renderDDYear();yM.classList.add("open");}}
   else if(type==="month"){const o=mM.classList.contains("open");closeAllDD();if(!o){renderDDMonth();mM.classList.add("open");}}
+  else if(type==="ps"){const o=pM.classList.contains("open");closeAllDD();if(!o){renderDDPS();pM.classList.add("open");}}
   else{const o=cM.classList.contains("open");closeAllDD();if(!o){renderDDCat();cM.classList.add("open");}}
 }
-function closeAllDD(){document.getElementById("ddYearMenu").classList.remove("open");document.getElementById("ddMonthMenu").classList.remove("open");const cM=document.getElementById("catDdMenu");if(cM)cM.classList.remove("open");const tm=document.getElementById("trendYearMenu");if(tm)tm.classList.remove("open");}
+function closeAllDD(){document.getElementById("ddYearMenu").classList.remove("open");document.getElementById("ddMonthMenu").classList.remove("open");const cM=document.getElementById("catDdMenu");if(cM)cM.classList.remove("open");const pM=document.getElementById("psDdMenu");if(pM)pM.classList.remove("open");const tm=document.getElementById("trendYearMenu");if(tm)tm.classList.remove("open");}
+function renderDDPS(){
+  document.getElementById("psDdOpts").innerHTML=PS_OPTIONS.map(n=>`<div class="dd-opt${n===PS?" sel":""}" onclick="pickPS(${n})">${n}개씩</div>`).join("");
+}
+function pickPS(n){
+  PS=n;dtPage=1;
+  try{localStorage.setItem("corpCard_pageSize",String(n));}catch(e){}
+  document.getElementById("psDdLabel").textContent=n+"개씩";
+  closeAllDD();
+  renderDetail();
+}
 let catFilter="";
 function renderDDCat(){
   const cats=[...new Set(RD.map(r=>r.cat))].filter(Boolean).sort();
@@ -753,8 +771,9 @@ function updateMonthLabel(){
   document.getElementById("ddMonthBtn").classList.toggle("active",!!curMonth);
   const n=filteredRD().length;
   document.getElementById("monthSubRow").textContent=n?`총 ${n}건`:"데이터 없음";
+  const psLbl=document.getElementById("psDdLabel");if(psLbl)psLbl.textContent=PS+"개씩";
 }
-document.addEventListener("click",e=>{const sel=document.getElementById("monthSel"),fr=document.getElementById("detailFilterRow");const inside=(sel&&sel.contains(e.target))||(fr&&fr.contains(e.target));if(!inside)closeAllDD();});
+document.addEventListener("click",e=>{const sel=document.getElementById("monthSel"),fr=document.getElementById("detailFilterRow"),ps=document.getElementById("psDdWrap");const inside=(sel&&sel.contains(e.target))||(fr&&fr.contains(e.target))||(ps&&ps.contains(e.target));if(!inside)closeAllDD();});
 function renderOverview(recs){
   const totalThis=recs.reduce((s,r)=>s+r.total,0);
   const monLbl=curMonth?`${curYear}년 ${curMonth}월`:curYear+"년 전체";
