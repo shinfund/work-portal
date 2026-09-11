@@ -876,9 +876,45 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
+/* ── 목록 썸네일(80px, ~15KB) — 원본과 별도로 업로드해 테이블 초기 로딩 용량을 줄인다 ── */
+var THUMB_MAX_DIM = 160;
+var THUMB_MAX_BYTES = 15*1024;
+function compressImageToThumb(file, maxDim, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0){ reject(new Error('이미지 파일이 아닙니다')); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight;
+      var scale = Math.min(1, maxDim/Math.max(w,h));
+      w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      var quality=0.8, attempts=0;
+      function step(){
+        attempts++;
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('썸네일 생성 실패')); return; }
+          if(blob.size<=maxBytes || attempts>=6){
+            resolve(new File([blob], (file.name||'thumb').replace(/\.[^.]+$/,'')+'-thumb.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          quality = Math.max(0.35, quality-0.15);
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
 // 사진 다중 첨부(2026-09-09) — 업로드한 사진을 폼 안에서 배열로 들고 있다가 제출 시 한 번에
 // 노션 files 속성에 반영한다(facility-status.html의 ADD_PHOTOS 패턴 재사용).
-var ADD_PHOTOS = [];
+var ADD_PHOTOS = [], ADD_PHOTOS_THUMB = [];
 function renderPhotoGallery(){
   var el=document.getElementById('photoGallery');
   if(!el) return;
@@ -887,7 +923,15 @@ function renderPhotoGallery(){
       +'<button type="button" class="pg-remove" aria-label="삭제" onclick="event.stopPropagation();removeAddPhoto('+i+')">×</button></div>';
   }).join('');
 }
-function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); renderPhotoGallery(); }
+function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); ADD_PHOTOS_THUMB.splice(i,1); renderPhotoGallery(); }
+function uploadOneFile(file, appFolder){
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('app', appFolder);
+  return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(data){ return data.url; });
+}
 function uploadMultiPhoto(input){
   var files = Array.prototype.slice.call(input.files||[]);
   if(!files.length) return;
@@ -900,12 +944,12 @@ function uploadMultiPhoto(input){
   var uploadOne=function(file){
     return compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
       if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-      var formData = new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'asset-register');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(function(data){ ADD_PHOTOS.push(data.url); });
+      return uploadOneFile(outFile, 'asset-register').then(function(url){
+        return compressImageToThumb(file, THUMB_MAX_DIM, THUMB_MAX_BYTES)
+          .then(function(thumbFile){ return uploadOneFile(thumbFile, 'asset-register'); })
+          .catch(function(){ return url; })
+          .then(function(thumbUrl){ ADD_PHOTOS.push(url); ADD_PHOTOS_THUMB.push(thumbUrl); });
+      });
     }).catch(function(e){ failed++; console.error(e); }).then(function(){
       done++; statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
       renderPhotoGallery();
@@ -918,14 +962,15 @@ function uploadMultiPhoto(input){
     input.disabled=false;
   });
 }
-function makePhotoThumb(arr){
+function makePhotoThumb(arr, thumbArr){
   arr = Array.isArray(arr) ? arr : (arr ? [arr] : []);
   arr = arr.filter(function(u){ return u && /^https?:\/\//i.test(u.trim()); });
   if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
+  var thumbSrc = (thumbArr && thumbArr[0]) || arr[0];
   var extra = arr.length>1 ? '<span class="photo-count-badge">+'+(arr.length-1)+'</span>' : '';
   return '<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px">'
     +'<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
-    +'<img src="'+esc(arr[0])+'" alt="사진"'
+    +'<img src="'+esc(thumbSrc)+'" alt="사진"'
     +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block"'
     +' onerror="this.style.display=\'none\'">'
     +'</a>'+extra+'</span>';
@@ -942,7 +987,7 @@ function openAddModal(){
   buildGenericSelectOpts(document.getElementById('addTunnel'), document.getElementById('addTunnelCustom'), getUniqueValues('터널명'), '');
   setFixedSelectValue('addCategory','addCategoryCustom','');
   setFixedSelectValue('addStatus','addStatusCustom','');
-  ADD_PHOTOS = [];
+  ADD_PHOTOS = []; ADD_PHOTOS_THUMB = [];
   renderPhotoGallery();
   document.getElementById('photoStatus').textContent='파일을 선택하세요';
   document.getElementById('photoStatus').className='photo-upload-status';
@@ -970,6 +1015,7 @@ function openEditModal(pageId){
   setFixedSelectValue('addCategory','addCategoryCustom', r['구분']||'');
   setFixedSelectValue('addStatus','addStatusCustom', r['구매상태']||'');
   ADD_PHOTOS = (r['사진']||[]).slice();
+  ADD_PHOTOS_THUMB = ADD_PHOTOS.map(function(u,i){ return (r['사진_썸네일']||[])[i] || u; });
   renderPhotoGallery();
   var s=document.getElementById('photoStatus');
   s.textContent = ADD_PHOTOS.length ? ('기존 사진 '+ADD_PHOTOS.length+'개 있음') : '파일을 선택하세요';
@@ -1022,6 +1068,7 @@ function submitAddForm(){
   setProp('구매상태', status ? { select:{ name:status } } : { select:null });
   setProp('비고', note ? { rich_text:[{ text:{ content:note } }] } : { rich_text:[] });
   setProp('사진', { files: ADD_PHOTOS.map(function(url,i){ return { name:'비품사진'+(i+1), type:'external', external:{ url:url } }; }) });
+  setProp('사진_썸네일', { files: ADD_PHOTOS_THUMB.map(function(url,i){ return { name:'비품사진'+(i+1)+'_썸네일', type:'external', external:{ url:url } }; }) });
 
   var isEdit = !!EDIT_PAGE_ID;
   var reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
@@ -1244,6 +1291,7 @@ function classifyPropKey(k){
   if(lk.indexOf('금액')>=0) return '금액';
   if(lk.indexOf('구매일')>=0||lk.indexOf('구입일')>=0||lk.indexOf('날짜')>=0) return '구매일';
   if(lk.indexOf('구매상태')>=0||lk.indexOf('상태')>=0) return '구매상태';
+  if((lk.indexOf('사진')>=0||lk.indexOf('photo')>=0) && lk.indexOf('썸네일')>=0) return '사진_썸네일';
   if(lk.indexOf('사진')>=0||lk.indexOf('photo')>=0) return '사진';
   if(lk.indexOf('비고')>=0) return '비고';
   return null;
@@ -1295,6 +1343,7 @@ function parseNotionPage(page){
     '금액': getPropText(get('금액')),
     '구매일': date,
     '사진': getFileUrls(get('사진')),
+    '사진_썸네일': getFileUrls(get('사진_썸네일')),
     '구매상태': getPropText(get('구매상태')),
     '비고': getPropText(get('비고'))
   };
@@ -1499,7 +1548,7 @@ function buildDetailRow(r){
     + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['단가'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtWonOrDash(r['금액'])+'</td>'
     + '<td style="white-space:nowrap">'+esc(fmtDate(r['구매일'])||'-')+'</td>'
-    + '<td class="col-photo">'+makePhotoThumb(r['사진']||'')+'</td>'
+    + '<td class="col-photo">'+makePhotoThumb(r['사진']||'', r['사진_썸네일'])+'</td>'
     + '<td style="white-space:nowrap">'+(r['구매상태']?('<span class="type-badge '+statusBadgeClass(r['구매상태'])+'">'+esc(r['구매상태'])+'</span>'):'<span style="color:var(--txt3)">-</span>')+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
     + '</tr>';

@@ -1568,11 +1568,13 @@ function parseNotionPage(page, idx){
     var notionKey=NOTION_PROP_MAP[internalKey];
     var p = notionKey&&props[notionKey] ? props[notionKey] : null;
     if(!p){
+      var wantThumb = internalKey.indexOf('썸네일')>=0;
       var entries2=Object.entries(props);
       for(var ki2=0; ki2<kwFallback.length; ki2++){
         var kw2=kwFallback[ki2].toLowerCase();
         for(var ei2=0; ei2<entries2.length; ei2++){
-          if(entries2[ei2][0].toLowerCase().includes(kw2)){ p=entries2[ei2][1]; break; }
+          var ekey2=entries2[ei2][0];
+          if(ekey2.toLowerCase().includes(kw2) && (wantThumb===(ekey2.indexOf('썸네일')>=0))){ p=entries2[ei2][1]; break; }
         }
         if(p) break;
       }
@@ -1587,6 +1589,8 @@ function parseNotionPage(page, idx){
   }
   result['하자사진_URL'] = getFileUrls('하자사진_URL', ['하자사진','photo1','사진1']);
   result['조치사진_URL'] = getFileUrls('조치사진_URL', ['조치사진','photo2','사진2']);
+  result['하자사진_썸네일_URL'] = getFileUrls('하자사진_썸네일_URL', ['하자사진_썸네일','하자사진썸네일']);
+  result['조치사진_썸네일_URL'] = getFileUrls('조치사진_썸네일_URL', ['조치사진_썸네일','조치사진썸네일']);
 
   // title 타입 폴백
   if(!result['하자내용']){
@@ -1703,8 +1707,10 @@ function buildNotionPropMap(props){
     { key:'하자내용',    kws:['하자내용','내용','content','하자'], types:['title','rich_text'] },
     { key:'조치여부',    kws:['조치여부','상태','status'], types:['select','checkbox'] },
     { key:'조치일',      kws:['조치일','완료일','act'],   types:['date'] },
-    { key:'하자사진_URL',kws:['하자사진','하자 사진','photo1','사진1'], types:['files','url','rich_text'] },
-    { key:'조치사진_URL',kws:['조치사진','조치 사진','photo2','사진2'], types:['files','url','rich_text'] },
+    { key:'하자사진_URL',kws:['하자사진','하자 사진','photo1','사진1'], types:['files','url','rich_text'], exclude:['썸네일'] },
+    { key:'조치사진_URL',kws:['조치사진','조치 사진','photo2','사진2'], types:['files','url','rich_text'], exclude:['썸네일'] },
+    { key:'하자사진_썸네일_URL',kws:['하자사진_썸네일','하자사진썸네일'], types:['files','url','rich_text'] },
+    { key:'조치사진_썸네일_URL',kws:['조치사진_썸네일','조치사진썸네일'], types:['files','url','rich_text'] },
     { key:'업체명',      kws:['업체명','업체 명','업체','company'], types:['rich_text','title','text'] },
     { key:'전화번호',    kws:['전화번호','전화','phone','연락'], types:['phone_number','rich_text','text'] },
     { key:'비고',        kws:['비고','remark','memo','메모'], types:['rich_text','text'] }
@@ -1713,12 +1719,13 @@ function buildNotionPropMap(props){
   matchers.forEach(function(m){
     // 이미 다른 내부 key에 매핑된 notionKey는 재사용 안 함
     function alreadyUsed(nk){ return Object.values(NOTION_PROP_MAP).indexOf(nk)>=0; }
+    function excluded(nk){ return m.exclude && m.exclude.some(function(ex){ return nk.toLowerCase().indexOf(ex)>=0; }); }
     // 1차: 키워드 + 타입 동시 매칭 (정확도 높음)
     for(var ki=0; ki<m.kws.length; ki++){
       var kw = m.kws[ki].toLowerCase();
       for(var ni=0; ni<keys.length; ni++){
         var nk = keys[ni];
-        if(nk.toLowerCase().includes(kw) && m.types.indexOf(props[nk].type)>=0 && !alreadyUsed(nk)){
+        if(nk.toLowerCase().includes(kw) && m.types.indexOf(props[nk].type)>=0 && !alreadyUsed(nk) && !excluded(nk)){
           if(!NOTION_PROP_MAP[m.key]){ NOTION_PROP_MAP[m.key]=nk; return; }
         }
       }
@@ -1728,7 +1735,7 @@ function buildNotionPropMap(props){
       var kw2=m.kws[ki2].toLowerCase();
       for(var ni2=0; ni2<keys.length; ni2++){
         var nk2=keys[ni2];
-        if(nk2.toLowerCase().includes(kw2) && !alreadyUsed(nk2)){
+        if(nk2.toLowerCase().includes(kw2) && !alreadyUsed(nk2) && !excluded(nk2)){
           if(!NOTION_PROP_MAP[m.key]){ NOTION_PROP_MAP[m.key]=nk2; return; }
         }
       }
@@ -2211,14 +2218,15 @@ function renderUnprocPanel(){
 }
 
 /* ── 사진 썸네일 헬퍼 (테이블용) ── */
-function makePhotoThumb(arr){
+function makePhotoThumb(arr, thumbArr){
   arr = Array.isArray(arr) ? arr : (arr ? [arr] : []);
   arr = arr.filter(function(u){ return u && /^https?:\/\//i.test(u.trim()); });
   if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
+  var thumbSrc = (thumbArr && thumbArr[0]) || arr[0];
   var extra = arr.length>1 ? '<span class="photo-count-badge">+'+(arr.length-1)+'</span>' : '';
   return '<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px">'
     +'<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
-    +'<img src="'+esc(arr[0])+'" alt="사진"'
+    +'<img src="'+esc(thumbSrc)+'" alt="사진"'
     +' style="width:44px;height:44px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block"'
     +' onerror="this.style.display=\'none\'">'
     +'</a>'+extra+'</span>';
@@ -2292,7 +2300,8 @@ function renderList(){
       if(key==='업무담당') return '<td class="'+cls+' td-nowrap">'+(val?'<span class="type-badge '+managerBadgeClass(val)+'">'+esc(val)+'</span>':'-')+'</td>';
       if(key==='조치여부') return '<td><span class="badge '+badge+'">'+esc(s||'-')+'</span></td>';
       if(key==='하자내용') return '<td><span class="td-content">'+esc(val)+'</span></td>';
-      if(key==='하자사진_URL'||key==='조치사진_URL') return '<td class="col-photo">'+makePhotoThumb(val)+'</td>';
+      if(key==='하자사진_URL') return '<td class="col-photo">'+makePhotoThumb(val, r['하자사진_썸네일_URL'])+'</td>';
+      if(key==='조치사진_URL') return '<td class="col-photo">'+makePhotoThumb(val, r['조치사진_썸네일_URL'])+'</td>';
       if(key==='비고') return '<td class="'+cls+'"><span class="remark-content">'+esc(val||'-')+'</span></td>';
       return '<td class="'+cls+' td-nowrap">'+esc(val||'-')+'</td>';
     }).join('');
@@ -2493,8 +2502,8 @@ var CELL_RENDERERS = {
   type:    function(r){ return '<td class="td-nowrap">'+esc(r['공종']||'-')+'</td>'; },
   loc:     function(r){ return '<td class="td-nowrap">'+esc(r['위치']||'-')+'</td>'; },
   content: function(r){ return '<td><span class="td-content">'+esc(r['하자내용']||'-')+'</span></td>'; },
-  photo1:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'')+'</td>'; },
-  photo2:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'')+'</td>'; },
+  photo1:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['하자사진_URL']||'', r['하자사진_썸네일_URL'])+'</td>'; },
+  photo2:  function(r){ return '<td class="col-photo">'+makePhotoThumb(r['조치사진_URL']||'', r['조치사진_썸네일_URL'])+'</td>'; },
   company: function(r){ return '<td class="td-nowrap">'+esc(r['업체명']||'-')+'</td>'; },
   contact: function(r){ return '<td class="td-nowrap col-contact">'+esc(r['업체담당자']||'-')+'</td>'; },
   phone:   function(r){ return '<td class="td-nowrap col-contact">'+esc(r['전화번호']||'-')+'</td>'; },
@@ -2842,9 +2851,45 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
+/* ── 목록 썸네일(80px, ~15KB) — 원본과 별도로 업로드해 테이블 초기 로딩 용량을 줄인다 ── */
+var THUMB_MAX_DIM = 160;
+var THUMB_MAX_BYTES = 15*1024;
+function compressImageToThumb(file, maxDim, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0){ reject(new Error('이미지 파일이 아닙니다')); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight;
+      var scale = Math.min(1, maxDim/Math.max(w,h));
+      w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      var quality=0.8, attempts=0;
+      function step(){
+        attempts++;
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('썸네일 생성 실패')); return; }
+          if(blob.size<=maxBytes || attempts>=6){
+            resolve(new File([blob], (file.name||'thumb').replace(/\.[^.]+$/,'')+'-thumb.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          quality = Math.max(0.35, quality-0.15);
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
 // 사진 다중 첨부(2026-09-09) — 하자사진/조치사진 각각 독립된 배열로 여러 장을 들고 있다가
 // 제출 시 노션 files 속성에 한 번에 반영한다(facility-status.html ADD_PHOTOS 패턴 재사용).
-var ADD_PHOTOS1 = [], ADD_PHOTOS2 = [];
+var ADD_PHOTOS1 = [], ADD_PHOTOS2 = [], ADD_PHOTOS1_THUMB = [], ADD_PHOTOS2_THUMB = [];
 function renderPhotoGallery(key){
   var num = key==='photo1' ? '1' : '2';
   var arr = key==='photo1' ? ADD_PHOTOS1 : ADD_PHOTOS2;
@@ -2856,8 +2901,17 @@ function renderPhotoGallery(key){
   }).join('');
 }
 function removeAddPhoto(key, i){
-  if(key==='photo1') ADD_PHOTOS1.splice(i,1); else ADD_PHOTOS2.splice(i,1);
+  if(key==='photo1'){ ADD_PHOTOS1.splice(i,1); ADD_PHOTOS1_THUMB.splice(i,1); }
+  else { ADD_PHOTOS2.splice(i,1); ADD_PHOTOS2_THUMB.splice(i,1); }
   renderPhotoGallery(key);
+}
+function uploadOneFile(file, appFolder){
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('app', appFolder);
+  return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(data){ return data.url; });
 }
 function uploadMultiPhoto(input, key){
   var files = Array.prototype.slice.call(input.files||[]);
@@ -2865,6 +2919,7 @@ function uploadMultiPhoto(input, key){
   var num = key==='photo1' ? '1' : '2';
   var statusEl = document.getElementById('photo'+num+'Status');
   var targetArr = key==='photo1' ? ADD_PHOTOS1 : ADD_PHOTOS2;
+  var thumbArr = key==='photo1' ? ADD_PHOTOS1_THUMB : ADD_PHOTOS2_THUMB;
 
   if(!isAuthed()){
     statusEl.textContent = '⚠ 로그인 필요';
@@ -2880,15 +2935,12 @@ function uploadMultiPhoto(input, key){
   var uploadOne = function(file){
     return compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
       if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-      var formData = new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'defect-management');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(function(r){
-          if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); });
-          return r.json();
-        })
-        .then(function(data){ targetArr.push(data.url); });
+      return uploadOneFile(outFile, 'defect-management').then(function(url){
+        return compressImageToThumb(file, THUMB_MAX_DIM, THUMB_MAX_BYTES)
+          .then(function(thumbFile){ return uploadOneFile(thumbFile, 'defect-management'); })
+          .catch(function(){ return url; })
+          .then(function(thumbUrl){ targetArr.push(url); thumbArr.push(thumbUrl); });
+      });
     }).catch(function(e){ failed++; console.error(e); }).then(function(){
       done++; statusEl.textContent = '업로드 중... ('+done+'/'+files.length+')';
       renderPhotoGallery(key);
@@ -2933,6 +2985,8 @@ function openEditModal(idx){
   // 사진 처리
   ADD_PHOTOS1 = (r['하자사진_URL']||[]).slice();
   ADD_PHOTOS2 = (r['조치사진_URL']||[]).slice();
+  ADD_PHOTOS1_THUMB = ADD_PHOTOS1.map(function(u,i){ return (r['하자사진_썸네일_URL']||[])[i] || u; });
+  ADD_PHOTOS2_THUMB = ADD_PHOTOS2.map(function(u,i){ return (r['조치사진_썸네일_URL']||[])[i] || u; });
   renderPhotoGallery('photo1');
   renderPhotoGallery('photo2');
   document.getElementById('addPhoto1File').value = '';
@@ -3172,6 +3226,8 @@ function openAddModal(){
   document.getElementById('addRemark').value = '';
   ADD_PHOTOS1 = [];
   ADD_PHOTOS2 = [];
+  ADD_PHOTOS1_THUMB = [];
+  ADD_PHOTOS2_THUMB = [];
   renderPhotoGallery('photo1');
   renderPhotoGallery('photo2');
   document.getElementById('addPhoto1File').value = '';
@@ -3328,6 +3384,8 @@ function submitAddForm(confirmed){
   setProp('업무담당',  manager ? { select: { name: manager } } : { select: null });
   setProp('하자사진_URL', { files: ADD_PHOTOS1.map(function(url,i){ return { name:'하자사진'+(i+1), type:'external', external:{ url:url } }; }) });
   setProp('조치사진_URL', { files: ADD_PHOTOS2.map(function(url,i){ return { name:'조치사진'+(i+1), type:'external', external:{ url:url } }; }) });
+  setProp('하자사진_썸네일_URL', { files: ADD_PHOTOS1_THUMB.map(function(url,i){ return { name:'하자사진'+(i+1)+'_썸네일', type:'external', external:{ url:url } }; }) });
+  setProp('조치사진_썸네일_URL', { files: ADD_PHOTOS2_THUMB.map(function(url,i){ return { name:'조치사진'+(i+1)+'_썸네일', type:'external', external:{ url:url } }; }) });
 
   var isEdit = !!EDIT_PAGE_ID;
   var reqUrl = isEdit

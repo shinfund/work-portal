@@ -895,6 +895,43 @@ function compressImageToLimit(file, maxBytes){
     img.src = url;
   });
 }
+
+/* ── 목록 썸네일(80px, ~15KB) — 원본과 별도로 업로드해 테이블 초기 로딩 용량을 줄인다 ── */
+var THUMB_MAX_DIM = 160;
+var THUMB_MAX_BYTES = 15*1024;
+function compressImageToThumb(file, maxDim, maxBytes){
+  return new Promise(function(resolve, reject){
+    if(!file.type || file.type.indexOf('image/')!==0){ reject(new Error('이미지 파일이 아닙니다')); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var w=img.naturalWidth, h=img.naturalHeight;
+      var scale = Math.min(1, maxDim/Math.max(w,h));
+      w = Math.max(1, Math.round(w*scale)); h = Math.max(1, Math.round(h*scale));
+      var canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      var ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      var quality=0.8, attempts=0;
+      function step(){
+        attempts++;
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('썸네일 생성 실패')); return; }
+          if(blob.size<=maxBytes || attempts>=6){
+            resolve(new File([blob], (file.name||'thumb').replace(/\.[^.]+$/,'')+'-thumb.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          quality = Math.max(0.35, quality-0.15);
+          step();
+        }, 'image/jpeg', quality);
+      }
+      step();
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src = url;
+  });
+}
 </script>
 <script>
 /* ── 고정 표시 순서(사용자 지정) — 물리적 노선 순서(포항→영덕)를 그대로 반영 ── */
@@ -942,12 +979,14 @@ function classifyEquipKey(k){
   if(lk.indexOf('수량')>=0) return '수량';
   if(lk==='포항') return '포항';
   if(lk==='영덕') return '영덕';
+  if(lk.indexOf('명판')>=0 && lk.indexOf('썸네일')>=0) return '명판_썸네일';
+  if(lk.indexOf('사진')>=0 && lk.indexOf('썸네일')>=0) return '사진_썸네일';
   if(lk.indexOf('명판')>=0) return '명판';
   if(lk.indexOf('사진')>=0) return '사진';
   if(lk.indexOf('비고')>=0) return '비고';
   return null;
 }
-var EQUIP_EXACT_PREFERRED = { '터널명':'터널명','구분':'구분','설비명':'설비명','규격':'규격','단위':'단위','수량':'수량','포항':'포항','영덕':'영덕','명판':'명판','사진':'사진','비고':'비고' };
+var EQUIP_EXACT_PREFERRED = { '터널명':'터널명','구분':'구분','설비명':'설비명','규격':'규격','단위':'단위','수량':'수량','포항':'포항','영덕':'영덕','명판':'명판','사진':'사진','사진_썸네일':'사진_썸네일','명판_썸네일':'명판_썸네일','비고':'비고' };
 function classifyTunnelKey(k){
   var lk=k.toLowerCase().replace(/\s/g,'');
   if(lk.indexOf('터널')>=0) return '터널명';
@@ -990,7 +1029,9 @@ function parseEquipPage(page){
     '영덕': getPropText(get('영덕')),
     '비고': getPropText(get('비고')),
     '사진': getFileUrls(get('사진')),
-    '명판': getFileUrls(get('명판'))
+    '명판': getFileUrls(get('명판')),
+    '사진_썸네일': getFileUrls(get('사진_썸네일')),
+    '명판_썸네일': getFileUrls(get('명판_썸네일'))
   };
 }
 function parseTunnelPage(page){
@@ -1263,13 +1304,14 @@ function fmtDirSubtotal(r){
   if((p==null||p==='') && (y==null||y==='')) return '<span style="color:var(--txt3)">-</span>';
   return fmtWon((parseFloat(p)||0) + (parseFloat(y)||0));
 }
-function fmtPhotoCell(arr,label){
+function fmtPhotoCell(arr,label,thumbArr){
   arr = arr||[];
   if(!arr.length) return '<span style="color:var(--txt3)">-</span>';
+  var thumbSrc = (thumbArr && thumbArr[0]) || arr[0];
   var extra = arr.length>1 ? '<span class="photo-count-badge">+'+(arr.length-1)+'</span>' : '';
   return '<span style="display:inline-flex;align-items:center;justify-content:center;gap:3px">'
     +'<a href="'+esc(arr[0])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'
-    +'<img src="'+esc(arr[0])+'" alt="'+esc(label)+'"'
+    +'<img src="'+esc(thumbSrc)+'" alt="'+esc(label)+'"'
     +' style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);vertical-align:middle;display:block"'
     +' onerror="this.style.display=\'none\'">'
     +'</a>'+extra+'</span>';
@@ -1302,8 +1344,8 @@ function buildDetailRow(r){
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['포항'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirCell(r['영덕'])+'</td>'
     + '<td class="r" style="white-space:nowrap">'+fmtDirSubtotal(r)+'</td>'
-    + '<td class="col-photo">'+fmtPhotoCell(r['사진'],'사진')+'</td>'
-    + '<td class="col-photo">'+fmtPhotoCell(r['명판'],'명판')+'</td>'
+    + '<td class="col-photo">'+fmtPhotoCell(r['사진'],'사진',r['사진_썸네일'])+'</td>'
+    + '<td class="col-photo">'+fmtPhotoCell(r['명판'],'명판',r['명판_썸네일'])+'</td>'
     + '<td>'+esc(r['비고']||'-')+'</td>'
     + '</tr>';
 }
@@ -1467,7 +1509,7 @@ function switchPanel(name){
 
 /* ── 시설물 등록/수정 모달 ── */
 var EDIT_PAGE_ID = null;
-var ADD_PHOTOS = [], ADD_PLATES = [];
+var ADD_PHOTOS = [], ADD_PLATES = [], ADD_PHOTOS_THUMB = [], ADD_PLATES_THUMB = [];
 function renderPhotoGallery(arr, galleryId, removeFn){
   var el=document.getElementById(galleryId);
   if(!el) return;
@@ -1476,12 +1518,21 @@ function renderPhotoGallery(arr, galleryId, removeFn){
       + '<button type="button" class="pg-remove" aria-label="삭제" onclick="event.stopPropagation();'+removeFn+'('+i+')">×</button></div>';
   }).join('');
 }
-function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); renderPhotoGallery(ADD_PHOTOS,'photoGallery','removeAddPhoto'); }
-function removeAddPlate(i){ ADD_PLATES.splice(i,1); renderPhotoGallery(ADD_PLATES,'plateGallery','removeAddPlate'); }
+function removeAddPhoto(i){ ADD_PHOTOS.splice(i,1); ADD_PHOTOS_THUMB.splice(i,1); renderPhotoGallery(ADD_PHOTOS,'photoGallery','removeAddPhoto'); }
+function removeAddPlate(i){ ADD_PLATES.splice(i,1); ADD_PLATES_THUMB.splice(i,1); renderPhotoGallery(ADD_PLATES,'plateGallery','removeAddPlate'); }
+function uploadOneFile(file, appFolder){
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('app', appFolder);
+  return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
+    .then(function(data){ return data.url; });
+}
 function uploadMultiPhoto(input, kind){
   var files = Array.prototype.slice.call(input.files||[]);
   if(!files.length) return;
   var targetArr = kind==='photo' ? ADD_PHOTOS : ADD_PLATES;
+  var thumbArr = kind==='photo' ? ADD_PHOTOS_THUMB : ADD_PLATES_THUMB;
   var galleryId = kind==='photo' ? 'photoGallery' : 'plateGallery';
   var removeFn = kind==='photo' ? 'removeAddPhoto' : 'removeAddPlate';
   var statusEl = document.getElementById(kind==='photo'?'photoStatus':'plateStatus');
@@ -1493,12 +1544,12 @@ function uploadMultiPhoto(input, kind){
   excelBatchPromises(files, function(file){
     return compressImageToLimit(file, UPLOAD_MAX_BYTES).then(function(outFile){
       if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과');
-      var formData = new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'facility-status');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(function(r){ if(!r.ok) return r.text().then(function(t){ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(function(data){ targetArr.push(data.url); });
+      return uploadOneFile(outFile, 'facility-status').then(function(url){
+        return compressImageToThumb(file, THUMB_MAX_DIM, THUMB_MAX_BYTES)
+          .then(function(thumbFile){ return uploadOneFile(thumbFile, 'facility-status'); })
+          .catch(function(){ return url; })
+          .then(function(thumbUrl){ targetArr.push(url); thumbArr.push(thumbUrl); });
+      });
     }).catch(function(e){ failed++; console.error(e); }).then(function(){
       done++; statusEl.textContent='업로드 중... ('+done+'/'+files.length+')';
       renderPhotoGallery(targetArr, galleryId, removeFn);
@@ -1512,7 +1563,7 @@ function uploadMultiPhoto(input, kind){
 }
 function openAddModal(){
   EDIT_PAGE_ID = null;
-  ADD_PHOTOS = []; ADD_PLATES = [];
+  ADD_PHOTOS = []; ADD_PLATES = []; ADD_PHOTOS_THUMB = []; ADD_PLATES_THUMB = [];
   document.getElementById('addModalTitleText').textContent='신규 시설물 등록';
   document.getElementById('addSubmitLabel').textContent='등록';
   ['addSpec','addQty','addPohang','addYeongdeok','addNote','addTunnelCustom','addGubunCustom','addSpecNameCustom','addUnitCustom'].forEach(function(id){ document.getElementById(id).value=''; });
@@ -1536,6 +1587,8 @@ function openEditModal(pageId){
   EDIT_PAGE_ID = pageId;
   ADD_PHOTOS = (r['사진']||[]).slice();
   ADD_PLATES = (r['명판']||[]).slice();
+  ADD_PHOTOS_THUMB = ADD_PHOTOS.map(function(u,i){ return (r['사진_썸네일']||[])[i] || u; });
+  ADD_PLATES_THUMB = ADD_PLATES.map(function(u,i){ return (r['명판_썸네일']||[])[i] || u; });
   document.getElementById('addModalTitleText').textContent='시설물 수정';
   document.getElementById('addSubmitLabel').textContent='수정';
   document.getElementById('addSpec').value = r['규격']||'';
@@ -1593,6 +1646,8 @@ function submitAddForm(){
   setProp('비고', note ? { select:{ name:note } } : { select:null });
   setProp('사진', { files: ADD_PHOTOS.map(function(u){ return { name:'사진', type:'external', external:{ url:u } }; }) } );
   setProp('명판', { files: ADD_PLATES.map(function(u){ return { name:'명판', type:'external', external:{ url:u } }; }) } );
+  setProp('사진_썸네일', { files: ADD_PHOTOS_THUMB.map(function(u){ return { name:'사진_썸네일', type:'external', external:{ url:u } }; }) } );
+  setProp('명판_썸네일', { files: ADD_PLATES_THUMB.map(function(u){ return { name:'명판_썸네일', type:'external', external:{ url:u } }; }) } );
 
   var isEdit = !!EDIT_PAGE_ID;
   var reqUrl = isEdit ? (CFG.workerUrl+'/v1/pages/'+EDIT_PAGE_ID) : (CFG.workerUrl+'/v1/pages');
@@ -1626,10 +1681,11 @@ function deleteRecord(pageId){
 
 /* ── 시설물 상세 모달 ── */
 function isRealPageId(id){ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id||''); }
-function photoViewGrid(urls){
+function photoViewGrid(urls, thumbUrls){
   if(!urls || !urls.length) return '<div style="padding:14px;text-align:center;font-size:12px;color:var(--txt3);background:var(--bg);border-radius:var(--r8);border:1.5px dashed var(--border)">사진 없음</div>';
-  return '<div class="photo-view-grid">'+urls.map(function(u){
-    return '<div class="pv-item"><a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(u)+'" alt="첨부사진"></a></div>';
+  return '<div class="photo-view-grid">'+urls.map(function(u,i){
+    var thumb = (thumbUrls && thumbUrls[i]) || u;
+    return '<div class="pv-item"><a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(thumb)+'" alt="첨부사진"></a></div>';
   }).join('')+'</div>';
 }
 function openDetailModal(id){
@@ -1650,8 +1706,8 @@ function openDetailModal(id){
   var infoHtml = '<div class="detail-info-wrap">'
     + rows.map(function(rv){ return '<div class="detail-info-row"><div class="detail-info-key">'+rv[0]+'</div><div class="detail-info-val">'+rv[1]+'</div></div>'; }).join('')
     + '</div>';
-  var photoHtml = '<div class="photo-section"><div class="photo-label">사진 ('+(r['사진']||[]).length+')</div>'+photoViewGrid(r['사진'])+'</div>'
-    + '<div class="photo-section"><div class="photo-label">명판 ('+(r['명판']||[]).length+')</div>'+photoViewGrid(r['명판'])+'</div>';
+  var photoHtml = '<div class="photo-section"><div class="photo-label">사진 ('+(r['사진']||[]).length+')</div>'+photoViewGrid(r['사진'],r['사진_썸네일'])+'</div>'
+    + '<div class="photo-section"><div class="photo-label">명판 ('+(r['명판']||[]).length+')</div>'+photoViewGrid(r['명판'],r['명판_썸네일'])+'</div>';
   document.getElementById('detailModalBody').innerHTML = infoHtml + photoHtml;
   document.getElementById('detailModalActions').innerHTML =
     '<button class="detail-act-btn detail-edit-btn" onclick="closeDetailModal();openEditModal(\''+id+'\')">수정</button>'
