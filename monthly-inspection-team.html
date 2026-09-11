@@ -146,6 +146,15 @@ tr:hover td{background:var(--sky50)}
 html[data-theme="dark"] .detail-count{color:#fff}
 .detail-count.warn{background:var(--amber50);color:var(--amber800);border-color:var(--amber100)}
 .count-actions{display:flex;gap:8px;flex-shrink:0}
+.count-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.page-size-wrap .dd-btn{padding:5px 26px 5px 10px;font-size:12px;min-height:28px}
+.pagination-row{display:flex;align-items:center;justify-content:center;gap:4px;padding:14px 0 2px;flex-wrap:wrap}
+.page-btn{min-width:28px;height:28px;padding:0 6px;border-radius:var(--r8);border:1px solid var(--border);background:var(--card);color:var(--txt);font-size:12px;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .15s,background .15s}
+.page-btn:hover:not(:disabled){border-color:var(--sky)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1565C0;border-color:#1565C0;color:#fff;font-weight:500}
+.page-btn.ellipsis{border:none;background:none;cursor:default;color:var(--sky600)}
+.page-btn.ellipsis:hover{border:none}
 .search-box{flex:1;min-width:160px;padding:0 12px;height:34px;border-radius:var(--r8);border:1px solid var(--border);font-size:13px;font-family:inherit;color:var(--txt);background:var(--card);outline:none}
 .search-box:focus{border-color:var(--sky)}
 .tb-action-btn{height:34px;padding:0 14px;border-radius:var(--r8);font-size:12px;font-weight:500;font-family:inherit;color:#fff;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
@@ -569,6 +578,12 @@ if (window.self !== window.top) {
       </div>
       <div class="detail-count" id="count-repair"></div>
       <div class="detail-count warn" id="pendingCount-repair" style="cursor:pointer" title="클릭하면 전체 연/월의 미조치 건을 봅니다" onclick="showAllPendingRepairs()"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_repair" onclick="toggleDd('pageSizeMenu_repair','pageSizeBtn_repair')"><span id="pageSizeLabel_repair">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_repair"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -578,6 +593,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-repair"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-repair"></div>
   </div>
 
   <!-- ▸ 점검사진 -->
@@ -610,6 +626,12 @@ if (window.self !== window.top) {
         <button class="tb-action-btn tb-delete on" id="delConfirmBtn_photo" onclick="deleteSelectedRows('photo')" style="display:none" disabled>선택 삭제</button>
       </div>
       <div class="detail-count" id="count-photo"></div>
+      <div class="count-right">
+        <div class="dd-wrap page-size-wrap">
+          <div class="dd-btn" id="pageSizeBtn_photo" onclick="toggleDd('pageSizeMenu_photo','pageSizeBtn_photo')"><span id="pageSizeLabel_photo">15개씩</span></div>
+          <div class="dd-menu" id="pageSizeMenu_photo"></div>
+        </div>
+      </div>
     </div>
     <div class="tbl-wrap">
       <table>
@@ -619,6 +641,7 @@ if (window.self !== window.top) {
         <tbody id="tbody-photo"></tbody>
       </table>
     </div>
+    <div class="pagination-row" id="paginationRow-photo"></div>
   </div>
 
 </div><!-- /main -->
@@ -1180,6 +1203,65 @@ document.addEventListener('click',e=>{
     }
   });
 });
+/* ── 페이지네이션(레코드 표시 개수) — 레코드 많은 탭(점검사진·고장수리)의 초기 로딩 지연 방지
+   (2026-09-11). 탭별 독립 key로 페이지 상태·크기를 저장하며, 이 기능을 쓰는 탭만 PAGE_DEFAULT_SIZE에
+   등록한다(등록 안 된 탭은 기존처럼 전체 렌더). ── */
+const PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
+const PAGE_DEFAULT_SIZE={photo:15, repair:15, photoMulti:15};
+const PAGE_STATE={};
+const _pageFilterSig={};
+function getPageState(tabId){
+  if(!PAGE_STATE[tabId]){
+    let size=PAGE_DEFAULT_SIZE[tabId]||15;
+    try{
+      const v=parseInt(localStorage.getItem('mit_pageSize_'+tabId),10);
+      if(PAGE_SIZE_OPTIONS.includes(v)) size=v;
+    }catch(e){}
+    PAGE_STATE[tabId]={size, page:1};
+  }
+  return PAGE_STATE[tabId];
+}
+function buildPageSizeDd(tabId){
+  const st=getPageState(tabId);
+  const menu=document.getElementById('pageSizeMenu_'+tabId);
+  if(!menu) return;
+  menu.innerHTML=PAGE_SIZE_OPTIONS.map(n=>`<div class="dd-opt${n===st.size?' sel':''}" onclick="pickPageSize('${tabId}',${n})">${n}개씩</div>`).join('');
+  const lbl=document.getElementById('pageSizeLabel_'+tabId);
+  if(lbl) lbl.textContent=st.size+'개씩';
+}
+function rerenderForPageKey(key){
+  if(key==='photoMulti') renderPhotoMultiRows();
+  else renderTabTable(key);
+}
+function pickPageSize(tabId,n){
+  const st=getPageState(tabId);
+  st.size=n; st.page=1;
+  try{ localStorage.setItem('mit_pageSize_'+tabId, String(n)); }catch(e){}
+  closeDd('pageSizeMenu_'+tabId,'pageSizeBtn_'+tabId);
+  rerenderForPageKey(tabId);
+}
+function goToTabPage(tabId,n){
+  getPageState(tabId).page=n;
+  rerenderForPageKey(tabId);
+}
+function renderTabPaginationRow(tabId,totalPages){
+  const el=document.getElementById('paginationRow-'+tabId);
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  const cur=getPageState(tabId).page;
+  const pages=[]; const win=2;
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  let html=`<button class="page-btn" onclick="goToTabPage('${tabId}',${cur-1})" ${cur<=1?'disabled':''} aria-label="이전 페이지">&#8249;</button>`;
+  html+=pages.map(p=>p==='...'
+    ? '<button class="page-btn ellipsis" disabled>…</button>'
+    : `<button class="page-btn${p===cur?' active':''}" onclick="goToTabPage('${tabId}',${p})" aria-current="${p===cur?'page':'false'}">${p}</button>`
+  ).join('');
+  html+=`<button class="page-btn" onclick="goToTabPage('${tabId}',${cur+1})" ${cur>=totalPages?'disabled':''} aria-label="다음 페이지">&#8250;</button>`;
+  el.innerHTML=html;
+}
 const _tabFilters={};
 const _tabFilterUserPicked={};
 TAB_DEFS.forEach(t=>{ _tabFilters[t.id]={year:'ALL', month:'ALL', tunnel:'', status:'ALL'}; _tabFilterUserPicked[t.id]=false; });
@@ -1349,12 +1431,29 @@ function renderTabTable(tabId){
   const tbody=document.getElementById('tbody-'+tabId);
   if(!tbody) return;
   const delMode=!!DELETE_MODE[tabId];
+  const paginated=!!PAGE_DEFAULT_SIZE[tabId];
+  // 필터·검색어가 바뀌면 자동으로 1페이지로 복귀(각 필터 픽 함수마다 개별 리셋을 두지 않고 여기서
+  // 필터 시그니처 변화를 감지하는 한 곳으로 통일, 2026-09-11).
+  if(paginated){
+    const sig=JSON.stringify(_tabFilters[tabId])+'|'+q;
+    if(_pageFilterSig[tabId]!==sig){ _pageFilterSig[tabId]=sig; getPageState(tabId).page=1; }
+  }
   if(!recs.length){
     const colCount=tabDef.listCols.length+(delMode?1:0);
     tbody.innerHTML=`<tr><td colspan="${colCount}">${emptyState(q?'검색 결과가 없습니다.':'등록된 기록이 없습니다.','🔍')}</td></tr>`;
+    if(paginated) renderTabPaginationRow(tabId,1);
     return;
   }
-  tbody.innerHTML=recs.map(r=>buildRow(tabDef,r)).join('');
+  let pageRecs=recs;
+  if(paginated){
+    buildPageSizeDd(tabId);
+    const st=getPageState(tabId);
+    const totalPages=Math.max(1,Math.ceil(recs.length/st.size));
+    if(st.page>totalPages) st.page=totalPages;
+    pageRecs=recs.slice((st.page-1)*st.size, st.page*st.size);
+    renderTabPaginationRow(tabId,totalPages);
+  }
+  tbody.innerHTML=pageRecs.map(r=>buildRow(tabDef,r)).join('');
   if(delMode) syncSelectAllCheckbox(tabId, recs);
 }
 function buildCellHtml(f, r){
@@ -1934,6 +2033,7 @@ function openAddModal(tabId, recordId){
     // 보이던 것 수정).
     _photoMultiRows=buildPhotoMultiRowsFromExisting();
     resortPhotoMultiRows();
+    getPageState('photoMulti').page=1;
     document.getElementById('photoMultiWrap').innerHTML=buildPhotoMultiHtml();
     renderPhotoMultiRows();
     syncTeamPhotoFormWidth();
@@ -2174,7 +2274,14 @@ function buildPhotoMultiRowsFromExisting(){
 function buildPhotoMultiHtml(){
   return `<div class="modal-field">
     <div class="photo-sort-hint">카드는 터널명(표준 순서)·일자 오름차순으로 자동 정렬되고, 번호도 그 순서에 맞춰 자동으로 매겨집니다</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px">
+      <div class="dd-wrap page-size-wrap">
+        <div class="dd-btn" id="pageSizeBtn_photoMulti" onclick="toggleDd('pageSizeMenu_photoMulti','pageSizeBtn_photoMulti')"><span id="pageSizeLabel_photoMulti">15개씩</span></div>
+        <div class="dd-menu" id="pageSizeMenu_photoMulti"></div>
+      </div>
+    </div>
     <div id="photoMultiRowsList" style="margin-top:8px"></div>
+    <div class="pagination-row" id="paginationRow-photoMulti"></div>
     <button type="button" class="tb-action-btn tb-add" style="margin-top:10px" onclick="addPhotoMultiRow()">+ 행 추가</button>
   </div>`;
 }
@@ -2183,12 +2290,22 @@ function renderPhotoMultiRows(){
   if(!wrap) return;
   if(!_photoMultiRows.length){
     wrap.innerHTML='<div class="modal-hint">"+ 행 추가"로 새 카드를 만드세요.</div>';
+    const pagEl=document.getElementById('paginationRow-photoMulti'); if(pagEl) pagEl.innerHTML='';
     return;
   }
+  // 카드가 많은 달(2026-09-11, 사용자 제보 — 42장까지도 나온다)은 전부 한 번에 렌더링하면 느려져
+  // 기본 15장씩 페이지네이션한다. "+ 행 추가"·삭제·저장(submitPhotoMulti)은 항상 _photoMultiRows
+  // 전체 배열을 기준으로 동작해 화면에 보이는 페이지와 무관하게 정상 동작한다.
+  buildPageSizeDd('photoMulti');
+  const pmSt=getPageState('photoMulti');
+  const pmTotalPages=Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size));
+  if(pmSt.page>pmTotalPages) pmSt.page=pmTotalPages;
+  const pageRows=_photoMultiRows.slice((pmSt.page-1)*pmSt.size, pmSt.page*pmSt.size);
+  renderTabPaginationRow('photoMulti', pmTotalPages);
   const tunnelOpts=TUNNEL_OPTIONS_STD;
   // 안전관리 앱 사진대지 카드와 동일한 형태로 배치(2026-08-10) — 다만 점검팀은 번호가 고정 6칸이
   // 아니라 터널별로 이어지는 임의 개수라 카드 수가 가변이다. 사진은 슬롯당 1장(교체 방식)으로 단순화.
-  wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${_photoMultiRows.map(row=>{
+  wrap.innerHTML=`<div id="photoMultiGridRow" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,340px));gap:10px">${pageRows.map(row=>{
     const tunnelOptsHtml=tunnelOpts.map(o=>`<option value="${esc(o)}"${row.tunnel===o?' selected':''}>${esc(o)}</option>`).join('')
       + (row.tunnel && !tunnelOpts.includes(row.tunnel) ? `<option value="${esc(row.tunnel)}" selected>${esc(row.tunnel)}</option>` : '');
     const descOptsArr=photoDescOptionsTeam(row.tunnel);
@@ -2285,6 +2402,8 @@ function addPhotoMultiRow(){
   const row=newPhotoMultiRow('', '');
   row.extra=true; // 모달을 처음 열 때부터 있던 "기본" 카드가 아니라 이번 세션에 직접 추가한 카드 표시
   _photoMultiRows.push(row);
+  const pmSt=getPageState('photoMulti');
+  pmSt.page=Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size)); // 새 카드가 보이도록 마지막 페이지로 이동
   renderPhotoMultiRows();
 }
 // 모달을 열 때부터 있던 "기본" 카드(row.extra 아님)는 ✕를 눌러도 칸 자체를 없애지 않는다 — 안전관리
