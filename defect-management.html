@@ -1216,7 +1216,7 @@ var PAGE_SIZE_OPTIONS=[10,20,30,50,100];
 var PAGE_STATE = {};
 function getPageState(key){
   if(!PAGE_STATE[key]){
-    var size=10;
+    var size=20;
     try{
       var raw=localStorage.getItem('defectMgmt_pageSize_'+key);
       var v=parseInt(raw,10);
