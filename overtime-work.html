@@ -1946,18 +1946,18 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">📊 전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="font-size:14px;color:var(--txt);margin-bottom:10px;font-weight:500">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
+          <div style="font-size:13px;color:var(--txt);margin-bottom:4px">기간</div>
           <div style="font-size:16px;font-weight:500;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:400;color:var(--txt2)">개월</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 건수</div>
+          <div style="font-size:13px;color:var(--txt);margin-bottom:4px">총 건수</div>
           <div style="font-size:16px;font-weight:500;color:var(--txt)">${totalAllCnt}<span style="font-size:12px;font-weight:400;color:var(--txt2)">건</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 지급액</div>
+          <div style="font-size:13px;color:var(--txt);margin-bottom:4px">총 지급액</div>
           <div style="font-size:15px;font-weight:500;color:var(--teal600)">${fmtWon(totalAllPay)}</div>
         </div>
       </div>
