@@ -1214,15 +1214,17 @@ document.addEventListener('click',e=>{
    (2026-09-11). 탭별 독립 key로 페이지 상태·크기를 저장하며, 이 기능을 쓰는 탭만 PAGE_DEFAULT_SIZE에
    등록한다(등록 안 된 탭은 기존처럼 전체 렌더). ── */
 const PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
-const PAGE_DEFAULT_SIZE={elecinsp:15, photo:15, repair:15, photoMulti:15};
+const PAGE_DEFAULT_SIZE={elecinsp:15, photo:15, repair:15, photoMulti:15, repairForm:30};
 const PAGE_STATE={};
 const _pageFilterSig={};
 function getPageState(tabId){
   if(!PAGE_STATE[tabId]){
     let size=PAGE_DEFAULT_SIZE[tabId]||15;
     try{
-      const v=parseInt(localStorage.getItem('mit_pageSize_'+tabId),10);
+      const raw=localStorage.getItem('mit_pageSize_'+tabId);
+      const v=parseInt(raw,10);
       if(PAGE_SIZE_OPTIONS.includes(v)) size=v;
+      else if(raw==='all') size='all';
     }catch(e){}
     PAGE_STATE[tabId]={size, page:1};
   }
@@ -1232,12 +1234,14 @@ function buildPageSizeDd(tabId){
   const st=getPageState(tabId);
   const menu=document.getElementById('pageSizeMenu_'+tabId);
   if(!menu) return;
-  menu.innerHTML=PAGE_SIZE_OPTIONS.map(n=>`<div class="dd-opt${n===st.size?' sel':''}" onclick="pickPageSize('${tabId}',${n})">${n}개씩</div>`).join('');
+  menu.innerHTML=PAGE_SIZE_OPTIONS.map(n=>`<div class="dd-opt${n===st.size?' sel':''}" onclick="pickPageSize('${tabId}',${n})">${n}개씩</div>`).join('')
+    + `<div class="dd-opt${st.size==='all'?' sel':''}" onclick="pickPageSize('${tabId}','all')">전체</div>`;
   const lbl=document.getElementById('pageSizeLabel_'+tabId);
-  if(lbl) lbl.textContent=st.size+'개씩';
+  if(lbl) lbl.textContent=st.size==='all'?'전체':st.size+'개씩';
 }
 function rerenderForPageKey(key){
   if(key==='photoMulti') renderPhotoMultiRows();
+  else if(key==='repairForm') renderTeamRepairBody();
   else renderTabTable(key);
 }
 function pickPageSize(tabId,n){
@@ -1455,9 +1459,9 @@ function renderTabTable(tabId){
   if(paginated){
     buildPageSizeDd(tabId);
     const st=getPageState(tabId);
-    const totalPages=Math.max(1,Math.ceil(recs.length/st.size));
+    const totalPages=st.size==='all'?1:Math.max(1,Math.ceil(recs.length/st.size));
     if(st.page>totalPages) st.page=totalPages;
-    pageRecs=recs.slice((st.page-1)*st.size, st.page*st.size);
+    pageRecs=st.size==='all'?recs:recs.slice((st.page-1)*st.size, st.page*st.size);
     renderTabPaginationRow(tabId,totalPages);
   }
   tbody.innerHTML=pageRecs.map(r=>buildRow(tabDef,r)).join('');
@@ -2305,9 +2309,9 @@ function renderPhotoMultiRows(){
   // 전체 배열을 기준으로 동작해 화면에 보이는 페이지와 무관하게 정상 동작한다.
   buildPageSizeDd('photoMulti');
   const pmSt=getPageState('photoMulti');
-  const pmTotalPages=Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size));
+  const pmTotalPages=pmSt.size==='all'?1:Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size));
   if(pmSt.page>pmTotalPages) pmSt.page=pmTotalPages;
-  const pageRows=_photoMultiRows.slice((pmSt.page-1)*pmSt.size, pmSt.page*pmSt.size);
+  const pageRows=pmSt.size==='all'?_photoMultiRows:_photoMultiRows.slice((pmSt.page-1)*pmSt.size, pmSt.page*pmSt.size);
   renderTabPaginationRow('photoMulti', pmTotalPages);
   const tunnelOpts=TUNNEL_OPTIONS_STD;
   // 안전관리 앱 사진대지 카드와 동일한 형태로 배치(2026-08-10) — 다만 점검팀은 번호가 고정 6칸이
@@ -2410,7 +2414,7 @@ function addPhotoMultiRow(){
   row.extra=true; // 모달을 처음 열 때부터 있던 "기본" 카드가 아니라 이번 세션에 직접 추가한 카드 표시
   _photoMultiRows.push(row);
   const pmSt=getPageState('photoMulti');
-  pmSt.page=Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size)); // 새 카드가 보이도록 마지막 페이지로 이동
+  pmSt.page=pmSt.size==='all'?1:Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size)); // 새 카드가 보이도록 마지막 페이지로 이동
   renderPhotoMultiRows();
 }
 // 모달을 열 때부터 있던 "기본" 카드(row.extra 아님)는 ✕를 눌러도 칸 자체를 없애지 않는다 — 안전관리
@@ -3355,7 +3359,8 @@ async function submitElecinspGridForm(){
 }
 // ── 고장수리 — 자유 다중 행 입력(안전관리 앱 업무처리 페이지와 동일 패턴) ──
 let _repairExtraRows=[];
-function repairAddExtraRow(){ _repairExtraRows.push({key:Date.now()+Math.random()}); renderTeamRepairBody(); }
+let _repairJustAdded=false;
+function repairAddExtraRow(){ _repairExtraRows.push({key:Date.now()+Math.random()}); _repairJustAdded=true; renderTeamRepairBody(); }
 async function renderReportPage_repair(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
@@ -3417,12 +3422,26 @@ function renderTeamRepairBody(){
   // 보이게 빈 행을 미리 채워둔다(안전관리 앱 업무처리 페이지와 동일, 2026-07-31 사용자 요청).
   while(recs.length + _repairExtraRows.length < 10){ _repairExtraRows.push({key:Date.now()+Math.random()}); }
   const chk=(attr)=>`<td><input type="checkbox" class="repair-row-chk" ${attr}></td>`;
-  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${repairRowCells('e'+r.id, r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}</tr>`).join('');
-  const extraRows=_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${repairRowCells('x'+String(row.key).replace('.','_'), '','','','','','')}</tr>`).join('');
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+  // 전체 행(기록+미저장 추가행)을 한 배열로 합친 뒤 페이지네이션(기본 30행, 2026-09-11 사용자 요청)
+  // — "+ 행 추가"는 항상 이 전체 배열 기준으로 동작하고, 새 행 추가 직후엔 마지막 페이지로 이동한다.
+  const allRowsHtml=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${repairRowCells('e'+r.id, r['터널명']||'', r['발생일']||'', r['이상발생내역']||'', r['조치일']||'', r['조치내역']||'', r['작업자']||'')}</tr>`)
+    .concat(_repairExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${repairRowCells('x'+String(row.key).replace('.','_'), '','','','','','')}</tr>`));
+  const rfSt=getPageState('repairForm');
+  const rfTotalPages=rfSt.size==='all'?1:Math.max(1,Math.ceil(allRowsHtml.length/rfSt.size));
+  if(_repairJustAdded){ rfSt.page=rfSt.size==='all'?1:rfTotalPages; _repairJustAdded=false; }
+  if(rfSt.page>rfTotalPages) rfSt.page=rfTotalPages;
+  const pageRowsHtml=rfSt.size==='all'?allRowsHtml:allRowsHtml.slice((rfSt.page-1)*rfSt.size, rfSt.page*rfSt.size);
+  wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <div class="dd-wrap page-size-wrap">
+        <div class="dd-btn" id="pageSizeBtn_repairForm" onclick="toggleDd('pageSizeMenu_repairForm','pageSizeBtn_repairForm')"><span id="pageSizeLabel_repairForm">30개씩</span></div>
+        <div class="dd-menu" id="pageSizeMenu_repairForm"></div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="rc-monthly-table">
       <thead><tr><th style="width:34px"><input type="checkbox" id="repairDelAll" onchange="repairToggleSelectAll(this.checked)"></th><th style="width:130px">터널명</th><th style="width:120px">발생일</th><th>이상발생내역</th><th style="width:120px">조치일</th><th>조치내역</th><th style="width:130px">작업자</th></tr></thead>
-      <tbody>${existingRows}${extraRows}</tbody>
+      <tbody>${pageRowsHtml.join('')}</tbody>
     </table></div>
+    <div class="pagination-row" id="paginationRow-repairForm"></div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button type="button" class="tb-action-btn tb-add" onclick="repairAddExtraRow()">+ 행 추가</button>
       <button type="button" class="tb-action-btn tb-delete" onclick="repairDeleteSelected()">선택 삭제</button>
@@ -3431,6 +3450,8 @@ function renderTeamRepairBody(){
       <button class="add-submit-btn" id="rpRepairSubmitBtn" onclick="submitTeamRepairForm()">등록</button>
     </div>
     <div class="modal-progress-wrap" id="rpRepairProgressWrap" style="display:none;margin-top:10px"><div class="modal-progress-bar" id="rpRepairProgressBar"></div></div>`;
+  buildPageSizeDd('repairForm');
+  renderTabPaginationRow('repairForm', rfTotalPages);
   wrap.querySelectorAll('.rp-tunnel, .rp-worker').forEach(sel=>{ sel.style.width='100%'; });
   autoSizeTableColumns(wrap, {'rp-issue':160, 'rp-fixnote':160});
 }

@@ -2024,16 +2024,18 @@ document.addEventListener('scroll', e=>{
 /* ── 페이지네이션(레코드 표시 개수) — 레코드 많은 탭(점검사진)의 초기 로딩 지연 방지
    (2026-09-11). 탭별 독립 key로 페이지 상태·크기를 저장하며, 이 기능을 쓰는 탭만 PAGE_DEFAULT_SIZE에
    등록한다(등록 안 된 탭은 기존처럼 전체 렌더). 점검팀 앱(monthly-inspection-team.html)과 동일 패턴. ── */
-const PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
-const PAGE_DEFAULT_SIZE={monthly:15, elec:15, transformer:15, generator:15, photo:15, power:15, task:15, photoMulti:15};
+const PAGE_SIZE_OPTIONS=[10,15,20,30,31,50,100];
+const PAGE_DEFAULT_SIZE={monthly:15, elec:15, transformer:15, generator:15, photo:15, power:15, task:15, photoMulti:15, taskForm:31, powerForm:31};
 const PAGE_STATE={};
 const _pageFilterSig={};
 function getPageState(tabId){
   if(!PAGE_STATE[tabId]){
     let size=PAGE_DEFAULT_SIZE[tabId]||15;
     try{
-      const v=parseInt(localStorage.getItem('mi_pageSize_'+tabId),10);
+      const raw=localStorage.getItem('mi_pageSize_'+tabId);
+      const v=parseInt(raw,10);
       if(PAGE_SIZE_OPTIONS.includes(v)) size=v;
+      else if(raw==='all') size='all';
     }catch(e){}
     PAGE_STATE[tabId]={size, page:1};
   }
@@ -2043,12 +2045,15 @@ function buildPageSizeDd(tabId){
   const st=getPageState(tabId);
   const menu=document.getElementById('pageSizeMenu_'+tabId);
   if(!menu) return;
-  menu.innerHTML=PAGE_SIZE_OPTIONS.map(n=>`<div class="dd-opt${n===st.size?' sel':''}" onclick="pickPageSize('${tabId}',${n})">${n}개씩</div>`).join('');
+  menu.innerHTML=PAGE_SIZE_OPTIONS.map(n=>`<div class="dd-opt${n===st.size?' sel':''}" onclick="pickPageSize('${tabId}',${n})">${n}개씩</div>`).join('')
+    + `<div class="dd-opt${st.size==='all'?' sel':''}" onclick="pickPageSize('${tabId}','all')">전체</div>`;
   const lbl=document.getElementById('pageSizeLabel_'+tabId);
-  if(lbl) lbl.textContent=st.size+'개씩';
+  if(lbl) lbl.textContent=st.size==='all'?'전체':st.size+'개씩';
 }
 function rerenderForPageKey(key){
   if(key==='photoMulti') renderPhotoMultiRows();
+  else if(key==='taskForm') renderTaskBody();
+  else if(key==='powerForm') renderPowerGrid();
   else renderTabTable(key);
 }
 function pickPageSize(tabId,n){
@@ -2354,9 +2359,9 @@ function renderTabTable(tabId){
   if(paginated){
     buildPageSizeDd(tabId);
     const st=getPageState(tabId);
-    const totalPages=Math.max(1,Math.ceil(recs.length/st.size));
+    const totalPages=st.size==='all'?1:Math.max(1,Math.ceil(recs.length/st.size));
     if(st.page>totalPages) st.page=totalPages;
-    pageRecs=recs.slice((st.page-1)*st.size, st.page*st.size);
+    pageRecs=st.size==='all'?recs:recs.slice((st.page-1)*st.size, st.page*st.size);
     renderTabPaginationRow(tabId,totalPages);
   }
   tbody.innerHTML=pageRecs.map(r=>buildRow(tabDef,r)).join('');
@@ -3870,7 +3875,7 @@ function photoMultiAddRow(){
   row.extra=true;
   _photoMultiRows.push(row);
   const pmSt=getPageState('photoMulti');
-  pmSt.page=Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size)); // 새 카드가 보이도록 마지막 페이지로 이동
+  pmSt.page=pmSt.size==='all'?1:Math.max(1,Math.ceil(_photoMultiRows.length/pmSt.size)); // 새 카드가 보이도록 마지막 페이지로 이동
   renderPhotoMultiRows();
 }
 // 팀 앱(monthly-inspection-team.html)과 동일하게 모든 칸에 ✕ 버튼을 두되(2026-08-19 사용자 요청),
@@ -3904,9 +3909,9 @@ function renderPhotoMultiRows(){
   const sortedAll=_photoMultiRows.slice().sort(photoMultiDateSortKey).map((row,idx)=>({row,displayNum:idx+1}));
   buildPageSizeDd('photoMulti');
   const pmSt=getPageState('photoMulti');
-  const pmTotalPages=Math.max(1,Math.ceil(sortedAll.length/pmSt.size));
+  const pmTotalPages=pmSt.size==='all'?1:Math.max(1,Math.ceil(sortedAll.length/pmSt.size));
   if(pmSt.page>pmTotalPages) pmSt.page=pmTotalPages;
-  const pageItems=sortedAll.slice((pmSt.page-1)*pmSt.size, pmSt.page*pmSt.size);
+  const pageItems=pmSt.size==='all'?sortedAll:sortedAll.slice((pmSt.page-1)*pmSt.size, pmSt.page*pmSt.size);
   renderTabPaginationRow('photoMulti', pmTotalPages);
   const boxes=pageItems.map(({row,displayNum})=>{
     // 사진설명은 해당 터널·번호 조합에서 과거에 입력된 값들을 select 드롭다운으로 제안(직접입력은
@@ -6644,6 +6649,7 @@ function loadGeneratorDay(recordId){
 // 탭(모달 기반 CRUD)은 변경 없이 그대로 둔다.
 let _taskExtraRows=[];
 let _taskExtraNextKey=1;
+let _taskJustAdded=false;
 async function renderReportPage_task(){
   document.getElementById('reportPaper').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:2.5px solid var(--sky);padding-bottom:10px;margin-bottom:14px">
@@ -6661,6 +6667,7 @@ async function renderReportPage_task(){
 }
 function taskAddRow(){
   _taskExtraRows.push({key:_taskExtraNextKey++});
+  _taskJustAdded=true;
   renderTaskBody();
 }
 function taskToggleSelectAll(checked){
@@ -6736,18 +6743,34 @@ function renderTaskBody(){
       <td><input type="text" class="modal-input tk-note" value="${esc(note)}"></td>`;
   };
   const chk=(attr)=>`<td><input type="checkbox" class="task-row-chk" ${attr} onchange="taskSyncSelectAllCheckbox()"></td>`;
-  const existingRows=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${cells('e'+r.id, r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`).join('');
-  const extraRows=_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${cells('x'+String(row.key).replace('.','_'), '','','','','')}</tr>`).join('');
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table">
+  // 전체 행(기록+미저장 추가행)을 한 배열로 합친 뒤 페이지네이션(기본 31행, 2026-09-11 사용자 요청)
+  // — "+ 행 추가"는 항상 이 전체 배열 기준으로 동작하고, 새 행 추가 직후엔 마지막 페이지로 이동한다.
+  const allRowsHtml=recs.map(r=>`<tr data-id="${r.id}">${chk('data-id="'+r.id+'"')}${cells('e'+r.id, r['날짜']||'', r['업무내용']||'', r['조치사항']||'', r['업체명']||'', r['비고']||'')}</tr>`)
+    .concat(_taskExtraRows.map(row=>`<tr data-extra-key="${row.key}">${chk('data-extra-key="'+row.key+'"')}${cells('x'+String(row.key).replace('.','_'), '','','','','')}</tr>`));
+  const tfSt=getPageState('taskForm');
+  const tfTotalPages=tfSt.size==='all'?1:Math.max(1,Math.ceil(allRowsHtml.length/tfSt.size));
+  if(_taskJustAdded){ tfSt.page=tfSt.size==='all'?1:tfTotalPages; _taskJustAdded=false; }
+  if(tfSt.page>tfTotalPages) tfSt.page=tfTotalPages;
+  const pageRowsHtml=tfSt.size==='all'?allRowsHtml:allRowsHtml.slice((tfSt.page-1)*tfSt.size, tfSt.page*tfSt.size);
+  wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <div class="dd-wrap page-size-wrap">
+        <div class="dd-btn" id="pageSizeBtn_taskForm" onclick="toggleDd('pageSizeMenu_taskForm','pageSizeBtn_taskForm')"><span id="pageSizeLabel_taskForm">31개씩</span></div>
+        <div class="dd-menu" id="pageSizeMenu_taskForm"></div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="rc-monthly-table">
       <thead><tr><th style="width:34px"><input type="checkbox" id="taskDelAll" onchange="taskToggleSelectAll(this.checked)"></th><th style="width:130px">날짜</th><th>업무내용</th><th>조치사항</th><th style="width:150px">업체명</th><th>비고</th></tr></thead>
-      <tbody>${existingRows}${extraRows}</tbody>
+      <tbody>${pageRowsHtml.join('')}</tbody>
     </table></div>
+    <div class="pagination-row" id="paginationRow-taskForm"></div>
     <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
       <button type="button" class="tb-action-btn tb-add" onclick="taskAddRow()">+ 행 추가</button>
       <button type="button" class="tb-action-btn tb-delete" onclick="taskDeleteSelected()">선택 삭제</button>
     </div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpTaskSubmitBtn" onclick="submitTaskReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpTaskProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpTaskProgressBar"></div></div>`;
+  buildPageSizeDd('taskForm');
+  renderTabPaginationRow('taskForm', tfTotalPages);
   autoSizeTableColumns(wrap, {'tk-content':160, 'tk-action':160, 'tk-note':90, 'tk-company':150});
 }
 // 표 형식 입력폼(업무처리/고장수리 등) 전용 — 컬럼별 실제 입력값 중 가장 긴 텍스트 폭을 caret 기준으로
@@ -7260,25 +7283,40 @@ function renderPowerGrid(){
   const tunnel=REPORT_SEL.tunnel;
   const year=Number(REPORT_SEL.year), month=Number(REPORT_SEL.month);
   const lastDay=new Date(year, month, 0).getDate();
-  let rows='';
+  const allRowsHtml=[];
   for(let d=1; d<=lastDay; d++){
     const dateStr=REPORT_SEL.year+'-'+REPORT_SEL.month+'-'+String(d).padStart(2,'0');
     const rec=powerRecordLookup(tunnel, dateStr);
     const mainV=rec&&rec['MAIN(kWh)']!=null?rec['MAIN(kWh)']:'';
     const lightV=rec&&rec['조명용(kWh)']!=null?rec['조명용(kWh)']:'';
-    rows+=`<tr data-date="${dateStr}">
+    allRowsHtml.push(`<tr data-date="${dateStr}">
       <td style="padding:4px 8px;text-align:center">${month}월 ${d}일</td>
       <td><input class="modal-input pw-main" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(mainV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
       <td><input class="modal-input pw-light" type="text" inputmode="decimal" style="width:100%" value="${formatThousands(lightV)}" onfocus="this.value=stripThousands(this.value)" onblur="this.value=formatThousands(this.value)"></td>
       <td><input class="modal-input pw-note" type="text" style="width:100%" value="${esc((rec&&rec['비고'])||'')}"></td>
-    </tr>`;
+    </tr>`);
   }
+  // 한 달 최대 31행이라 기본 페이지 크기도 31개(2026-09-11 사용자 요청) — 평소엔 항상 1페이지 안에
+  // 다 들어가 실질적으로 페이지네이션이 개입하지 않고, 사용자가 직접 더 작은 값을 고를 때만 나뉜다.
+  const pfSt=getPageState('powerForm');
+  const pfTotalPages=pfSt.size==='all'?1:Math.max(1,Math.ceil(allRowsHtml.length/pfSt.size));
+  if(pfSt.page>pfTotalPages) pfSt.page=pfTotalPages;
+  const pageRowsHtml=pfSt.size==='all'?allRowsHtml:allRowsHtml.slice((pfSt.page-1)*pfSt.size, pfSt.page*pfSt.size);
   // 컬럼 폭 — 실제 A4 세로 엑셀 리포트(전력사용량표, buildPowerReportSheet)의 4개 컬럼이 모두
   // 동일 폭(32.79 엑셀 단위 ≈ 230px)이라 입력폼도 동일 비율로 맞춘다(2026-07-31 사용자 지적 —
   // 기존엔 표가 너무 좁아 A4 인쇄 폭과 안 맞았음). table-layout:fixed로 th 폭을 그대로 강제한다.
-  wrap.innerHTML=`<div class="tbl-wrap"><table class="rc-monthly-table" style="table-layout:fixed;width:920px"><thead><tr><th style="width:230px">날짜</th><th style="width:230px">MAIN (kWh)</th><th style="width:230px">조명용 (kWh)</th><th style="width:230px">비고</th></tr></thead><tbody>${rows}</tbody></table></div>
+  wrap.innerHTML=`<div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <div class="dd-wrap page-size-wrap">
+        <div class="dd-btn" id="pageSizeBtn_powerForm" onclick="toggleDd('pageSizeMenu_powerForm','pageSizeBtn_powerForm')"><span id="pageSizeLabel_powerForm">31개씩</span></div>
+        <div class="dd-menu" id="pageSizeMenu_powerForm"></div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="rc-monthly-table" style="table-layout:fixed;width:920px"><thead><tr><th style="width:230px">날짜</th><th style="width:230px">MAIN (kWh)</th><th style="width:230px">조명용 (kWh)</th><th style="width:230px">비고</th></tr></thead><tbody>${pageRowsHtml.join('')}</tbody></table></div>
+    <div class="pagination-row" id="paginationRow-powerForm"></div>
     <div class="modal-btns" style="margin-top:18px"><button class="add-submit-btn" id="rpPowerSubmitBtn" onclick="submitPowerReportForm()">등록</button></div>
     <div class="modal-progress-wrap" id="rpPowerProgressWrap" style="display:none"><div class="modal-progress-bar" id="rpPowerProgressBar"></div></div>`;
+  buildPageSizeDd('powerForm');
+  renderTabPaginationRow('powerForm', pfTotalPages);
 }
 async function submitPowerReportForm(){
   if(!isAuthed()){ alert('로그인이 필요합니다.'); openCfgModal(); return; }
