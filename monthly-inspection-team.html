@@ -985,7 +985,12 @@ const TAB_DEFS=[
       // 사진설명은 노션 실데이터 기준 252건 중 서로 다른 값이 50개(2026-07-24 확인)로, 사진마다
       // 내용이 제각각이라 고정 드롭다운 후보로 묶을 만큼 반복되지 않는다 — 직접입력 유지가 적합.
       {key:'사진설명', type:'text'},
-      {key:'점검사진', type:'file'}
+      {key:'점검사진', type:'file'},
+      // 점검사진 탭 목록(40px)·입력폼 카드 미리보기가 원본(최대 500KB)을 그대로 축소 표시해 초기
+      // 로딩이 느리던 문제를 원본+썸네일(160px, ~15KB) 동시 업로드로 해결(2026-09-11, 안전관리 앱과
+      // 동일 패턴). hidden:true라 폼·상세모달·엑셀출력에선 자동 제외되고, 목록 썸네일 렌더링에서만
+      // 별도로 참조한다.
+      {key:'점검사진_썸네일', type:'file', hidden:true}
     ],
     listCols:['터널명','일자','번호','사진설명','점검사진']
   }
@@ -1358,7 +1363,7 @@ function buildCellHtml(f, r){
   if(f.badgeFn) return `<td><span class="type-badge ${f.badgeFn(r[key])}">${esc(r[key]||'-')}</span></td>`;
   if(f.type==='date') return `<td style="white-space:nowrap">${esc(fmtDate(r[key]))}</td>`;
   if(f.type==='number') return `<td class="r">${fmtWon(r[key])}</td>`;
-  if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2)}</td>`;
+  if(f.type==='file') return `<td>${buildPhotoThumbs(r[key], 2, key==='점검사진' ? r['점검사진_썸네일'] : null)}</td>`;
   return `<td>${esc(r[key]||'-')}</td>`;
 }
 function buildRow(tabDef, r){
@@ -1478,14 +1483,15 @@ function resultSlug(v){
   if(v==='점검요') return 'result-warn';
   return 'result-none';
 }
-function buildPhotoThumbs(files, maxShow){
+function buildPhotoThumbs(files, maxShow, thumbFiles){
   if(!files || !files.length) return '<span style="color:var(--txt3)">-</span>';
   const shown=files.slice(0,maxShow||4);
-  const html=shown.map(f=>
-    `<a href="${esc(f.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">`
-    +`<img src="${esc(f.url)}" alt="사진" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);margin:1px;display:inline-block;vertical-align:middle" onerror="this.style.display='none'">`
-    +`</a>`
-  ).join('');
+  const html=shown.map((f,i)=>{
+    const thumbSrc=(thumbFiles && thumbFiles[i] && thumbFiles[i].url) || f.url;
+    return `<a href="${esc(f.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">`
+    +`<img src="${esc(thumbSrc)}" alt="사진" style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid var(--border);margin:1px;display:inline-block;vertical-align:middle" onerror="this.style.display='none'">`
+    +`</a>`;
+  }).join('');
   const more = files.length>shown.length ? `<span style="font-size:11px;color:var(--txt3);margin-left:4px">+${files.length-shown.length}</span>` : '';
   return html+more;
 }
@@ -1526,7 +1532,7 @@ function openDetailModal(tabId, recordId){
     else val=esc(r[f.key]||'-');
     return `<div class="detail-info-row"><div class="detail-info-key">${esc(f.key)}</div><div class="detail-info-val">${val}</div></div>`;
   }).join('');
-  const photoHtml=fields.filter(f=>f.type==='file').map(f=>buildPhotoSection(f.key, r[f.key])).join('');
+  const photoHtml=fields.filter(f=>f.type==='file' && !f.hidden).map(f=>buildPhotoSection(f.key, r[f.key])).join('');
   document.getElementById('detailModalBody').innerHTML='<div class="detail-info-wrap">'+rows+'</div>'
     + photoHtml;
   document.getElementById('detailModalActions').innerHTML=
@@ -1811,7 +1817,8 @@ function toggleElecinspGroupAll(gi, checked){
 function getFieldValue(f, idx){
   const id='ff_'+idx;
   if(f.type==='file'){
-    return _photoFiles;
+    if(f.key==='점검사진_썸네일') return _photoFiles.map(p=>({url:p.thumbUrl||p.url, name:p.name}));
+    return _photoFiles.map(p=>({url:p.url, name:p.name}));
   }
   if(f.type==='select' || f.uiType==='cascade-select' || f.uiType==='fixed-select'){
     const sel=document.getElementById(id);
@@ -1887,6 +1894,9 @@ function openAddModal(tabId, recordId){
       }
       return;
     }
+    // hidden:true — 표준 위치에 렌더링하지 않는 필드(예: 점검사진_썸네일, 목록 썸네일 전용). 값
+    // 읽기/저장/파싱은 tabDef.fields 공용 로직 그대로 탄다(안전관리 앱과 동일 패턴).
+    if(f.hidden) return;
     const curVal = r ? r[f.key] : (f.defaultValue!=null ? f.defaultValue : '');
     const readOnly = tabId==='photo' && !!r && (f.key==='일자' || f.key==='번호');
     html+=buildFieldHtml(f, idx, curVal, tabId, readOnly);
@@ -1905,7 +1915,9 @@ function openAddModal(tabId, recordId){
   initDraggableModals();
   const fileIdx=tabDef.fields.findIndex(f=>f.type==='file');
   if(fileIdx>=0 && !isPhotoMulti){
-    _photoFiles = r ? (r[tabDef.fields[fileIdx].key]||[]).slice() : [];
+    const origArr = r ? (r[tabDef.fields[fileIdx].key]||[]) : [];
+    const thumbArr = r ? (r['점검사진_썸네일']||[]) : [];
+    _photoFiles = origArr.map((f,i)=>({url:f.url, name:f.name, thumbUrl:(thumbArr[i]||{}).url}));
     renderPhotoFileList('ff_'+fileIdx);
   }
   tabDef.fields.forEach((f,idx)=>{
@@ -1982,6 +1994,47 @@ function compressImageToLimit(file, maxBytes){
     img.src=url;
   });
 }
+// 목록 40px 썸네일·입력폼 카드 미리보기 전용 소형 이미지(원본과 별도 업로드) — facility-status 등
+// 4개 앱과 동일 패턴(2026-09-11).
+const THUMB_MAX_DIM=160, THUMB_MAX_BYTES=15*1024;
+function compressImageToThumb(file, maxDim, maxBytes){
+  return new Promise((resolve, reject)=>{
+    const url=URL.createObjectURL(file);
+    const img=new Image();
+    img.onload=()=>{
+      URL.revokeObjectURL(url);
+      const scale=Math.min(1, maxDim/Math.max(img.naturalWidth, img.naturalHeight));
+      let w=Math.max(1,Math.round(img.naturalWidth*scale)), h=Math.max(1,Math.round(img.naturalHeight*scale));
+      let quality=0.8, attempts=0;
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      const step=()=>{
+        attempts++;
+        canvas.width=w; canvas.height=h;
+        ctx.drawImage(img,0,0,w,h);
+        canvas.toBlob(blob=>{
+          if(!blob){ reject(new Error('썸네일 생성 실패')); return; }
+          if(blob.size<=maxBytes || attempts>=6){
+            resolve(new File([blob], (file.name||'photo').replace(/\.[^.]+$/,'')+'-thumb.jpg', {type:'image/jpeg'}));
+            return;
+          }
+          quality=Math.max(0.35, quality-0.15);
+          step();
+        }, 'image/jpeg', quality);
+      };
+      step();
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('이미지 로드 실패')); };
+    img.src=url;
+  });
+}
+function uploadOneFile(file, appFolder){
+  const formData=new FormData();
+  formData.append('file', file);
+  formData.append('app', appFolder);
+  return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
+    .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); });
+}
 // ── 점검사진 업로드 (overtime-work 앱 다중 첨부파일 패턴 재사용, R2 monthly-inspection 폴더) ──
 function uploadInspectionPhoto(input, fieldId){
   const files=Array.from(input.files||[]);
@@ -1998,14 +2051,14 @@ function uploadInspectionPhoto(input, fieldId){
   const results=new Array(files.length).fill(null);
   let done=0;
   files.forEach((file,i)=>{
-    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
-      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-      const formData=new FormData();
-      formData.append('file', outFile);
-      formData.append('app', 'monthly-inspection-team');
-      return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-        .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-        .then(data=>{ results[i]={ url:data.url, name:file.name }; });
+    Promise.all([
+      compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+        if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+        return uploadOneFile(outFile, 'monthly-inspection-team');
+      }),
+      compressImageToThumb(file, THUMB_MAX_DIM, THUMB_MAX_BYTES).then(thumbFile=>uploadOneFile(thumbFile, 'monthly-inspection-team'))
+    ]).then(([origData,thumbData])=>{
+      results[i]={ url:origData.url, thumbUrl:thumbData.url, name:file.name };
     })
       .catch(e=>{
         toast('사진 업로드 실패('+file.name+'): '+e.message);
@@ -2030,7 +2083,7 @@ function renderPhotoFileList(fieldId){
   if(!wrap) return;
   wrap.innerHTML=_photoFiles.map((f,i)=>
     `<div style="position:relative">
-      <img src="${esc(f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
+      <img src="${esc(f.thumbUrl||f.url)}" alt="사진" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">
       <button type="button" onclick="removePhotoFile(${i},'${fieldId}')" aria-label="사진 삭제" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;border:none;font-size:11px;line-height:1;cursor:pointer">✕</button>
     </div>`
   ).join('');
@@ -2106,7 +2159,7 @@ function buildPhotoMultiRowsFromExisting(){
     const row=newPhotoMultiRow(r['번호']!=null?String(r['번호']):'', r['사진설명']||'');
     row.tunnel=r['터널명']||'';
     row.date=r['일자']||'';
-    row.files=(r['점검사진']||[]).slice(0,1);
+    row.files=(r['점검사진']||[]).slice(0,1).map((f,i)=>({url:f.url, name:f.name, thumbUrl:(r['점검사진_썸네일']||[])[i]?.url}));
     row.origId=r.id;
     return row;
   });
@@ -2258,14 +2311,14 @@ function uploadPhotoMultiFile(input, key){
   if(!isAuthed()){ toast('로그인이 필요합니다.'); return; }
   const row=_photoMultiRows.find(r=>r.key===key);
   if(!row) return;
-  compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
-    if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
-    const formData=new FormData();
-    formData.append('file', outFile);
-    formData.append('app', 'monthly-inspection-team');
-    return fetch(CFG.workerUrl+'/upload', { method:'POST', body:formData })
-      .then(r=>{ if(!r.ok) return r.text().then(t=>{ throw new Error('HTTP '+r.status+': '+t); }); return r.json(); })
-      .then(data=>{ row.files=[{ url:data.url, name:file.name }]; renderPhotoMultiRows(); });
+  Promise.all([
+    compressImageToLimit(file, UPLOAD_MAX_BYTES).then(outFile=>{
+      if(outFile.size>UPLOAD_MAX_BYTES) throw new Error('파일 용량 초과 (최대 '+UPLOAD_MAX_LABEL+')');
+      return uploadOneFile(outFile, 'monthly-inspection-team');
+    }),
+    compressImageToThumb(file, THUMB_MAX_DIM, THUMB_MAX_BYTES).then(thumbFile=>uploadOneFile(thumbFile, 'monthly-inspection-team'))
+  ]).then(([origData,thumbData])=>{
+      row.files=[{ url:origData.url, thumbUrl:thumbData.url, name:file.name }]; renderPhotoMultiRows();
   }).catch(e=>{ toast('사진 업로드 실패('+file.name+'): '+e.message); console.error(e); });
   input.value='';
 }
@@ -2317,7 +2370,10 @@ async function submitPhotoMulti(){
       '번호':buildPropValue('number', row.num)
     };
     if(row.desc) properties['사진설명']=buildPropValue('text', row.desc);
-    if(row.files.length) properties['점검사진']=buildPropValue('file', row.files);
+    if(row.files.length){
+      properties['점검사진']=buildPropValue('file', row.files);
+      properties['점검사진_썸네일']=buildPropValue('file', row.files.map(f=>({url:f.thumbUrl||f.url, name:f.name})));
+    }
     const existing=row.origId
       ? (TAB_STATE.photo.records||[]).find(r=>r.id===row.origId)
       : (TAB_STATE.photo.records||[]).find(r=>r['터널명']===row.tunnel && (r['일자']||'').slice(0,7)===rowYm && parseInt(r['번호'],10)===parseInt(row.num,10));
@@ -2808,7 +2864,7 @@ function buildExcelReport(opts){
 function exportTabExcel(tabId){
   const tabDef=getTabDef(tabId);
   if(!tabDef || !tabDef.fields){ toast('아직 준비 중인 탭입니다.'); return; }
-  const fields=dataFields(tabDef).filter(f=>f.type!=='title');
+  const fields=dataFields(tabDef).filter(f=>f.type!=='title' && !f.hidden);
   const tunnel=_tabFilters[tabId].tunnel;
   const rows=getVisibleRecords(tabId).map(r=>{
     const row={};
