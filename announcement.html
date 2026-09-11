@@ -1392,7 +1392,7 @@ function buildCategoryDd(){ buildGenericFilterDd('categoryDdMenu','categoryDdBtn
 var PAGE_SIZE_OPTIONS=[10,15,30,50,100];
 var PAGE_SIZE = (function(){
   try{ var v=parseInt(localStorage.getItem('announcement_pageSize'),10); if(PAGE_SIZE_OPTIONS.indexOf(v)>=0) return v; if(localStorage.getItem('announcement_pageSize')==='all') return 'all'; }catch(e){}
-  return 30;
+  return 15;
 })();
 var CURRENT_PAGE=1;
 function togglePageSizeDd(){ toggleDd('pageSizeDdMenu','pageSizeDdBtn'); }

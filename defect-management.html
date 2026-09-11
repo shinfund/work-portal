@@ -1212,11 +1212,11 @@ var CURRENT_TAB = 1;
 /* ── 페이지네이션(레코드 표시 개수) ── 사진·레코드 많은 탭의 초기 로딩 지연 방지(2026-09-10).
    탭별로 독립된 key(list/unproc/tunnel/company/contact/mgmt)를 쓰며, 터널별·업체별처럼 그룹 카드가
    여러 개인 탭은 그룹별 key(예: tunnel:청하터널)를 추가로 써서 카드별 페이지를 독립 관리한다. ── */
-var PAGE_SIZE_OPTIONS=[10,20,30,50,100];
+var PAGE_SIZE_OPTIONS=[10,15,20,30,50,100];
 var PAGE_STATE = {};
 function getPageState(key){
   if(!PAGE_STATE[key]){
-    var size=20;
+    var size=15;
     try{
       var raw=localStorage.getItem('defectMgmt_pageSize_'+key);
       var v=parseInt(raw,10);
