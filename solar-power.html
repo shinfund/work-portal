@@ -468,6 +468,7 @@ if (window.self !== window.top) {
   <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">발전내역</span></button>
   <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널별</span></button>
   <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')"><span class="tt-label">월별추이</span></button>
+  <button class="top-tab" id="nav-trenddaily" role="tab" aria-selected="false" aria-controls="panel-trenddaily" onclick="switchPanel('trenddaily')"><span class="tt-label">일별추이</span></button>
   <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')"><span class="tt-label">요약</span></button>
 </div>
 </div>
@@ -602,9 +603,17 @@ if (window.self !== window.top) {
 
   <!-- ▸ 월별추이 -->
   <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
+    <div class="filter-row" style="margin-bottom:12px">
+      <div class="dd-wrap" id="trendTunnelDdWrap">
+        <button class="dd-btn" id="trendTunnelDdBtn" onclick="toggleTrendTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+          <span id="trendTunnelDdLabel">전체</span>
+        </button>
+        <div class="dd-menu" id="trendTunnelDdMenu"></div>
+      </div>
+    </div>
     <div id="trendTotalCard"></div>
     <div class="sc">
-      <div class="sc-hd">최근 12개월 발전량 추이</div>
+      <div class="sc-hd" id="trendChartHd">최근 12개월 발전량 추이</div>
       <div class="trend-wrap">
         <div class="trend-chart" id="trendChart"></div>
       </div>
@@ -614,7 +623,7 @@ if (window.self !== window.top) {
         <span>월별 요약 <span class="badge">최근 12개월</span></span>
         <button class="tb-action-btn tb-excel" id="trendExcelBtn" onclick="exportTrendExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span id="trendExcelLabel">엑셀</span>
+          <span id="trendExcelLabel">엑셀 생성</span>
         </button>
       </div>
       <div class="tbl-wrap">
@@ -627,6 +636,44 @@ if (window.self !== window.top) {
             <th class="r">발전일수</th>
           </tr></thead>
           <tbody id="trendTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ 일별추이 (상단 공유 연/월 선택기로 특정 월을 고르면 그 달의 일자별 추이를 표시) -->
+  <div id="panel-trenddaily" class="panel" role="tabpanel" aria-labelledby="nav-trenddaily">
+    <div class="filter-row" style="margin-bottom:12px">
+      <div class="dd-wrap" id="dailyTunnelDdWrap">
+        <button class="dd-btn" id="dailyTunnelDdBtn" onclick="toggleDailyTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+          <span id="dailyTunnelDdLabel">전체</span>
+        </button>
+        <div class="dd-menu" id="dailyTunnelDdMenu"></div>
+      </div>
+    </div>
+    <div id="dailyTotalCard"></div>
+    <div class="sc">
+      <div class="sc-hd" id="dailyChartHd">일별 발전량 추이</div>
+      <div class="trend-wrap">
+        <div class="trend-chart" id="dailyChart"></div>
+      </div>
+    </div>
+    <div class="sc">
+      <div class="sc-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span>일별 요약</span>
+        <button class="tb-action-btn tb-excel" id="dailyExcelBtn" onclick="exportDailyExcel()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="dailyExcelLabel">엑셀 생성</span>
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr id="dailyThead">
+            <th>일자</th><th class="r">발전량(kWh)</th>
+            <th class="r">흥해터널</th><th class="r">청하터널(주)</th><th class="r">청하터널(부)</th><th class="r">남정5터널</th>
+            <th class="r">기록수</th>
+          </tr></thead>
+          <tbody id="dailyTableBody"></tbody>
         </table>
       </div>
     </div>
@@ -1211,6 +1258,35 @@ function buildDetailTunnelDd(tunnels){
   }
 }
 
+// ── 월별추이·일별추이 공용 터널 필터 (두 탭이 하나의 상태를 공유 — curYear/curMonth가
+// 이미 요약/터널별/월별추이/일별추이 사이에서 공유되는 패턴과 동일하게 맞춤, "전체" 기본값) ──
+let _trendTunnelFilter='';
+function toggleTrendTunnelDd(){ toggleDd('trendTunnelDdMenu','trendTunnelDdBtn'); }
+function toggleDailyTunnelDd(){ toggleDd('dailyTunnelDdMenu','dailyTunnelDdBtn'); }
+function buildTunnelFilterDd(menuId,btnId,labelId,filterValue,onPick){
+  const menu=document.getElementById(menuId);
+  if(!menu) return;
+  const opts=[{val:'',label:'전체'}].concat(getTrendTunnelCols().map(t=>({val:t,label:t})));
+  menu.innerHTML=opts.map(o=>`<div class="dd-opt${filterValue===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
+  const lblEl=document.getElementById(labelId);
+  if(lblEl) lblEl.textContent = filterValue || '전체';
+  document.getElementById(btnId)?.classList.toggle('active', !!filterValue);
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      closeDd(menuId,btnId);
+      onPick(opt.dataset.val);
+    });
+  }
+}
+function onTrendTunnelPick(v){
+  _trendTunnelFilter=v;
+  renderTrend();
+  renderDailyTrend();
+}
+
 // ── 발전내역 탭 연/월 필터 드롭다운 (요약·터널별·월별추이의 curYear/curMonth와 독립,
 //    기본값 "전체 연도"·"전체 월" — 2026-07-05 확정) ──
 function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
@@ -1263,7 +1339,7 @@ function buildDetailMonthDd(){
 }
 
 // ── 하단 네비 ─────────────────────────────────────────
-const PANELS=['detail','tunnel','trend','summary'];
+const PANELS=['detail','tunnel','trend','trenddaily','summary'];
 let _activePanel='detail';
 // 공용 연/월 선택기(요약·터널별·월별추이가 공유)는 발전내역 탭에서는 숨김 — 발전내역은
 // 2026-07-05부터 독립된 자체 연/월 드롭다운(detailYearDd/detailMonthDd, 기본값 전체)을 사용
@@ -1690,6 +1766,7 @@ function renderAll(){
   renderSummary(recs);
   renderTunnel(recs);
   renderTrend();
+  renderDailyTrend();
   renderDetail();
 }
 
@@ -1855,8 +1932,86 @@ function renderTrendThead(){
     + getTrendTunnelCols().map(name=>`<th class="r">${esc(name)}</th>`).join('')
     + '<th class="r">발전일수</th>';
 }
+// 라인차트 좌표 계산(월별추이·일별추이 공용) — data 항목은 {label,totalGen}만 있으면 되고,
+// isCurFn(item,i)이 "오늘/이번 달에 해당하는 포인트"를 판정해 강조 표시에 쓰인다.
+function chartGeometry(data, isCurFn){
+  const maxGen=Math.max(...data.map(d=>d.totalGen),1);
+  const chartW=Math.max(300,data.length*54),chartH=150,padTop=22,padBottom=26,padL=22,padR=22;
+  const plotH=chartH-padTop-padBottom;
+  const stepX=data.length>1?(chartW-padL-padR)/(data.length-1):0;
+  const pts=data.map((item,i)=>{
+    const x=padL+stepX*i;
+    const yy=padTop+plotH-(item.totalGen/maxGen*plotH);
+    return{x,y:yy,v:item.totalGen,label:item.label,isCur:isCurFn?!!isCurFn(item,i):false};
+  });
+  const linePath=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  const baseY=(padTop+plotH).toFixed(1);
+  const areaPath=pts.length?linePath+` L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`:"";
+  return {chartW,chartH,padL,padR,padTop,padBottom,plotH,pts,linePath,areaPath,baseY};
+}
+// 화면 표시용 SVG(테마 var(--..) 색상 사용) — gradId는 동일 문서 내 여러 차트(월별/일별)가
+// 동시에 존재할 때 <linearGradient> id 충돌을 피하기 위한 구분자.
+function onScreenChartSvg(geo, gradId){
+  return `
+    <svg viewBox="0 0 ${geo.chartW} ${geo.chartH}" width="${geo.chartW}" height="${geo.chartH}" style="display:block;overflow:visible">
+      <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="var(--sky)" stop-opacity="0"/>
+      </linearGradient></defs>
+      <line x1="${geo.padL}" y1="${geo.baseY}" x2="${geo.chartW-geo.padR}" y2="${geo.baseY}" stroke="var(--border)" stroke-width="1"/>
+      ${geo.pts.length?`<path d="${geo.areaPath}" fill="url(#${gradId})" stroke="none"/>`:""}
+      ${geo.pts.length?`<path d="${geo.linePath}" fill="none" stroke="var(--sky)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:""}
+      ${geo.pts.map(p=>`
+        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isCur?4.5:3}" fill="${p.v>0?"var(--sky)":"var(--border)"}" stroke="var(--card)" stroke-width="1.5"/>
+        ${p.isCur?`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="none" stroke="var(--sky)" stroke-width="1.5" opacity="0.4"/>`:""}
+      `).join("")}
+      ${geo.pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${geo.chartH-6}" text-anchor="middle" class="trend-svg-lbl${p.isCur?" cur":""}">${esc(p.label)}</text>`).join("")}
+      ${geo.pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${p.v<1000?fmtWon(Math.round(p.v)):fmtWon(Math.round(p.v/1000))+'천'}</text>`).join("")}
+    </svg>`;
+}
+// 엑셀 삽입용 SVG — var(--..)는 워크북 렌더링 컨텍스트(오프스크린 <img>)에서 해석되지 않으므로
+// 라이트 테마 고정 색상으로 치환한 버전. svgToPngDataUrl()로 래스터화해 addImage로 삽입한다.
+function exportChartSvg(geo, gradId){
+  const COL={sky:'#0366D6',sky600:'#005CC5',border:'#E1E4E8',bg:'#FFFFFF',txt2:'#3A4453'};
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${geo.chartW} ${geo.chartH}" width="${geo.chartW}" height="${geo.chartH}">
+    <rect width="${geo.chartW}" height="${geo.chartH}" fill="${COL.bg}"/>
+    <defs><linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${COL.sky}" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="${COL.sky}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <line x1="${geo.padL}" y1="${geo.baseY}" x2="${geo.chartW-geo.padR}" y2="${geo.baseY}" stroke="${COL.border}" stroke-width="1"/>
+    ${geo.pts.length?`<path d="${geo.areaPath}" fill="url(#${gradId})" stroke="none"/>`:""}
+    ${geo.pts.length?`<path d="${geo.linePath}" fill="none" stroke="${COL.sky}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:""}
+    ${geo.pts.map(p=>`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isCur?4.5:3}" fill="${p.v>0?COL.sky:COL.border}" stroke="${COL.bg}" stroke-width="1.5"/>`).join("")}
+    ${geo.pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${geo.chartH-6}" text-anchor="middle" font-size="10" font-family="Malgun Gothic, sans-serif" fill="${COL.txt2}">${esc(p.label)}</text>`).join("")}
+    ${geo.pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" font-size="10" font-weight="500" font-family="Malgun Gothic, sans-serif" fill="${COL.sky600}">${p.v<1000?fmtWon(Math.round(p.v)):fmtWon(Math.round(p.v/1000))+'천'}</text>`).join("")}
+  </svg>`;
+}
+function svgToPngDataUrl(svgStr, width, height, scale){
+  scale=scale||2;
+  return new Promise((resolve,reject)=>{
+    const blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      canvas.width=Math.round(width*scale); canvas.height=Math.round(height*scale);
+      const ctx=canvas.getContext('2d');
+      ctx.scale(scale,scale);
+      ctx.drawImage(img,0,0,width,height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror=()=>{ URL.revokeObjectURL(url); reject(new Error('차트 이미지 변환 실패')); };
+    img.src=url;
+  });
+}
 function renderTrend(){
+  buildTunnelFilterDd('trendTunnelDdMenu','trendTunnelDdBtn','trendTunnelDdLabel', _trendTunnelFilter, onTrendTunnelPick);
   renderTrendThead();
+  document.getElementById('trendChartHd').textContent = _trendTunnelFilter
+    ? `최근 12개월 발전량 추이 (${_trendTunnelFilter})`
+    : '최근 12개월 발전량 추이';
   const months=[];
   // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
   const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
@@ -1866,18 +2021,18 @@ function renderTrend(){
     if(m<1){m+=12;y--;}
     months.push({y,m});
   }
+  const baseRecs = _trendTunnelFilter ? ALL_RECORDS.filter(r=>r.tunnel===_trendTunnelFilter) : ALL_RECORDS;
   const data=months.map(({y,m})=>{
-    const recs=recordsForYM(y,m);
+    const recs=recordsForYM(y,m).filter(r=>!_trendTunnelFilter||r.tunnel===_trendTunnelFilter);
     const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
     const tunnelMap=calcTunnelMap(recs);
     return {y,m,label:`${m}월`,totalGen,cnt:recs.length,tunnelMap};
   });
   _trendData=data; // 엑셀 생성(exportTrendExcel)에서 화면과 동일한 데이터를 쓰기 위해 보관
-  const maxGen=Math.max(...data.map(d=>d.totalGen),1);
 
-  const allMonths=new Set(ALL_RECORDS.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
-  const totalAllGen=ALL_RECORDS.reduce((s,r)=>s+getGenAmt(r),0);
-  const totalAllFee=ALL_RECORDS.reduce((s,r)=>s+getFeeAmt(r),0);
+  const allMonths=new Set(baseRecs.map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
+  const totalAllGen=baseRecs.reduce((s,r)=>s+getGenAmt(r),0);
+  const totalAllFee=baseRecs.reduce((s,r)=>s+getFeeAmt(r),0);
   const monthRange=(()=>{
     const sorted=[...allMonths].sort();
     if(!sorted.length) return '—';
@@ -1887,7 +2042,7 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span></div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span>${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
@@ -1904,33 +2059,8 @@ function renderTrend(){
       </div>
     </div>`;
 
-  const chartW=Math.max(300,data.length*54),chartH=150,padTop=22,padBottom=26,padL=22,padR=22;
-  const plotH=chartH-padTop-padBottom;
-  const stepX=data.length>1?(chartW-padL-padR)/(data.length-1):0;
-  const pts=data.map(({y,m,label,totalGen},i)=>{
-    const x=padL+stepX*i;
-    const yy=padTop+plotH-(totalGen/maxGen*plotH);
-    return{x,y:yy,v:totalGen,label,isCur:curMonth!==0&&y===curYear&&m===curMonth};
-  });
-  const linePath=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
-  const baseY=(padTop+plotH).toFixed(1);
-  const areaPath=pts.length?linePath+` L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`:"";
-  document.getElementById('trendChart').innerHTML=`
-    <svg viewBox="0 0 ${chartW} ${chartH}" width="${chartW}" height="${chartH}" style="display:block;overflow:visible">
-      <defs><linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="var(--sky)" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="var(--sky)" stop-opacity="0"/>
-      </linearGradient></defs>
-      <line x1="${padL}" y1="${baseY}" x2="${chartW-padR}" y2="${baseY}" stroke="var(--border)" stroke-width="1"/>
-      ${pts.length?`<path d="${areaPath}" fill="url(#trendFill)" stroke="none"/>`:""}
-      ${pts.length?`<path d="${linePath}" fill="none" stroke="var(--sky)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`:""}
-      ${pts.map(p=>`
-        <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${p.isCur?4.5:3}" fill="${p.v>0?"var(--sky)":"var(--border)"}" stroke="var(--card)" stroke-width="1.5"/>
-        ${p.isCur?`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="8" fill="none" stroke="var(--sky)" stroke-width="1.5" opacity="0.4"/>`:""}
-      `).join("")}
-      ${pts.map(p=>`<text x="${p.x.toFixed(1)}" y="${chartH-6}" text-anchor="middle" class="trend-svg-lbl${p.isCur?" cur":""}">${esc(p.label)}</text>`).join("")}
-      ${pts.filter(p=>p.v>0).map(p=>`<text x="${p.x.toFixed(1)}" y="${Math.max(10,p.y-8).toFixed(1)}" text-anchor="middle" class="trend-svg-val">${p.v<1000?fmtWon(Math.round(p.v)):fmtWon(Math.round(p.v/1000))+'천'}</text>`).join("")}
-    </svg>`;
+  const geo=chartGeometry(data, item=>curMonth!==0&&item.y===curYear&&item.m===curMonth);
+  document.getElementById('trendChart').innerHTML=onScreenChartSvg(geo,'trendFillM');
 
   document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
@@ -1942,6 +2072,94 @@ function renderTrend(){
       <td class="r">${cnt}건</td>
     </tr>`;
   }).join('');
+}
+
+// ── 일별 추이 ─────────────────────────────────────────
+// 상단 공유 연/월 선택기(curYear/curMonth)로 고른 "특정 한 달"의 일자별 발전량을 보여준다.
+// 전체 연도/전체 월이 선택된 상태에서는 대상 범위가 불명확하므로 안내만 표시.
+function daysInMonthOf(y,m){ return new Date(y,m,0).getDate(); }
+let _dailyData=[];
+function getDailyRecords(){
+  if(curYear==='ALL'||curMonth===0) return null;
+  let recs=recordsForYM(curYear,curMonth);
+  if(_trendTunnelFilter) recs=recs.filter(r=>r.tunnel===_trendTunnelFilter);
+  return recs;
+}
+function renderDailyThead(){
+  const tr=document.getElementById('dailyThead');
+  if(!tr) return;
+  tr.innerHTML = '<th>일자</th><th class="r">발전량(kWh)</th>'
+    + getTrendTunnelCols().map(name=>`<th class="r">${esc(name)}</th>`).join('')
+    + '<th class="r">기록수</th>';
+}
+function isTodayPoint(item){
+  return curYear===_now.getFullYear() && curMonth===(_now.getMonth()+1) && item.d===_now.getDate();
+}
+function renderDailyTrend(){
+  if(!document.getElementById('panel-trenddaily')) return;
+  buildTunnelFilterDd('dailyTunnelDdMenu','dailyTunnelDdBtn','dailyTunnelDdLabel', _trendTunnelFilter, onTrendTunnelPick);
+  renderDailyThead();
+  const colCount=3+getTrendTunnelCols().length;
+  const recs=getDailyRecords();
+  document.getElementById('dailyChartHd').textContent = recs===null
+    ? '일별 발전량 추이'
+    : `일별 발전량 추이 (${curYear}년 ${curMonth}월${_trendTunnelFilter?' · '+_trendTunnelFilter:''})`;
+  if(recs===null){
+    document.getElementById('dailyTotalCard').innerHTML='';
+    document.getElementById('dailyChart').innerHTML='';
+    document.getElementById('dailyTableBody').innerHTML=`<tr><td colspan="${colCount}">${emptyState('상단에서 특정 연도·월을 선택하면 일별 추이를 볼 수 있습니다.','📅')}</td></tr>`;
+    _dailyData=[];
+    return;
+  }
+  const dayCount=daysInMonthOf(curYear,curMonth);
+  const data=[];
+  for(let d=1; d<=dayCount; d++){
+    const dateStr=`${curYear}-${String(curMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayRecs=recs.filter(r=>r.date===dateStr);
+    const totalGen=dayRecs.reduce((s,r)=>s+getGenAmt(r),0);
+    const tunnelMap=calcTunnelMap(dayRecs);
+    data.push({d,dateStr,label:`${d}일`,totalGen,cnt:dayRecs.length,tunnelMap});
+  }
+  _dailyData=data;
+
+  const genDays=data.filter(d=>d.cnt>0).length;
+  const monthTotalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
+  const monthTotalFee=recs.reduce((s,r)=>s+getFeeAmt(r),0);
+  document.getElementById('dailyTotalCard').innerHTML=`
+    <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">${curYear}년 ${curMonth}월 합계${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">발전일수</div>
+          <div style="font-size:16px;font-weight:500;color:var(--txt)">${genDays}<span style="font-size:12px;font-weight:400;color:var(--txt2)">일</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 발전량</div>
+          <div style="font-size:15px;font-weight:500;color:var(--sky600)">${fmtWon(Math.floor(monthTotalGen))}<span style="font-size:11px;font-weight:400">kWh</span></div>
+        </div>
+        <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 전기요금</div>
+          <div style="font-size:15px;font-weight:500;color:var(--teal600)">${fmtWon(Math.floor(monthTotalFee))}</div>
+        </div>
+      </div>
+    </div>`;
+
+  const geo=chartGeometry(data, isTodayPoint);
+  document.getElementById('dailyChart').innerHTML=onScreenChartSvg(geo,'trendFillD');
+
+  document.getElementById('dailyTableBody').innerHTML = data.length
+    ? [...data].reverse().map(item=>{
+        const {dateStr,totalGen,cnt,tunnelMap}=item;
+        const isCur=isTodayPoint(item);
+        const tunnelCells=getTrendTunnelCols().map(name=>`<td class="r">${fmtWon(Math.floor(tunnelMap[name]?.gen||0))}</td>`).join('');
+        return `<tr${isCur?' style="background:var(--sky50)"':''}>
+          <td style="font-weight:${isCur?'700':'400'}">${dateStr.slice(5)}</td>
+          <td class="r">${fmtWon(Math.floor(totalGen))}</td>
+          ${tunnelCells}
+          <td class="r">${cnt}건</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="${colCount}">${emptyState('해당 월의 발전 기록이 없습니다.')}</td></tr>`;
 }
 
 /* ── 페이지네이션(발전내역 탭) ── 여러 터널의 일자별 발전기록이 누적되어 레코드가 많아져
@@ -2194,6 +2412,14 @@ function buildExcelReport(opts){
       });
       row.commit();
     });
+    // opts.chartImage: {dataUrl, widthPx, heightPx} — 표 아래 한 줄 띄워 삽입(월별추이/일별추이 엑셀의
+    // 라인차트). 이미지는 addImage로 워크북에 등록 후 시트에 절대 위치로 고정한다.
+    if(opts.chartImage && opts.chartImage.dataUrl){
+      const img=opts.chartImage;
+      const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
+      const imgRow0=(2+rows.length)+1; // 0-indexed, 데이터 마지막 행 다음에 한 줄 여백
+      ws.addImage(imgId,{ tl:{col:0,row:imgRow0}, ext:{width:img.widthPx,height:img.heightPx} });
+    }
     lbl.textContent='파일 저장 중...';
     return wb.xlsx.writeBuffer();
   }).then(buf=>{
@@ -2238,17 +2464,54 @@ function trendExcelColumns(){
     {key:'발전일수',header:'발전일수',numFmt:'#,##0'}
   ];
 }
-function exportTrendExcel(){
+async function exportTrendExcel(){
   const cols=trendExcelColumns();
   const rows=[..._trendData].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const row={월:`${y}/${String(m).padStart(2,'0')}`, 발전량:Math.floor(totalGen), 발전일수:cnt};
     getTrendTunnelCols().forEach(name=>{ row[name]=Math.floor(tunnelMap[name]?.gen||0); });
     return row;
   });
+  let chartImage=null;
+  try{
+    const geo=chartGeometry(_trendData, item=>curMonth!==0&&item.y===curYear&&item.m===curMonth);
+    const dataUrl=await svgToPngDataUrl(exportChartSvg(geo,'trendFillExp'), geo.chartW, geo.chartH, 2);
+    chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
+  }catch(e){ console.error(e); }
+  const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
   buildExcelReport({
-    btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀',
-    sheetName:'월별요약', title:'태양광발전량 월별요약', fnamePrefix:'태양광발전량_월별요약',
-    columns:cols, rows, orientation:'portrait'
+    btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
+    sheetName:'월별요약', title:'태양광발전량 월별요약'+titleSuffix, fnamePrefix:'태양광발전량_월별요약',
+    columns:cols, rows, orientation:'portrait', chartImage
+  });
+}
+// 터널 컬럼은 getTrendTunnelCols()에서 파생 — 월별추이와 동일한 소스를 공유해 컬럼셋이 어긋나지 않게 한다.
+function dailyExcelColumns(){
+  return [
+    {key:'일자',header:'일자',dateCol:true},
+    {key:'발전량',header:'발전량(kWh)',numFmt:'#,##0'},
+    ...getTrendTunnelCols().map(name=>({key:name,header:name,numFmt:'#,##0'})),
+    {key:'기록수',header:'기록수',numFmt:'#,##0'}
+  ];
+}
+async function exportDailyExcel(){
+  if(!_dailyData.length){ alert('내보낼 데이터가 없습니다. 상단에서 연도·월을 먼저 선택하세요.'); return; }
+  const cols=dailyExcelColumns();
+  const rows=_dailyData.map(({dateStr,totalGen,cnt,tunnelMap})=>{
+    const row={일자:dateStr, 발전량:Math.floor(totalGen), 기록수:cnt};
+    getTrendTunnelCols().forEach(name=>{ row[name]=Math.floor(tunnelMap[name]?.gen||0); });
+    return row;
+  });
+  let chartImage=null;
+  try{
+    const geo=chartGeometry(_dailyData, isTodayPoint);
+    const dataUrl=await svgToPngDataUrl(exportChartSvg(geo,'dailyFillExp'), geo.chartW, geo.chartH, 2);
+    chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
+  }catch(e){ console.error(e); }
+  const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
+  buildExcelReport({
+    btnId:'dailyExcelBtn', lblId:'dailyExcelLabel', lblDefault:'엑셀 생성',
+    sheetName:'일별요약', title:`태양광발전량 일별요약(${curYear}/${String(curMonth).padStart(2,'0')})`+titleSuffix, fnamePrefix:'태양광발전량_일별요약',
+    columns:cols, rows, orientation:'portrait', chartImage
   });
 }
 
