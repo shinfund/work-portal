@@ -439,7 +439,7 @@ if (window.self !== window.top) {
       </div>
       <div class="modal-field">
         <label class="modal-label">운행(km) <span class="modal-required">*</span></label>
-        <input id="addDist" class="modal-input" type="number" step="0.1" readonly oninput="recomputeDist()" style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
+        <input id="addDist" class="modal-input" type="number" step="0.1" readonly oninput="recomputeDist()" onwheel="this.blur()" style="background:rgba(127,127,127,.08);cursor:not-allowed"/>
         <div class="modal-hint" id="addDistHint">차량번호와 날짜를 먼저 선택하세요.</div>
       </div>
       <div class="modal-field">
