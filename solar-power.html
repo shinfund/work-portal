@@ -161,6 +161,11 @@ html[data-theme="dark"] .rn{color:#fff}
 
 /* ── FILTER (발전내역 툴바 — 하자보수현황 앱 필터바 패턴 재사용) ── */
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+/* ── 월별/일별추이 KPI 카드 (trendTotalCard/dailyTotalCard) ── */
+.kpi-hd{font-size:14px;color:var(--txt2);margin-bottom:10px;font-weight:500}
+.kpi-lbl{font-size:13px;color:var(--txt2);margin-bottom:4px}
+html[data-theme="dark"] .kpi-hd{color:#fff}
+html[data-theme="dark"] .kpi-lbl{color:#fff}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
 html[data-theme="dark"] .detail-count{color:#fff}
@@ -496,6 +501,18 @@ if (window.self !== window.top) {
           <div id="ddMonthOpts"></div>
         </div>
       </div>
+      <div class="dd-wrap" id="trendTunnelDdWrap" style="display:none">
+        <button class="dd-btn" id="trendTunnelDdBtn" onclick="toggleTrendTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+          <span id="trendTunnelDdLabel">전체</span>
+        </button>
+        <div class="dd-menu" id="trendTunnelDdMenu"></div>
+      </div>
+      <div class="dd-wrap" id="dailyTunnelDdWrap" style="display:none">
+        <button class="dd-btn" id="dailyTunnelDdBtn" onclick="toggleDailyTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
+          <span id="dailyTunnelDdLabel">전체</span>
+        </button>
+        <div class="dd-menu" id="dailyTunnelDdMenu"></div>
+      </div>
       <div class="month-sub-row" id="monthSub"></div>
     </div>
   </div>
@@ -603,14 +620,6 @@ if (window.self !== window.top) {
 
   <!-- ▸ 월별추이 -->
   <div id="panel-trend" class="panel" role="tabpanel" aria-labelledby="nav-trend">
-    <div class="filter-row" style="margin-bottom:12px">
-      <div class="dd-wrap" id="trendTunnelDdWrap">
-        <button class="dd-btn" id="trendTunnelDdBtn" onclick="toggleTrendTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
-          <span id="trendTunnelDdLabel">전체</span>
-        </button>
-        <div class="dd-menu" id="trendTunnelDdMenu"></div>
-      </div>
-    </div>
     <div id="trendTotalCard"></div>
     <div class="sc">
       <div class="sc-hd" id="trendChartHd">최근 12개월 발전량 추이</div>
@@ -643,14 +652,6 @@ if (window.self !== window.top) {
 
   <!-- ▸ 일별추이 (상단 공유 연/월 선택기로 특정 월을 고르면 그 달의 일자별 추이를 표시) -->
   <div id="panel-trenddaily" class="panel" role="tabpanel" aria-labelledby="nav-trenddaily">
-    <div class="filter-row" style="margin-bottom:12px">
-      <div class="dd-wrap" id="dailyTunnelDdWrap">
-        <button class="dd-btn" id="dailyTunnelDdBtn" onclick="toggleDailyTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
-          <span id="dailyTunnelDdLabel">전체</span>
-        </button>
-        <div class="dd-menu" id="dailyTunnelDdMenu"></div>
-      </div>
-    </div>
     <div id="dailyTotalCard"></div>
     <div class="sc">
       <div class="sc-hd" id="dailyChartHd">일별 발전량 추이</div>
@@ -1347,6 +1348,10 @@ function relocateMonthSel(name){
   const wrap=document.getElementById('monthSelDefaultSlot');
   if(!wrap) return;
   wrap.style.display = name==='detail' ? 'none' : '';
+  const trendDd=document.getElementById('trendTunnelDdWrap');
+  const dailyDd=document.getElementById('dailyTunnelDdWrap');
+  if(trendDd) trendDd.style.display = name==='trend' ? '' : 'none';
+  if(dailyDd) dailyDd.style.display = name==='trenddaily' ? '' : 'none';
 }
 function switchPanel(name){
   if(name===_activePanel) return;
@@ -2042,18 +2047,18 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span>${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
+      <div class="kpi-hd">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span>${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">기간</div>
+          <div class="kpi-lbl">기간</div>
           <div style="font-size:16px;font-weight:500;color:var(--txt)">${allMonths.size}<span style="font-size:12px;font-weight:400;color:var(--txt2)">개월</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 발전량</div>
+          <div class="kpi-lbl">총 발전량</div>
           <div style="font-size:15px;font-weight:500;color:var(--sky600)">${fmtWon(Math.floor(totalAllGen))}<span style="font-size:11px;font-weight:400">kWh</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 전기요금</div>
+          <div class="kpi-lbl">총 전기요금</div>
           <div style="font-size:15px;font-weight:500;color:var(--teal600)">${fmtWon(Math.floor(totalAllFee))}</div>
         </div>
       </div>
@@ -2127,18 +2132,18 @@ function renderDailyTrend(){
   const monthTotalFee=recs.reduce((s,r)=>s+getFeeAmt(r),0);
   document.getElementById('dailyTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px;font-weight:400">${curYear}년 ${curMonth}월 합계${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
+      <div class="kpi-hd">${curYear}년 ${curMonth}월 합계${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">발전일수</div>
+          <div class="kpi-lbl">발전일수</div>
           <div style="font-size:16px;font-weight:500;color:var(--txt)">${genDays}<span style="font-size:12px;font-weight:400;color:var(--txt2)">일</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 발전량</div>
+          <div class="kpi-lbl">총 발전량</div>
           <div style="font-size:15px;font-weight:500;color:var(--sky600)">${fmtWon(Math.floor(monthTotalGen))}<span style="font-size:11px;font-weight:400">kWh</span></div>
         </div>
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
-          <div style="font-size:11px;color:var(--txt2);margin-bottom:4px">총 전기요금</div>
+          <div class="kpi-lbl">총 전기요금</div>
           <div style="font-size:15px;font-weight:500;color:var(--teal600)">${fmtWon(Math.floor(monthTotalFee))}</div>
         </div>
       </div>
@@ -2373,11 +2378,16 @@ function buildExcelReport(opts){
   const columns=opts.columns;
   const orientation=opts.orientation||'landscape';
   btn.disabled=true; lbl.textContent='준비 중...';
+  // 차트 이미지가 있으면 제목 바로 아래(표 위)에 배치 — 이미지 높이에 맞춘 행(chartRowNum) +
+  // 여백행 1개를 표 위에 끼워넣고, 헤더/데이터 행 번호를 그만큼 뒤로 민다.
+  const hasChart=!!(opts.chartImage && opts.chartImage.dataUrl);
+  const chartRowNum=2;
+  const headerRowNum=hasChart ? 4 : 2;
   loadExcelLib().then(()=>{
     const wb=new ExcelJS.Workbook();
     const ws=wb.addWorksheet(opts.sheetName,{
-      views:[{state:'frozen',ySplit:2,showGridLines:false,zoomScale:90}],
-      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:'2:2'},
+      views:[{state:'frozen',ySplit:headerRowNum,showGridLines:false,zoomScale:90}],
+      pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:`${headerRowNum}:${headerRowNum}`},
       headerFooter:{oddHeader:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:''}
     });
     const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
@@ -2386,7 +2396,14 @@ function buildExcelReport(opts){
     titleRow.height=EXCEL_ROW_HEIGHTS.title;
     const titleCell=titleRow.getCell(1);
     titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
-    const headerRow=ws.getRow(2);
+    if(hasChart){
+      const img=opts.chartImage;
+      ws.getRow(chartRowNum).height=img.heightPx*0.75;
+      ws.getRow(chartRowNum+1).height=6;
+      const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
+      ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:img.widthPx,height:img.heightPx} });
+    }
+    const headerRow=ws.getRow(headerRowNum);
     headerRow.height=EXCEL_ROW_HEIGHTS.header;
     columns.forEach((col,i)=>{
       const cell=headerRow.getCell(i+1);
@@ -2395,7 +2412,7 @@ function buildExcelReport(opts){
       cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
     });
     rows.forEach((r,i)=>{
-      const rn=3+i;
+      const rn=headerRowNum+1+i;
       const row=ws.getRow(rn);
       row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
       columns.forEach((col,ci)=>{
@@ -2412,14 +2429,6 @@ function buildExcelReport(opts){
       });
       row.commit();
     });
-    // opts.chartImage: {dataUrl, widthPx, heightPx} — 표 아래 한 줄 띄워 삽입(월별추이/일별추이 엑셀의
-    // 라인차트). 이미지는 addImage로 워크북에 등록 후 시트에 절대 위치로 고정한다.
-    if(opts.chartImage && opts.chartImage.dataUrl){
-      const img=opts.chartImage;
-      const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
-      const imgRow0=(2+rows.length)+1; // 0-indexed, 데이터 마지막 행 다음에 한 줄 여백
-      ws.addImage(imgId,{ tl:{col:0,row:imgRow0}, ext:{width:img.widthPx,height:img.heightPx} });
-    }
     lbl.textContent='파일 저장 중...';
     return wb.xlsx.writeBuffer();
   }).then(buf=>{
