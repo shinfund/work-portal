@@ -1262,6 +1262,8 @@ function buildDetailTunnelDd(tunnels){
 // ── 월별추이·일별추이 공용 터널 필터 (두 탭이 하나의 상태를 공유 — curYear/curMonth가
 // 이미 요약/터널별/월별추이/일별추이 사이에서 공유되는 패턴과 동일하게 맞춤, "전체" 기본값) ──
 let _trendTunnelFilter='';
+// 엑셀 파일명 등에서 "전체"(터널 필터 미선택) 대신 쓰는 전체 터널군 명칭.
+const ALL_TUNNELS_LABEL='포항영덕간터널';
 function toggleTrendTunnelDd(){ toggleDd('trendTunnelDdMenu','trendTunnelDdBtn'); }
 function toggleDailyTunnelDd(){ toggleDd('dailyTunnelDdMenu','dailyTunnelDdBtn'); }
 function buildTunnelFilterDd(menuId,btnId,labelId,filterValue,onPick){
@@ -2354,6 +2356,9 @@ function excelAutoWidth(strings, min=8, max=40, padding=5){
   strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
   return Math.min(w, max);
 }
+// Excel 컬럼폭(문자 단위) → 픽셀 근사 변환(Calibri11 기준 MDW=7px). 차트 이미지를
+// 표 전체 너비에 맞춰 리사이즈할 때(buildExcelReport) 사용.
+function excelColWidthToPx(w){ return Math.round(w*7+5); }
 function excelEstimateWrappedLines(text, colWidthChars){
   const w=excelStrWidth(text);
   if(w===0) return 1;
@@ -2378,11 +2383,11 @@ function buildExcelReport(opts){
   const columns=opts.columns;
   const orientation=opts.orientation||'landscape';
   btn.disabled=true; lbl.textContent='준비 중...';
-  // 차트 이미지가 있으면 제목 바로 아래(표 위)에 배치 — 이미지 높이에 맞춘 행(chartRowNum) +
-  // 여백행 1개를 표 위에 끼워넣고, 헤더/데이터 행 번호를 그만큼 뒤로 민다.
+  // 차트 이미지가 있으면 제목 아래 한 행(2행)을 비우고 3행에 배치 — 그 다음 여백행 1개를
+  // 더 끼워넣고, 헤더/데이터 행 번호를 그만큼 뒤로 민다.
   const hasChart=!!(opts.chartImage && opts.chartImage.dataUrl);
-  const chartRowNum=2;
-  const headerRowNum=hasChart ? 4 : 2;
+  const chartRowNum=3;
+  const headerRowNum=hasChart ? chartRowNum+2 : 2;
   loadExcelLib().then(()=>{
     const wb=new ExcelJS.Workbook();
     const ws=wb.addWorksheet(opts.sheetName,{
@@ -2398,10 +2403,14 @@ function buildExcelReport(opts){
     titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
     if(hasChart){
       const img=opts.chartImage;
-      ws.getRow(chartRowNum).height=img.heightPx*0.75;
+      // 표 전체 너비(컬럼폭 합계)에 맞춰 차트를 가로세로 비율 유지한 채 리사이즈.
+      const tableWidthPx=colWidths.reduce((s,w)=>s+excelColWidthToPx(w),0);
+      const scale=tableWidthPx/img.widthPx;
+      const imgW=tableWidthPx, imgH=Math.round(img.heightPx*scale);
+      ws.getRow(chartRowNum).height=imgH*0.75;
       ws.getRow(chartRowNum+1).height=6;
       const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
-      ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:img.widthPx,height:img.heightPx} });
+      ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:imgW,height:imgH} });
     }
     const headerRow=ws.getRow(headerRowNum);
     headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -2487,9 +2496,12 @@ async function exportTrendExcel(){
     chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
   }catch(e){ console.error(e); }
   const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
+  const years=[...new Set(_trendData.map(d=>d.y))].sort((a,b)=>a-b);
+  const yearLabel=years.length<=1 ? `${years[0]}년` : `${years[0]}~${years[years.length-1]}년`;
+  const tunnelLabel=_trendTunnelFilter||ALL_TUNNELS_LABEL;
   buildExcelReport({
     btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
-    sheetName:'월별요약', title:'태양광발전량 월별요약'+titleSuffix, fnamePrefix:'태양광발전량_월별요약',
+    sheetName:'월별요약', title:'태양광발전량 월별요약'+titleSuffix, fnamePrefix:`${yearLabel} 월별 ${tunnelLabel} 태양광발전량`,
     columns:cols, rows, orientation:'portrait', chartImage
   });
 }
@@ -2517,9 +2529,10 @@ async function exportDailyExcel(){
     chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
   }catch(e){ console.error(e); }
   const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
+  const tunnelLabel=_trendTunnelFilter||ALL_TUNNELS_LABEL;
   buildExcelReport({
     btnId:'dailyExcelBtn', lblId:'dailyExcelLabel', lblDefault:'엑셀 생성',
-    sheetName:'일별요약', title:`태양광발전량 일별요약(${curYear}/${String(curMonth).padStart(2,'0')})`+titleSuffix, fnamePrefix:'태양광발전량_일별요약',
+    sheetName:'일별요약', title:`태양광발전량 일별요약(${curYear}/${String(curMonth).padStart(2,'0')})`+titleSuffix, fnamePrefix:`${curYear}년 ${curMonth}월 ${tunnelLabel} 태양광발전량`,
     columns:cols, rows, orientation:'portrait', chartImage
   });
 }
