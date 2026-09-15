@@ -2381,6 +2381,7 @@ const EXCEL_COMPANY_NAME='수자원기술(주)';
 const EXCEL_TITLE_FONT={name:'HY헤드라인M',size:28};
 const EXCEL_BODY_FONT={name:'맑은 고딕',size:13};
 const EXCEL_HEADER_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFDAE9F8'}};
+const EXCEL_TOTAL_FILL={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F2F2'}};
 const EXCEL_ROW_HEIGHTS={title:60,header:30,data:30};
 // 표 바깥 테두리는 thin, 안쪽 격자선은 hair(가장 가는 선) — 2026-07-22 요청. 병합 없는
 // 헤더행+데이터행 그리드는 각 셀이 표의 어느 변에 걸리는지만 판정하면 됨.
@@ -2419,9 +2420,6 @@ function excelAutoWidth(strings, min=8, max=40, padding=5){
   strings.forEach(s=>{ w=Math.max(w, excelStrWidth(s)+padding); });
   return Math.min(w, max);
 }
-// Excel 컬럼폭(문자 단위) → 픽셀 근사 변환(Calibri11 기준 MDW=7px). 차트 이미지를
-// 표 전체 너비에 맞춰 리사이즈할 때(buildExcelReport) 사용.
-function excelColWidthToPx(w){ return Math.round(w*7+5); }
 function excelEstimateWrappedLines(text, colWidthChars){
   const w=excelStrWidth(text);
   if(w===0) return 1;
@@ -2467,16 +2465,13 @@ function buildExcelReport(opts){
     if(hasChart){
       const img=opts.chartImage;
       ws.getRow(2).height=30;
-      // 표 전체 너비(컬럼폭 합계)에 채우고, 세로는 차트행(3행) 높이(130pt)에 꽉 차도록 맞춘다.
-      // 데이터 개수에 따라 원본 SVG 가로세로 비율이 달라지므로(월별 12개월 vs 일별 최대 31일),
-      // 비율 유지 대신 두 값 모두 고정폭·고정높이로 맞춰 두 탭의 차트 크기를 통일한다.
-      const tableWidthPx=colWidths.reduce((s,w)=>s+excelColWidthToPx(w),0);
-      const chartRowHeightPx=Math.round(130/0.75);
-      const imgW=tableWidthPx, imgH=chartRowHeightPx;
       ws.getRow(chartRowNum).height=130;
       ws.getRow(chartRowNum+1).height=30;
       const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
-      ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:imgW,height:imgH} });
+      // 컬럼폭(문자단위)→픽셀 근사 변환 대신 셀 경계(0열~마지막 컬럼, 차트행 상단~하단)에
+      // twoCellAnchor로 직접 고정 — 렌더러의 픽셀 계산 오차와 무관하게 항상 표 전체 폭에
+      // 정확히 맞춰진다. 데이터 개수별 원본 SVG 가로세로 비율은 무시하고 표 폭·행높이에 맞춘다.
+      ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, br:{col:columns.length,row:chartRowNum} });
     }
     const headerRow=ws.getRow(headerRowNum);
     headerRow.height=EXCEL_ROW_HEIGHTS.header;
@@ -2508,10 +2503,9 @@ function buildExcelReport(opts){
     if(showTotal){
       const totalRow=ws.getRow(headerRowNum+1+rows.length);
       totalRow.height=EXCEL_ROW_HEIGHTS.data;
-      const totalFont={...EXCEL_BODY_FONT, bold:true};
       columns.forEach((col,ci)=>{
         const cell=totalRow.getCell(ci+1);
-        cell.font=totalFont; cell.fill=EXCEL_HEADER_FILL;
+        cell.font=EXCEL_BODY_FONT; cell.fill=EXCEL_TOTAL_FILL;
         cell.border=excelGridBorder(false, true, ci, ci===columns.length-1);
         cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left'} : {vertical:'middle',horizontal:'center'};
         if(ci===0){
