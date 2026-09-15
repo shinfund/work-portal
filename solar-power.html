@@ -163,8 +163,10 @@ html[data-theme="dark"] .rn{color:#fff}
 .filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
 /* ── 월별/일별추이 KPI 카드 (trendTotalCard/dailyTotalCard) ── */
 .kpi-hd{font-size:14px;color:var(--txt2);margin-bottom:10px;font-weight:500}
+.kpi-hd-sub{font-weight:400;color:var(--txt3)}
 .kpi-lbl{font-size:13px;color:var(--txt2);margin-bottom:4px}
 html[data-theme="dark"] .kpi-hd{color:#fff}
+html[data-theme="dark"] .kpi-hd-sub{color:#fff}
 html[data-theme="dark"] .kpi-lbl{color:#fff}
 .detail-count-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:2px 0 8px}
 .detail-count{font-size:12px;font-weight:500;background:var(--sky50);color:var(--sky600);border-radius:var(--r8);padding:3px 10px;border:1px solid var(--sky100)}
@@ -2049,7 +2051,7 @@ function renderTrend(){
   })();
   document.getElementById('trendTotalCard').innerHTML=`
     <div style="margin:0 0 12px;background:var(--card);border-radius:var(--r12);border:1px solid var(--border);padding:14px 16px">
-      <div class="kpi-hd">전체 기간 합계 <span style="font-weight:400;color:var(--txt3)">${monthRange}</span>${_trendTunnelFilter?` <span style="font-weight:400;color:var(--txt3)">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
+      <div class="kpi-hd">전체 기간 합계 <span class="kpi-hd-sub">${monthRange}</span>${_trendTunnelFilter?` <span class="kpi-hd-sub">· ${esc(_trendTunnelFilter)}</span>`:''}</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
         <div style="background:var(--bg);border-radius:8px;padding:10px 6px">
           <div class="kpi-lbl">기간</div>
@@ -2393,7 +2395,7 @@ function buildExcelReport(opts){
     const ws=wb.addWorksheet(opts.sheetName,{
       views:[{state:'frozen',ySplit:headerRowNum,showGridLines:false,zoomScale:90}],
       pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:`${headerRowNum}:${headerRowNum}`},
-      headerFooter:{oddHeader:'&C&"맑은 고딕"&9&P / &N'+'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME+'  출력일: &D &T',oddFooter:''}
+      headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME,oddFooter:''}
     });
     const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
     ws.columns=colWidths.map(w=>({width:w}));
@@ -2403,12 +2405,13 @@ function buildExcelReport(opts){
     titleCell.value=opts.title; titleCell.font=EXCEL_TITLE_FONT; titleCell.alignment={vertical:'middle'};
     if(hasChart){
       const img=opts.chartImage;
+      ws.getRow(2).height=30;
       // 표 전체 너비(컬럼폭 합계)에 맞춰 차트를 가로세로 비율 유지한 채 리사이즈.
       const tableWidthPx=colWidths.reduce((s,w)=>s+excelColWidthToPx(w),0);
       const scale=tableWidthPx/img.widthPx;
       const imgW=tableWidthPx, imgH=Math.round(img.heightPx*scale);
       ws.getRow(chartRowNum).height=imgH*0.75;
-      ws.getRow(chartRowNum+1).height=6;
+      ws.getRow(chartRowNum+1).height=30;
       const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
       ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:imgW,height:imgH} });
     }
@@ -2495,13 +2498,13 @@ async function exportTrendExcel(){
     const dataUrl=await svgToPngDataUrl(exportChartSvg(geo,'trendFillExp'), geo.chartW, geo.chartH, 2);
     chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
   }catch(e){ console.error(e); }
-  const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
   const years=[...new Set(_trendData.map(d=>d.y))].sort((a,b)=>a-b);
   const yearLabel=years.length<=1 ? `${years[0]}년` : `${years[0]}~${years[years.length-1]}년`;
   const tunnelLabel=_trendTunnelFilter||ALL_TUNNELS_LABEL;
+  const titleAndFname=`${yearLabel} 월별 ${tunnelLabel} 태양광발전량`;
   buildExcelReport({
     btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
-    sheetName:'월별요약', title:'태양광발전량 월별요약'+titleSuffix, fnamePrefix:`${yearLabel} 월별 ${tunnelLabel} 태양광발전량`,
+    sheetName:'월별요약', title:titleAndFname, fnamePrefix:titleAndFname,
     columns:cols, rows, orientation:'portrait', chartImage
   });
 }
@@ -2528,11 +2531,11 @@ async function exportDailyExcel(){
     const dataUrl=await svgToPngDataUrl(exportChartSvg(geo,'dailyFillExp'), geo.chartW, geo.chartH, 2);
     chartImage={dataUrl, widthPx:geo.chartW, heightPx:geo.chartH};
   }catch(e){ console.error(e); }
-  const titleSuffix=_trendTunnelFilter?` - ${_trendTunnelFilter}`:'';
   const tunnelLabel=_trendTunnelFilter||ALL_TUNNELS_LABEL;
+  const titleAndFname=`${curYear}년 ${curMonth}월 ${tunnelLabel} 태양광발전량`;
   buildExcelReport({
     btnId:'dailyExcelBtn', lblId:'dailyExcelLabel', lblDefault:'엑셀 생성',
-    sheetName:'일별요약', title:`태양광발전량 일별요약(${curYear}/${String(curMonth).padStart(2,'0')})`+titleSuffix, fnamePrefix:`${curYear}년 ${curMonth}월 ${tunnelLabel} 태양광발전량`,
+    sheetName:'일별요약', title:titleAndFname, fnamePrefix:titleAndFname,
     columns:cols, rows, orientation:'portrait', chartImage
   });
 }
