@@ -473,9 +473,9 @@ if (window.self !== window.top) {
 <!-- TOP TAB NAV -->
 <div class="top-tabs" role="tablist">
   <button class="top-tab active" id="nav-detail" role="tab" aria-selected="true" aria-controls="panel-detail" onclick="switchPanel('detail')"><span class="tt-label">발전내역</span></button>
-  <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널별</span></button>
-  <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')"><span class="tt-label">월별추이</span></button>
   <button class="top-tab" id="nav-trenddaily" role="tab" aria-selected="false" aria-controls="panel-trenddaily" onclick="switchPanel('trenddaily')"><span class="tt-label">일별추이</span></button>
+  <button class="top-tab" id="nav-trend" role="tab" aria-selected="false" aria-controls="panel-trend" onclick="switchPanel('trend')"><span class="tt-label">월별추이</span></button>
+  <button class="top-tab" id="nav-tunnel" role="tab" aria-selected="false" aria-controls="panel-tunnel" onclick="switchPanel('tunnel')"><span class="tt-label">터널별</span></button>
   <button class="top-tab" id="nav-summary" role="tab" aria-selected="false" aria-controls="panel-summary" onclick="switchPanel('summary')"><span class="tt-label">요약</span></button>
 </div>
 </div>
@@ -2406,10 +2406,12 @@ function buildExcelReport(opts){
     if(hasChart){
       const img=opts.chartImage;
       ws.getRow(2).height=30;
-      // 표 전체 너비(컬럼폭 합계)에 맞춰 차트를 가로세로 비율 유지한 채 리사이즈.
+      // 표 전체 너비(컬럼폭 합계)에 채우고, 세로는 차트행(3행) 높이(130pt)에 꽉 차도록 맞춘다.
+      // 데이터 개수에 따라 원본 SVG 가로세로 비율이 달라지므로(월별 12개월 vs 일별 최대 31일),
+      // 비율 유지 대신 두 값 모두 고정폭·고정높이로 맞춰 두 탭의 차트 크기를 통일한다.
       const tableWidthPx=colWidths.reduce((s,w)=>s+excelColWidthToPx(w),0);
-      const scale=tableWidthPx/img.widthPx;
-      const imgW=tableWidthPx, imgH=Math.round(img.heightPx*scale);
+      const chartRowHeightPx=Math.round(130/0.75);
+      const imgW=tableWidthPx, imgH=chartRowHeightPx;
       ws.getRow(chartRowNum).height=130;
       ws.getRow(chartRowNum+1).height=30;
       const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
