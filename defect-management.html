@@ -941,9 +941,9 @@ if (window.self !== window.top) {
     </div>
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
       <span class="tb-group-label">출력</span>
-      <button id="excelExportBtn" class="tb-action-btn tb-excel" onclick="exportToExcel()">
+      <button id="gongguExcelBtn" class="tb-action-btn tb-excel" onclick="exportGongguExcel()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="excelExportLabel">엑셀</span>
+        <span id="gongguExcelLabel">엑셀</span>
       </button>
       <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
@@ -952,10 +952,6 @@ if (window.self !== window.top) {
       <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="photoReportLabel">사진-완료</span>
-      </button>
-      <button id="gongguExcelBtn" class="tb-action-btn tb-excel" onclick="exportGongguExcel()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span id="gongguExcelLabel">공구별</span>
       </button>
     </div>
     <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_list">
@@ -4226,21 +4222,6 @@ var EXCEL_PAGE_PRESETS = {
 // photo:true 컬럼(하자사진/조치사진)은 실제 데이터 필드명이 key+'_URL'(예: '하자사진_URL')이며,
 // 이 접미사 결합은 아래가 아니라 buildExcelReport 렌더링 쪽(약 L3842 `r[pc.col.key+'_URL']`)에
 // 암묵적으로 하드코딩되어 있다. key 값을 바꾸면 렌더링도 반드시 같이 맞춰야 한다.
-var EXCEL_COLUMNS = [
-  { key:'날짜', header:'날짜', dateCol:true },
-  { key:'공구', header:'공구' },
-  { key:'터널명', header:'터널명' },
-  { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
-  { key:'하자사진', header:'하자사진', photo:true, width:18 }, // 데이터 필드는 '하자사진_URL' (key+'_URL' 암묵적 결합)
-  { key:'조치일', header:'조치일', dateCol:true },
-  { key:'조치사진', header:'조치사진', photo:true, width:18 }, // 데이터 필드는 '조치사진_URL' (key+'_URL' 암묵적 결합)
-  { key:'조치여부', header:'조치여부' },
-  { key:'업체명', header:'업체명' },
-  { key:'업체담당자', header:'담당자' },
-  { key:'전화번호', header:'전화번호' },
-  { key:'비고', header:'비고', width:16, wrap:true, align:'left' }
-];
-
 // 업체연락처 탭 — 헤더 라벨은 노션 업체연락처DB 실제 속성명과 일치(내부 키 '관리구분'의
 // 실제 Notion 속성명은 '관리'). 고정폭 컬럼(관련업무 50·비고 15)만 사용자가 지정, 나머지는
 // 자동폭 — 새 탭/앱 추가 시 표준 패턴(스킬 문서 "새 탭/앱에 엑셀 버튼 추가하기" 참고).
@@ -4563,44 +4544,7 @@ function buildExcelReport(opts){
   }).finally(function(){ btn.disabled = false; });
 }
 
-// 엑셀 제목행 — 내보내는 행들의 "관리"(업무담당)가 단일값이면 그에 맞춰 제목을 특화한다
-// (2026-08-07 사용자 요청): 점검팀만 있으면 "점검팀 하자보수현황", 안전관리자만 있으면 터널명
-// 기준으로 "{터널명} 하자보수현황"(단일) 또는 "{터널1}, {터널2}, {마지막터널명}터널 하자보수현황"
-// (여러 터널 — 마지막 항목만 "터널" 접미사를 남기고 나머지는 생략). 관리가 섞여 있거나 비어있으면
-// 기존 기본 제목("하자보수현황") 유지.
-function buildDefectExcelTitle(rows){
-  var managers = [];
-  rows.forEach(function(r){ var m=r['업무담당']||''; if(m && managers.indexOf(m)<0) managers.push(m); });
-  if(managers.length===1 && managers[0]==='점검팀'){
-    return '점검팀 하자보수현황';
-  }
-  if(managers.length===1 && managers[0]==='안전관리자'){
-    var tunnels = [];
-    rows.forEach(function(r){ var t=r['터널명']||''; if(t && tunnels.indexOf(t)<0) tunnels.push(t); });
-    if(tunnels.length===1) return tunnels[0]+' 하자보수현황';
-    if(tunnels.length>1){
-      var labels = tunnels.map(function(t, idx){ return idx===tunnels.length-1 ? t : t.replace(/터널$/,''); });
-      return labels.join(', ')+' 하자보수현황';
-    }
-  }
-  return '하자보수현황';
-}
-function exportToExcel(){
-  var rows = filtered().slice().sort(function(a,b){
-    var da=(a['날짜']||'').replace(/[.\/]/g,'-');
-    var db=(b['날짜']||'').replace(/[.\/]/g,'-');
-    return da<db?1:da>db?-1:0;
-  });
-  buildExcelReport({
-    btnId:'excelExportBtn', lblId:'excelExportLabel', lblDefault:'엑셀',
-    sheetName:'하자현황', title: buildDefectExcelTitle(rows), fnamePrefix:'하자보수현황',
-    columns: EXCEL_COLUMNS, rows: rows, orientation:'landscape',
-    statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
-    oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME
-  });
-}
-
-// ── 공구별 엑셀 생성 (2026-09-15 추가) ──────────────────────────
+// ── 공구별 엑셀 생성 (2026-09-15 추가, 2026-09-15 하자내역 탭 단일 엑셀 버튼으로 통합) ──────
 // 컬럼 순서(사용자 지정): 터널명,공구명,날짜,하자내용,하자사진,조치일,조치사진,조치여부,업체명,담당자,전화번호,비고
 var EXCEL_GONGGU_COLUMNS = [
   { key:'터널명', header:'터널명' },
@@ -4724,7 +4668,7 @@ function exportGongguExcel(){
   var progressRows = sortGongguRows(ALL_DATA.filter(function(r){ return r['조치여부']==='진행중'; }));
   var now = new Date();
   buildExcelReport({
-    btnId:'gongguExcelBtn', lblId:'gongguExcelLabel', lblDefault:'공구별',
+    btnId:'gongguExcelBtn', lblId:'gongguExcelLabel', lblDefault:'엑셀',
     sheetName:'공구별', title: gongguExcelTitle(),
     fnamePrefix: now.getFullYear()+'년 포항영덕간터널 하자보수현황',
     columns: EXCEL_GONGGU_COLUMNS, rows: rows, orientation:'landscape',
