@@ -509,6 +509,12 @@ if (window.self !== window.top) {
         </button>
         <div class="dd-menu" id="trendTunnelDdMenu"></div>
       </div>
+      <div class="dd-wrap" id="trendPeriodDdWrap" style="display:none">
+        <button class="dd-btn" id="trendPeriodDdBtn" onclick="toggleTrendPeriodDd()" aria-haspopup="listbox" aria-label="기간 선택">
+          <span id="trendPeriodDdLabel">최근 12개월</span>
+        </button>
+        <div class="dd-menu" id="trendPeriodDdMenu"></div>
+      </div>
       <div class="dd-wrap" id="dailyTunnelDdWrap" style="display:none">
         <button class="dd-btn" id="dailyTunnelDdBtn" onclick="toggleDailyTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
           <span id="dailyTunnelDdLabel">전체</span>
@@ -631,7 +637,7 @@ if (window.self !== window.top) {
     </div>
     <div class="sc">
       <div class="sc-hd" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span>월별 요약 <span class="badge">최근 12개월</span></span>
+        <span>월별 요약 <span class="badge" id="trendPeriodBadge">최근 12개월</span></span>
         <button class="tb-action-btn tb-excel" id="trendExcelBtn" onclick="exportTrendExcel()">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span id="trendExcelLabel">엑셀 생성</span>
@@ -1292,6 +1298,63 @@ function onTrendTunnelPick(v){
   renderDailyTrend();
 }
 
+// ── 월별추이 전용 기간 필터 (터널명 필터 바로 뒤 — 기본값 "최근 12개월") ──
+let _trendPeriodMonths=12; // 'ALL'이면 데이터가 존재하는 전체 기간
+const TREND_PERIOD_OPTS=[
+  {val:6,label:'최근 6개월'},
+  {val:12,label:'최근 12개월'},
+  {val:24,label:'최근 24개월'},
+  {val:36,label:'최근 36개월'},
+  {val:'ALL',label:'전체 기간'}
+];
+function toggleTrendPeriodDd(){ toggleDd('trendPeriodDdMenu','trendPeriodDdBtn'); }
+function buildTrendPeriodDd(){
+  const menu=document.getElementById('trendPeriodDdMenu');
+  if(!menu) return;
+  menu.innerHTML=TREND_PERIOD_OPTS.map(o=>`<div class="dd-opt${_trendPeriodMonths===o.val?' sel':''}" data-val="${esc(String(o.val))}">${esc(o.label)}</div>`).join('');
+  const cur=TREND_PERIOD_OPTS.find(o=>o.val===_trendPeriodMonths);
+  const lblEl=document.getElementById('trendPeriodDdLabel');
+  if(lblEl) lblEl.textContent = cur ? cur.label : '최근 12개월';
+  if(!menu._bound){
+    menu._bound=true;
+    menu.addEventListener('click',e=>{
+      const opt=e.target.closest('.dd-opt');
+      if(!opt) return;
+      closeDd('trendPeriodDdMenu','trendPeriodDdBtn');
+      const raw=opt.dataset.val;
+      onTrendPeriodPick(raw==='ALL'?'ALL':parseInt(raw,10));
+    });
+  }
+}
+function onTrendPeriodPick(v){
+  _trendPeriodMonths=v;
+  renderTrend();
+}
+// 조회 기간(개월수)에 맞는 {y,m} 목록을 anchor(기준 연/월)부터 과거로 계산.
+// 'ALL'이면 baseRecs(터널 필터 적용된 전체 레코드)에서 가장 오래된 연-월까지 확장.
+function computeTrendMonths(baseRecs){
+  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
+  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
+  let n=_trendPeriodMonths;
+  if(n==='ALL'){
+    const ymSet=new Set((baseRecs||[]).map(r=>r.date?r.date.slice(0,7):null).filter(Boolean));
+    if(!ymSet.size){ n=12; }
+    else {
+      const sorted=[...ymSet].sort();
+      const [ey,em]=sorted[0].split('-').map(Number);
+      n=(anchorYear-ey)*12+(anchorMonth-em)+1;
+      if(n<1) n=1;
+    }
+  }
+  const months=[];
+  for(let i=n-1;i>=0;i--){
+    let m=anchorMonth-i,y=anchorYear;
+    while(m<1){m+=12;y--;}
+    months.push({y,m});
+  }
+  return months;
+}
+
 // ── 발전내역 탭 연/월 필터 드롭다운 (요약·터널별·월별추이의 curYear/curMonth와 독립,
 //    기본값 "전체 연도"·"전체 월" — 2026-07-05 확정) ──
 function toggleDetailYearDd(){ toggleDd('detailYearDdMenu','detailYearDdBtn'); }
@@ -1353,8 +1416,10 @@ function relocateMonthSel(name){
   if(!wrap) return;
   wrap.style.display = name==='detail' ? 'none' : '';
   const trendDd=document.getElementById('trendTunnelDdWrap');
+  const trendPeriodDd=document.getElementById('trendPeriodDdWrap');
   const dailyDd=document.getElementById('dailyTunnelDdWrap');
   if(trendDd) trendDd.style.display = name==='trend' ? '' : 'none';
+  if(trendPeriodDd) trendPeriodDd.style.display = name==='trend' ? '' : 'none';
   if(dailyDd) dailyDd.style.display = name==='trenddaily' ? '' : 'none';
 }
 function switchPanel(name){
@@ -2017,20 +2082,16 @@ function svgToPngDataUrl(svgStr, width, height, scale){
 }
 function renderTrend(){
   buildTunnelFilterDd('trendTunnelDdMenu','trendTunnelDdBtn','trendTunnelDdLabel', _trendTunnelFilter, onTrendTunnelPick);
+  buildTrendPeriodDd();
   renderTrendThead();
+  const periodLabel=(TREND_PERIOD_OPTS.find(o=>o.val===_trendPeriodMonths)||{}).label || '최근 12개월';
   document.getElementById('trendChartHd').textContent = _trendTunnelFilter
-    ? `최근 12개월 발전량 추이 (${_trendTunnelFilter})`
-    : '최근 12개월 발전량 추이';
-  const months=[];
-  // curYear==='ALL'일 때는 연산 기준점이 없으므로 실제 오늘 날짜를 기준점으로 삼음
-  const anchorYear=curYear==='ALL'?_now.getFullYear():curYear;
-  const anchorMonth=curYear==='ALL'?_now.getMonth()+1:(curMonth===0?12:curMonth);
-  for(let i=11;i>=0;i--){
-    let m=anchorMonth-i,y=anchorYear;
-    if(m<1){m+=12;y--;}
-    months.push({y,m});
-  }
+    ? `${periodLabel} 발전량 추이 (${_trendTunnelFilter})`
+    : `${periodLabel} 발전량 추이`;
+  const periodBadge=document.getElementById('trendPeriodBadge');
+  if(periodBadge) periodBadge.textContent=periodLabel;
   const baseRecs = _trendTunnelFilter ? ALL_RECORDS.filter(r=>r.tunnel===_trendTunnelFilter) : ALL_RECORDS;
+  const months=computeTrendMonths(baseRecs);
   const data=months.map(({y,m})=>{
     const recs=recordsForYM(y,m).filter(r=>!_trendTunnelFilter||r.tunnel===_trendTunnelFilter);
     const totalGen=recs.reduce((s,r)=>s+getGenAmt(r),0);
@@ -2425,13 +2486,14 @@ function buildExcelReport(opts){
       cell.alignment={vertical:'middle',horizontal:'center'};
       cell.border=excelGridBorder(true, false, i, i===columns.length-1); cell.fill=EXCEL_HEADER_FILL;
     });
+    const showTotal=!!opts.showTotal;
     rows.forEach((r,i)=>{
       const rn=headerRowNum+1+i;
       const row=ws.getRow(rn);
       row.height=excelWrapAwareRowHeight(r, columns, colWidths, EXCEL_BODY_FONT.size, EXCEL_ROW_HEIGHTS.data);
       columns.forEach((col,ci)=>{
         const cell=row.getCell(ci+1);
-        cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, i===rows.length-1, ci, ci===columns.length-1);
+        cell.font=EXCEL_BODY_FONT; cell.border=excelGridBorder(false, !showTotal && i===rows.length-1, ci, ci===columns.length-1);
         cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left',wrapText:!!col.wrap} : {vertical:'middle',horizontal:'center',wrapText:!!col.wrap};
         if(col.dateCol && r[col.key]){
           const d=excelParseDate(r[col.key]);
@@ -2443,6 +2505,24 @@ function buildExcelReport(opts){
       });
       row.commit();
     });
+    if(showTotal){
+      const totalRow=ws.getRow(headerRowNum+1+rows.length);
+      totalRow.height=EXCEL_ROW_HEIGHTS.data;
+      const totalFont={...EXCEL_BODY_FONT, bold:true};
+      columns.forEach((col,ci)=>{
+        const cell=totalRow.getCell(ci+1);
+        cell.font=totalFont; cell.fill=EXCEL_HEADER_FILL;
+        cell.border=excelGridBorder(false, true, ci, ci===columns.length-1);
+        cell.alignment = col.align==='left' ? {vertical:'middle',horizontal:'left'} : {vertical:'middle',horizontal:'center'};
+        if(ci===0){
+          cell.value='합계';
+        } else if(col.numFmt){
+          cell.value=rows.reduce((s,r)=>s+(Number(r[col.key])||0),0);
+          cell.numFmt=col.numFmt.replace(/\.#+/,'');
+        }
+      });
+      totalRow.commit();
+    }
     lbl.textContent='파일 저장 중...';
     return wb.xlsx.writeBuffer();
   }).then(buf=>{
@@ -2507,7 +2587,7 @@ async function exportTrendExcel(){
   buildExcelReport({
     btnId:'trendExcelBtn', lblId:'trendExcelLabel', lblDefault:'엑셀 생성',
     sheetName:'월별요약', title:titleAndFname, fnamePrefix:titleAndFname,
-    columns:cols, rows, orientation:'portrait', chartImage
+    columns:cols, rows, orientation:'portrait', chartImage, showTotal:true
   });
 }
 // 터널 컬럼은 getTrendTunnelCols()에서 파생 — 월별추이와 동일한 소스를 공유해 컬럼셋이 어긋나지 않게 한다.
@@ -2538,7 +2618,7 @@ async function exportDailyExcel(){
   buildExcelReport({
     btnId:'dailyExcelBtn', lblId:'dailyExcelLabel', lblDefault:'엑셀 생성',
     sheetName:'일별요약', title:titleAndFname, fnamePrefix:titleAndFname,
-    columns:cols, rows, orientation:'portrait', chartImage
+    columns:cols, rows, orientation:'portrait', chartImage, showTotal:true
   });
 }
 
