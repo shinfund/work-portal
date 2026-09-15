@@ -135,6 +135,9 @@ html[data-theme="dark"] .badge{color:#fff}
 
 /* ── PANEL ── */
 .panel{display:none}.panel.active{display:block}
+.panel-fetching{position:relative;min-height:120px}
+.panel-fetching>*{opacity:.25;pointer-events:none;filter:blur(1px)}
+.panel-fetching::after{content:'전체 이력 불러오는 중...';position:absolute;top:24px;left:0;right:0;text-align:center;font-size:13px;color:var(--txt2);z-index:5}
 
 /* ── TREND CHART ── */
 .trend-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1433,8 +1436,14 @@ function switchPanel(name){
   });
   relocateMonthSel(name);
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
-  // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충
-  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ ensureFullHistoryLoaded(); }
+  // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충.
+  // 보충이 끝나기 전엔 2개월치 부분 데이터가 마치 최종 결과처럼 보여 혼동을 주므로,
+  // 로딩 중엔 패널을 흐리게 가려 "전체 이력 불러오는 중" 상태임을 명시한다.
+  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){
+    const panel=document.getElementById('panel-trend');
+    panel.classList.add('panel-fetching');
+    ensureFullHistoryLoaded().finally(()=>panel.classList.remove('panel-fetching'));
+  }
 }
 
 // ── 전역 데이터 ───────────────────────────────────────
