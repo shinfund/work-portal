@@ -953,6 +953,10 @@ if (window.self !== window.top) {
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
         <span id="photoReportLabel">사진-완료</span>
       </button>
+      <button id="gongguExcelBtn" class="tb-action-btn tb-excel" onclick="exportGongguExcel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="gongguExcelLabel">공구별</span>
+      </button>
     </div>
     <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_list">
       <button class="dd-btn" id="pageSizeDdBtn_list" onclick="togglePageSizeDd('list')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
@@ -4380,6 +4384,9 @@ function buildExcelReport(opts){
 
   loadExcelLib().then(function(){
     var wb = new ExcelJS.Workbook();
+    // beforeMainSheet: 메인 데이터 시트보다 앞에 별도 시트(예: "요약")를 추가해야 할 때 사용 —
+    // 엑셀 시트 순서는 addWorksheet 호출 순서를 그대로 따르므로 여기서 먼저 호출한다.
+    if(opts.beforeMainSheet) opts.beforeMainSheet(wb);
     var ws = wb.addWorksheet(opts.sheetName, {
       views: [{ state:'frozen', ySplit:2, showGridLines:false, zoomScale:90 }],
       pageSetup: {
@@ -4536,6 +4543,133 @@ function exportToExcel(){
     columns: EXCEL_COLUMNS, rows: rows, orientation:'landscape',
     statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
     oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME
+  });
+}
+
+// ── 공구별 엑셀 생성 (2026-09-15 추가) ──────────────────────────
+// 컬럼 순서(사용자 지정): 터널명,공구명,날짜,하자내용,하자사진,조치일,조치사진,조치여부,업체명,담당자,전화번호,비고
+var EXCEL_GONGGU_COLUMNS = [
+  { key:'터널명', header:'터널명' },
+  { key:'공구', header:'공구명' },
+  { key:'날짜', header:'날짜', dateCol:true },
+  { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
+  { key:'하자사진', header:'하자사진', photo:true, width:18 },
+  { key:'조치일', header:'조치일', dateCol:true },
+  { key:'조치사진', header:'조치사진', photo:true, width:18 },
+  { key:'조치여부', header:'조치여부' },
+  { key:'업체명', header:'업체명' },
+  { key:'업체담당자', header:'담당자' },
+  { key:'전화번호', header:'전화번호' },
+  { key:'비고', header:'비고', width:16, wrap:true, align:'left' }
+];
+// 터널명 정렬 우선순위(사용자 지정 순서) — 목록에 없는 터널명(예: "기타")은 맨 뒤로 보낸다.
+var GONGGU_TUNNEL_ORDER = [
+  '흥해터널','청하터널','남정1•2터널','남정3터널','남정4터널','남정5터널','남정6터널',
+  '남정7터널','남정8터널','남정9터널','강구1터널','강구2터널','강구3터널'
+];
+function gongguExcelTitle(){
+  return new Date().getFullYear()+'년 포항영덕간터널 하자보수현황';
+}
+// "요약" 시트 — 공구별 엑셀 생성 대상 rows 기준으로 터널별 진행중/완료/미흡 건수 집계.
+// buildExcelReport의 beforeMainSheet 훅으로 호출되어 메인 데이터 시트보다 앞(1번째)에 추가된다.
+function buildGongguSummarySheet(wb, rows){
+  var ws = wb.addWorksheet('요약', {
+    views: [{ state:'frozen', ySplit:2, showGridLines:false }],
+    pageSetup: {
+      paperSize:9, orientation:'portrait', fitToPage:true, fitToWidth:1, fitToHeight:0,
+      horizontalCentered:true, margins: EXCEL_PAGE_PRESETS.portrait
+    },
+    headerFooter: { oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME, oddFooter:'' }
+  });
+  var cols = [
+    { key:'터널명', header:'터널명' },
+    { key:'공구', header:'공구명' },
+    { key:'진행중', header:'진행중' },
+    { key:'완료', header:'완료' },
+    { key:'미흡', header:'미흡' },
+    { key:'합계', header:'합계' }
+  ];
+  // 터널별 집계 — GONGGU_TUNNEL_ORDER 순서 유지, 데이터가 있는 터널만 표시
+  var byTunnel = {};
+  rows.forEach(function(r){
+    var t = r['터널명']||'(미지정)';
+    if(!byTunnel[t]) byTunnel[t] = { gonggu:r['공구']||'', prog:0, done:0, poor:0 };
+    var s = r['조치여부'];
+    if(s==='완료') byTunnel[t].done++;
+    else if(s==='진행중') byTunnel[t].prog++;
+    else byTunnel[t].poor++;
+  });
+  var tunnelKeys = Object.keys(byTunnel).sort(function(a,b){
+    var ga=byTunnel[a].gonggu, gb=byTunnel[b].gonggu;
+    if(ga!==gb) return ga<gb?-1:1;
+    var ia=GONGGU_TUNNEL_ORDER.indexOf(a); if(ia<0) ia=999;
+    var ib=GONGGU_TUNNEL_ORDER.indexOf(b); if(ib<0) ib=999;
+    return ia-ib;
+  });
+  var dataRows = tunnelKeys.map(function(t){
+    var g = byTunnel[t];
+    return { 터널명:t, 공구:g.gonggu, 진행중:g.prog, 완료:g.done, 미흡:g.poor, 합계:g.prog+g.done+g.poor };
+  });
+  var totalRow = dataRows.reduce(function(acc,r){
+    acc.진행중+=r.진행중; acc.완료+=r.완료; acc.미흡+=r.미흡; acc.합계+=r.합계; return acc;
+  }, { 터널명:'합계', 공구:'', 진행중:0, 완료:0, 미흡:0, 합계:0 });
+
+  var colWidths = cols.map(function(c){ return excelAutoWidth([c.header].concat(dataRows.map(function(r){ return r[c.key]; })).concat([totalRow[c.key]])); });
+  ws.columns = colWidths.map(function(w){ return {width:w}; });
+
+  var titleRow = ws.getRow(1);
+  titleRow.height = EXCEL_ROW_HEIGHTS.title;
+  var titleCell = titleRow.getCell(1);
+  titleCell.value = gongguExcelTitle()+' 요약';
+  titleCell.font = EXCEL_TITLE_FONT;
+  titleCell.alignment = { vertical:'middle' };
+
+  var headerRow = ws.getRow(2);
+  headerRow.height = EXCEL_ROW_HEIGHTS.header;
+  cols.forEach(function(c, i){
+    var cell = headerRow.getCell(i+1);
+    cell.value = c.header;
+    cell.font = EXCEL_BODY_FONT;
+    cell.alignment = { vertical:'middle', horizontal:'center' };
+    cell.border = excelGridBorder(true, false, i, i===cols.length-1);
+    cell.fill = EXCEL_HEADER_FILL;
+  });
+
+  var allRows = dataRows.concat([totalRow]);
+  allRows.forEach(function(r, i){
+    var isTotal = i===allRows.length-1;
+    var row = ws.getRow(3+i);
+    row.height = EXCEL_ROW_HEIGHTS.data;
+    cols.forEach(function(c, ci){
+      var cell = row.getCell(ci+1);
+      cell.value = r[c.key];
+      cell.font = isTotal ? { name:EXCEL_BODY_FONT.name, size:EXCEL_BODY_FONT.size, bold:true } : EXCEL_BODY_FONT;
+      cell.alignment = { vertical:'middle', horizontal:'center' };
+      cell.border = excelGridBorder(false, i===allRows.length-1, ci, ci===cols.length-1);
+      if(isTotal) cell.fill = EXCEL_HEADER_FILL;
+    });
+    row.commit();
+  });
+}
+function exportGongguExcel(){
+  var rows = filtered().slice().sort(function(a,b){
+    var ga=a['공구']||'', gb=b['공구']||'';
+    if(ga!==gb) return ga<gb?-1:1;
+    var ta=GONGGU_TUNNEL_ORDER.indexOf(a['터널명']); if(ta<0) ta=999;
+    var tb=GONGGU_TUNNEL_ORDER.indexOf(b['터널명']); if(tb<0) tb=999;
+    if(ta!==tb) return ta-tb;
+    var da=(a['날짜']||'').replace(/[.\/]/g,'-'), db=(b['날짜']||'').replace(/[.\/]/g,'-');
+    return da<db?-1:da>db?1:0;
+  });
+  var now = new Date();
+  buildExcelReport({
+    btnId:'gongguExcelBtn', lblId:'gongguExcelLabel', lblDefault:'공구별',
+    sheetName:'하자현황', title: gongguExcelTitle(),
+    fnamePrefix: now.getFullYear()+'년 포항영덕간터널 하자보수현황',
+    columns: EXCEL_GONGGU_COLUMNS, rows: rows, orientation:'landscape',
+    statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
+    oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME,
+    beforeMainSheet: function(wb){ buildGongguSummarySheet(wb, rows); }
   });
 }
 
