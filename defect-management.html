@@ -1244,6 +1244,7 @@ var TAB_FILTER = { tunnel:'ALL', company:'ALL', gonggu:'ALL' };
 // (2026-09-10, 태양광발전 앱 _detailTunnelUserPicked와 동일 패턴)
 var _tunnelTabUserPicked=false;
 var _companyTabUserPicked=false;
+var _gongguTabUserPicked=false;
 var CURRENT_TAB = 1;
 
 /* ── 페이지네이션(레코드 표시 개수) ── 사진·레코드 많은 탭의 초기 로딩 지연 방지(2026-09-10).
@@ -2564,6 +2565,7 @@ function selectTabDd(kind, val, el){
   getPageState(kind).page = 1;
   if(kind==='tunnel') _tunnelTabUserPicked=true;
   else if(kind==='company') _companyTabUserPicked=true;
+  else if(kind==='gonggu') _gongguTabUserPicked=true;
   closeTabDd(c.menuId, c.btnId);
   var btn = document.getElementById(c.btnId);
   if(btn) btn.classList.toggle('active', val!=='ALL');
@@ -2600,9 +2602,9 @@ function updateTabCounts(){
     var g7 = calcGroupKpi('공구');
     renderKpiCountLine('gongguTabCount', [
       { label:'총', value:gData.length+'건' },
-      { label:'공구 수', value:g7.count+'개' },
-      { label:'미처리 합계', value:g7.unproc, color:'var(--coral800)' },
-      { label:'평균 완료율', value:g7.avgRate+'%', color:'var(--teal600)' }
+      { label:'공구수', value:g7.count },
+      { label:'미처리', value:g7.unproc, color:'var(--coral800)' },
+      { label:'완료율', value:g7.avgRate+'%', color:'var(--teal600)' }
     ]);
   }
 }
@@ -2699,6 +2701,15 @@ function renderGongguPanel(){
   var allGonggu = groupBy(ALL_DATA,'공구');
   var el = document.getElementById('gongguPanels');
   var keys = Object.keys(allGonggu).sort();
+  // 공구별 탭 필터 기본값 = 제1공구(2026-09-15 요청) — 데이터에 실제 존재할 때만 적용,
+  // 사용자가 드롭다운에서 무엇이든 직접 고르면(selectTabDd) 다시는 자동 개입하지 않는다.
+  if(!_gongguTabUserPicked && TAB_FILTER.gonggu==='ALL' && keys.indexOf('제1공구')>=0){
+    TAB_FILTER.gonggu='제1공구';
+    var gLbl=document.getElementById('gongguTabDdLabel'), gBtn=document.getElementById('gongguTabDdBtn');
+    if(gLbl) gLbl.textContent='제1공구';
+    if(gBtn) gBtn.classList.add('active');
+    buildTabDropdowns();
+  }
   if(TAB_FILTER.gonggu !== 'ALL'){
     keys = keys.filter(function(k){ return k === TAB_FILTER.gonggu; });
   }
