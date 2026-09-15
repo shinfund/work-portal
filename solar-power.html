@@ -2410,7 +2410,7 @@ function buildExcelReport(opts){
       const tableWidthPx=colWidths.reduce((s,w)=>s+excelColWidthToPx(w),0);
       const scale=tableWidthPx/img.widthPx;
       const imgW=tableWidthPx, imgH=Math.round(img.heightPx*scale);
-      ws.getRow(chartRowNum).height=imgH*0.75;
+      ws.getRow(chartRowNum).height=130;
       ws.getRow(chartRowNum+1).height=30;
       const imgId=wb.addImage({base64:img.dataUrl, extension:'png'});
       ws.addImage(imgId,{ tl:{col:0,row:chartRowNum-1}, ext:{width:imgW,height:imgH} });
