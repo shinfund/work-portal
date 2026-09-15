@@ -4649,7 +4649,7 @@ function buildGongguSummarySheet(wb, rows){
   var titleRow = ws.getRow(1);
   titleRow.height = EXCEL_ROW_HEIGHTS.title;
   var titleCell = titleRow.getCell(1);
-  titleCell.value = gongguExcelTitle()+' 요약';
+  titleCell.value = new Date().getFullYear()+'년 포항영덕간터널 하자보수 요약';
   titleCell.font = EXCEL_TITLE_FONT;
   titleCell.alignment = { vertical:'middle' };
 
@@ -4699,14 +4699,14 @@ function exportGongguExcel(){
   var now = new Date();
   buildExcelReport({
     btnId:'gongguExcelBtn', lblId:'gongguExcelLabel', lblDefault:'공구별',
-    sheetName:'하자현황', title: gongguExcelTitle(),
+    sheetName:'공구별', title: gongguExcelTitle(),
     fnamePrefix: now.getFullYear()+'년 포항영덕간터널 하자보수현황',
     columns: EXCEL_GONGGU_COLUMNS, rows: rows, orientation:'landscape',
     statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
     oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME,
     beforeMainSheet: function(wb){ buildGongguSummarySheet(wb, rows); },
     extraDataSheets: [{
-      sheetName:'진행중', title: gongguExcelTitle()+' (진행중)',
+      sheetName:'진행중', title: now.getFullYear()+'년 포항영덕간터널 진행중 하자 건',
       columns: EXCEL_GONGGU_COLUMNS, rows: progressRows, orientation:'landscape',
       oddHeader: '&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME
     }]
