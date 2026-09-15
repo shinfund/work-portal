@@ -146,6 +146,7 @@ tbody tr:last-child td{border-bottom:none}
 .remark-content{white-space:normal;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.55;word-break:keep-all}
 .col-date{width:80px;white-space:nowrap}
 .col-tunnel{width:52px;white-space:nowrap}
+.col-gonggu{width:58px;white-space:nowrap}
 .col-type{width:44px;white-space:nowrap}
 .col-loc{width:80px;white-space:nowrap}
 .col-status{width:64px;white-space:nowrap}
@@ -837,6 +838,7 @@ if (window.self !== window.top) {
     <button class="top-tab active" role="tab" aria-selected="true"  onclick="switchTab(1,this)"><span class="tt-label">하자내역</span></button>
     <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(5,this)"><span class="tt-label">업체연락처</span></button>
     <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(6,this)"><span class="tt-label">하자관리</span></button>
+    <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(7,this)"><span class="tt-label">공구별</span></button>
     <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(2,this)"><span class="tt-label">미처리</span></button>
     <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(3,this)"><span class="tt-label">터널별</span></button>
     <button class="top-tab" role="tab" aria-selected="false" onclick="switchTab(4,this)"><span class="tt-label">업체별</span></button>
@@ -894,6 +896,13 @@ if (window.self !== window.top) {
       </button>
       <div class="dd-menu" id="monthDdMenu"></div>
     </div>
+    <div class="dd-wrap" id="gongguDdWrap">
+      <button class="dd-btn" id="gongguDdBtn" onclick="toggleGongguDd()" aria-haspopup="listbox" aria-label="공구명 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span id="gongguDdLabel">공구명 전체</span>
+      </button>
+      <div class="dd-menu" id="gongguDdMenu"></div>
+    </div>
     <div class="dd-wrap" id="tunnelDdWrap">
       <button class="dd-btn" id="tunnelDdBtn" onclick="toggleTunnelDd()" aria-haspopup="listbox" aria-label="터널명 선택">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
@@ -920,19 +929,6 @@ if (window.self !== window.top) {
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       신규등록
     </button>
-    <span class="tb-group-label">출력</span>
-    <button id="excelExportBtn" class="tb-action-btn tb-excel" onclick="exportToExcel()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span id="excelExportLabel">엑셀</span>
-    </button>
-    <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportProgLabel">사진-진행</span>
-    </button>
-    <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
-      <span id="photoReportLabel">사진-완료</span>
-    </button>
   </div>
   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:12px">
     <div class="filter-count" id="filterCount"></div>
@@ -943,7 +939,22 @@ if (window.self !== window.top) {
       </button>
       <button id="delConfirmBtn" onclick="deleteSelectedRows()" style="display:none;background:#B23A2E;color:#fff;flex-shrink:0;font-size:12px;padding:0 12px;height:34px;border-radius:8px;border:none;cursor:pointer;font-weight:500;white-space:nowrap" disabled>선택 삭제</button>
     </div>
-    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_list" style="margin-left:auto">
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto">
+      <span class="tb-group-label">출력</span>
+      <button id="excelExportBtn" class="tb-action-btn tb-excel" onclick="exportToExcel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span id="excelExportLabel">엑셀</span>
+      </button>
+      <button id="photoReportProgBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportProgress()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        <span id="photoReportProgLabel">사진-진행</span>
+      </button>
+      <button id="photoReportBtn" class="tb-action-btn tb-report" onclick="exportDefectPhotoReportDone()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+        <span id="photoReportLabel">사진-완료</span>
+      </button>
+    </div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_list">
       <button class="dd-btn" id="pageSizeDdBtn_list" onclick="togglePageSizeDd('list')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
         <span id="pageSizeDdLabel_list">10개씩</span>
       </button>
@@ -1050,6 +1061,28 @@ if (window.self !== window.top) {
   </div>
   <div id="companyPanels"></div>
   <div class="pagination-row" id="companyPaginationRow"></div>
+</div>
+
+<!-- 패널7: 공구별 -->
+<div class="panel" id="p7">
+  <div class="filter-row" style="margin-bottom:14px">
+    <div class="dd-wrap" id="gongguTabDdWrap">
+      <button class="dd-btn" id="gongguTabDdBtn" onclick="toggleTabDd('gonggu')" aria-haspopup="listbox" aria-label="공구 선택">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span id="gongguTabDdLabel">공구 전체</span>
+      </button>
+      <div class="dd-menu" id="gongguTabDdMenu"></div>
+    </div>
+    <div class="filter-count" id="gongguTabCount"></div>
+    <div class="dd-wrap page-size-wrap" id="pageSizeDdWrap_gonggu" style="margin-left:auto">
+      <button class="dd-btn" id="pageSizeDdBtn_gonggu" onclick="togglePageSizeDd('gonggu')" aria-haspopup="listbox" aria-label="페이지당 표시 개수">
+        <span id="pageSizeDdLabel_gonggu">10개씩</span>
+      </button>
+      <div class="dd-menu" id="pageSizeDdMenu_gonggu"></div>
+    </div>
+  </div>
+  <div id="gongguPanels"></div>
+  <div class="pagination-row" id="gongguPaginationRow"></div>
 </div>
 
 <!-- 패널5: 업체연락처 -->
@@ -1201,8 +1234,8 @@ if (window.self !== window.top) {
 
 <script>
 var ALL_DATA = [];
-var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', year:'ALL', month:'ALL' };
-var TAB_FILTER = { tunnel:'ALL', company:'ALL' };
+var FILTER = { status:'ALL', tunnel:'ALL', manager:'ALL', year:'ALL', month:'ALL', gonggu:'ALL' };
+var TAB_FILTER = { tunnel:'ALL', company:'ALL', gonggu:'ALL' };
 // true가 되면 기본값(터널별=청하터널, 업체별=목록 최상위 업체) 자동 적용을 멈추고 사용자 선택을 유지
 // (2026-09-10, 태양광발전 앱 _detailTunnelUserPicked와 동일 패턴)
 var _tunnelTabUserPicked=false;
@@ -1292,6 +1325,7 @@ var AFTER_DEFECT_RELOAD_CB = null; // 하자내역 목록 새로고침 후 자�
 var COL_DEFS = [
   { key:'조치여부',   label:'조치여부', width:'col-status'  },
   { key:'날짜',       label:'날짜',     width:'col-date'    },
+  { key:'공구',       label:'공구',     width:'col-gonggu'  },
   { key:'업무담당',   label:'관리',     width:'col-manager' },
   { key:'터널명',     label:'터널명',   width:'col-tunnel'  },
   { key:'공종',       label:'공종',     width:'col-type'    },
@@ -1400,6 +1434,7 @@ function loadDemo(){
   buildStatusFilter();
   buildTunnelFilter();
   buildManagerFilter();
+  buildGongguFilter();
   buildMonthFilter();
   buildTabDropdowns();
   updateKPI();
@@ -1551,6 +1586,7 @@ function parseNotionPage(page, idx){
   }
   result['날짜'] = dateVal.slice(0,10);
 
+  result['공구']       = getField('공구',       ['공구','lot']);
   result['터널명']     = getField('터널명',    ['터널명','터널','tunnel']);
   result['공종']       = getField('공종',       ['공종','type','공사종류']);
   result['위치']       = getField('위치',       ['위치','location','loc']);
@@ -1659,6 +1695,7 @@ function loadData(){
             buildStatusFilter();
             buildTunnelFilter();
             buildManagerFilter();
+            buildGongguFilter();
             buildMonthFilter();
             buildTabDropdowns();
             updateKPI();
@@ -1699,6 +1736,7 @@ function buildNotionPropMap(props){
   // 내부 key별 키워드와 타입 힌트로 매칭
   var matchers = [
     { key:'날짜',        kws:['날짜','date'],            types:['date','created_time'] },
+    { key:'공구',        kws:['공구','lot'],             types:['select','multi_select','rich_text','text'] },
     { key:'터널명',      kws:['터널명','터널','tunnel'],  types:['select','multi_select','title','rich_text'] },
     { key:'공종',        kws:['공종','type','공사'],      types:['select','multi_select','rich_text'] },
     { key:'위치',        kws:['위치','location','loc'],  types:['rich_text','text','title'] },
@@ -1814,6 +1852,45 @@ function buildManagerFilter(){
       if(wrap && !wrap.contains(e.target)) closeManagerDd();
     });
   }
+}
+
+/* ── BUILD 공구명 DROPDOWN (하자내역 탭, 날짜 필터 뒤 — 2026-09-15, 기본값 "전체") ── */
+function buildGongguFilter(){
+  var gonggus = getUniqueValues('공구');
+  var menu = document.getElementById('gongguDdMenu');
+  if(!menu) return;
+  var opts = [{ val:'ALL', label:'공구명 전체' }];
+  gonggus.forEach(function(g){ opts.push({ val:g, label:g }); });
+  menu.innerHTML = opts.map(function(o){
+    return '<div class="dd-opt'+(o.val===FILTER.gonggu?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+  }).join('');
+  var lbl = document.getElementById('gongguDdLabel');
+  if(lbl) lbl.textContent = FILTER.gonggu==='ALL' ? '공구명 전체' : FILTER.gonggu;
+  var btn = document.getElementById('gongguDdBtn');
+  if(btn) btn.classList.toggle('active', FILTER.gonggu!=='ALL');
+  if(!buildGongguFilter._bound){
+    buildGongguFilter._bound = true;
+    menu.addEventListener('click', function(e){
+      var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+      if(opt && opt.dataset && opt.dataset.val) selectGonggu(opt.dataset.val, opt);
+    });
+    document.addEventListener('click', function(e){
+      var wrap = document.getElementById('gongguDdWrap');
+      if(wrap && !wrap.contains(e.target)) closeGongguDd();
+    });
+  }
+}
+function toggleGongguDd(){ toggleDd('gongguDdMenu','gongguDdBtn'); }
+function closeGongguDd()  { closeDd('gongguDdMenu','gongguDdBtn'); }
+function selectGonggu(val, el){
+  document.querySelectorAll('#gongguDdMenu .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  document.getElementById('gongguDdLabel').textContent = val==='ALL' ? '공구명 전체' : val;
+  FILTER.gonggu = val;
+  closeGongguDd();
+  var btn = document.getElementById('gongguDdBtn');
+  if(btn) btn.classList.toggle('active', val!=='ALL');
+  renderList();
 }
 
 /* ── BUILD 날짜(년/월 각각) DROPDOWN (하자내역 탭 — 목록/엑셀 탭 표준 툴바 규칙, 2026-07-05: 하나의
@@ -2028,6 +2105,7 @@ function filtered(){
     var stMatch = FILTER.status==='ALL' || r['조치여부']===FILTER.status;
     var tnMatch = FILTER.tunnel==='ALL' || r['터널명']===FILTER.tunnel;
     var mgMatch = FILTER.manager==='ALL' || r['업무담당']===FILTER.manager;
+    var gnMatch = FILTER.gonggu==='ALL' || r['공구']===FILTER.gonggu;
     var dNorm = (r['날짜']||'').replace(/[.\/]/g,'-');
     var yrMatch = FILTER.year==='ALL' || dNorm.slice(0,4)===FILTER.year;
     var moMatch = FILTER.month==='ALL' || dNorm.slice(5,7)===FILTER.month;
@@ -2038,7 +2116,7 @@ function filtered(){
                      || (r['업무담당']||'').toLowerCase().includes(q)
                      || (r['업체명']||'').toLowerCase().includes(q)
                      || (r['비고']||'').toLowerCase().includes(q);
-    return stMatch && tnMatch && mgMatch && yrMatch && moMatch && qMatch;
+    return stMatch && tnMatch && mgMatch && gnMatch && yrMatch && moMatch && qMatch;
   });
 }
 
@@ -2144,7 +2222,7 @@ function updateKpiForList(){
   // 하자내역 탭: 필터 결과 기준, "총 N건" 라인에 진행중/완료/미흡 함께 표시
   var rows = filtered();
   var c = countStatus(rows);
-  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL' || FILTER.year!=='ALL' || FILTER.month!=='ALL'
+  var isFiltered = FILTER.status!=='ALL' || FILTER.tunnel!=='ALL' || FILTER.manager!=='ALL' || FILTER.gonggu!=='ALL' || FILTER.year!=='ALL' || FILTER.month!=='ALL'
     || (document.getElementById('searchBox') && document.getElementById('searchBox').value.trim()!=='');
   renderKpiCountLine('filterCount', [
     { label:isFiltered?'필터 결과':'전체', value:rows.length },
@@ -2156,9 +2234,9 @@ function updateKpiForList(){
 
 
 /* ── RENDER ALL (현재 탭만 즉시, 나머지는 탭 전환 시 lazy) ── */
-var DIRTY_TABS = [0,1,2,3,4]; // 렌더 필요 탭 목록
+var DIRTY_TABS = [0,1,2,3,4,7]; // 렌더 필요 탭 목록
 function renderAll(){
-  DIRTY_TABS = [0,1,2,3,4];
+  DIRTY_TABS = [0,1,2,3,4,7];
   renderCurrentTab();
 }
 function renderCurrentTab(){
@@ -2170,6 +2248,7 @@ function renderCurrentTab(){
   else if(t===2){ renderUnprocPanel(); }
   else if(t===3){ renderTunnelPanel(); }
   else if(t===4){ renderCompanyPanel(); }
+  else if(t===7){ renderGongguPanel(); }
 }
 
 /* ── UNPROC FILTER ── */
@@ -2426,11 +2505,28 @@ function buildTabDropdowns(){
       });
     }
   }
+  // 공구별 드롭다운
+  var gonggus = getUniqueValues('공구');
+  var gmenu = document.getElementById('gongguTabDdMenu');
+  if(gmenu){
+    gmenu.innerHTML = '';
+    var gopts = [{val:'ALL',label:'공구 전체'}].concat(gonggus.map(function(g){return{val:g,label:g};}));
+    gmenu.innerHTML = gopts.map(function(o){
+      return '<div class="dd-opt'+(TAB_FILTER.gonggu===o.val?' sel':'')+'" data-val="'+esc(o.val)+'">'+esc(o.label)+'</div>';
+    }).join('');
+    if(!gmenu._bound){
+      gmenu._bound = true;
+      gmenu.addEventListener('click', function(e){
+        var opt = e.target.closest ? e.target.closest('.dd-opt') : e.target;
+        if(opt && opt.dataset && opt.dataset.val) selectTabDd('gonggu', opt.dataset.val, opt);
+      });
+    }
+  }
   // 외부 클릭 닫기 (중복 등록 방지: 한 번만)
   if(!buildTabDropdowns._bound){
     buildTabDropdowns._bound = true;
     document.addEventListener('click', function(e){
-      var pairs = [['tunnelTabDdMenu','tunnelTabDdBtn'],['companyTabDdMenu','companyTabDdBtn']];
+      var pairs = [['tunnelTabDdMenu','tunnelTabDdBtn'],['companyTabDdMenu','companyTabDdBtn'],['gongguTabDdMenu','gongguTabDdBtn']];
       pairs.forEach(function(p){
         var wrap = document.getElementById(p[0].replace('DdMenu','DdWrap'));
         if(wrap && !wrap.contains(e.target)) closeTabDd(p[0], p[1]);
@@ -2441,36 +2537,40 @@ function buildTabDropdowns(){
   updateTabCounts();
 }
 
+// kind별 드롭다운 설정 (2026-09-15, 공구별 탭 추가하며 tunnel/company 개별분기를 테이블화)
+var TAB_DD_CONFIG = {
+  tunnel:  { menuId:'tunnelTabDdMenu',  btnId:'tunnelTabDdBtn',  labelId:'tunnelTabDdLabel',  defLabel:'터널 전체', render:function(){ renderTunnelPanel(); } },
+  company: { menuId:'companyTabDdMenu', btnId:'companyTabDdBtn', labelId:'companyTabDdLabel', defLabel:'업체 전체', render:function(){ renderCompanyPanel(); } },
+  gonggu:  { menuId:'gongguTabDdMenu',  btnId:'gongguTabDdBtn',  labelId:'gongguTabDdLabel',  defLabel:'공구 전체', render:function(){ renderGongguPanel(); } }
+};
+
 function toggleTabDd(kind){
-  var menuId = kind==='tunnel'?'tunnelTabDdMenu':'companyTabDdMenu';
-  var btnId  = kind==='tunnel'?'tunnelTabDdBtn':'companyTabDdBtn';
-  toggleDd(menuId, btnId);
+  var c = TAB_DD_CONFIG[kind];
+  toggleDd(c.menuId, c.btnId);
 }
 
 function closeTabDd(menuId, btnId){ closeDd(menuId, btnId); }
 
 function selectTabDd(kind, val, el){
-  var menuId  = kind==='tunnel'?'tunnelTabDdMenu':'companyTabDdMenu';
-  var btnId   = kind==='tunnel'?'tunnelTabDdBtn':'companyTabDdBtn';
-  var labelId = kind==='tunnel'?'tunnelTabDdLabel':'companyTabDdLabel';
-  var defLabel= kind==='tunnel'?'터널 전체':'업체 전체';
-  document.querySelectorAll('#'+menuId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
+  var c = TAB_DD_CONFIG[kind];
+  document.querySelectorAll('#'+c.menuId+' .dd-opt').forEach(function(o){ o.classList.remove('sel'); });
   if(el) el.classList.add('sel');
-  document.getElementById(labelId).textContent = val==='ALL' ? defLabel : val;
+  document.getElementById(c.labelId).textContent = val==='ALL' ? c.defLabel : val;
   TAB_FILTER[kind] = val;
-  if(kind==='tunnel'){ _tunnelTabUserPicked=true; getPageState('tunnel').page=1; }
-  else               { _companyTabUserPicked=true; getPageState('company').page=1; }
-  closeTabDd(menuId, btnId);
-  var btn = document.getElementById(btnId);
+  getPageState(kind).page = 1;
+  if(kind==='tunnel') _tunnelTabUserPicked=true;
+  else if(kind==='company') _companyTabUserPicked=true;
+  closeTabDd(c.menuId, c.btnId);
+  var btn = document.getElementById(c.btnId);
   if(btn) btn.classList.toggle('active', val!=='ALL');
-  if(kind==='tunnel'){ renderTunnelPanel(); }
-  else               { renderCompanyPanel(); }
+  c.render();
   updateTabCounts();
 }
 
 function updateTabCounts(){
   var tc = document.getElementById('tunnelTabCount');
   var cc = document.getElementById('companyTabCount');
+  var gc = document.getElementById('gongguTabCount');
   if(tc){
     var tData = TAB_FILTER.tunnel==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['터널명']===TAB_FILTER.tunnel;});
     var g2 = calcGroupKpi('터널명');
@@ -2489,6 +2589,16 @@ function updateTabCounts(){
       { label:'업체 수', value:g4.count+'개' },
       { label:'미처리 합계', value:g4.unproc, color:'var(--coral800)' },
       { label:'평균 완료율', value:g4.avgRate+'%', color:'var(--teal600)' }
+    ]);
+  }
+  if(gc){
+    var gData = TAB_FILTER.gonggu==='ALL' ? ALL_DATA : ALL_DATA.filter(function(r){return r['공구']===TAB_FILTER.gonggu;});
+    var g7 = calcGroupKpi('공구');
+    renderKpiCountLine('gongguTabCount', [
+      { label:'총', value:gData.length+'건' },
+      { label:'공구 수', value:g7.count+'개' },
+      { label:'미처리 합계', value:g7.unproc, color:'var(--coral800)' },
+      { label:'평균 완료율', value:g7.avgRate+'%', color:'var(--teal600)' }
     ]);
   }
 }
@@ -2578,6 +2688,31 @@ function renderTunnelPanel(){
     return buildPanelCard(t, '', rows, thead, buildPanelRows(visibleByKey[t], cols), true);
   }).join('');
   renderPaginationRow('tunnelPaginationRow','tunnel',pg.totalPages,renderTunnelPanel);
+}
+
+/* ── GONGGU(공구) PANEL ── */
+function renderGongguPanel(){
+  var allGonggu = groupBy(ALL_DATA,'공구');
+  var el = document.getElementById('gongguPanels');
+  var keys = Object.keys(allGonggu).sort();
+  if(TAB_FILTER.gonggu !== 'ALL'){
+    keys = keys.filter(function(k){ return k === TAB_FILTER.gonggu; });
+  }
+  buildPageSizeDd('gonggu', renderGongguPanel);
+  if(!keys.length){ el.innerHTML='<div class="empty"><p>표시할 데이터가 없습니다</p></div>'; renderPaginationRow('gongguPaginationRow','gonggu',1,renderGongguPanel); return; }
+  // 공구는 터널·업체 어느 쪽과도 1:1이 아니므로(여러 터널/업체를 포괄) 두 컬럼 모두 표시
+  var cols = pickCols(['status','date','tunnel','type','loc','content','photo1','photo2','company','contact','phone','remark','manager']);
+  var thead = '<th class="col-status">상태</th><th>날짜</th><th>터널</th><th>공종</th><th>위치</th><th class="col-expand">하자내용</th><th class="col-photo">하자사진</th><th class="col-photo">조치사진</th><th>업체</th><th class="col-contact">업체담당</th><th class="col-contact">전화번호</th><th class="col-remark">비고</th><th class="col-manager">관리</th>';
+  var flat=[];
+  keys.forEach(function(g){ allGonggu[g].forEach(function(r){ flat.push({g:g, r:r}); }); });
+  var pg = paginate('gonggu', flat);
+  var visibleByKey={};
+  pg.pageRows.forEach(function(item){ (visibleByKey[item.g]=visibleByKey[item.g]||[]).push(item.r); });
+  el.innerHTML = keys.filter(function(g){ return visibleByKey[g]; }).map(function(g){
+    var rows = allGonggu[g];
+    return buildPanelCard(g, '', rows, thead, buildPanelRows(visibleByKey[g], cols), true);
+  }).join('');
+  renderPaginationRow('gongguPaginationRow','gonggu',pg.totalPages,renderGongguPanel);
 }
 
 /* ── COMPANY PANEL ── */
@@ -2713,7 +2848,7 @@ function switchTab(n,el){
   updateKPI();
   if(n===5 && !CONTACT_LOADED){ loadContactData(); }
   if(n===6 && !MGMT_LOADED){ loadMgmtData(); }
-  if(n<5) renderCurrentTab();
+  if(n<5 || n===7) renderCurrentTab();
 }
 
 /* ── 503 자동 재시도 카운트다운 ── */
@@ -4078,6 +4213,7 @@ var EXCEL_PAGE_PRESETS = {
 // 암묵적으로 하드코딩되어 있다. key 값을 바꾸면 렌더링도 반드시 같이 맞춰야 한다.
 var EXCEL_COLUMNS = [
   { key:'날짜', header:'날짜', dateCol:true },
+  { key:'공구', header:'공구' },
   { key:'터널명', header:'터널명' },
   { key:'하자내용', header:'하자내용', width:53, wrap:true, align:'left' },
   { key:'하자사진', header:'하자사진', photo:true, width:18 }, // 데이터 필드는 '하자사진_URL' (key+'_URL' 암묵적 결합)
