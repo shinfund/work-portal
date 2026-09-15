@@ -625,6 +625,21 @@ if (window.self !== window.top) {
         <input id="addDate" class="modal-input" type="date"/>
       </div>
 
+      <!-- 1-1.공구 -->
+      <div class="modal-field">
+        <label class="modal-label">공구</label>
+        <select id="addGonggu" class="modal-select" onchange="onSelectChange(this,'addGongguCustom')">
+          <option value="">선택</option>
+          <option value="__custom__">직접입력</option>
+          <option value="제1공구">제1공구</option>
+          <option value="제2공구">제2공구</option>
+          <option value="제3공구">제3공구</option>
+          <option value="제4공구">제4공구</option>
+          <option value="제5공구">제5공구</option>
+        </select>
+        <input id="addGongguCustom" class="modal-input" type="text" placeholder="공구 직접 입력" style="display:none;margin-top:6px"/>
+      </div>
+
       <!-- 2.공종 -->
       <div class="modal-field">
         <label class="modal-label">공종 <span class="modal-required">*</span></label>
@@ -3114,6 +3129,7 @@ function openEditModal(idx){
 
   // 기존 데이터 채우기
   document.getElementById('addDate').value        = r['날짜']||'';
+  buildGenericSelectOpts(document.getElementById('addGonggu'), document.getElementById('addGongguCustom'), ['제1공구','제2공구','제3공구','제4공구','제5공구'], r['공구']||'');
   buildGenericSelectOpts(document.getElementById('addType'), document.getElementById('addTypeCustom'), ['설비','전기','소방','통신','토목','건축'], r['공종']||'');
   var locs = ALL_DATA.length ? getUniqueValues('위치') : [];
   buildGenericSelectOpts(document.getElementById('addLoc'), document.getElementById('addLocCustom'), locs, r['위치']||'');
@@ -3383,7 +3399,8 @@ function openAddModal(){
   document.getElementById('photo2Status').textContent = '파일을 선택하세요';
   document.getElementById('photo2Status').className = 'photo-upload-status';
   document.getElementById('addManager').value = '';
-  ['addTypeCustom','addTunnelCustom','addLocCustom','addStatusCustom','addCompanyCustom','addContactCustom','addManagerCustom'].forEach(function(id){
+  document.getElementById('addGonggu').value = '';
+  ['addTypeCustom','addTunnelCustom','addLocCustom','addStatusCustom','addCompanyCustom','addContactCustom','addManagerCustom','addGongguCustom'].forEach(function(id){
     var el=document.getElementById(id); if(el){el.value='';el.style.display='none';}
   });
   // 위치, 업체명, 업체담당자 드롭다운 동적 채우기
@@ -3486,6 +3503,7 @@ function submitAddForm(confirmed){
   var phone     = document.getElementById('addPhone').value.trim();
   var remark    = document.getElementById('addRemark').value.trim();
   var manager   = getSelectValue('addManager','addManagerCustom');
+  var gonggu    = getSelectValue('addGonggu','addGongguCustom');
 
   var btn = document.getElementById('addSubmitBtn');
   var lbl = document.getElementById('addSubmitLabel');
@@ -3516,6 +3534,7 @@ function submitAddForm(confirmed){
   // 안전한 수정을 위해서는 buildNotionPropMap 단계에서 감지한 실제 타입을 별도 맵(NOTION_PROP_TYPE_MAP 등)에 보존해
   // setProp이 필드별로 값 형태를 분기하도록 재구성해야 하나, 실제 노션 DB 스키마 확인 없이는 검증 불가해 보류함.
   setProp('날짜',    date ? { date: { start: date } } : { date: null });
+  setProp('공구',    gonggu ? { select: { name: gonggu } } : { select: null });
   setProp('공종',    { multi_select: [{ name: type }] });
   setProp('터널명',  { select: { name: tunnel } });
   setProp('위치',    { rich_text: [{ text: { content: loc } }] });
