@@ -1192,7 +1192,7 @@ function pickYear(y){
   curYear=y; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(needsFullHistory(y,curMonth) && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistory(y,curMonth) && isAuthed()){ ensureFullHistoryLoaded(); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
   else { renderAll(); } // 로그인 전(데모 데이터)이면 loadData/renderAll 모두 안 타던 문제 — 라벨-화면 불일치 방지(B1)
@@ -1201,7 +1201,7 @@ function pickMonth(m){
   curMonth=m; _userPickedMonth=true;
   closeAllDD();
   updateMonthLabel();
-  if(needsFullHistory(curYear,m) && isAuthed()){ loadData({full:true}); }
+  if(needsFullHistory(curYear,m) && isAuthed()){ ensureFullHistoryLoaded(); }
   else if(_dataLoadedOnce){ renderAll(); }
   else if(isAuthed()){ loadData(); }
   else { renderAll(); } // 로그인 전(데모 데이터)이면 loadData/renderAll 모두 안 타던 문제 — 라벨-화면 불일치 방지(B1)
@@ -1378,7 +1378,7 @@ function buildDetailYearDd(){
       _detailUserPicked=true;
       CURRENT_PAGE=1;
       closeDetailYearDd();
-      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ ensureFullHistoryLoaded(); }
       else renderDetail();
     });
   }
@@ -1400,7 +1400,7 @@ function buildDetailMonthDd(){
       _detailUserPicked=true;
       CURRENT_PAGE=1;
       closeDetailMonthDd();
-      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ loadData({full:true}); }
+      if(needsFullHistory(_detailYearFilter,_detailMonthFilter==='ALL'?0:parseInt(_detailMonthFilter,10)) && isAuthed()){ ensureFullHistoryLoaded(); }
       else renderDetail();
     });
   }
@@ -1434,7 +1434,7 @@ function switchPanel(name){
   relocateMonthSel(name);
   requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
   // 월별추이 탭은 최근 12개월치가 필요 — 기본 로딩(최근 2개월)만으론 부족하므로 전체 이력 보충
-  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ loadData({full:true}); }
+  if(name==='trend' && !_fullHistoryLoaded && isAuthed()){ ensureFullHistoryLoaded(); }
 }
 
 // ── 전역 데이터 ───────────────────────────────────────
@@ -1556,6 +1556,16 @@ function parseNotionPage(page){
 const DEFAULT_LOAD_MONTHS=2;
 let _fullHistoryLoaded=false;
 let _dataLoadedOnce=false;
+let _fullHistoryLoadPromise=null;
+// 전체 이력 로딩이 여러 곳(탭 전환, 연/월 필터, 엑셀 생성)에서 동시에 트리거될 수 있어
+// 진행 중인 요청을 공유해 중복 fetch를 막고, 호출자가 완료를 await할 수 있게 한다.
+function ensureFullHistoryLoaded(){
+  if(_fullHistoryLoaded || !isAuthed()) return Promise.resolve();
+  if(!_fullHistoryLoadPromise){
+    _fullHistoryLoadPromise=loadData({full:true}).finally(()=>{ _fullHistoryLoadPromise=null; });
+  }
+  return _fullHistoryLoadPromise;
+}
 async function loadData(opts){
   opts=opts||{};
   const needFull=opts.full===true;
@@ -2562,6 +2572,16 @@ function trendExcelColumns(){
   ];
 }
 async function exportTrendExcel(){
+  // 탭 진입 시 전체 이력 로딩(ensureFullHistoryLoaded)이 아직 끝나기 전에 생성을 누르면
+  // 최근 DEFAULT_LOAD_MONTHS개월치만 반영된 _trendData로 내보내지는 문제가 있어, 완료를 기다린다.
+  if(!_fullHistoryLoaded && isAuthed()){
+    const btn=document.getElementById('trendExcelBtn'), lbl=document.getElementById('trendExcelLabel');
+    if(btn) btn.disabled=true;
+    if(lbl) lbl.textContent='데이터 확인 중...';
+    await ensureFullHistoryLoaded();
+    if(btn) btn.disabled=false;
+    if(lbl) lbl.textContent='엑셀 생성';
+  }
   const cols=trendExcelColumns();
   const rows=[..._trendData].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
     const row={월:`${y}/${String(m).padStart(2,'0')}`, 발전량:Math.floor(totalGen), 발전일수:cnt};
@@ -2594,6 +2614,16 @@ function dailyExcelColumns(){
   ];
 }
 async function exportDailyExcel(){
+  // 기본 로딩 범위(DEFAULT_LOAD_MONTHS) 밖의 연/월을 선택한 직후엔 _dailyData가 아직 비어있을
+  // 수 있어, "데이터 없음" 판정보다 전체 이력 로딩 완료 대기를 먼저 한다.
+  if(needsFullHistory(curYear,curMonth) && isAuthed()){
+    const btn=document.getElementById('dailyExcelBtn'), lbl=document.getElementById('dailyExcelLabel');
+    if(btn) btn.disabled=true;
+    if(lbl) lbl.textContent='데이터 확인 중...';
+    await ensureFullHistoryLoaded();
+    if(btn) btn.disabled=false;
+    if(lbl) lbl.textContent='엑셀 생성';
+  }
   if(!_dailyData.length){ alert('내보낼 데이터가 없습니다. 상단에서 연도·월을 먼저 선택하세요.'); return; }
   const cols=dailyExcelColumns();
   const rows=_dailyData.map(({dateStr,totalGen,cnt,tunnelMap})=>{
