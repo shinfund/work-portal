@@ -4664,12 +4664,13 @@ function sortGongguRows(rows){
 }
 function exportGongguExcel(){
   var rows = sortGongguRows(filtered());
-  // "진행중" 시트는 현재 탭 필터와 무관하게 전체 터널의 진행중 건을 대상으로 한다(2026-09-15 요청)
-  var progressRows = sortGongguRows(ALL_DATA.filter(function(r){ return r['조치여부']==='진행중'; }));
+  // "진행중" 시트는 메인 시트와 동일하게 현재 탭 필터(기간/터널/공구 등)를 적용한 뒤 조치여부만
+  // "진행중"으로 좁힌다(2026-09-15 수정 — 이전엔 필터 무관하게 전체 터널 대상이었음)
+  var progressRows = rows.filter(function(r){ return r['조치여부']==='진행중'; });
   var now = new Date();
   buildExcelReport({
     btnId:'gongguExcelBtn', lblId:'gongguExcelLabel', lblDefault:'엑셀',
-    sheetName:'공구별', title: gongguExcelTitle(),
+    sheetName:'하자내역', title: gongguExcelTitle(),
     fnamePrefix: now.getFullYear()+'년 포항영덕간터널 하자보수현황',
     columns: EXCEL_GONGGU_COLUMNS, rows: rows, orientation:'landscape',
     statusColorRules: [{ key:'조치여부', value:'완료', color:'FFFF0000' }],
