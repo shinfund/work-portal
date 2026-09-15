@@ -508,7 +508,7 @@ if (window.self !== window.top) {
       </div>
       <div class="dd-wrap" id="trendTunnelDdWrap" style="display:none">
         <button class="dd-btn" id="trendTunnelDdBtn" onclick="toggleTrendTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
-          <span id="trendTunnelDdLabel">전체</span>
+          <span id="trendTunnelDdLabel">전체 터널</span>
         </button>
         <div class="dd-menu" id="trendTunnelDdMenu"></div>
       </div>
@@ -520,7 +520,7 @@ if (window.self !== window.top) {
       </div>
       <div class="dd-wrap" id="dailyTunnelDdWrap" style="display:none">
         <button class="dd-btn" id="dailyTunnelDdBtn" onclick="toggleDailyTunnelDd()" aria-haspopup="listbox" aria-label="터널 선택">
-          <span id="dailyTunnelDdLabel">전체</span>
+          <span id="dailyTunnelDdLabel">전체 터널</span>
         </button>
         <div class="dd-menu" id="dailyTunnelDdMenu"></div>
       </div>
@@ -658,6 +658,7 @@ if (window.self !== window.top) {
           <tbody id="trendTableBody"></tbody>
         </table>
       </div>
+      <div class="pagination-row" id="trendPaginationRow"></div>
     </div>
   </div>
 
@@ -1280,10 +1281,10 @@ function toggleDailyTunnelDd(){ toggleDd('dailyTunnelDdMenu','dailyTunnelDdBtn')
 function buildTunnelFilterDd(menuId,btnId,labelId,filterValue,onPick){
   const menu=document.getElementById(menuId);
   if(!menu) return;
-  const opts=[{val:'',label:'전체'}].concat(getTrendTunnelCols().map(t=>({val:t,label:t})));
+  const opts=[{val:'',label:'전체 터널'}].concat(getTrendTunnelCols().map(t=>({val:t,label:t})));
   menu.innerHTML=opts.map(o=>`<div class="dd-opt${filterValue===o.val?' sel':''}" data-val="${esc(o.val)}">${esc(o.label)}</div>`).join('');
   const lblEl=document.getElementById(labelId);
-  if(lblEl) lblEl.textContent = filterValue || '전체';
+  if(lblEl) lblEl.textContent = filterValue || '전체 터널';
   document.getElementById(btnId)?.classList.toggle('active', !!filterValue);
   if(!menu._bound){
     menu._bound=true;
@@ -1297,6 +1298,7 @@ function buildTunnelFilterDd(menuId,btnId,labelId,filterValue,onPick){
 }
 function onTrendTunnelPick(v){
   _trendTunnelFilter=v;
+  TREND_CURRENT_PAGE=1;
   renderTrend();
   renderDailyTrend();
 }
@@ -1318,6 +1320,8 @@ function buildTrendPeriodDd(){
   const cur=TREND_PERIOD_OPTS.find(o=>o.val===_trendPeriodMonths);
   const lblEl=document.getElementById('trendPeriodDdLabel');
   if(lblEl) lblEl.textContent = cur ? cur.label : '최근 12개월';
+  // 기간 필터는 "전체 기간"이 아니면(기본값 "최근 12개월" 포함) 선택된 상태로 간주해 색상 강조(2026-09-15 요청)
+  document.getElementById('trendPeriodDdBtn')?.classList.toggle('active', _trendPeriodMonths!=='ALL');
   if(!menu._bound){
     menu._bound=true;
     menu.addEventListener('click',e=>{
@@ -1331,6 +1335,7 @@ function buildTrendPeriodDd(){
 }
 function onTrendPeriodPick(v){
   _trendPeriodMonths=v;
+  TREND_CURRENT_PAGE=1;
   renderTrend();
 }
 // 조회 기간(개월수)에 맞는 {y,m} 목록을 anchor(기준 연/월)부터 과거로 계산.
@@ -2151,7 +2156,13 @@ function renderTrend(){
   const geo=chartGeometry(data, item=>curMonth!==0&&item.y===curYear&&item.m===curMonth);
   document.getElementById('trendChart').innerHTML=onScreenChartSvg(geo,'trendFillM');
 
-  document.getElementById('trendTableBody').innerHTML=[...data].reverse().map(({y,m,totalGen,cnt,tunnelMap})=>{
+  // "월별 요약" 표만 페이지네이션 적용(차트·_trendData(엑셀용)는 항상 전체 기간 데이터 유지)
+  const reversed=[...data].reverse();
+  const totalPages=Math.max(1, Math.ceil(reversed.length/TREND_PAGE_SIZE));
+  if(TREND_CURRENT_PAGE>totalPages) TREND_CURRENT_PAGE=totalPages;
+  if(TREND_CURRENT_PAGE<1) TREND_CURRENT_PAGE=1;
+  const pageRows=reversed.slice((TREND_CURRENT_PAGE-1)*TREND_PAGE_SIZE, TREND_CURRENT_PAGE*TREND_PAGE_SIZE);
+  document.getElementById('trendTableBody').innerHTML=pageRows.map(({y,m,totalGen,cnt,tunnelMap})=>{
     const isCur=curMonth!==0&&y===curYear&&m===curMonth;
     const tunnelCells=getTrendTunnelCols().map(name=>`<td class="r">${fmtWon(Math.floor(tunnelMap[name]?.gen||0))}</td>`).join('');
     return `<tr${isCur?' style="background:var(--sky50)"':''}>
@@ -2161,6 +2172,7 @@ function renderTrend(){
       <td class="r">${cnt}건</td>
     </tr>`;
   }).join('');
+  renderTrendPaginationRow(reversed.length, totalPages);
 }
 
 // ── 일별 추이 ─────────────────────────────────────────
@@ -2309,6 +2321,35 @@ function renderPaginationRow(totalCount, totalPages){
     return '<button class="page-btn'+(p===cur?' active':'')+'" onclick="goToPage('+p+')" aria-current="'+(p===cur?'page':'false')+'">'+p+'</button>';
   }).join('');
   html+='<button class="page-btn" onclick="goToPage('+(cur+1)+')" '+(cur>=totalPages?'disabled':'')+' aria-label="다음 페이지">›</button>';
+  el.innerHTML=html;
+}
+
+/* ── 페이지네이션(월별추이 "월별 요약" 표) ── 발전내역 탭과 별개 상태, 기본 12개(2026-09-15 요청) ── */
+var TREND_PAGE_SIZE=12;
+var TREND_CURRENT_PAGE=1;
+function goToTrendPage(n){
+  TREND_CURRENT_PAGE=n;
+  renderTrend();
+  const wrap=document.getElementById('trendTableBody')?.closest('.sc');
+  if(wrap) wrap.scrollIntoView({block:'nearest'});
+}
+function renderTrendPaginationRow(totalCount, totalPages){
+  const el=document.getElementById('trendPaginationRow');
+  if(!el) return;
+  if(totalPages<=1){ el.innerHTML=''; return; }
+  const cur=TREND_CURRENT_PAGE;
+  const win=2;
+  const pages=[];
+  for(let i=1;i<=totalPages;i++){
+    if(i===1||i===totalPages||(i>=cur-win&&i<=cur+win)) pages.push(i);
+    else if(pages[pages.length-1]!=='...') pages.push('...');
+  }
+  let html=`<button class="page-btn" onclick="goToTrendPage(${cur-1})" ${cur<=1?'disabled':''} aria-label="이전 페이지">‹</button>`;
+  html+=pages.map(p=>p==='...'
+    ? '<button class="page-btn ellipsis" disabled>…</button>'
+    : `<button class="page-btn${p===cur?' active':''}" onclick="goToTrendPage(${p})" aria-current="${p===cur?'page':'false'}">${p}</button>`
+  ).join('');
+  html+=`<button class="page-btn" onclick="goToTrendPage(${cur+1})" ${cur>=totalPages?'disabled':''} aria-label="다음 페이지">›</button>`;
   el.innerHTML=html;
 }
 
