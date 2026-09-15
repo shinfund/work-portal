@@ -2466,7 +2466,20 @@ function buildExcelReport(opts){
       pageSetup:{paperSize:9,orientation,fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true,verticalCentered:false,margins:EXCEL_PAGE_PRESETS[orientation],printTitlesRow:`${headerRowNum}:${headerRowNum}`},
       headerFooter:{oddHeader:'&R&"맑은 고딕,Regular"&11'+EXCEL_COMPANY_NAME,oddFooter:''}
     });
-    const colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    let colWidths=columns.map(col=>col.width || excelAutoWidth([col.header].concat(rows.map(r=>r[col.key]))));
+    // 표가 컬럼 수가 적거나 내용이 짧아 인쇄 페이지 폭보다 많이 좁으면(주로 월별/일별추이처럼
+    // 숫자형 컬럼 위주인 표) 비율을 유지한 채 확대해 페이지 폭까지 채운다. paperSize:9(A4)
+    // 기준 — 이미 폭이 넓은 표(자유서술형 컬럼 등)는 줄이지 않고, 넘치는 부분은 fitToWidth:1
+    // 인쇄 시 자동 축소로 처리한다.
+    {
+      const targetPx=((orientation==='landscape'?297:210)/25.4)*96;
+      const curPx=colWidths.map(w=>w*7+5);
+      const curTotalPx=curPx.reduce((a,b)=>a+b,0);
+      if(curTotalPx>0 && curTotalPx<targetPx){
+        const scale=targetPx/curTotalPx;
+        colWidths=colWidths.map((w,i)=>Math.round((curPx[i]*scale-5)/7*100)/100);
+      }
+    }
     ws.columns=colWidths.map(w=>({width:w}));
     const titleRow=ws.getRow(1);
     titleRow.height=EXCEL_ROW_HEIGHTS.title;
