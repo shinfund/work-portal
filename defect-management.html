@@ -4262,6 +4262,19 @@ function excelAutoWidth(strings, min, max, padding){
   strings.forEach(function(s){ w = Math.max(w, excelStrWidth(s)+padding); });
   return Math.min(w, max);
 }
+// 표 컬럼 수가 적거나 내용이 짧아 자동폭 합계가 인쇄 페이지 폭보다 좁으면(요약표처럼 숫자형
+// 컬럼 위주인 표) 비율을 유지한 채 확대해 좌우 여백까지 채운다 — Excel의 fitToWidth 인쇄옵션은
+// 넘칠 때만 축소하고 부족할 땐 확대하지 않는 한계가 있어(solar-power.html 2026-09-15 동일 이슈로
+// 확인) 컬럼폭 자체를 키워야 함. 이미 폭이 넓은 표(자유서술형 컬럼 등)는 그대로 둔다(grow-only).
+// px 환산은 Excel 열너비-픽셀 근사식(px = width*7+5, MDW=7 for Calibri 11 @96dpi) 사용.
+function excelFillPageWidth(colWidths, orientation){
+  var targetPx = ((orientation==='landscape'?297:210)/25.4)*96;
+  var curPx = colWidths.map(function(w){ return w*7+5; });
+  var curTotalPx = curPx.reduce(function(a,b){ return a+b; }, 0);
+  if(curTotalPx<=0 || curTotalPx>=targetPx) return colWidths;
+  var scale = targetPx/curTotalPx;
+  return colWidths.map(function(w,i){ return Math.round((curPx[i]*scale-5)/7*100)/100; });
+}
 
 // wrapText 컬럼의 실제 줄바꿈 줄 수를 열너비 기준으로 근사 추정(exceljs는 렌더링을
 // 하지 않아 정확한 줄 수를 알 수 없음 — 자동열폭 계산과 같은 근본적 한계, 보수적으로 추정)
@@ -4395,6 +4408,7 @@ function renderExcelDataSheet(wb, s){
     var strings = col.photo ? [col.header] : [col.header].concat(rows.map(function(r){ return r[col.key]; }));
     return excelAutoWidth(strings);
   });
+  colWidths = excelFillPageWidth(colWidths, orientation);
   ws.columns = colWidths.map(function(w){ return {width:w}; });
 
   var titleRow = ws.getRow(1);
@@ -4644,6 +4658,7 @@ function buildGongguSummarySheet(wb, rows){
   }, { 터널명:'합계', 공구:'', 진행중:0, 완료:0, 미흡:0, 합계:0 });
 
   var colWidths = cols.map(function(c){ return excelAutoWidth([c.header].concat(dataRows.map(function(r){ return r[c.key]; })).concat([totalRow[c.key]])); });
+  colWidths = excelFillPageWidth(colWidths, 'portrait');
   ws.columns = colWidths.map(function(w){ return {width:w}; });
 
   var titleRow = ws.getRow(1);
